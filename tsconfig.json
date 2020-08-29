@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "baseUrl": ".",
+        "paths": {
+            "*": ["node_modules/*", "types/*"],
+            "@/*": ["src/*"]
+        },
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "noImplicitAny": true,
+        "forceConsistentCasingInFileNames": true,
+        "module": "commonjs",
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": false,
+        "noEmit": true,
+        "noEmitOnError": true, //当编译出错不生成js文件
+        "jsx": "preserve"
+    },
+    "include": ["./src/**/*"],
+    "exclude": ["node_modules", "./src/**/*.js"]
+}
