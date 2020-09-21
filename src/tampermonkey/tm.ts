@@ -15,6 +15,19 @@ const commentPath = path.join(productPath, `comments.txt`);
 const commentXlsx = path.join(productPath, 'comments.xlsx');
 const photoPath = path.join(productPath, 'photos');
 
+if(typeof product_id === 'undefined'){
+    console.log(`tm_product_id 未定义;`)
+    process.exit();
+}
+if(typeof is_save_photo === 'undefined'){
+    console.log(`tm_is_save_photo 未定义;`)
+    process.exit();
+}
+if(typeof select_length === 'undefined'){
+    console.log(`tm_select_length 未定义;`)
+    process.exit();
+}
+
 interface photoInt {
     fileId: number;
     receiveId: number;
@@ -224,7 +237,7 @@ const Start = async (pageNum: number = 1) => {
 const Task = async () => {
     const is_exit = await fse.pathExists(productPath);
     if (is_exit) {
-        return Promise.reject('目录存在');
+        return Promise.reject(`${productPath} 目录存在`);
     }
     // 确保商品目录存在
     await fse.ensureDir(productPath);
