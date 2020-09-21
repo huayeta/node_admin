@@ -136,9 +136,9 @@ class Str {
         this._video = [];
         this._content_xlsx=xlsx.parse(commentXlsx);
     }
-    add(str: string) {
+    add(str: string,fir?:string) {
         if (str && !str.includes('此用户没有填写评价') && !str.includes('系统默认好评') && str.length>= +select_length!){
-            this._content += `${this._content && '\r\n'}${str}`;
+            this._content += `${this._content && '\r\n'}${fir}${str}`;
             this._content_xlsx[0].data.push([str]);
         }
     }
@@ -184,7 +184,7 @@ const Start = async (pageNum: number = 1) => {
         if(comment.photos && comment.photos.length>0){
             fir = `有图片：${comment.photos[0].receiveId}，`;
         }
-        STR.add(fir + comment.content);
+        STR.add(comment.content,fir);
         STR.addPhoto(comment.photos);
         if(comment.video)STR.addVideo({receiveId:comment.rateId,url:comment.video.cloudVideoUrl})
         if (comment.append) {
@@ -192,7 +192,7 @@ const Start = async (pageNum: number = 1) => {
             if(comment.append.photos && comment.append.photos.length>0){
                 fir = `有图片：${comment.append.photos[0].receiveId}，`;
             }
-            STR.add(fir + comment.append.content);
+            STR.add(comment.append.content,fir);
             STR.addPhoto(comment.append.photos);
         }
     });
