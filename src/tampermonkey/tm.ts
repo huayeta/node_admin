@@ -5,11 +5,15 @@ import fs from 'fs';
 import xlsx from 'node-xlsx';
 require('dotenv').config();
 
-const {tm_product_id:product_id,tm_is_save_photo:is_save_photo,tm_select_length:select_length} = process.env;
-const productPath = path.join(__dirname,'comments',`${product_id}`);
-const commentPath = path.join(productPath,`comments.txt`);
-const commentXlsx = path.join(productPath,'comments.xlsx');
-const photoPath = path.join(productPath,'photos');
+const {
+    tm_product_id: product_id,
+    tm_is_save_photo: is_save_photo,
+    tm_select_length: select_length
+} = process.env;
+const productPath = path.join(__dirname, 'comments', `${product_id}`);
+const commentPath = path.join(productPath, `comments.txt`);
+const commentXlsx = path.join(productPath, 'comments.xlsx');
+const photoPath = path.join(productPath, 'photos');
 
 interface photoInt {
     fileId: number;
@@ -95,7 +99,7 @@ const saveImg = async (url: string, name?: string) => {
     }
 };
 // saveImg('//img.alicdn.com/imgextra/i2/0/O1CN01955acY1Z553MRFwKd_!!0-rate.jpg_400x400.jpg','3');
-const saveVideo = async (url:string, name?:string) => {
+const saveVideo = async (url: string, name?: string) => {
     if (url.startsWith('//')) url = 'https:' + url;
 
     let min = 'mp4';
@@ -123,35 +127,40 @@ const saveVideo = async (url:string, name?:string) => {
     } catch (e) {
         console.log(e);
     }
-}
+};
 // saveVideo('//cloud.video.taobao.com/play/u/4e666f412b694a5254754e74686a444e6245722b7a673d3d/p/1/d/sd/e/6/t/1/274479061823.mp4')
 class Str {
     _content: string;
     _photo: photoInt[];
     _video: videoInt[];
-    _content_xlsx: {name:string;data:any[][]}[];
+    _content_xlsx: { name: string; data: any[][] }[];
     constructor() {
         this._content = '';
         this._photo = [];
         this._video = [];
-        this._content_xlsx=xlsx.parse(commentXlsx);
+        this._content_xlsx = xlsx.parse(commentXlsx);
     }
-    add(str: string,fir?:string) {
-        if (str && !str.includes('此用户没有填写评价') && !str.includes('系统默认好评') && str.length>= +select_length!){
+    add(str: string, fir?: string) {
+        if (
+            str &&
+            !str.includes('此用户没有填写评价') &&
+            !str.includes('系统默认好评') &&
+            str.length >= +select_length!
+        ) {
             this._content += `${this._content && '\r\n'}${fir}${str}`;
-            this._content_xlsx[0].data.push([str]);
+            this._content_xlsx[0].data.push([fir + str]);
         }
     }
     addPhoto(images: photoInt[] = []) {
         this._photo = this._photo.concat(images);
     }
-    addVideo(video: videoInt){
+    addVideo(video: videoInt) {
         this._video.push(video);
     }
-    async save(){
-        await fse.appendFile(commentPath,this._content);
-        if(is_save_photo) {
-            await this.savePhotos()
+    async save() {
+        await fse.appendFile(commentPath, this._content);
+        if (is_save_photo) {
+            await this.savePhotos();
             await this.saveVideos();
         }
         await this.saveXlsx();
@@ -163,14 +172,14 @@ class Str {
         await Promise.all(this._photo);
     }
     async saveVideos() {
-        this._video.map(video=>{
-            return saveVideo(video.url,`${video.receiveId}`)
+        this._video.map(video => {
+            return saveVideo(video.url, `${video.receiveId}`);
         });
         await Promise.all(this._video);
     }
-    async saveXlsx(){
+    async saveXlsx() {
         const buffer = xlsx.build(this._content_xlsx);
-        await fse.writeFile(commentXlsx,buffer,'binary');
+        await fse.writeFile(commentXlsx, buffer, 'binary');
     }
 }
 const Start = async (pageNum: number = 1) => {
@@ -181,18 +190,22 @@ const Start = async (pageNum: number = 1) => {
     const STR = new Str();
     comments.forEach(comment => {
         let fir = '';
-        if(comment.photos && comment.photos.length>0){
+        if (comment.photos && comment.photos.length > 0) {
             fir = `有图片：${comment.photos[0].receiveId}，`;
         }
-        STR.add(comment.content,fir);
+        STR.add(comment.content, fir);
         STR.addPhoto(comment.photos);
-        if(comment.video)STR.addVideo({receiveId:comment.rateId,url:comment.video.cloudVideoUrl})
+        if (comment.video)
+            STR.addVideo({
+                receiveId: comment.rateId,
+                url: comment.video.cloudVideoUrl
+            });
         if (comment.append) {
             let fir = '';
-            if(comment.append.photos && comment.append.photos.length>0){
+            if (comment.append.photos && comment.append.photos.length > 0) {
                 fir = `有图片：${comment.append.photos[0].receiveId}，`;
             }
-            STR.add(comment.append.content,fir);
+            STR.add(comment.append.content, fir);
             STR.addPhoto(comment.append.photos);
         }
     });
@@ -209,18 +222,26 @@ const Start = async (pageNum: number = 1) => {
     }
 };
 const Task = async () => {
+    const is_exit = await fse.pathExists(productPath);
+    if (is_exit) {
+        return Promise.reject('目录存在');
+    }
     // 确保商品目录存在
     await fse.ensureDir(productPath);
     // 确保商品图片目录存在
-    is_save_photo && await fse.ensureDir(photoPath);
+    is_save_photo && (await fse.ensureDir(photoPath));
     // 清空评论
     await fse.outputFile(commentPath, '');
     // 确保comments.xlsx存在
-    const buffer = xlsx.build([{name:`${product_id}`,data:[]}]);
-    await fse.writeFile(commentXlsx,buffer,'binary');
+    const buffer = xlsx.build([{ name: `${product_id}`, data: [] }]);
+    await fse.writeFile(commentXlsx, buffer, 'binary');
     // 开始收集评论
     await Start();
-}
-Task().then(()=>{
-    console.log(`全部保存完成，保存在：${productPath}`);
-});
+};
+Task()
+    .then(() => {
+        console.log(`全部保存完成，保存在：${productPath}`);
+    })
+    .catch(reason => {
+        console.log(reason);
+    });
