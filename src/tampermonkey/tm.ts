@@ -15,16 +15,16 @@ const commentPath = path.join(productPath, `comments.txt`);
 const commentXlsx = path.join(productPath, 'comments.xlsx');
 const photoPath = path.join(productPath, 'photos');
 
-if(typeof product_id === 'undefined'){
-    console.log(`tm_product_id 未定义;`)
+if (typeof product_id === 'undefined') {
+    console.log(`tm_product_id 未定义;`);
     process.exit();
 }
-if(typeof is_save_photo === 'undefined'){
-    console.log(`tm_is_save_photo 未定义;`)
+if (typeof is_save_photo === 'undefined') {
+    console.log(`tm_is_save_photo 未定义;`);
     process.exit();
 }
-if(typeof select_length === 'undefined'){
-    console.log(`tm_select_length 未定义;`)
+if (typeof select_length === 'undefined') {
+    console.log(`tm_select_length 未定义;`);
     process.exit();
 }
 
@@ -201,32 +201,36 @@ const Start = async (pageNum: number = 1) => {
     const result = res.data;
     const { maxPage, currentPageNum, comments } = result;
     const STR = new Str();
-    comments.forEach(comment => {
-        let fir = '';
-        if (comment.photos && comment.photos.length > 0) {
-            fir = `有图片：${comment.photos[0].receiveId}，`;
-        }
-        STR.add(comment.content, fir);
-        STR.addPhoto(comment.photos);
-        if (comment.video)
-            STR.addVideo({
-                receiveId: comment.rateId,
-                url: comment.video.cloudVideoUrl
-            });
-        if (comment.append) {
+    if (comments) {
+        comments.forEach(comment => {
             let fir = '';
-            if (comment.append.photos && comment.append.photos.length > 0) {
-                fir = `有图片：${comment.append.photos[0].receiveId}，`;
+            if (comment.photos && comment.photos.length > 0) {
+                fir = `有图片：${comment.photos[0].receiveId}，`;
             }
-            STR.add(comment.append.content, fir);
-            STR.addPhoto(comment.append.photos);
-        }
-    });
-    console.log(
-        `第${pageNum}页/${maxPage}页：得到${comments.length}个评语，正在保存...`
-    );
-    await STR.save();
-    console.log(`第${pageNum}页/${maxPage}页：保存成功`);
+            STR.add(comment.content, fir);
+            STR.addPhoto(comment.photos);
+            if (comment.video)
+                STR.addVideo({
+                    receiveId: comment.rateId,
+                    url: comment.video.cloudVideoUrl
+                });
+            if (comment.append) {
+                let fir = '';
+                if (comment.append.photos && comment.append.photos.length > 0) {
+                    fir = `有图片：${comment.append.photos[0].receiveId}，`;
+                }
+                STR.add(comment.append.content, fir);
+                STR.addPhoto(comment.append.photos);
+            }
+        });
+        console.log(
+            `第${pageNum}页/${maxPage}页：得到${comments.length}个评语，正在保存...`
+        );
+        await STR.save();
+        console.log(`第${pageNum}页/${maxPage}页：保存成功`);
+    } else {
+        console.log(`第${pageNum}页：保存失败，跳过`);
+    }
     console.log('-----------------------------');
     if (currentPageNum < maxPage) {
         const nextPageNum = currentPageNum + 1;
