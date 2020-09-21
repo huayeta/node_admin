@@ -143,12 +143,14 @@ const saveVideo = async (url: string, name?: string) => {
 };
 // saveVideo('//cloud.video.taobao.com/play/u/4e666f412b694a5254754e74686a444e6245722b7a673d3d/p/1/d/sd/e/6/t/1/274479061823.mp4')
 class Str {
-    _content: string;
+    _content: string[];
     _photo: photoInt[];
     _video: videoInt[];
     _content_xlsx: { name: string; data: any[][] }[];
-    constructor() {
-        this._content = '';
+    _pageNum: number;
+    constructor(pageNum: number = 1) {
+        this._pageNum = pageNum;
+        this._content = [];
         this._photo = [];
         this._video = [];
         this._content_xlsx = xlsx.parse(commentXlsx);
@@ -160,7 +162,7 @@ class Str {
             !str.includes('系统默认好评') &&
             str.length >= +select_length!
         ) {
-            this._content += `${this._content && '\r\n'}${fir}${str}`;
+            this._content.push(`${fir}${str}`);
             this._content_xlsx[0].data.push([fir + str]);
         }
     }
@@ -171,7 +173,9 @@ class Str {
         this._video.push(video);
     }
     async save() {
-        await fse.appendFile(commentPath, this._content);
+        const content =
+            `${this._pageNum !== 1 ? '\r\n' : ''}` + this._content.join('\r\n');
+        await fse.appendFile(commentPath, content);
         if (is_save_photo) {
             await this.savePhotos();
             await this.saveVideos();
@@ -200,7 +204,7 @@ const Start = async (pageNum: number = 1) => {
     const res = await getData(pageNum);
     const result = res.data;
     const { maxPage, currentPageNum, comments } = result;
-    const STR = new Str();
+    const STR = new Str(pageNum);
     if (comments) {
         comments.forEach(comment => {
             let fir = '';
