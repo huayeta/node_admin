@@ -5,7 +5,7 @@ import fs from 'fs';
 import xlsx from 'node-xlsx';
 require('dotenv').config();
 
-const {tm_product_id:product_id,tm_is_save_photo:is_save_photo} = process.env;
+const {tm_product_id:product_id,tm_is_save_photo:is_save_photo,tm_select_length:select_length} = process.env;
 const productPath = path.join(__dirname,'comments',`${product_id}`);
 const commentPath = path.join(productPath,`comments.txt`);
 const commentXlsx = path.join(productPath,'comments.xlsx');
@@ -137,7 +137,7 @@ class Str {
         this._content_xlsx=xlsx.parse(commentXlsx);
     }
     add(str: string) {
-        if (str && str != '此用户没有填写评价。'){
+        if (str && !str.includes('此用户没有填写评价') && !str.includes('系统默认好评') && str.length>= +select_length!){
             this._content += `${this._content && '\r\n'}${str}`;
             this._content_xlsx[0].data.push([str]);
         }
@@ -180,11 +180,19 @@ const Start = async (pageNum: number = 1) => {
     const { maxPage, currentPageNum, comments } = result;
     const STR = new Str();
     comments.forEach(comment => {
-        STR.add(comment.content);
+        let fir = '';
+        if(comment.photos && comment.photos.length>0){
+            fir = `有图片：${comment.photos[0].receiveId}，`;
+        }
+        STR.add(fir + comment.content);
         STR.addPhoto(comment.photos);
         if(comment.video)STR.addVideo({receiveId:comment.rateId,url:comment.video.cloudVideoUrl})
         if (comment.append) {
-            STR.add(comment.append.content);
+            let fir = '';
+            if(comment.append.photos && comment.append.photos.length>0){
+                fir = `有图片：${comment.append.photos[0].receiveId}，`;
+            }
+            STR.add(fir + comment.append.content);
             STR.addPhoto(comment.append.photos);
         }
     });

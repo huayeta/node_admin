@@ -7,6 +7,7 @@
     "scripts": {
         "build": "tsc --project tsconfig.server.json",
         "dev": "ts-node-dev --no-notify --transpileOnly src/index.ts",
+        "node": "ts-node src/index.ts",
         "start": "node dist/index.js",
         "debug": "node inspect node_modules/.bin/ts-node src/debug.ts",
         "pdd-w": "ts-node src/pdd/write.ts",
