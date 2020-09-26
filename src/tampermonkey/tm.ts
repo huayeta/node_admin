@@ -157,10 +157,11 @@ class Str {
     }
     add(str: string, fir?: string) {
         if (
-            str &&
-            !str.includes('此用户没有填写评价') &&
-            !str.includes('系统默认好评') &&
-            str.length >= +select_length!
+            (str &&
+                !str.includes('此用户没有填写评价') &&
+                !str.includes('系统默认好评') &&
+                str.length >= +select_length!) ||
+            fir
         ) {
             this._content.push(`${fir}${str}`);
             this._content_xlsx[0].data.push([fir + str]);
@@ -173,9 +174,13 @@ class Str {
         this._video.push(video);
     }
     async save() {
-        const content =
-            `${this._pageNum !== 1 ? '\r\n' : ''}` + this._content.join('\r\n');
-        await fse.appendFile(commentPath, content);
+        // console.log(this._pageNum,typeof this._pageNum,this._pageNum !== 1,this._pageNum !== 1 ? '12\r\n' : '');
+        if (this._content.length > 0) {
+            const content =
+                `${this._pageNum !== 1 ? '\r\n' : ''}` +
+                this._content.join('\r\n');
+            await fse.appendFile(commentPath, content);
+        }
         if (is_save_photo) {
             await this.savePhotos();
             await this.saveVideos();
