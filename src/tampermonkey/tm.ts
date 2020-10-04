@@ -196,6 +196,15 @@ class Str {
                 );
                 if (index !== -1)
                     this._content = this._content.slice(0, index + 1);
+
+                const xlsx_index = this._content_xlsx[0].data.findIndex(arr =>
+                    arr[0].includes(tm_end)
+                );
+                if (xlsx_index !== -1)
+                    this._content_xlsx[0].data = this._content_xlsx[0].data.slice(
+                        0,
+                        xlsx_index + 1
+                    );
             }
             const content =
                 `${this._pageNum !== 1 ? '\r\n' : ''}` +
