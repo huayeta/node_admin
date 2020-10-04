@@ -8,9 +8,14 @@ require('dotenv').config();
 const {
     tm_product_id: product_id,
     tm_is_save_photo: is_save_photo,
-    tm_select_length: select_length
+    tm_select_length: select_length,
+    tm_end = '*'
 } = process.env;
-const productPath = path.join(__dirname, 'comments', `${product_id}`);
+const productPath = path.join(
+    __dirname,
+    'comments',
+    `${tm_end === '*' ? product_id : product_id + '-' + tm_end!.slice(0, 10)}`
+);
 const commentPath = path.join(productPath, `comments.txt`);
 const commentXlsx = path.join(productPath, 'comments.xlsx');
 const photoPath = path.join(productPath, 'photos');
@@ -25,6 +30,10 @@ if (typeof is_save_photo === 'undefined') {
 }
 if (typeof select_length === 'undefined') {
     console.log(`tm_select_length 未定义;`);
+    process.exit();
+}
+if (typeof tm_end === 'undefined') {
+    console.log(`tm_end 未定义;`);
     process.exit();
 }
 
@@ -148,12 +157,14 @@ class Str {
     _video: videoInt[];
     _content_xlsx: { name: string; data: any[][] }[];
     _pageNum: number;
+    _end: boolean;
     constructor(pageNum: number = 1) {
         this._pageNum = pageNum;
         this._content = [];
         this._photo = [];
         this._video = [];
         this._content_xlsx = xlsx.parse(commentXlsx);
+        this._end = false;
     }
     add(str: string, fir?: string) {
         if (
@@ -163,6 +174,9 @@ class Str {
                 str.length >= +select_length!) ||
             fir
         ) {
+            if (tm_end !== '*' && str.includes(tm_end)) {
+                this._end = true;
+            }
             this._content.push(`${fir}${str}`);
             this._content_xlsx[0].data.push([fir + str]);
         }
@@ -176,6 +190,13 @@ class Str {
     async save() {
         // console.log(this._pageNum,typeof this._pageNum,this._pageNum !== 1,this._pageNum !== 1 ? '12\r\n' : '');
         if (this._content.length > 0) {
+            if (this._end) {
+                const index = this._content.findIndex(str =>
+                    str.includes(tm_end)
+                );
+                if (index !== -1)
+                    this._content = this._content.slice(0, index + 1);
+            }
             const content =
                 `${this._pageNum !== 1 ? '\r\n' : ''}` +
                 this._content.join('\r\n');
@@ -241,6 +262,7 @@ const Start = async (pageNum: number = 1) => {
         console.log(`第${pageNum}页：保存失败，跳过`);
     }
     console.log('-----------------------------');
+    if (STR._end) return;
     if (currentPageNum < maxPage) {
         const nextPageNum = currentPageNum + 1;
         await Start(nextPageNum);
