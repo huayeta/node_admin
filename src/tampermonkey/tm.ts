@@ -11,13 +11,15 @@ const {
     tm_select_length: select_length,
     tm_end = '*'
 } = process.env;
-const productPath = path.join(
-    __dirname,
-    'comments',
-    `${tm_end === '*' ? product_id : product_id + '-' + tm_end!.slice(0, 10)}`
+const productPath = path.join(__dirname, 'comments', product_id!);
+const commentPath = path.join(
+    productPath,
+    tm_end === '*' ? 'comments.txt' : `comments-${tm_end!.slice(0, 10)}.txt`
 );
-const commentPath = path.join(productPath, `comments.txt`);
-const commentXlsx = path.join(productPath, 'comments.xlsx');
+const commentXlsx = path.join(
+    productPath,
+    tm_end === '*' ? 'comments.xlsx' : `comments-${tm_end!.slice(0, 10)}.xlsx`
+);
 const photoPath = path.join(productPath, 'photos');
 
 if (typeof product_id === 'undefined') {
@@ -280,7 +282,7 @@ const Start = async (pageNum: number = 1) => {
 };
 const Task = async () => {
     const is_exit = await fse.pathExists(productPath);
-    if (is_exit) {
+    if (is_exit && tm_end === '*') {
         return Promise.reject(`${productPath} 目录存在`);
     }
     // 确保商品目录存在
