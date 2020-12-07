@@ -50,24 +50,26 @@ interface videoInt {
     receiveId: number;
     url: string;
 }
+interface commentVideoInt {
+    cloudVideoUrl: string;
+}
 interface commentInt {
-    append: null | { content: string; photos: photoInt[] };
+    append: null | { content: string; photos: photoInt[]; video?:commentVideoInt };
     content: string;
     photos: photoInt[];
     rateId: number;
-    video?: {
-        cloudVideoUrl: string;
-    };
+    video?: commentVideoInt;
 }
+
 interface commentTmInt {
     rateContent: string;
     id: number;
     pics: string[];
-    videoList: string[];
+    videoList: commentVideoInt[];
     appendComment: null | {
         content: string;
         pics: string[];
-        videoList: string[];
+        videoList: commentVideoInt[];
     };
 }
 interface resInt {
@@ -178,6 +180,7 @@ const saveImg = async (url: string, name?: string) => {
 };
 // saveImg('//img.alicdn.com/imgextra/i2/0/O1CN01955acY1Z553MRFwKd_!!0-rate.jpg_400x400.jpg','3');
 const saveVideo = async (url: string, name?: string) => {
+    if(!url) return  Promise.resolve();
     if (url.startsWith('//')) url = 'https:' + url;
 
     let min = 'mp4';
@@ -312,9 +315,9 @@ const getComments = async (pageNum: number) => {
                 video:
                     comment.videoList.length > 0
                         ? {
-                              cloudVideoUrl: comment.videoList[0]
+                            cloudVideoUrl: comment.videoList[0].cloudVideoUrl
                           }
-                        : null,
+                        : undefined,
                 append: comment.appendComment
                     ? {
                           content: comment.appendComment.content,
@@ -339,6 +342,7 @@ const Start = async (pageNum: number = 1) => {
     const { maxPage, currentPageNum, comments } = result;
     const STR = new Str(pageNum);
     if (comments) {
+        // console.log(comments);
         comments.forEach(comment => {
             let fir = '';
             if (comment.photos && comment.photos.length > 0) {
@@ -348,6 +352,7 @@ const Start = async (pageNum: number = 1) => {
             // console.log(comment.photos)
             STR.addPhoto(comment.photos);
             if (comment.video && comment.video.cloudVideoUrl)
+                // console.log(comment.video.cloudVideoUrl);
                 STR.addVideo({
                     receiveId: comment.rateId,
                     url: comment.video.cloudVideoUrl
@@ -359,6 +364,12 @@ const Start = async (pageNum: number = 1) => {
                 }
                 STR.add(comment.append.content, fir);
                 STR.addPhoto(comment.append.photos);
+                if(comment.append.video && comment.append.video.cloudVideoUrl){
+                    STR.addVideo({
+                        receiveId: comment.rateId,
+                        url: comment.append.video.cloudVideoUrl
+                    })
+                }
             }
         });
         console.log(
@@ -380,7 +391,7 @@ const Start = async (pageNum: number = 1) => {
 const Task = async () => {
     const is_exit = await fse.pathExists(productPath);
     if (is_exit && tm_end === '*') {
-        return Promise.reject(`${productPath} 目录存在`);
+        // return Promise.reject(`${productPath} 目录存在`);
     }
     // 确保商品目录存在
     await fse.ensureDir(productPath);
