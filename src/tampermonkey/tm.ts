@@ -59,98 +59,90 @@ interface commentInt {
         cloudVideoUrl: string;
     };
 }
+interface commentTmInt {
+    rateContent: string;
+    id: number;
+    pics: string[];
+    videoList: string[];
+    appendComment: null | {
+        content: string;
+        pics: string[];
+        videoList: string[];
+    };
+}
 interface resInt {
     maxPage: number;
     currentPageNum: number;
     comments: commentInt[];
 }
 interface resIntTm {
-    paginator: {
-        lastPage: number;
-        page: number;
-        items: number;
+    rateDetail: {
+        paginator: {
+            lastPage: number;
+            page: number;
+            items: number;
+        };
+        rateList: commentTmInt[];
     };
-    rateList: commentInt[];
 }
 const getData = (pageNum: number = 1) => {
-    return tm_is === '1'
-        ? axios.get<resInt>(
-              'https://rate.tmall.com/list_detail_rate.htm?spuId=1589105234&sellerId=3126162346&append=0&content=1&tagId=&posi=&picture=&groupId=&ua=098%23E1hvupvPvBvvUvCkvvvvvjiWP25wtjnCR2sh1jljPmP9tjEhPFcZlj3CP2SOgj3PdvhvmZC2FDCxvhCFOpvCvvXvppvvvvvUvpCWpOGgv8Rz8Zl9ZRAn%2BbyDCcECTWeARFxjb9TxfBAKNxGw4w2WVshw4cC2QEZKK5C2a1n1lBkXw6Ow4w2Wedvw4cC2ARpKK5C2aBVU%2B89Cvv3vpvLxGvLNug9CvvXmp99hjEugvpvIphvvvvvvphCvpCv9vvC2R6CvjvUvvhBGphvwv9vvBHBvpCQmvvChxvgCvvpvvPMMRvhvChCvvvmevpvhphvhHUOCvvBvppvvdvhvmZC2ZoBSvhCxT8QCvvDvp1IGXvCvcTk%2BvpvEphW4oVQvpVlI9vhvHHiwXc2BzHi47IIQt1s1cjt4NYGBRvhvChCvvvv%3D&needFold=0&_ksTS=1605798252518_1214',
-              {
-                  params: {
-                      itemId: product_id,
-                      currentPage: pageNum,
-                      order: '1',
-                      callback: 'jsonp1215'
-                  },
-                  headers: {
-                      cookie:
-                          'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; login=true; dnk=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc3=vt3=F8dCufeBx4sMUOiHJ8U%3D&nk2=saDOo3ihwnk%3D&id2=UUphzOVxh0qcKbPFUg%3D%3D&lg2=VT5L2FSpMGV7TQ%3D%3D; tracknick=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc4=nk4=0%40s8WOEy%2B5Iw8R3mF2Pn0cU4a6dA%3D%3D&id4=0%40U2grF86%2BBspCia2nYzCNm8yC8th3j03D; lgc=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; hng=CN%7Czh-CN%7CCNY%7C156; tk_trace=1; sm4=410100; sgcookie=E100TuSODrDkeMgHzTXDuNBKIhnf6QwCoEJW0UW1VBylIBmiPWHfKEP8fftJhUnoIz7urkQMR%2FynzRTPJocQtrmbHg%3D%3D; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; enc=D6q0mlt9zj2lhfYJ0sDrjs8seIBkABvZtkuusobfWTnmo9t2GYhy5JLpgwK2O27WAqocvBfgs8Dy3mJIyjk2nWehkLwEo7Brvj%2Fd3vlo038%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1604681033; _tb_token_=671803307e8b; uc1=cookie14=Uoe0aDvdmaakcg%3D%3D&cookie21=UIHiLt3xSalX; csg=fd46cd2e; xlly_s=1; _m_h5_tk=48c9b67b8ba87c9d94425a8f525ab161_1605807036055; _m_h5_tk_enc=8062d11d7b881f8ac831b6d027da701d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1605798223; tfstk=cWqhBjmApyuIp_3glMiQHQVldLihaOKriur_blJE_227YZqZLsAv7E7gjOc3tuL5.; l=eBTvt5Keq7M-YEwjBO5wKurza77OwIdf1sPzaNbMiInca6GAgg8T8NQVz2xXzdtjgtfUSetyNxVOSRFeW-a_WE_ceTwhKXIpB896-; isg=BLe3S5QWpDjc7CLumXuwscXwRqsBfIve3YYoygllbgYyuNT6EU6qLELemhjmUGNW',
-                      referer:
-                          'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18'
-                  },
-                  transformResponse: [
-                      data => {
-                          const match = data.match(/jsonp1215\((.+)\)/);
-                          if (match) {
-                              const res = JSON.parse(match[1]);
-                              return {
-                                  maxPage: res.rateDetail.paginator.lastPage,
-                                  currentPageNum: res.rateDetail.paginator.page,
-                                  comments: res.rateDetail.rateList.map(
-                                      (comment: any) =>
-                                          Object.assign(comment, {
-                                              content: comment.rateContent,
-                                              append: comment.appendComment,
-                                              rateId: comment.id,
-                                              // photos: comment.pics && comment.pics.map((pic:any)=>{
-                                              //     fileId: comment.id;
-                                              //     receiveId: comment.id;
-                                              //     thumbnail: pic;
-                                              //     url: pic;
-                                              // }),
-                                              // video: {
-                                              //     cloudVideoUrl: ;
-                                              // }
-                                          })
-                                  )
-                              };
-                          }
-                          return data;
-                      }
-                  ]
-              }
-          )
-        : axios.get<resInt>('https://rate.taobao.com/feedRateList.htm', {
-              params: {
-                  auctionNumId: product_id,
-                  userNumId: 2978418630,
-                  currentPageNum: pageNum,
-                  pageSize: 20,
-                  orderType: 'feedbackdate',
-                  callback: 'jsonp_tbcrate_reviews_list'
-              },
-              headers: {
-                  cookie:
-                      'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; login=true; dnk=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc3=vt3=F8dCufeBx4sMUOiHJ8U%3D&nk2=saDOo3ihwnk%3D&id2=UUphzOVxh0qcKbPFUg%3D%3D&lg2=VT5L2FSpMGV7TQ%3D%3D; tracknick=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc4=nk4=0%40s8WOEy%2B5Iw8R3mF2Pn0cU4a6dA%3D%3D&id4=0%40U2grF86%2BBspCia2nYzCNm8yC8th3j03D; lgc=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; hng=CN%7Czh-CN%7CCNY%7C156; tk_trace=1; sm4=410100; sgcookie=E100TuSODrDkeMgHzTXDuNBKIhnf6QwCoEJW0UW1VBylIBmiPWHfKEP8fftJhUnoIz7urkQMR%2FynzRTPJocQtrmbHg%3D%3D; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; enc=D6q0mlt9zj2lhfYJ0sDrjs8seIBkABvZtkuusobfWTnmo9t2GYhy5JLpgwK2O27WAqocvBfgs8Dy3mJIyjk2nWehkLwEo7Brvj%2Fd3vlo038%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1604681033; _tb_token_=671803307e8b; uc1=cookie14=Uoe0aDvdmaakcg%3D%3D&cookie21=UIHiLt3xSalX; csg=fd46cd2e; xlly_s=1; _m_h5_tk=48c9b67b8ba87c9d94425a8f525ab161_1605807036055; _m_h5_tk_enc=8062d11d7b881f8ac831b6d027da701d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1605798223; tfstk=cWqhBjmApyuIp_3glMiQHQVldLihaOKriur_blJE_227YZqZLsAv7E7gjOc3tuL5.; l=eBTvt5Keq7M-YEwjBO5wKurza77OwIdf1sPzaNbMiInca6GAgg8T8NQVz2xXzdtjgtfUSetyNxVOSRFeW-a_WE_ceTwhKXIpB896-; isg=BLe3S5QWpDjc7CLumXuwscXwRqsBfIve3YYoygllbgYyuNT6EU6qLELemhjmUGNW',
-                  referer:
-                      'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18'
-              },
-              transformResponse: [
-                  data => {
-                      const match = data.match(
-                          /jsonp_tbcrate_reviews_list\((.+)\)/
-                      );
-                      if (match) {
-                          return JSON.parse(match[1]);
-                      }
-                      return data;
-                  }
-              ]
-          });
+    return axios.get<resInt>('https://rate.taobao.com/feedRateList.htm', {
+        params: {
+            auctionNumId: product_id,
+            userNumId: 2978418630,
+            currentPageNum: pageNum,
+            pageSize: 20,
+            orderType: 'feedbackdate',
+            callback: 'jsonp_tbcrate_reviews_list'
+        },
+        headers: {
+            cookie:
+                'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; login=true; dnk=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc3=vt3=F8dCufeBx4sMUOiHJ8U%3D&nk2=saDOo3ihwnk%3D&id2=UUphzOVxh0qcKbPFUg%3D%3D&lg2=VT5L2FSpMGV7TQ%3D%3D; tracknick=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc4=nk4=0%40s8WOEy%2B5Iw8R3mF2Pn0cU4a6dA%3D%3D&id4=0%40U2grF86%2BBspCia2nYzCNm8yC8th3j03D; lgc=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; hng=CN%7Czh-CN%7CCNY%7C156; tk_trace=1; sm4=410100; sgcookie=E100TuSODrDkeMgHzTXDuNBKIhnf6QwCoEJW0UW1VBylIBmiPWHfKEP8fftJhUnoIz7urkQMR%2FynzRTPJocQtrmbHg%3D%3D; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; enc=D6q0mlt9zj2lhfYJ0sDrjs8seIBkABvZtkuusobfWTnmo9t2GYhy5JLpgwK2O27WAqocvBfgs8Dy3mJIyjk2nWehkLwEo7Brvj%2Fd3vlo038%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1604681033; _tb_token_=671803307e8b; uc1=cookie14=Uoe0aDvdmaakcg%3D%3D&cookie21=UIHiLt3xSalX; csg=fd46cd2e; xlly_s=1; _m_h5_tk=48c9b67b8ba87c9d94425a8f525ab161_1605807036055; _m_h5_tk_enc=8062d11d7b881f8ac831b6d027da701d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1605798223; tfstk=cWqhBjmApyuIp_3glMiQHQVldLihaOKriur_blJE_227YZqZLsAv7E7gjOc3tuL5.; l=eBTvt5Keq7M-YEwjBO5wKurza77OwIdf1sPzaNbMiInca6GAgg8T8NQVz2xXzdtjgtfUSetyNxVOSRFeW-a_WE_ceTwhKXIpB896-; isg=BLe3S5QWpDjc7CLumXuwscXwRqsBfIve3YYoygllbgYyuNT6EU6qLELemhjmUGNW',
+            referer:
+                'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18'
+        },
+        transformResponse: [
+            data => {
+                const match = data.match(/jsonp_tbcrate_reviews_list\((.+)\)/);
+                if (match) {
+                    return JSON.parse(match[1]);
+                }
+                return data;
+            }
+        ]
+    });
+};
+const getTmData = (pageNum: number = 1) => {
+    return axios.get<resIntTm>(
+        'https://rate.tmall.com/list_detail_rate.htm?spuId=1589105234&sellerId=3126162346&append=0&content=1&tagId=&posi=&picture=&groupId=&ua=098%23E1hvupvPvBvvUvCkvvvvvjiWP25wtjnCR2sh1jljPmP9tjEhPFcZlj3CP2SOgj3PdvhvmZC2FDCxvhCFOpvCvvXvppvvvvvUvpCWpOGgv8Rz8Zl9ZRAn%2BbyDCcECTWeARFxjb9TxfBAKNxGw4w2WVshw4cC2QEZKK5C2a1n1lBkXw6Ow4w2Wedvw4cC2ARpKK5C2aBVU%2B89Cvv3vpvLxGvLNug9CvvXmp99hjEugvpvIphvvvvvvphCvpCv9vvC2R6CvjvUvvhBGphvwv9vvBHBvpCQmvvChxvgCvvpvvPMMRvhvChCvvvmevpvhphvhHUOCvvBvppvvdvhvmZC2ZoBSvhCxT8QCvvDvp1IGXvCvcTk%2BvpvEphW4oVQvpVlI9vhvHHiwXc2BzHi47IIQt1s1cjt4NYGBRvhvChCvvvv%3D&needFold=0&_ksTS=1605798252518_1214',
+        {
+            params: {
+                itemId: product_id,
+                currentPage: pageNum,
+                order: '1',
+                callback: 'jsonp1215'
+            },
+            headers: {
+                cookie:
+                    'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; login=true; dnk=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc3=vt3=F8dCufeBx4sMUOiHJ8U%3D&nk2=saDOo3ihwnk%3D&id2=UUphzOVxh0qcKbPFUg%3D%3D&lg2=VT5L2FSpMGV7TQ%3D%3D; tracknick=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc4=nk4=0%40s8WOEy%2B5Iw8R3mF2Pn0cU4a6dA%3D%3D&id4=0%40U2grF86%2BBspCia2nYzCNm8yC8th3j03D; lgc=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; hng=CN%7Czh-CN%7CCNY%7C156; tk_trace=1; sm4=410100; sgcookie=E100TuSODrDkeMgHzTXDuNBKIhnf6QwCoEJW0UW1VBylIBmiPWHfKEP8fftJhUnoIz7urkQMR%2FynzRTPJocQtrmbHg%3D%3D; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; enc=D6q0mlt9zj2lhfYJ0sDrjs8seIBkABvZtkuusobfWTnmo9t2GYhy5JLpgwK2O27WAqocvBfgs8Dy3mJIyjk2nWehkLwEo7Brvj%2Fd3vlo038%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1604681033; _tb_token_=671803307e8b; uc1=cookie14=Uoe0aDvdmaakcg%3D%3D&cookie21=UIHiLt3xSalX; csg=fd46cd2e; xlly_s=1; _m_h5_tk=48c9b67b8ba87c9d94425a8f525ab161_1605807036055; _m_h5_tk_enc=8062d11d7b881f8ac831b6d027da701d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1605798223; tfstk=cWqhBjmApyuIp_3glMiQHQVldLihaOKriur_blJE_227YZqZLsAv7E7gjOc3tuL5.; l=eBTvt5Keq7M-YEwjBO5wKurza77OwIdf1sPzaNbMiInca6GAgg8T8NQVz2xXzdtjgtfUSetyNxVOSRFeW-a_WE_ceTwhKXIpB896-; isg=BLe3S5QWpDjc7CLumXuwscXwRqsBfIve3YYoygllbgYyuNT6EU6qLELemhjmUGNW',
+                referer:
+                    'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18'
+            },
+            transformResponse: [
+                data => {
+                    const match = data.match(/jsonp1215\((.+)\)/);
+                    if (match) {
+                        const res = JSON.parse(match[1]);
+                        return res;
+                    }
+                    return data;
+                }
+            ]
+        }
+    );
 };
 // getData().then(res => {
-//     console.log(res.data.comments[0]);
+//     console.log(res.data.comments);
 // });
 const saveImg = async (url: string, name?: string) => {
     if (url.startsWith('//')) url = 'https:' + url;
@@ -298,10 +290,52 @@ class Str {
         await fse.writeFile(commentXlsx, buffer, 'binary');
     }
 }
+const getComments = async (pageNum: number) => {
+    if (tm_is !== '1') return (await getData(pageNum)).data;
+    const tmData = await getTmData(pageNum);
+    const { rateDetail } = tmData.data;
+    return ({
+        maxPage: rateDetail.paginator.lastPage,
+        currentPageNum: rateDetail.paginator.page,
+        comments: rateDetail.rateList.map(comment => {
+            return {
+                photos: comment.pics.map(pic => {
+                    return {
+                        fileId: comment.id,
+                        receiveId: comment.id,
+                        thumbnail: pic,
+                        url: pic
+                    };
+                }),
+                content: comment.rateContent,
+                rateId: comment.id,
+                video:
+                    comment.videoList.length > 0
+                        ? {
+                              cloudVideoUrl: comment.videoList[0]
+                          }
+                        : null,
+                append: comment.appendComment
+                    ? {
+                          content: comment.appendComment.content,
+                          photos: comment.appendComment.pics.map(pic => {
+                              return {
+                                  fileId: comment.id,
+                                  receiveId: comment.id,
+                                  thumbnail: pic,
+                                  url: pic
+                              };
+                          })
+                      }
+                    : null
+            };
+        })
+    }) as resInt;
+};
+// getComments(1);
 const Start = async (pageNum: number = 1) => {
     console.log(`第${pageNum}页：正在获取的评语...`);
-    const res = await getData(pageNum);
-    const result = res.data;
+    const result = await getComments(pageNum);
     const { maxPage, currentPageNum, comments } = result;
     const STR = new Str(pageNum);
     if (comments) {
@@ -311,8 +345,9 @@ const Start = async (pageNum: number = 1) => {
                 fir = `有图片：${comment.photos[0].receiveId}，`;
             }
             STR.add(comment.content, fir);
+            // console.log(comment.photos)
             STR.addPhoto(comment.photos);
-            if (comment.video)
+            if (comment.video && comment.video.cloudVideoUrl)
                 STR.addVideo({
                     receiveId: comment.rateId,
                     url: comment.video.cloudVideoUrl
