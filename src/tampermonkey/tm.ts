@@ -3,6 +3,7 @@ import path from 'path';
 import axios from 'axios';
 import fs from 'fs';
 import xlsx from 'node-xlsx';
+import { start } from 'repl';
 require('dotenv').config();
 
 const {
@@ -54,7 +55,11 @@ interface commentVideoInt {
     cloudVideoUrl: string;
 }
 interface commentInt {
-    append: null | { content: string; photos: photoInt[]; video?:commentVideoInt };
+    append: null | {
+        content: string;
+        photos: photoInt[];
+        video?: commentVideoInt;
+    };
     content: string;
     photos: photoInt[];
     rateId: number;
@@ -114,14 +119,15 @@ const getData = (pageNum: number = 1) => {
         ]
     });
 };
-const getTmData = (pageNum: number = 1) => {
+const getTmData = (pageNum: number = 1, needFold: string = '0') => {
     return axios.get<resIntTm>(
-        'https://rate.tmall.com/list_detail_rate.htm?spuId=1589105234&sellerId=3126162346&append=0&content=1&tagId=&posi=&picture=&groupId=&ua=098%23E1hvupvPvBvvUvCkvvvvvjiWP25wtjnCR2sh1jljPmP9tjEhPFcZlj3CP2SOgj3PdvhvmZC2FDCxvhCFOpvCvvXvppvvvvvUvpCWpOGgv8Rz8Zl9ZRAn%2BbyDCcECTWeARFxjb9TxfBAKNxGw4w2WVshw4cC2QEZKK5C2a1n1lBkXw6Ow4w2Wedvw4cC2ARpKK5C2aBVU%2B89Cvv3vpvLxGvLNug9CvvXmp99hjEugvpvIphvvvvvvphCvpCv9vvC2R6CvjvUvvhBGphvwv9vvBHBvpCQmvvChxvgCvvpvvPMMRvhvChCvvvmevpvhphvhHUOCvvBvppvvdvhvmZC2ZoBSvhCxT8QCvvDvp1IGXvCvcTk%2BvpvEphW4oVQvpVlI9vhvHHiwXc2BzHi47IIQt1s1cjt4NYGBRvhvChCvvvv%3D&needFold=0&_ksTS=1605798252518_1214',
+        'https://rate.tmall.com/list_detail_rate.htm?spuId=1589105234&sellerId=3126162346&append=0&content=1&tagId=&posi=&picture=&groupId=&ua=098%23E1hvupvPvBvvUvCkvvvvvjiWP25wtjnCR2sh1jljPmP9tjEhPFcZlj3CP2SOgj3PdvhvmZC2FDCxvhCFOpvCvvXvppvvvvvUvpCWpOGgv8Rz8Zl9ZRAn%2BbyDCcECTWeARFxjb9TxfBAKNxGw4w2WVshw4cC2QEZKK5C2a1n1lBkXw6Ow4w2Wedvw4cC2ARpKK5C2aBVU%2B89Cvv3vpvLxGvLNug9CvvXmp99hjEugvpvIphvvvvvvphCvpCv9vvC2R6CvjvUvvhBGphvwv9vvBHBvpCQmvvChxvgCvvpvvPMMRvhvChCvvvmevpvhphvhHUOCvvBvppvvdvhvmZC2ZoBSvhCxT8QCvvDvp1IGXvCvcTk%2BvpvEphW4oVQvpVlI9vhvHHiwXc2BzHi47IIQt1s1cjt4NYGBRvhvChCvvvv%3D&_ksTS=1605798252518_1214',
         {
             params: {
                 itemId: product_id,
                 currentPage: pageNum,
                 order: '1',
+                needFold: needFold,
                 callback: 'jsonp1215'
             },
             headers: {
@@ -143,8 +149,8 @@ const getTmData = (pageNum: number = 1) => {
         }
     );
 };
-// getData().then(res => {
-//     console.log(res.data.comments);
+// getTmData(1,'1').then(res => {
+//     console.log(res.data.rateDetail.rateList[0]);
 // });
 const saveImg = async (url: string, name?: string) => {
     if (url.startsWith('//')) url = 'https:' + url;
@@ -180,7 +186,7 @@ const saveImg = async (url: string, name?: string) => {
 };
 // saveImg('//img.alicdn.com/imgextra/i2/0/O1CN01955acY1Z553MRFwKd_!!0-rate.jpg_400x400.jpg','3');
 const saveVideo = async (url: string, name?: string) => {
-    if(!url) return  Promise.resolve();
+    if (!url) return Promise.resolve();
     if (url.startsWith('//')) url = 'https:' + url;
 
     let min = 'mp4';
@@ -236,6 +242,7 @@ class Str {
             if (tm_end !== '*' && str.includes(tm_end)) {
                 this._end = true;
             }
+            // console.log(str)
             this._content.push(`${fir}${str}`);
             this._content_xlsx[0].data.push([fir + str]);
         }
@@ -246,7 +253,7 @@ class Str {
     addVideo(video: videoInt) {
         this._video.push(video);
     }
-    async save() {
+    async save(fir:boolean = false) {
         // console.log(this._pageNum,typeof this._pageNum,this._pageNum !== 1,this._pageNum !== 1 ? '12\r\n' : '');
         if (this._content.length > 0) {
             if (this._end) {
@@ -266,7 +273,7 @@ class Str {
                     );
             }
             const content =
-                `${this._pageNum !== 1 ? '\r\n' : ''}` +
+                `${(this._pageNum !== 1 || fir) ? '\r\n' : ''}` +
                 this._content.join('\r\n');
             await fse.appendFile(commentPath, content);
         }
@@ -293,56 +300,60 @@ class Str {
         await fse.writeFile(commentXlsx, buffer, 'binary');
     }
 }
-const getComments = async (pageNum: number) => {
+const getComments = async (pageNum: number,needFold:string = '0') => {
     if (tm_is !== '1') return (await getData(pageNum)).data;
-    const tmData = await getTmData(pageNum);
+    const tmData = await getTmData(pageNum,needFold);
     const { rateDetail } = tmData.data;
-    return ({
+    const comments = [] as commentInt[];
+    rateDetail.rateList.forEach(comment => {
+        comments.push({
+            photos: comment.pics.map(pic => {
+                return {
+                    fileId: comment.id,
+                    receiveId: comment.id,
+                    thumbnail: pic,
+                    url: pic
+                };
+            }),
+            content: comment.rateContent,
+            rateId: comment.id,
+            video:
+                comment.videoList.length > 0
+                    ? {
+                        cloudVideoUrl: comment.videoList[0].cloudVideoUrl
+                    }
+                    : undefined,
+            append: comment.appendComment
+                ? {
+                    content: comment.appendComment.content,
+                    photos: comment.appendComment.pics.map(pic => {
+                        return {
+                            fileId: comment.id,
+                            receiveId: comment.id,
+                            thumbnail: pic,
+                            url: pic
+                        };
+                    })
+                }
+                : null
+        });
+    })
+    return {
         maxPage: rateDetail.paginator.lastPage,
         currentPageNum: rateDetail.paginator.page,
-        comments: rateDetail.rateList.map(comment => {
-            return {
-                photos: comment.pics.map(pic => {
-                    return {
-                        fileId: comment.id,
-                        receiveId: comment.id,
-                        thumbnail: pic,
-                        url: pic
-                    };
-                }),
-                content: comment.rateContent,
-                rateId: comment.id,
-                video:
-                    comment.videoList.length > 0
-                        ? {
-                            cloudVideoUrl: comment.videoList[0].cloudVideoUrl
-                          }
-                        : undefined,
-                append: comment.appendComment
-                    ? {
-                          content: comment.appendComment.content,
-                          photos: comment.appendComment.pics.map(pic => {
-                              return {
-                                  fileId: comment.id,
-                                  receiveId: comment.id,
-                                  thumbnail: pic,
-                                  url: pic
-                              };
-                          })
-                      }
-                    : null
-            };
-        })
-    }) as resInt;
+        comments: comments
+    } as resInt;
 };
-// getComments(1);
-const Start = async (pageNum: number = 1) => {
+// getComments(1,'1').then(res=>{
+//     console.log(res.comments);
+// })
+const Start = async (pageNum: number = 1, needFold: string = '0') => {
     console.log(`第${pageNum}页：正在获取的评语...`);
-    const result = await getComments(pageNum);
+    const result = await getComments(pageNum,needFold);
     const { maxPage, currentPageNum, comments } = result;
     const STR = new Str(pageNum);
     if (comments) {
-        // console.log(comments);
+        // if(needFold === '1')console.log(comments);
         comments.forEach(comment => {
             let fir = '';
             if (comment.photos && comment.photos.length > 0) {
@@ -364,18 +375,22 @@ const Start = async (pageNum: number = 1) => {
                 }
                 STR.add(comment.append.content, fir);
                 STR.addPhoto(comment.append.photos);
-                if(comment.append.video && comment.append.video.cloudVideoUrl){
+                if (
+                    comment.append.video &&
+                    comment.append.video.cloudVideoUrl
+                ) {
                     STR.addVideo({
                         receiveId: comment.rateId,
                         url: comment.append.video.cloudVideoUrl
-                    })
+                    });
                 }
             }
         });
         console.log(
             `第${pageNum}页/${maxPage}页：得到${comments.length}个评语，正在保存...`
         );
-        await STR.save();
+        // if(needFold === '1')console.log(STR);
+        await STR.save((currentPageNum === 1 && needFold === '1') ?true: false);
         console.log(`第${pageNum}页/${maxPage}页：保存成功`);
     } else {
         console.log(`第${pageNum}页：保存失败，跳过`);
@@ -388,10 +403,11 @@ const Start = async (pageNum: number = 1) => {
         return;
     }
 };
+// Start(1, '1');
 const Task = async () => {
     const is_exit = await fse.pathExists(productPath);
     if (is_exit && tm_end === '*') {
-        // return Promise.reject(`${productPath} 目录存在`);
+        return Promise.reject(`${productPath} 目录存在`);
     }
     // 确保商品目录存在
     await fse.ensureDir(productPath);
@@ -403,7 +419,11 @@ const Task = async () => {
     const buffer = xlsx.build([{ name: `${product_id}`, data: [] }]);
     await fse.writeFile(commentXlsx, buffer, 'binary');
     // 开始收集评论
-    await Start();
+    await Start(1);
+    // 看下是否有 折叠的评语
+    console.log('获取折叠评语.................start');
+    await Start(1, '1');
+    console.log('获取折叠评语.................end');
 };
 Task()
     .then(() => {
