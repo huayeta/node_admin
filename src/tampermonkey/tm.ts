@@ -11,7 +11,8 @@ const {
     tm_is_save_photo: is_save_photo,
     tm_select_length: select_length,
     tm_is = '0',
-    tm_end = '*'
+    tm_end = '*',
+    tm_fold = '0'
 } = process.env;
 const productPath = path.join(__dirname, 'comments', product_id!);
 const commentPath = path.join(
@@ -93,32 +94,37 @@ interface resIntTm {
     };
 }
 const getData = (pageNum: number = 1, folded: string = '0') => {
-    return axios.get<resInt>('https://rate.taobao.com/feedRateList.htm?auctionNumId=626989843655&userNumId=2343541658&currentPageNum=1&pageSize=20&rateType=&orderType=feedbackdate&attribute=&sku=&hasSku=false&folded=0&ua=098%23E1hvj9vWvRyvUvCkvvvvvjiWP2SwAjtbn2qh1jivPmPp6jn8RssWsj3URszhAjtjdvhvmpvCytoLvvmHwQvCvvOv9hCvvvmgvpvIvvCvpvvvvvvvvhNjvvmClvvvBGwvvvUwvvCj1Qvvv99vvhNjvvvmm89Cvv9vvhhzL4N2Fg9CvvOCvhE2gnQUvpCWv8Vs%2B1zEn1mAdc9DYE7rj8TxO3NniLwBHdBYLWsOjEy7RAYVyOvO5fVQWl4vAC9aRfU6pwethb8r5C60dbm65i9OwZRQ0fJ6W3CQoQgCvvpvvPMMRvhvCvvvphmevpvhvvCCBUOCvvpv9hCv9vhvHnMSndQY7rMNzskRMHQbtlPNVas3RvhvCvvvphv%3D&_ksTS=1607725653379_1495&callback=jsonp_tbcrate_reviews_list', {
-        params: {
-            auctionNumId: product_id,
-            userNumId: 2978418630,
-            currentPageNum: pageNum,
-            pageSize: 20,
-            folded: '0',
-            orderType: 'feedbackdate',
-            callback: 'jsonp_tbcrate_reviews_list'
-        },
-        headers: {
-            cookie:
-                'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; login=true; dnk=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc3=vt3=F8dCufeBx4sMUOiHJ8U%3D&nk2=saDOo3ihwnk%3D&id2=UUphzOVxh0qcKbPFUg%3D%3D&lg2=VT5L2FSpMGV7TQ%3D%3D; tracknick=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc4=nk4=0%40s8WOEy%2B5Iw8R3mF2Pn0cU4a6dA%3D%3D&id4=0%40U2grF86%2BBspCia2nYzCNm8yC8th3j03D; lgc=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; hng=CN%7Czh-CN%7CCNY%7C156; tk_trace=1; sm4=410100; sgcookie=E100TuSODrDkeMgHzTXDuNBKIhnf6QwCoEJW0UW1VBylIBmiPWHfKEP8fftJhUnoIz7urkQMR%2FynzRTPJocQtrmbHg%3D%3D; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; enc=D6q0mlt9zj2lhfYJ0sDrjs8seIBkABvZtkuusobfWTnmo9t2GYhy5JLpgwK2O27WAqocvBfgs8Dy3mJIyjk2nWehkLwEo7Brvj%2Fd3vlo038%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1604681033; _tb_token_=671803307e8b; uc1=cookie14=Uoe0aDvdmaakcg%3D%3D&cookie21=UIHiLt3xSalX; csg=fd46cd2e; xlly_s=1; _m_h5_tk=48c9b67b8ba87c9d94425a8f525ab161_1605807036055; _m_h5_tk_enc=8062d11d7b881f8ac831b6d027da701d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1605798223; tfstk=cWqhBjmApyuIp_3glMiQHQVldLihaOKriur_blJE_227YZqZLsAv7E7gjOc3tuL5.; l=eBTvt5Keq7M-YEwjBO5wKurza77OwIdf1sPzaNbMiInca6GAgg8T8NQVz2xXzdtjgtfUSetyNxVOSRFeW-a_WE_ceTwhKXIpB896-; isg=BLe3S5QWpDjc7CLumXuwscXwRqsBfIve3YYoygllbgYyuNT6EU6qLELemhjmUGNW',
-            referer:
-                'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18'
-        },
-        transformResponse: [
-            data => {
-                const match = data.match(/jsonp_tbcrate_reviews_list\((.+)\)/);
-                if (match) {
-                    return JSON.parse(match[1]);
+    return axios.get<resInt>(
+        'https://rate.taobao.com/feedRateList.htm?auctionNumId=626989843655&userNumId=2343541658&currentPageNum=1&pageSize=20&rateType=&orderType=feedbackdate&attribute=&sku=&hasSku=false&folded=0&ua=098%23E1hvj9vWvRyvUvCkvvvvvjiWP2SwAjtbn2qh1jivPmPp6jn8RssWsj3URszhAjtjdvhvmpvCytoLvvmHwQvCvvOv9hCvvvmgvpvIvvCvpvvvvvvvvhNjvvmClvvvBGwvvvUwvvCj1Qvvv99vvhNjvvvmm89Cvv9vvhhzL4N2Fg9CvvOCvhE2gnQUvpCWv8Vs%2B1zEn1mAdc9DYE7rj8TxO3NniLwBHdBYLWsOjEy7RAYVyOvO5fVQWl4vAC9aRfU6pwethb8r5C60dbm65i9OwZRQ0fJ6W3CQoQgCvvpvvPMMRvhvCvvvphmevpvhvvCCBUOCvvpv9hCv9vhvHnMSndQY7rMNzskRMHQbtlPNVas3RvhvCvvvphv%3D&_ksTS=1607725653379_1495&callback=jsonp_tbcrate_reviews_list',
+        {
+            params: {
+                auctionNumId: product_id,
+                userNumId: 2978418630,
+                currentPageNum: pageNum,
+                pageSize: 20,
+                folded: '0',
+                orderType: 'feedbackdate',
+                callback: 'jsonp_tbcrate_reviews_list'
+            },
+            headers: {
+                cookie:
+                    'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; login=true; dnk=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc3=vt3=F8dCufeBx4sMUOiHJ8U%3D&nk2=saDOo3ihwnk%3D&id2=UUphzOVxh0qcKbPFUg%3D%3D&lg2=VT5L2FSpMGV7TQ%3D%3D; tracknick=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc4=nk4=0%40s8WOEy%2B5Iw8R3mF2Pn0cU4a6dA%3D%3D&id4=0%40U2grF86%2BBspCia2nYzCNm8yC8th3j03D; lgc=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; hng=CN%7Czh-CN%7CCNY%7C156; tk_trace=1; sm4=410100; sgcookie=E100TuSODrDkeMgHzTXDuNBKIhnf6QwCoEJW0UW1VBylIBmiPWHfKEP8fftJhUnoIz7urkQMR%2FynzRTPJocQtrmbHg%3D%3D; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; enc=D6q0mlt9zj2lhfYJ0sDrjs8seIBkABvZtkuusobfWTnmo9t2GYhy5JLpgwK2O27WAqocvBfgs8Dy3mJIyjk2nWehkLwEo7Brvj%2Fd3vlo038%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1604681033; _tb_token_=671803307e8b; uc1=cookie14=Uoe0aDvdmaakcg%3D%3D&cookie21=UIHiLt3xSalX; csg=fd46cd2e; xlly_s=1; _m_h5_tk=48c9b67b8ba87c9d94425a8f525ab161_1605807036055; _m_h5_tk_enc=8062d11d7b881f8ac831b6d027da701d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1605798223; tfstk=cWqhBjmApyuIp_3glMiQHQVldLihaOKriur_blJE_227YZqZLsAv7E7gjOc3tuL5.; l=eBTvt5Keq7M-YEwjBO5wKurza77OwIdf1sPzaNbMiInca6GAgg8T8NQVz2xXzdtjgtfUSetyNxVOSRFeW-a_WE_ceTwhKXIpB896-; isg=BLe3S5QWpDjc7CLumXuwscXwRqsBfIve3YYoygllbgYyuNT6EU6qLELemhjmUGNW',
+                referer:
+                    'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18'
+            },
+            transformResponse: [
+                data => {
+                    const match = data.match(
+                        /jsonp_tbcrate_reviews_list\((.+)\)/
+                    );
+                    if (match) {
+                        return JSON.parse(match[1]);
+                    }
+                    return data;
                 }
-                return data;
-            }
-        ]
-    });
+            ]
+        }
+    );
 };
 const getTmData = (pageNum: number = 1, needFold: string = '0') => {
     return axios.get<resIntTm>(
@@ -254,7 +260,7 @@ class Str {
     addVideo(video: videoInt) {
         this._video.push(video);
     }
-    async save(fir:boolean = false) {
+    async save(fir: boolean = false) {
         // console.log(this._pageNum,typeof this._pageNum,this._pageNum !== 1,this._pageNum !== 1 ? '12\r\n' : '');
         if (this._content.length > 0) {
             if (this._end) {
@@ -274,7 +280,7 @@ class Str {
                     );
             }
             const content =
-                `${(this._pageNum !== 1 || fir) ? '\r\n' : ''}` +
+                `${this._pageNum !== 1 || fir ? '\r\n' : ''}` +
                 this._content.join('\r\n');
             await fse.appendFile(commentPath, content);
         }
@@ -301,9 +307,9 @@ class Str {
         await fse.writeFile(commentXlsx, buffer, 'binary');
     }
 }
-const getComments = async (pageNum: number,needFold:string = '0') => {
-    if (tm_is !== '1') return (await getData(pageNum,needFold)).data;
-    const tmData = await getTmData(pageNum,needFold);
+const getComments = async (pageNum: number, needFold: string = '0') => {
+    if (tm_is !== '1') return (await getData(pageNum, needFold)).data;
+    const tmData = await getTmData(pageNum, needFold);
     const { rateDetail } = tmData.data;
     const comments = [] as commentInt[];
     rateDetail.rateList.forEach(comment => {
@@ -321,24 +327,24 @@ const getComments = async (pageNum: number,needFold:string = '0') => {
             video:
                 comment.videoList.length > 0
                     ? {
-                        cloudVideoUrl: comment.videoList[0].cloudVideoUrl
-                    }
+                          cloudVideoUrl: comment.videoList[0].cloudVideoUrl
+                      }
                     : undefined,
             append: comment.appendComment
                 ? {
-                    content: comment.appendComment.content,
-                    photos: comment.appendComment.pics.map(pic => {
-                        return {
-                            fileId: comment.id,
-                            receiveId: comment.id,
-                            thumbnail: pic,
-                            url: pic
-                        };
-                    })
-                }
+                      content: comment.appendComment.content,
+                      photos: comment.appendComment.pics.map(pic => {
+                          return {
+                              fileId: comment.id,
+                              receiveId: comment.id,
+                              thumbnail: pic,
+                              url: pic
+                          };
+                      })
+                  }
                 : null
         });
-    })
+    });
     return {
         maxPage: rateDetail.paginator.lastPage,
         currentPageNum: rateDetail.paginator.page,
@@ -350,7 +356,7 @@ const getComments = async (pageNum: number,needFold:string = '0') => {
 // })
 const Start = async (pageNum: number = 1, needFold: string = '0') => {
     console.log(`第${pageNum}页：正在获取的评语...`);
-    const result = await getComments(pageNum,needFold);
+    const result = await getComments(pageNum, needFold);
     const { maxPage, currentPageNum, comments } = result;
     const STR = new Str(pageNum);
     if (comments) {
@@ -391,7 +397,7 @@ const Start = async (pageNum: number = 1, needFold: string = '0') => {
             `第${pageNum}页/${maxPage}页：得到${comments.length}个评语，正在保存...`
         );
         // if(needFold === '1')console.log(STR);
-        await STR.save((currentPageNum === 1 && needFold === '1') ?true: false);
+        await STR.save(currentPageNum === 1 && needFold === '1' ? true : false);
         console.log(`第${pageNum}页/${maxPage}页：保存成功`);
     } else {
         console.log(`第${pageNum}页：保存失败，跳过`);
@@ -422,9 +428,11 @@ const Task = async () => {
     // 开始收集评论
     await Start(1);
     // 看下是否有 折叠的评语
-    console.log('获取折叠评语.................start');
-    await Start(1, '1');
-    console.log('获取折叠评语.................end');
+    if (tm_fold === '1') {
+        console.log('获取折叠评语.................start');
+        await Start(1, '1');
+        console.log('获取折叠评语.................end');
+    }
 };
 Task()
     .then(() => {
