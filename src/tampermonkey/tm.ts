@@ -92,13 +92,14 @@ interface resIntTm {
         rateList: commentTmInt[];
     };
 }
-const getData = (pageNum: number = 1) => {
-    return axios.get<resInt>('https://rate.taobao.com/feedRateList.htm', {
+const getData = (pageNum: number = 1, folded: string = '0') => {
+    return axios.get<resInt>('https://rate.taobao.com/feedRateList.htm?auctionNumId=626989843655&userNumId=2343541658&currentPageNum=1&pageSize=20&rateType=&orderType=feedbackdate&attribute=&sku=&hasSku=false&folded=0&ua=098%23E1hvj9vWvRyvUvCkvvvvvjiWP2SwAjtbn2qh1jivPmPp6jn8RssWsj3URszhAjtjdvhvmpvCytoLvvmHwQvCvvOv9hCvvvmgvpvIvvCvpvvvvvvvvhNjvvmClvvvBGwvvvUwvvCj1Qvvv99vvhNjvvvmm89Cvv9vvhhzL4N2Fg9CvvOCvhE2gnQUvpCWv8Vs%2B1zEn1mAdc9DYE7rj8TxO3NniLwBHdBYLWsOjEy7RAYVyOvO5fVQWl4vAC9aRfU6pwethb8r5C60dbm65i9OwZRQ0fJ6W3CQoQgCvvpvvPMMRvhvCvvvphmevpvhvvCCBUOCvvpv9hCv9vhvHnMSndQY7rMNzskRMHQbtlPNVas3RvhvCvvvphv%3D&_ksTS=1607725653379_1495&callback=jsonp_tbcrate_reviews_list', {
         params: {
             auctionNumId: product_id,
             userNumId: 2978418630,
             currentPageNum: pageNum,
             pageSize: 20,
+            folded: '0',
             orderType: 'feedbackdate',
             callback: 'jsonp_tbcrate_reviews_list'
         },
@@ -301,7 +302,7 @@ class Str {
     }
 }
 const getComments = async (pageNum: number,needFold:string = '0') => {
-    if (tm_is !== '1') return (await getData(pageNum)).data;
+    if (tm_is !== '1') return (await getData(pageNum,needFold)).data;
     const tmData = await getTmData(pageNum,needFold);
     const { rateDetail } = tmData.data;
     const comments = [] as commentInt[];
