@@ -140,8 +140,7 @@ const getTmData = (pageNum: number = 1, needFold: string = '0') => {
             headers: {
                 cookie:
                     'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; tk_trace=1; dnk=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; tracknick=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; lgc=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; login=true; uc3=id2=VAMSbCeNb2UR&lg2=URm48syIIVrSKA%3D%3D&vt3=F8dCuAJ9cvnM76CkLaU%3D&nk2=1T1vOlufmUTIzQ%3D%3D; uc4=nk4=0%401%2BGqrLicOPW2jU%2FZP2idU2sVmiHU&id4=0%40VhpPUd19tQMUxU4Q5kbO9yQD5cw%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1607632738,1607632989,1608395660,1608564372; hng=CN%7Czh-CN%7CCNY%7C156; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; _tb_token_=e881377bb78b3; enc=vf5cfablyZykMiqFdktLRaVKkoNiKbYYT%2BijpCak7qOzR5rN6BaNnPgS1Z3afBik%2Faq1HKgYuXDz5%2BD03lhIEL4VkO7sTuXuNzOa9jx8KgA%3D; _m_h5_tk=c4ace200dda9a2cb70f5d5c588e2f8dd_1608964881104; _m_h5_tk_enc=e4ca8e53b8856ea8301d6e8f1b91bde6; unb=2207831172436; sn=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; sgcookie=E1000xuaaTSi5wXTkfkx9m%2F3Y8oLijT5aEThVaynpkUsjPSiO59F4PzRi28L99R6HHfKQGxxDjIt8zQK6UofvxDXlA%3D%3D; uc1=cookie21=UIHiLt3xSalX&cookie14=Uoe0ZNcr53hdoA%3D%3D; csg=9385a831; xlly_s=1; x5sec=7b22726174656d616e616765723b32223a223662373631353161396633373463616538623662346330323161333234653533434e4f5a71663846454b476c367071613775546b56526f504d6a49774e7a677a4d5445334d6a517a4e6a7378227d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1609190635; tfstk=cfmlBgq9e4zSPX4m53ZSIQtFpjclZRsUsDoj0m9LzkdtOkiVihQV7EmDn7covw1..; l=eBTvt5Keq7M-YaHXBO5Cnurza77TzIObzsPzaNbMiInca6NAahhxCNQ2bgzWudtjgt5v-etrJmGnAReD7ka_Wx_ceTwhKXIpBU968e1..; isg=BBQUzXstNy1meaHnPgojiMqR5VKGbThXO4wgka70_B9rmbbj1n6k5cFfmZEBYXCv',
-                referer:
-                    `https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=${product_id}&ns=1&abbucket=18`
+                referer: `https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=${product_id}&ns=1&abbucket=18`
             },
             transformResponse: [
                 data => {
@@ -171,7 +170,6 @@ const saveImg = async (url: string, name?: string) => {
         name = name || match_min[1];
         min = match_min[2];
     }
-
     try {
         const res = await axios({
             method: 'get',
@@ -179,19 +177,30 @@ const saveImg = async (url: string, name?: string) => {
             responseType: 'stream'
         });
         return new Promise((resolve, reject) => {
-            const ws = fs.createWriteStream(
-                path.join(photoPath, name ? `${name}.${min}` : url)
-            );
+            const wr_url = path.join(photoPath, name ? `${name}.${min}` : url);
+            const ws = fs.createWriteStream(wr_url);
             ws.on('finish', () => {
-                resolve();
+                resolve(wr_url);
             });
+            ws.on('error',()=>{
+                console.log(`error:${wr_url}`);
+            })
             res.data.pipe(ws);
         });
-    } catch (e) {
+    }catch (e) {
         console.log(e);
     }
 };
-// saveImg('//img.alicdn.com/imgextra/i2/0/O1CN01955acY1Z553MRFwKd_!!0-rate.jpg_400x400.jpg','3');
+// saveImg(
+//     '//img.alicdn.com/bao/uploaded/i3/O1CN01rduj7n1bITuXmtUmH_!!0-rate.jpg',
+//     '3'
+// )
+//     .then(res => {
+//         console.log(res);
+//     })
+//     .catch(res => {
+//         console.log(res);
+//     });
 const saveVideo = async (url: string, name?: string) => {
     if (!url) return Promise.resolve();
     if (url.startsWith('//')) url = 'https:' + url;
@@ -210,12 +219,16 @@ const saveVideo = async (url: string, name?: string) => {
             responseType: 'stream'
         });
         return new Promise((resolve, reject) => {
+            const wr_url = path.join(photoPath, name ? `${name}.${min}` : url);
             const ws = fs.createWriteStream(
-                path.join(photoPath, name ? `${name}.${min}` : url)
+                wr_url
             );
             ws.on('finish', () => {
-                resolve();
+                resolve(wr_url);
             });
+            ws.on('error',()=>{
+                console.log(`error:${wr_url}`);
+            })
             res.data.pipe(ws);
         });
     } catch (e) {
@@ -312,7 +325,7 @@ const getComments = async (pageNum: number, needFold: string = '0') => {
     const tmData = await getTmData(pageNum, needFold);
     const { rateDetail } = tmData.data;
     const comments = [] as commentInt[];
-    if(!rateDetail) return {} as resInt;
+    if (!rateDetail) return {} as resInt;
     rateDetail.rateList.forEach(comment => {
         comments.push({
             photos: comment.pics.map(pic => {
@@ -360,7 +373,7 @@ const Start = async (pageNum: number = 1, needFold: string = '0') => {
     console.log(`第${pageNum}页：正在获取的评语...`);
     const result = await getComments(pageNum, needFold);
     const { maxPage, currentPageNum, comments } = result;
-    if(MAXPAGE === 0) MAXPAGE = maxPage;
+    if (MAXPAGE === 0) MAXPAGE = maxPage;
     const STR = new Str(pageNum);
     if (comments) {
         // if(needFold === '1')console.log(comments);
