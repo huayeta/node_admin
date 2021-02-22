@@ -2,7 +2,7 @@
 // @name         生意参谋
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  try to take over the world!
+// @description  交易指数转换
 // @author       You
 // @match        https://sycm.taobao.com/*
 // @grant        none

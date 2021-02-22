@@ -2,7 +2,7 @@
 // @name         小猪平台
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  try to take over the world!
+// @description  无限置顶小猪任务
 // @author       You
 // @match        http://44.73u18.cn/*
 // @match        http://feifei.xi56p.cn/*

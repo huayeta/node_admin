@@ -1,15 +1,17 @@
+// 评论收集
+
 import fse from 'fs-extra';
 import path from 'path';
 import axios from 'axios';
 import fs from 'fs';
 import xlsx from 'node-xlsx';
-import { start } from 'repl';
 require('dotenv').config();
 
 const {
     tm_product_id: product_id,
     tm_is_save_photo: is_save_photo,
-    tm_select_length: select_length,
+    tm_select_length: select_length = '0',
+    tm_select_qz : select_qz = '0',
     tm_is = '0',
     tm_end = '*',
     tm_fold = '0'
@@ -182,12 +184,12 @@ const saveImg = async (url: string, name?: string) => {
             ws.on('finish', () => {
                 resolve(wr_url);
             });
-            ws.on('error',()=>{
+            ws.on('error', () => {
                 console.log(`error:${wr_url}`);
-            })
+            });
             res.data.pipe(ws);
         });
-    }catch (e) {
+    } catch (e) {
         console.log(e);
     }
 };
@@ -220,15 +222,13 @@ const saveVideo = async (url: string, name?: string) => {
         });
         return new Promise((resolve, reject) => {
             const wr_url = path.join(photoPath, name ? `${name}.${min}` : url);
-            const ws = fs.createWriteStream(
-                wr_url
-            );
+            const ws = fs.createWriteStream(wr_url);
             ws.on('finish', () => {
                 resolve(wr_url);
             });
-            ws.on('error',()=>{
+            ws.on('error', () => {
                 console.log(`error:${wr_url}`);
-            })
+            });
             res.data.pipe(ws);
         });
     } catch (e) {
@@ -259,6 +259,7 @@ class Str {
                 str.length >= +select_length!) ||
             fir
         ) {
+            if(!(select_qz === '1' && str.length >= +select_length!))return;
             if (tm_end !== '*' && str.includes(tm_end)) {
                 this._end = true;
             }
