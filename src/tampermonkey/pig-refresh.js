@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         小猪平台
+// @name         小猪平台-无限置顶
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  无限置顶小猪任务
@@ -7,6 +7,7 @@
 // @match        http://44.73u18.cn/*
 // @match        http://feifei.xi56p.cn/*
 // @match        http://jiutiangw.com/*
+// @match        http://lmt66.cn/*
 // @grant        none
 // ==/UserScript==
 
