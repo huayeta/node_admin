@@ -3,11 +3,18 @@ node
 
 ## .env
 ```dotenv
-tm_product_id = 559327859913 //商品id
-tm_is_save_photo = 1  // 是否保存图片 0 | 1
-tm_select_length = 30 // 多长的评论保存
-tm_select_qz = 0 // 强制按照长度筛选
-tm_end = * // 结尾到哪结束
-tm_is = 1 // 是否是天猫评论
-tm_fold = 0 // 是否获取折叠评论
+#产品id
+tm_product_id = 641528247356
+#是否保存图片
+tm_is_save_photo = 1
+#筛选长度
+tm_select_length = 15
+#强制长度
+tm_select_qz = 0
+#到哪结束
+tm_end = *
+#是否天猫
+tm_is = 1
+#是否打开折叠
+tm_fold = 0
 ```

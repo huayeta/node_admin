@@ -12,7 +12,8 @@
     "debug": "node inspect node_modules/.bin/ts-node src/debug.ts",
     "pdd-w": "ts-node src/pdd/write.ts",
     "pdd-r": "ts-node src/pdd/read.ts",
-    "tm": "ts-node src/tampermonkey/tm.ts"
+    "tm": "ts-node src/tampermonkey/tm.ts",
+    "pdd": "ts-node src/tampermonkey/pdd.ts"
   },
   "author": "huayeta",
   "license": "ISC",

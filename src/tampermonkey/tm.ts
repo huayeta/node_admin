@@ -253,13 +253,13 @@ class Str {
     }
     add(str: string, fir?: string) {
         if (
-            (str &&
+            ((str &&
                 !str.includes('此用户没有填写评价') &&
                 !str.includes('系统默认好评') &&
-                str.length >= +select_length!) ||
+                str.length >= +select_length!)) ||
             fir
         ) {
-            if(!(select_qz === '1' && str.length >= +select_length!))return;
+            if(select_qz === '1' && str.length < +select_length!)return;
             if (tm_end !== '*' && str.includes(tm_end)) {
                 this._end = true;
             }
