@@ -72,7 +72,7 @@ interface resInt {
 }
 const getData = (pageNum: number = 1) => {
     return axios.get<resInt>(
-        `https://mobile.yangkeduo.com/proxy/api/reviews/${product_id}/list?pdduid=0&page=1&size=20&enable_video=1&enable_group_review=1&label_id=700000000`,
+        `https://mobile.yangkeduo.com/proxy/api/reviews/${product_id}/list?pdduid=3763110705&enable_video=1&enable_group_review=1&label_id=700000000`,
         {
             params: {
                 page: pageNum,
@@ -84,7 +84,7 @@ const getData = (pageNum: number = 1) => {
                     'api_uid=CiH5i12sGkdSbgA/ln7gAg==; _nano_fp=Xpd8XpdjX09oX0EJnC_pdrcq1tdx8PmtrOljvgu9; Hm_lvt_1370d93b7ce0e6f1d870cef43042d966=1607532972; Hm_lpvt_1370d93b7ce0e6f1d870cef43042d966=1607533435; ua=Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F89.0.4389.82%20Safari%2F537.36; webp=1; JSESSIONID=301CB4E3F5E76F786AB25C9EAEEC1300; PDDAccessToken=UTLLO67NCXD4UTOFNMUCRXNF5NSIX6TYVDH2QDA4O7A3HJCMXK3Q1133109; pdd_user_id=3763110705; pdd_user_uin=QBX7GBOEDJEBO4R3B6WF7KOXGM_GEXDA; pdd_vds=gaTdBNsxnlxbBwdOxbGmBOedGyxsLbIGIsNGBGsIGyBmInbndEINGbudnEmN',
                 referer:
                     'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18',
-                'user-agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.${pageNum}.82 Safari/537.36`
+                'user-agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.1.82 Safari/537.36`
             },
             transformResponse: [
                 data => {
@@ -93,7 +93,10 @@ const getData = (pageNum: number = 1) => {
             ]
         }
     );
-};
+}
+// getData(3).then(res=>{
+//     console.log(res.data.data);
+// })
 const saveImg = async (url: string, name?: string) => {
     if (url.startsWith('//')) url = 'https:' + url;
 
@@ -260,8 +263,9 @@ const getComments = async (pageNum: number, needFold: string = '0') => {
     const rateList = tmData.data;
     const comments = [] as commentInt[];
     if (!rateList) return {data:[]} as resInt;
-    const time = Date.now();
-    rateList.data.forEach(comment => {
+    const _time = Date.now();
+    rateList.data.forEach((comment,index) => {
+        const time = _time+index;
         comments.push({
             pictures: comment.pictures.map(pic => {
                 return {
@@ -302,10 +306,10 @@ const Start = async (pageNum: number = 1, needFold: string = '0') => {
     const result = await getComments(pageNum, needFold);
     const { data } = result
     const STR = new Str(pageNum);
-    console.log(data)
+    // console.log(data)
     if (data && data.length) {
         // if(needFold === '1')console.log(comments);
-        data.forEach(comment => {
+        data.forEach((comment) => {
             let fir = '';
             if (comment.pictures && comment.pictures.length > 0) {
                 fir = `有图片：${comment.pictures[0].review_id}，`;
