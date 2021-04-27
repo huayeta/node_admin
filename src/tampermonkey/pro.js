@@ -1,3 +1,4 @@
+// 格式化问大家
 const fs = require('fs');
 
 const json = JSON.parse(fs.readFileSync('json1.json'));
