@@ -347,7 +347,7 @@ const getComments = async (pageNum: number, needFold: string = '0') => {
                     : undefined,
             append: comment.appendComment
                 ? {
-                      content: comment.appendComment.content,
+                      content: `追：`+comment.appendComment.content,
                       photos: comment.appendComment.pics.map(pic => {
                           return {
                               fileId: comment.id,

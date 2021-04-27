@@ -6,3 +6,5 @@ node_modules
 comments*
 pdd_comments*
 .env
+json.json
+json1.json

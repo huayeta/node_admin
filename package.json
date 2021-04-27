@@ -13,6 +13,7 @@
     "pdd-w": "ts-node src/pdd/write.ts",
     "pdd-r": "ts-node src/pdd/read.ts",
     "tm": "ts-node src/tampermonkey/tm.ts",
+    "tm-pro": "ts src/tampermonkey/tm.js",
     "pdd": "ts-node src/tampermonkey/pdd.ts"
   },
   "author": "huayeta",
@@ -55,6 +56,8 @@
     "nanoid": "^2.1.9",
     "node-xlsx": "^0.15.0",
     "pug": "^2.0.4",
+    "puppeteer": "^9.0.0",
+    "puppeteer-core": "^9.0.0",
     "request": "^2.88.2",
     "socks5-http-client": "^1.0.4",
     "socks5-https-client": "^1.2.1",
