@@ -16,7 +16,8 @@
     "tm-sj": "ts-node src/tampermonkey/tm-sj.ts",
     "tm-pro": "node src/tampermonkey/pro-read.js",
     "tm-pro-pr": "node src/tampermonkey/pro.js",
-    "pdd": "ts-node src/tampermonkey/pdd.ts"
+    "pdd": "ts-node src/tampermonkey/pdd.ts",
+    "pdd-zzb": "ts-node src/tampermonkey/pdd-zzb-comment.ts"
   },
   "author": "huayeta",
   "license": "ISC",
