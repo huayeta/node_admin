@@ -13,7 +13,8 @@
     "pdd-w": "ts-node src/pdd/write.ts",
     "pdd-r": "ts-node src/pdd/read.ts",
     "tm": "ts-node src/tampermonkey/tm.ts",
-    "tm-pro": "node src/tampermonkey/tm.js",
+    "tm-sj": "ts-node src/tampermonkey/tm-sj.ts",
+    "tm-pro": "node src/tampermonkey/pro-read.js",
     "tm-pro-pr": "node src/tampermonkey/pro.js",
     "pdd": "ts-node src/tampermonkey/pdd.ts"
   },
