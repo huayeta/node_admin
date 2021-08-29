@@ -2,7 +2,7 @@
 // @name         问大家-详情
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  提交完成数据
+// @description  这个有点多余
 // @author       You
 // @match        https://market.m.taobao.com/app/mtb/questions-and-answers/pages/detail/index.html*
 // @grant        none

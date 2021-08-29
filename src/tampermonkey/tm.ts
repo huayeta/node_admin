@@ -95,13 +95,16 @@ interface resIntTm {
         rateList: commentTmInt[];
     };
 }
+function sleep (time:number) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
 const getData = (pageNum: number = 1, folded: string = '0') => {
     return axios.get<resInt>(
         'https://rate.taobao.com/feedRateList.htm?auctionNumId=626989843655&userNumId=2343541658&currentPageNum=1&pageSize=20&rateType=&orderType=feedbackdate&attribute=&sku=&hasSku=false&folded=0&ua=098%23E1hvj9vWvRyvUvCkvvvvvjiWP2SwAjtbn2qh1jivPmPp6jn8RssWsj3URszhAjtjdvhvmpvCytoLvvmHwQvCvvOv9hCvvvmgvpvIvvCvpvvvvvvvvhNjvvmClvvvBGwvvvUwvvCj1Qvvv99vvhNjvvvmm89Cvv9vvhhzL4N2Fg9CvvOCvhE2gnQUvpCWv8Vs%2B1zEn1mAdc9DYE7rj8TxO3NniLwBHdBYLWsOjEy7RAYVyOvO5fVQWl4vAC9aRfU6pwethb8r5C60dbm65i9OwZRQ0fJ6W3CQoQgCvvpvvPMMRvhvCvvvphmevpvhvvCCBUOCvvpv9hCv9vhvHnMSndQY7rMNzskRMHQbtlPNVas3RvhvCvvvphv%3D&_ksTS=1607725653379_1495&callback=jsonp_tbcrate_reviews_list',
         {
             params: {
                 auctionNumId: product_id,
-                userNumId: 2978418630,
+                userNumId: 4146367369,
                 currentPageNum: pageNum,
                 pageSize: 20,
                 folded: '0',
@@ -110,7 +113,7 @@ const getData = (pageNum: number = 1, folded: string = '0') => {
             },
             headers: {
                 cookie:
-                    'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; login=true; dnk=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc3=vt3=F8dCufeBx4sMUOiHJ8U%3D&nk2=saDOo3ihwnk%3D&id2=UUphzOVxh0qcKbPFUg%3D%3D&lg2=VT5L2FSpMGV7TQ%3D%3D; tracknick=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; uc4=nk4=0%40s8WOEy%2B5Iw8R3mF2Pn0cU4a6dA%3D%3D&id4=0%40U2grF86%2BBspCia2nYzCNm8yC8th3j03D; lgc=%5Cu4E00%5Cu5B57%5Cu65F6%5Cu95F4; hng=CN%7Czh-CN%7CCNY%7C156; tk_trace=1; sm4=410100; sgcookie=E100TuSODrDkeMgHzTXDuNBKIhnf6QwCoEJW0UW1VBylIBmiPWHfKEP8fftJhUnoIz7urkQMR%2FynzRTPJocQtrmbHg%3D%3D; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; enc=D6q0mlt9zj2lhfYJ0sDrjs8seIBkABvZtkuusobfWTnmo9t2GYhy5JLpgwK2O27WAqocvBfgs8Dy3mJIyjk2nWehkLwEo7Brvj%2Fd3vlo038%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1604681033; _tb_token_=671803307e8b; uc1=cookie14=Uoe0aDvdmaakcg%3D%3D&cookie21=UIHiLt3xSalX; csg=fd46cd2e; xlly_s=1; _m_h5_tk=48c9b67b8ba87c9d94425a8f525ab161_1605807036055; _m_h5_tk_enc=8062d11d7b881f8ac831b6d027da701d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1605798223; tfstk=cWqhBjmApyuIp_3glMiQHQVldLihaOKriur_blJE_227YZqZLsAv7E7gjOc3tuL5.; l=eBTvt5Keq7M-YEwjBO5wKurza77OwIdf1sPzaNbMiInca6GAgg8T8NQVz2xXzdtjgtfUSetyNxVOSRFeW-a_WE_ceTwhKXIpB896-; isg=BLe3S5QWpDjc7CLumXuwscXwRqsBfIve3YYoygllbgYyuNT6EU6qLELemhjmUGNW',
+                    'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; s=VAMUGwcg; hng=CN%7Czh-CN%7CCNY%7C156; dnk=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; tracknick=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; lgc=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; login=true; cancelledSubSites=empty; uc3=lg2=VFC%2FuZ9ayeYq2g%3D%3D&vt3=F8dCujPysh7BAVN1OHk%3D&nk2=1T1vOlufmUTIzQ%3D%3D&id2=VAMSbCeNb2UR; uc4=nk4=0%401%2BGqrLicOPW2jU%2FZP2qAQNzshAhG&id4=0%40VhpPUd19tQMUxU4Q5LIgJKZk6I0%3D; lid=%E8%89%BE%E8%B7%83%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E6%97%97%E8%88%B0%E5%BA%97%3A%E6%9C%B1; _tb_token_=ea8b8b3367b6e; enc=PRjDKsNVwVadB6YKv9EXyAWfWCcaR5FEX758k43Yl8hXqVQZTcgXeyy0kZL5G5myzT7HD2JhEym3%2BFr3oP5qIUcCJ4l25zlblbS4Nb7jpMI%3D; sgcookie=E100HzqH3QV%2Fzb1VN07BgcMHRIaT3aglV0Q4pJQ6tr68RE3mz8MtObun96EWRTG46I7KCQBDyolQwXwoEc5a3tF6FQ%3D%3D; uc1=cookie21=WqG3DMC9Eman&cookie14=Uoe2xe1z83nF6g%3D%3D; csg=7876131e; UM_distinctid=17b47a7303a14c-0794b450f45d6b-4343363-1fa400-17b47a7303b53c; tk_trace=oTRxOWSBNwn9dPyorMJE%2FoPdY8zMG1aAN%2F0TkjYGZjkj6rrK3kv4LgxGhtlxvv5CwTD%2BouWTjev%2BBoE%2FW%2F6%2BfBhbVU26TyCIQKsu6MFrbAFUa6jZPN8vKrzMCPqiyInCoJhgD1HvBvb55u7%2F5xZ%2BZft4Nzl3WwDYzrKi1wwW1ZMJ%2BHanEzoLeuxO1Mn%2BcwNvX8L5CcXwg2JyoyPWD3Xw7u%2BpXSh0ZeBvwqbfIjI9KZO%2FQHsebo0Q58uHGLuzaJM15jOANEahFI7NrRzrVSSMNg0F4FR7z%2Bq%2FTGaFThEQWxhTnCEDm12SO3%2BQgiSyd7I36OdePU1YpVwlejtDlEd7Y29%2FNFAT0%2BgWqx%2FZYyxiMD8hXa77; miid=2957659351951425633; _m_h5_tk=a7ebaf033d43f86a2a5a64a7573d3e75_1629105667421; _m_h5_tk_enc=41500bbb1706e6af3b815fb5cdc47f81; xlly_s=1; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1626710377,1629185998; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1629186176; tfstk=cbnFBANzLHKFIzEWkkZyAMEzKxRdaVMnEGyb-VFLQtuVAdz3gsfdwRbuhRy7Mh4h.; l=eBTvt5Keq7M-YcFjBO5wKurza77t6IOf1sPzaNbMiInca6CPaFsTjNCKIrDpudtjgt5XRetrSSYwjRFy7maU-x_ceTwhKXIpBiJ68e1..; isg=BCIil_Qht2ZgdpdN_MQNAmi3c6iEcyaNng_DeWy6OhVKP8G5VADPnG_5b3vDL54l',
                 referer:
                     'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18'
             },
@@ -130,23 +133,29 @@ const getData = (pageNum: number = 1, folded: string = '0') => {
 };
 const getTmData = (pageNum: number = 1, needFold: string = '0') => {
     return axios.get<resIntTm>(
-        'https://rate.tmall.com/list_detail_rate.htm?spuId=1589105234&sellerId=3126162346&append=0&content=1&tagId=&posi=&picture=&groupId=&ua=098%23E1hvupvPvBvvUvCkvvvvvjiWP25wtjnCR2sh1jljPmP9tjEhPFcZlj3CP2SOgj3PdvhvmZC2FDCxvhCFOpvCvvXvppvvvvvUvpCWpOGgv8Rz8Zl9ZRAn%2BbyDCcECTWeARFxjb9TxfBAKNxGw4w2WVshw4cC2QEZKK5C2a1n1lBkXw6Ow4w2Wedvw4cC2ARpKK5C2aBVU%2B89Cvv3vpvLxGvLNug9CvvXmp99hjEugvpvIphvvvvvvphCvpCv9vvC2R6CvjvUvvhBGphvwv9vvBHBvpCQmvvChxvgCvvpvvPMMRvhvChCvvvmevpvhphvhHUOCvvBvppvvdvhvmZC2ZoBSvhCxT8QCvvDvp1IGXvCvcTk%2BvpvEphW4oVQvpVlI9vhvHHiwXc2BzHi47IIQt1s1cjt4NYGBRvhvChCvvvv%3D&_ksTS=1605798252518_1214',
+        'https://rate.tmall.com/list_detail_rate.htm?spuId=1171332549&sellerId=3126162346&append=0&content=1&tagId=&posi=&picture=&groupId=&ua=098%23E1hvqvvXvXgvUvCkvvvvvjiWPFcUAjrbR2LvQjYHPmPWtj1PPsq96j3WP2LW1j1UdvhvmpvWSQRw5v2wC29Cvvpvvvvv9vhv2nMScrza7rMNz0yfz8QCvvyvmvQhbkgv1He%2BvpvEvv9uCvZHvb1wRvhvCvvvvvm%2BvpvEvvsIvSdTvmmM9vhv2nMSlc1F7rMNzQvBz8OCvvpvvUmmRvhvCvvvvvvRvpvhvv2MMQ9CvhQvKapvC0kDyO2v5fh3Zi7v1WpaRoxBlwet9b8rwkM6D7zWdiZDN%2B3l%2B87JejEHtnkQ0fJ6EvLvqU0HKfE9ZwFIAXZTKFEw98c6D404kvhvC99vvOCtoT9Cvv9vvUmYHpvQHd9Cvm9vvvvvphvvvvvv96CvpvAevvm2phCvhRvvvUnvphvppvvv96CvpCCvvvhvC9vhvvCvpUOCvvpvCvvvRvhvCvvvvvmvvpvWzMa0cCBwzYMNUvbwdvhvmpvUrQnboQCwVuQCvCtZmPQ2X0wvDnME%2B2IDZO7a6Rm4dzHHQW2v1C9ww18%2BvpvEvvFxvMf0v8pqdvhvmpvUBvW5EQm%2B0uQCvvyv28v29gWvrP0vvpvWzMJK5RY4zYMNKLLw&needFold=0&_ksTS=1629220063698_572',
         {
             params: {
                 itemId: product_id,
                 currentPage: pageNum,
                 order: '1',
-                needFold: needFold,
-                callback: 'jsonp1215'
+                // needFold: needFold,
+                callback: 'jsonp573'
             },
             headers: {
+                "sec-ch-ua": '"Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"',
+                "sec-ch-ua-mobile":"?0",
+                "sec-fetch-dest":"script",
+        "sec-fetch-mode":"no-cors",
+        "sec-fetch-site":"same-site",
+        "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
                 cookie:
-                    'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; s=VW8f3hxM; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; UM_distinctid=173f1ac4e6c20e-0517fa470c9ebf-3323767-1fa400-173f1ac4e6dc99; tk_trace=1; dnk=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; tracknick=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; lgc=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; login=true; uc3=id2=VAMSbCeNb2UR&lg2=URm48syIIVrSKA%3D%3D&vt3=F8dCuAJ9cvnM76CkLaU%3D&nk2=1T1vOlufmUTIzQ%3D%3D; uc4=nk4=0%401%2BGqrLicOPW2jU%2FZP2idU2sVmiHU&id4=0%40VhpPUd19tQMUxU4Q5kbO9yQD5cw%3D; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1607632738,1607632989,1608395660,1608564372; hng=CN%7Czh-CN%7CCNY%7C156; lid=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; _tb_token_=e881377bb78b3; enc=vf5cfablyZykMiqFdktLRaVKkoNiKbYYT%2BijpCak7qOzR5rN6BaNnPgS1Z3afBik%2Faq1HKgYuXDz5%2BD03lhIEL4VkO7sTuXuNzOa9jx8KgA%3D; _m_h5_tk=c4ace200dda9a2cb70f5d5c588e2f8dd_1608964881104; _m_h5_tk_enc=e4ca8e53b8856ea8301d6e8f1b91bde6; unb=2207831172436; sn=%E4%B8%87%E9%98%81%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E4%B8%93%E8%90%A5%E5%BA%97%3A%E6%9C%B1; sgcookie=E1000xuaaTSi5wXTkfkx9m%2F3Y8oLijT5aEThVaynpkUsjPSiO59F4PzRi28L99R6HHfKQGxxDjIt8zQK6UofvxDXlA%3D%3D; uc1=cookie21=UIHiLt3xSalX&cookie14=Uoe0ZNcr53hdoA%3D%3D; csg=9385a831; xlly_s=1; x5sec=7b22726174656d616e616765723b32223a223662373631353161396633373463616538623662346330323161333234653533434e4f5a71663846454b476c367071613775546b56526f504d6a49774e7a677a4d5445334d6a517a4e6a7378227d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1609190635; tfstk=cfmlBgq9e4zSPX4m53ZSIQtFpjclZRsUsDoj0m9LzkdtOkiVihQV7EmDn7covw1..; l=eBTvt5Keq7M-YaHXBO5Cnurza77TzIObzsPzaNbMiInca6NAahhxCNQ2bgzWudtjgt5v-etrJmGnAReD7ka_Wx_ceTwhKXIpBU968e1..; isg=BBQUzXstNy1meaHnPgojiMqR5VKGbThXO4wgka70_B9rmbbj1n6k5cFfmZEBYXCv',
+                    'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; t=00db5613b4729ef18186d0179f2bd45e; s=VAMUGwcg; hng=CN%7Czh-CN%7CCNY%7C156; dnk=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; tracknick=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; lgc=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; login=true; cancelledSubSites=empty; uc3=lg2=VFC%2FuZ9ayeYq2g%3D%3D&vt3=F8dCujPysh7BAVN1OHk%3D&nk2=1T1vOlufmUTIzQ%3D%3D&id2=VAMSbCeNb2UR; uc4=nk4=0%401%2BGqrLicOPW2jU%2FZP2qAQNzshAhG&id4=0%40VhpPUd19tQMUxU4Q5LIgJKZk6I0%3D; lid=%E8%89%BE%E8%B7%83%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E6%97%97%E8%88%B0%E5%BA%97%3A%E6%9C%B1; _tb_token_=ea8b8b3367b6e; enc=PRjDKsNVwVadB6YKv9EXyAWfWCcaR5FEX758k43Yl8hXqVQZTcgXeyy0kZL5G5myzT7HD2JhEym3%2BFr3oP5qIUcCJ4l25zlblbS4Nb7jpMI%3D; UM_distinctid=17b47a7303a14c-0794b450f45d6b-4343363-1fa400-17b47a7303b53c; tk_trace=oTRxOWSBNwn9dPyorMJE%2FoPdY8zMG1aAN%2F0TkjYGZjkj6rrK3kv4LgxGhtlxvv5CwTD%2BouWTjev%2BBoE%2FW%2F6%2BfBhbVU26TyCIQKsu6MFrbAFUa6jZPN8vKrzMCPqiyInCoJhgD1HvBvb55u7%2F5xZ%2BZft4Nzl3WwDYzrKi1wwW1ZMJ%2BHanEzoLeuxO1Mn%2BcwNvX8L5CcXwg2JyoyPWD3Xw7u%2BpXSh0ZeBvwqbfIjI9KZO%2FQHsebo0Q58uHGLuzaJM15jOANEahFI7NrRzrVSSMNg0F4FR7z%2Bq%2FTGaFThEQWxhTnCEDm12SO3%2BQgiSyd7I36OdePU1YpVwlejtDlEd7Y29%2FNFAT0%2BgWqx%2FZYyxiMD8hXa77; miid=2957659351951425633; cna=LbybGYDLvFUCASeiIRH1x2hp; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1629185998,1629532507,1629532758; _m_h5_tk=c3c9ef0623db709de50e1d82b0ab3499_1629816472946; _m_h5_tk_enc=b583345e50fa4775231a4e4f10031181; xlly_s=1; sgcookie=E100%2B6Xs1KotwrmLXEQYNoA39vjDy9QUhkOfwUOGPEI3iwIZmBP%2B4WE2S4wKne71NTxNOmb0F9ZAENuYORsH6FFWJg%3D%3D; csg=ea82408b; unb=2210640100308; sn=%E8%89%BE%E8%B7%83%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E6%97%97%E8%88%B0%E5%BA%97%3A%E6%9C%B1; uc1=cookie21=U%2BGCWk%2F7oPIg&cookie14=Uoe2xMrvqlHrwA%3D%3D; x5sec=7b22617365727665723b32223a223464353265363266623631323331666165613733386639383130613537396166434a62536d596b47454e54346c355366324f663351426f504d6a49784d4459304d4445774d444d774f4473784d4b366838593043227d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1629907228; tfstk=cgV5Bw_By3x52sWeaz_24eWkL6GlZWLsRTiuPR7VWLbkLYz5iSAZfJFLKHdxBq1..; l=eBTvt5Keq7M-Y516BO5wnurza77tiIRf1sPzaNbMiInca6ZPaFGLKNCK4Wj6udtjgtfXKetrSSYwjRhy-74LRE_ceTwhKXIpBrvw-; isg=BA8PXA5psiCEnIoWcaPoKW04nqMZNGNWu_C-giEcLn6K8CzyKQWKpqym8iDOiDvO',
                 referer: `https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=${product_id}&ns=1&abbucket=18`
             },
             transformResponse: [
                 data => {
-                    const match = data.match(/jsonp1215\((.+)\)/);
+                    const match = data.match(/jsonp573\((.+)\)/);
                     if (match) {
                         const res = JSON.parse(match[1]);
                         return res;
@@ -180,6 +189,7 @@ const saveImg = async (url: string, name?: string) => {
         });
         return new Promise((resolve, reject) => {
             const wr_url = path.join(photoPath, name ? `${name}.${min}` : url);
+            // console.log(wr_url)
             const ws = fs.createWriteStream(wr_url);
             ws.on('finish', () => {
                 resolve(wr_url);
@@ -194,7 +204,7 @@ const saveImg = async (url: string, name?: string) => {
     }
 };
 // saveImg(
-//     '//img.alicdn.com/bao/uploaded/i3/O1CN01rduj7n1bITuXmtUmH_!!0-rate.jpg',
+//     '//img.alicdn.com/bao/uploaded/i4/O1CN01zx3QYM2LBaJx3a26T_!!0-rate.jpg',
 //     '3'
 // )
 //     .then(res => {
@@ -326,7 +336,10 @@ const getComments = async (pageNum: number, needFold: string = '0') => {
     const tmData = await getTmData(pageNum, needFold);
     const { rateDetail } = tmData.data;
     const comments = [] as commentInt[];
-    if (!rateDetail) return {} as resInt;
+    if (!rateDetail) {
+        console.log(tmData.data)
+        return {} as resInt;
+    }
     rateDetail.rateList.forEach(comment => {
         comments.push({
             photos: comment.pics.map(pic => {
@@ -417,12 +430,14 @@ const Start = async (pageNum: number = 1, needFold: string = '0') => {
         await STR.save(currentPageNum === 1 && needFold === '1' ? true : false);
         console.log(`第${pageNum}页/${maxPage}页：保存成功`);
     } else {
+        console.log(result);
         console.log(`第${pageNum}页：保存失败，跳过`);
     }
     console.log('-----------------------------');
     if (STR._end) return;
     if (pageNum < MAXPAGE) {
         const nextPageNum = pageNum + 1;
+        await sleep(1000);
         await Start(nextPageNum);
         return;
     }
