@@ -14,7 +14,8 @@ const {
     tm_select_qz : select_qz = '0',
     tm_is = '0',
     tm_end = '*',
-    tm_fold = '0'
+    tm_fold = '0',
+    tm_cookies: tm_cookies = ''
 } = process.env;
 const productPath = path.join(__dirname, 'comments', product_id!);
 const commentPath = path.join(
@@ -112,8 +113,7 @@ const getData = (pageNum: number = 1, folded: string = '0') => {
                 callback: 'jsonp_tbcrate_reviews_list'
             },
             headers: {
-                cookie:
-                    'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; t=00db5613b4729ef18186d0179f2bd45e; cna=/SEgFrkPTB8CAT00oyJzMqVG; s=VAMUGwcg; hng=CN%7Czh-CN%7CCNY%7C156; dnk=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; tracknick=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; lgc=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; login=true; cancelledSubSites=empty; uc3=lg2=VFC%2FuZ9ayeYq2g%3D%3D&vt3=F8dCujPysh7BAVN1OHk%3D&nk2=1T1vOlufmUTIzQ%3D%3D&id2=VAMSbCeNb2UR; uc4=nk4=0%401%2BGqrLicOPW2jU%2FZP2qAQNzshAhG&id4=0%40VhpPUd19tQMUxU4Q5LIgJKZk6I0%3D; lid=%E8%89%BE%E8%B7%83%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E6%97%97%E8%88%B0%E5%BA%97%3A%E6%9C%B1; _tb_token_=ea8b8b3367b6e; enc=PRjDKsNVwVadB6YKv9EXyAWfWCcaR5FEX758k43Yl8hXqVQZTcgXeyy0kZL5G5myzT7HD2JhEym3%2BFr3oP5qIUcCJ4l25zlblbS4Nb7jpMI%3D; sgcookie=E100HzqH3QV%2Fzb1VN07BgcMHRIaT3aglV0Q4pJQ6tr68RE3mz8MtObun96EWRTG46I7KCQBDyolQwXwoEc5a3tF6FQ%3D%3D; uc1=cookie21=WqG3DMC9Eman&cookie14=Uoe2xe1z83nF6g%3D%3D; csg=7876131e; UM_distinctid=17b47a7303a14c-0794b450f45d6b-4343363-1fa400-17b47a7303b53c; tk_trace=oTRxOWSBNwn9dPyorMJE%2FoPdY8zMG1aAN%2F0TkjYGZjkj6rrK3kv4LgxGhtlxvv5CwTD%2BouWTjev%2BBoE%2FW%2F6%2BfBhbVU26TyCIQKsu6MFrbAFUa6jZPN8vKrzMCPqiyInCoJhgD1HvBvb55u7%2F5xZ%2BZft4Nzl3WwDYzrKi1wwW1ZMJ%2BHanEzoLeuxO1Mn%2BcwNvX8L5CcXwg2JyoyPWD3Xw7u%2BpXSh0ZeBvwqbfIjI9KZO%2FQHsebo0Q58uHGLuzaJM15jOANEahFI7NrRzrVSSMNg0F4FR7z%2Bq%2FTGaFThEQWxhTnCEDm12SO3%2BQgiSyd7I36OdePU1YpVwlejtDlEd7Y29%2FNFAT0%2BgWqx%2FZYyxiMD8hXa77; miid=2957659351951425633; _m_h5_tk=a7ebaf033d43f86a2a5a64a7573d3e75_1629105667421; _m_h5_tk_enc=41500bbb1706e6af3b815fb5cdc47f81; xlly_s=1; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1626710377,1629185998; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1629186176; tfstk=cbnFBANzLHKFIzEWkkZyAMEzKxRdaVMnEGyb-VFLQtuVAdz3gsfdwRbuhRy7Mh4h.; l=eBTvt5Keq7M-YcFjBO5wKurza77t6IOf1sPzaNbMiInca6CPaFsTjNCKIrDpudtjgt5XRetrSSYwjRFy7maU-x_ceTwhKXIpBiJ68e1..; isg=BCIil_Qht2ZgdpdN_MQNAmi3c6iEcyaNng_DeWy6OhVKP8G5VADPnG_5b3vDL54l',
+                cookie:tm_cookies,
                 referer:
                     'https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=619699134009&ns=1&abbucket=18'
             },
@@ -149,8 +149,7 @@ const getTmData = (pageNum: number = 1, needFold: string = '0') => {
         "sec-fetch-mode":"no-cors",
         "sec-fetch-site":"same-site",
         "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
-                cookie:
-                    'cookie2=1e5ff2ed7165f5bb548f09b9f8fe9959; t=00db5613b4729ef18186d0179f2bd45e; s=VAMUGwcg; hng=CN%7Czh-CN%7CCNY%7C156; dnk=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; tracknick=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; lgc=%5Cu72EC%5Cu7EBF%5Cu65C5%5Cu7A0B%5Cu5355; login=true; cancelledSubSites=empty; uc3=lg2=VFC%2FuZ9ayeYq2g%3D%3D&vt3=F8dCujPysh7BAVN1OHk%3D&nk2=1T1vOlufmUTIzQ%3D%3D&id2=VAMSbCeNb2UR; uc4=nk4=0%401%2BGqrLicOPW2jU%2FZP2qAQNzshAhG&id4=0%40VhpPUd19tQMUxU4Q5LIgJKZk6I0%3D; lid=%E8%89%BE%E8%B7%83%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E6%97%97%E8%88%B0%E5%BA%97%3A%E6%9C%B1; _tb_token_=ea8b8b3367b6e; enc=PRjDKsNVwVadB6YKv9EXyAWfWCcaR5FEX758k43Yl8hXqVQZTcgXeyy0kZL5G5myzT7HD2JhEym3%2BFr3oP5qIUcCJ4l25zlblbS4Nb7jpMI%3D; UM_distinctid=17b47a7303a14c-0794b450f45d6b-4343363-1fa400-17b47a7303b53c; tk_trace=oTRxOWSBNwn9dPyorMJE%2FoPdY8zMG1aAN%2F0TkjYGZjkj6rrK3kv4LgxGhtlxvv5CwTD%2BouWTjev%2BBoE%2FW%2F6%2BfBhbVU26TyCIQKsu6MFrbAFUa6jZPN8vKrzMCPqiyInCoJhgD1HvBvb55u7%2F5xZ%2BZft4Nzl3WwDYzrKi1wwW1ZMJ%2BHanEzoLeuxO1Mn%2BcwNvX8L5CcXwg2JyoyPWD3Xw7u%2BpXSh0ZeBvwqbfIjI9KZO%2FQHsebo0Q58uHGLuzaJM15jOANEahFI7NrRzrVSSMNg0F4FR7z%2Bq%2FTGaFThEQWxhTnCEDm12SO3%2BQgiSyd7I36OdePU1YpVwlejtDlEd7Y29%2FNFAT0%2BgWqx%2FZYyxiMD8hXa77; miid=2957659351951425633; cna=LbybGYDLvFUCASeiIRH1x2hp; Hm_lvt_96bc309cbb9c6a6b838dd38a00162b96=1629185998,1629532507,1629532758; _m_h5_tk=c3c9ef0623db709de50e1d82b0ab3499_1629816472946; _m_h5_tk_enc=b583345e50fa4775231a4e4f10031181; xlly_s=1; sgcookie=E100%2B6Xs1KotwrmLXEQYNoA39vjDy9QUhkOfwUOGPEI3iwIZmBP%2B4WE2S4wKne71NTxNOmb0F9ZAENuYORsH6FFWJg%3D%3D; csg=ea82408b; unb=2210640100308; sn=%E8%89%BE%E8%B7%83%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E6%97%97%E8%88%B0%E5%BA%97%3A%E6%9C%B1; uc1=cookie21=U%2BGCWk%2F7oPIg&cookie14=Uoe2xMrvqlHrwA%3D%3D; x5sec=7b22617365727665723b32223a223464353265363266623631323331666165613733386639383130613537396166434a62536d596b47454e54346c355366324f663351426f504d6a49784d4459304d4445774d444d774f4473784d4b366838593043227d; Hm_lpvt_96bc309cbb9c6a6b838dd38a00162b96=1629907228; tfstk=cgV5Bw_By3x52sWeaz_24eWkL6GlZWLsRTiuPR7VWLbkLYz5iSAZfJFLKHdxBq1..; l=eBTvt5Keq7M-Y516BO5wnurza77tiIRf1sPzaNbMiInca6ZPaFGLKNCK4Wj6udtjgtfXKetrSSYwjRhy-74LRE_ceTwhKXIpBrvw-; isg=BA8PXA5psiCEnIoWcaPoKW04nqMZNGNWu_C-giEcLn6K8CzyKQWKpqym8iDOiDvO',
+                cookie:tm_cookies,
                 referer: `https://item.taobao.com/item.htm?spm=a230r.1.14.703.1bac4f249d4Js3&id=${product_id}&ns=1&abbucket=18`
             },
             transformResponse: [
