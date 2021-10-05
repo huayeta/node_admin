@@ -436,7 +436,7 @@ const Start = async (pageNum: number = 1, needFold: string = '0') => {
     if (STR._end) return;
     if (pageNum < MAXPAGE) {
         const nextPageNum = pageNum + 1;
-        await sleep(1000);
+        await sleep(3000);
         await Start(nextPageNum);
         return;
     }
