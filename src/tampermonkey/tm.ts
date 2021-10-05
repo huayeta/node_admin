@@ -15,7 +15,8 @@ const {
     tm_is = '0',
     tm_end = '*',
     tm_fold = '0',
-    tm_cookies: tm_cookies = ''
+    tm_cookies: tm_cookies = '',
+	tm_page = '1'
 } = process.env;
 const productPath = path.join(__dirname, 'comments', product_id!);
 const commentPath = path.join(
@@ -436,28 +437,30 @@ const Start = async (pageNum: number = 1, needFold: string = '0') => {
     if (STR._end) return;
     if (pageNum < MAXPAGE) {
         const nextPageNum = pageNum + 1;
-        await sleep(3000);
+        await sleep(5000);
         await Start(nextPageNum);
         return;
     }
 };
 // Start(1, '1');
 const Task = async () => {
-    const is_exit = await fse.pathExists(productPath);
-    if (is_exit && tm_end === '*') {
-        return Promise.reject(`${productPath} 目录存在`);
-    }
-    // 确保商品目录存在
-    await fse.ensureDir(productPath);
-    // 确保商品图片目录存在
-    is_save_photo === '1' && (await fse.ensureDir(photoPath));
-    // 清空评论
-    await fse.outputFile(commentPath, '');
-    // 确保comments.xlsx存在
-    const buffer = xlsx.build([{ name: `${product_id}`, data: [] }]);
-    await fse.writeFile(commentXlsx, buffer, 'binary');
+    if(tm_page === '1'){
+		const is_exit = await fse.pathExists(productPath);
+		if (is_exit && tm_end === '*') {
+			return Promise.reject(`${productPath} 目录存在`);
+		}
+		// 确保商品目录存在
+		await fse.ensureDir(productPath);
+		// 确保商品图片目录存在
+		is_save_photo === '1' && (await fse.ensureDir(photoPath));
+		// 清空评论
+		await fse.outputFile(commentPath, '');
+		// 确保comments.xlsx存在
+		const buffer = xlsx.build([{ name: `${product_id}`, data: [] }]);
+		await fse.writeFile(commentXlsx, buffer, 'binary');
+	}
     // 开始收集评论
-    await Start(1);
+    await Start(parseInt(tm_page));
     // 看下是否有 折叠的评语
     if (tm_fold === '1') {
         console.log('获取折叠评语.................start');
