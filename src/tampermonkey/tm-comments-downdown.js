@@ -144,6 +144,7 @@
                 if (down_photos.length === index) {
                     console.log(`正在下载评论...`)
                     zip.generateAsync({ type: "blob" }).then(function (content) {
+                        console.log('转换成功')
                         // 下载的文件名
                         var filename = product_id + '.zip';
                         // 创建隐藏的可下载链接
@@ -169,4 +170,5 @@
             download();
         });
     }
+    console.log('下载评论函数：startReadComent()')
 })();
