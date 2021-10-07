@@ -9,6 +9,8 @@ tm_cookies =
 tm_product_id = 614123140758
 #是否保存图片 0 | 1
 tm_is_save_photo = 1
+#从第几页开始
+tm_page = 1
 #筛选长度
 tm_select_length = 15
 #强制长度
