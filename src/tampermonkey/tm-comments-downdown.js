@@ -18,6 +18,7 @@
     let currentPage = 1;
     let next_btn;
     const product_id = new URLSearchParams(window.location.search.slice(1)).get('id');
+    const Zip = new JSZip();
     const getIsNext = () => next_btn.getAttribute('data-page');
     const readComment = () => {
         const trs = document.querySelectorAll('.rate-grid tr');
@@ -125,43 +126,48 @@
             min
         }
     }
+    function startDownload(params) {
+        console.log(`正在下载评论...`)
+        Zip.generateAsync({ type: "blob" }).then(function (content) {
+            console.log('转换成功')
+            // 下载的文件名
+            var filename = product_id + '.zip';
+            // 创建隐藏的可下载链接
+            var eleLink = document.createElement('a');
+            eleLink.download = filename;
+            eleLink.style.display = 'none';
+            // 下载内容转变成blob地址
+            eleLink.href = URL.createObjectURL(content);
+            // 触发点击
+            document.body.appendChild(eleLink);
+            eleLink.click();
+            // 然后移除
+            document.body.removeChild(eleLink);
+            console.log(`下载完成评论...`)
+        });
+    }
     function download() {
-        var zip = new JSZip();
-        zip.file("评价.txt", Coments.join('\r\n'));
-        var img = zip.folder("images");
-        let index = 0;
-        const down_photos = [];
-        Photos.forEach(photo => {
-            photo.photos.forEach((phot, ind) => {
-                down_photos.push(getImgMin(phot, `${photo.id}-${ind}`))
-            })
-        })
-        down_photos.forEach(photo => {
-            getBase64Image(photo.url).then(base64 => {
-                img.file(`${photo.name}.${photo.min}`, base64.split(',')[1], { base64: true });
-                index++;
-                console.log(`第${index}/${down_photos.length}个图片下载完成...`)
-                if (down_photos.length === index) {
-                    console.log(`正在下载评论...`)
-                    zip.generateAsync({ type: "blob" }).then(function (content) {
-                        console.log('转换成功')
-                        // 下载的文件名
-                        var filename = product_id + '.zip';
-                        // 创建隐藏的可下载链接
-                        var eleLink = document.createElement('a');
-                        eleLink.download = filename;
-                        eleLink.style.display = 'none';
-                        // 下载内容转变成blob地址
-                        eleLink.href = URL.createObjectURL(content);
-                        // 触发点击
-                        document.body.appendChild(eleLink);
-                        eleLink.click();
-                        // 然后移除
-                        document.body.removeChild(eleLink);
-                    });
-                }
-            })
-        })
+        Zip.file("评价.txt", Coments.join('\r\n'));
+        Zip.file('图片.txt', JSON.stringify(Photos));
+        startDownload();
+        // var img = zip.folder("images");
+        // let index = 0;
+        // const down_photos = [];
+        // Photos.forEach(photo => {
+        //     photo.photos.forEach((phot, ind) => {
+        //         down_photos.push(getImgMin(phot, `${photo.id}-${ind}`))
+        //     })
+        // })
+        // down_photos.forEach(photo => {
+        //     getBase64Image(photo.url).then(base64 => {
+        //         img.file(`${photo.name}.${photo.min}`, base64.split(',')[1], { base64: true });
+        //         index++;
+        //         console.log(`第${index}/${down_photos.length}个图片下载完成...`)
+        //         if (down_photos.length === index) {
+        //             startDownload();
+        //         }
+        //     })
+        // })
     }
     window.startReadComent = () => {
         next_btn = document.querySelector('.rate-paginator').lastElementChild;
