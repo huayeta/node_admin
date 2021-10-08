@@ -17,13 +17,27 @@
     let Index = 0;
     let currentPage = 1;
     let next_btn;
+    const select_length = 15; // 最小长度
+    const select_qz = true; // 是否强制长度
     const product_id = new URLSearchParams(window.location.search.slice(1)).get('id');
     const Zip = new JSZip();
     const getIsNext = () => next_btn.getAttribute('data-page');
+    const addComment = (str,fir)=>{
+        if (
+            ((str &&
+                !str.includes('此用户没有填写评价') &&
+                !str.includes('系统默认好评') &&
+                str.length >= +select_length)) ||
+            fir
+        ) {
+            if(select_qz && str.length < +select_length)return;
+            // console.log(str)
+            Coments.push(`${fir}${str}`);
+        }
+    }
     const readComment = () => {
         const trs = document.querySelectorAll('.rate-grid tr');
         Array.prototype.forEach.call(trs, tr => {
-            Index++;
             const master = tr.querySelector('.tm-col-master>.tm-rate-content');
             if (master) {
                 // 直接评论
@@ -33,9 +47,13 @@
                 lis && Array.prototype.forEach.call(lis, li => {
                     photos.push(li.getAttribute('data-src'));
                 })
-                // console.log(comment, photos);   
-                Coments.push(photos.length > 0 ? `有图片：${Index}：${comment}` : comment);
-                photos.length > 0 && Photos.push({ id: Index, photos: photos })
+                // console.log(comment, photos);
+                if(photos.length>0){
+                    Index = Index+1;
+                    Photos.push({ id: Index, photos: photos })
+                }
+                // Coments.push(photos.length > 0 ? `有图片：${Index}：${comment}` : comment);
+                addComment(comment,photos.length>0?`有图片：${Index}：`:'')
             } else {
                 // 获取首次评论
                 const premiere = tr.querySelector('.tm-rate-premiere');
@@ -46,10 +64,13 @@
                     pre_photos.push(li.getAttribute('data-src'));
                 })
                 // console.log(pre_comment, pre_photos);
-                Coments.push(pre_photos.length > 0 ? `有图片：${Index}：${pre_comment}` : pre_comment);
-                pre_photos.length > 0 && Photos.push({ id: Index, photos: pre_photos });
+                if(pre_photos.length > 0){
+                    Index = Index+1;
+                    Photos.push({ id: Index, photos: pre_photos });
+                }
+                // Coments.push(pre_photos.length > 0 ? `有图片：${Index}：${pre_comment}` : pre_comment);
+                addComment(pre_comment,pre_photos.length > 0 ? `有图片：${Index}：` : '')
                 // 获取追评
-                Index++;
                 const append = tr.querySelector('.tm-rate-append');
                 const append_comment = append.querySelector('.tm-rate-fulltxt').textContent;
                 const append_photos = [];
@@ -58,8 +79,12 @@
                     append_photos.push(li.getAttribute('data-src'));
                 })
                 // console.log(append_comment, append_photos);
-                Coments.push(append_photos.length > 0 ? `有图片：${Index}：追：${append_comment}` : `追：${append_comment}`);
-                append_photos.length > 0 && Photos.push({ id: Index, photos: append_photos });
+                if(append_photos.length > 0){
+                    Index = Index+1;
+                    Photos.push({ id: Index, photos: append_photos });
+                }
+                // Coments.push(append_photos.length > 0 ? `有图片：${Index}：追：${append_comment}` : `追：${append_comment}`);
+                addComment(append_comment,append_photos.length > 0 ? `有图片：${Index}：追：` : `追：`);
             }
         })
         // console.log(Coments);
@@ -127,9 +152,9 @@
         }
     }
     function startDownload(params) {
-        console.log(`正在下载评论...`)
+        console.log(`正在打包评论...`)
         Zip.generateAsync({ type: "blob" }).then(function (content) {
-            console.log('转换成功')
+            console.log('打包成功')
             // 下载的文件名
             var filename = product_id + '.zip';
             // 创建隐藏的可下载链接
@@ -148,26 +173,26 @@
     }
     function download() {
         Zip.file("评价.txt", Coments.join('\r\n'));
-        Zip.file('图片.txt', JSON.stringify(Photos));
-        startDownload();
-        // var img = zip.folder("images");
-        // let index = 0;
-        // const down_photos = [];
-        // Photos.forEach(photo => {
-        //     photo.photos.forEach((phot, ind) => {
-        //         down_photos.push(getImgMin(phot, `${photo.id}-${ind}`))
-        //     })
-        // })
-        // down_photos.forEach(photo => {
-        //     getBase64Image(photo.url).then(base64 => {
-        //         img.file(`${photo.name}.${photo.min}`, base64.split(',')[1], { base64: true });
-        //         index++;
-        //         console.log(`第${index}/${down_photos.length}个图片下载完成...`)
-        //         if (down_photos.length === index) {
-        //             startDownload();
-        //         }
-        //     })
-        // })
+        // Zip.file('图片.txt', JSON.stringify(Photos));
+        // startDownload();
+        var img = Zip.folder("images");
+        let index = 0;
+        const down_photos = [];
+        Photos.forEach(photo => {
+            photo.photos.forEach((phot, ind) => {
+                down_photos.push(getImgMin(phot, `${photo.id}-${ind}`))
+            })
+        })
+        down_photos.forEach(photo => {
+            getBase64Image(photo.url).then(base64 => {
+                img.file(`${photo.name}.${photo.min}`, base64.split(',')[1], { base64: true });
+                index++;
+                console.log(`第${index}/${down_photos.length}个图片下载完成...`)
+                if (down_photos.length === index) {
+                    startDownload();
+                }
+            })
+        })
     }
     window.startReadComent = () => {
         next_btn = document.querySelector('.rate-paginator').lastElementChild;
