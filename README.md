@@ -42,3 +42,9 @@ pdd_end = *
 #复制出来所有问题列表+回答道json1.json里面
 #再次运行 npm run tm-pro-pr 将把问题写入 json.text里面
 ```
+
+## 提取评价
+```
+#复制tm-comments-download.js到浏览器，然后打开评价页面，按照时间排序
+#浏览器调取函数：startReadComent();会下载product_id.zip
+```

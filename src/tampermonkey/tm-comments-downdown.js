@@ -19,6 +19,7 @@
     let next_btn;
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度
+    const is_save_photo = true; // 是否保存评论
     const product_id = new URLSearchParams(window.location.search.slice(1)).get('id');
     const Zip = new JSZip();
     const getIsNext = () => next_btn.getAttribute('data-page');
@@ -175,6 +176,7 @@
         Zip.file("评价.txt", Coments.join('\r\n'));
         // Zip.file('图片.txt', JSON.stringify(Photos));
         // startDownload();
+        if(!is_save_photo) return startDownload();
         var img = Zip.folder("images");
         let index = 0;
         const down_photos = [];
