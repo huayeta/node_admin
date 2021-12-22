@@ -14,8 +14,8 @@
     // Your code here...
     const Coments = [];
     const Photos = [];
-    let Index = 0;
-    let currentPage = 1;
+    let Index = 0; // 图片数字从几开始
+    let currentPage = 1; // 当前页码
     let next_btn;
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度

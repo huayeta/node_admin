@@ -6,7 +6,7 @@ node
 #淘宝cookie
 tm_cookies = 
 #产品id
-tm_product_id = 614123140758
+tm_product_id = 644149006743
 #是否保存图片 0 | 1
 tm_is_save_photo = 1
 #从第几页开始
