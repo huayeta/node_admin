@@ -6,7 +6,7 @@ node
 #淘宝cookie
 tm_cookies = 
 #产品id
-tm_product_id = 644149006743
+tm_product_id = 653554283653
 #是否保存图片 0 | 1
 tm_is_save_photo = 1
 #从第几页开始
@@ -45,6 +45,11 @@ pdd_end = *
 
 ## 提取评价
 ```
+前台下载评价
 #复制tm-comments-download.js到浏览器，然后打开评价页面，按照时间排序
-#浏览器调取函数：startReadComent();会下载product_id.zip
+#控制器调取函数：startReadComent();会下载{product_id}.zip
+
+后台下载评价
+#复制tm-comments-download-hou.js到浏览器，然后打开后台的评价管理页面，搜索{product_id}
+#控制台调度函数：startReadComent();会下载{product_id}.zip
 ```

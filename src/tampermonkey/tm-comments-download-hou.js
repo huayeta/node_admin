@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         获取详情页的评论
+// @name         获取后台详情页的评论
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  try to take over the world!
 // @author       You
-// @match        https://*.detail.tmall.com/item.htm*
+// @match        https://rate.taobao.com/sellercenterv2/index.htm/list/rateWait4PC?*
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==
@@ -15,14 +15,14 @@
     const Coments = [];
     const Photos = [];
     let Index = 0; // 图片数字从几开始
-    let currentPage = 1; // 当前页码
+    let currentPage = new URLSearchParams(window.location.search.slice(1)).get('current') || 1; // 当前页码
     let next_btn;
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度
     const is_save_photo = true; // 是否保存评论
-    const product_id = new URLSearchParams(window.location.search.slice(1)).get('id');
+    const product_id = new URLSearchParams(window.location.search.slice(1)).get('search');
     const Zip = new JSZip();
-    const getIsNext = () => next_btn.getAttribute('data-page');
+    const getIsNext = () => next_btn.getAttribute('disabled') === null;
     const addComment = (str,fir)=>{
         if (
             ((str &&
@@ -37,32 +37,18 @@
         }
     }
     const readComment = () => {
-        const trs = document.querySelectorAll('.rate-grid tr');
-        Array.prototype.forEach.call(trs, tr => {
-            const master = tr.querySelector('.tm-col-master>.tm-rate-content');
-            if (master) {
-                // 直接评论
-                const comment = master.querySelector('.tm-rate-fulltxt').textContent;
-                const photos = [];
-                const lis = master.querySelectorAll('.tm-m-photos li');
-                lis && Array.prototype.forEach.call(lis, li => {
-                    photos.push(li.getAttribute('data-src'));
-                })
-                // console.log(comment, photos);
-                if(photos.length>0){
-                    Index = Index+1;
-                    Photos.push({ id: Index, photos: photos })
-                }
-                // Coments.push(photos.length > 0 ? `有图片：${Index}：${comment}` : comment);
-                addComment(comment,photos.length>0?`有图片：${Index}：`:'')
-            } else {
+        const tables = document.querySelectorAll('.next-table-body table');
+        Array.prototype.forEach.call(tables, table => {
+            const rates = table.querySelectorAll('.l-rate-content');
+            if (rates && rates[0]) {
+                const rate =  rates[0];
                 // 获取首次评论
-                const premiere = tr.querySelector('.tm-rate-premiere');
-                const pre_comment = premiere.querySelector('.tm-rate-fulltxt').textContent;
+                const span = rate.querySelectorAll('.rate-content span');
+                const pre_comment = span.length!==0?span[1].textContent:'';
                 const pre_photos = [];
-                const pre_lis = premiere.querySelectorAll('.tm-m-photos li');
+                const pre_lis = rate.querySelectorAll('.l-media-gallery img');
                 pre_lis && Array.prototype.forEach.call(pre_lis, li => {
-                    pre_photos.push(li.getAttribute('data-src'));
+                    pre_photos.push(li.getAttribute('src'));
                 })
                 // console.log(pre_comment, pre_photos);
                 if(pre_photos.length > 0){
@@ -71,13 +57,16 @@
                 }
                 // Coments.push(pre_photos.length > 0 ? `有图片：${Index}：${pre_comment}` : pre_comment);
                 addComment(pre_comment,pre_photos.length > 0 ? `有图片：${Index}：` : '')
+            }
+            if(rates && rates[1]){
+                const rate =  rates[1];
                 // 获取追评
-                const append = tr.querySelector('.tm-rate-append');
-                const append_comment = append.querySelector('.tm-rate-fulltxt').textContent;
+                const span = rate.querySelectorAll('.rate-content span');
+                const append_comment = span.length!==0?span[1].textContent:'';
                 const append_photos = [];
-                const append_lis = append.querySelectorAll('.tm-m-photos li');
+                const append_lis = rate.querySelectorAll('.l-media-gallery img');
                 append_lis && Array.prototype.forEach.call(append_lis, li => {
-                    append_photos.push(li.getAttribute('data-src'));
+                    append_photos.push(li.getAttribute('src'));
                 })
                 // console.log(append_comment, append_photos);
                 if(append_photos.length > 0){
@@ -92,7 +81,7 @@
         // console.log(Photos);
     }
     const clickNext = () => {
-        const ev = new Event('click');
+        const ev = new Event('click',{"bubbles":true, "cancelable":false});
         next_btn.dispatchEvent(ev);
     }
     function sleep(time) {
@@ -101,6 +90,7 @@
     const startTask = (cb) => {
         readComment();
         console.log(`第${currentPage}页完成`);
+        // return console.log(Coments,Photos);
         if (getIsNext()) {
             clickNext();
             sleep(3000).then(() => {
@@ -197,7 +187,7 @@
         })
     }
     window.startReadComent = () => {
-        next_btn = document.querySelector('.rate-paginator').lastElementChild;
+        next_btn = document.querySelector('.next-pagination-list').nextElementSibling;
         startTask(() => {
             console.log('收集完成,开始下载评论;')
             download();
