@@ -39,7 +39,7 @@ pdd_end = *
 #复制json文件到浏览器问题列表
 #https://web.m.taobao.com/app/mtb/ask-everyone/list?pha=true&disableNav=YES&refId=#id
 #之后去问题列表详情页 打开 执行 pro_start()
-#复制出来所有问题列表+回答道json1.json里面
+#复制出来所有问题列表+回答到json1.json里面
 #再次运行 npm run tm-pro-pr 将把问题写入 json.text里面
 ```
 
