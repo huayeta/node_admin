@@ -33,14 +33,19 @@ pdd_select_qz = 0
 #到哪结束
 pdd_end = *
 ```
-##问大家的提取
+## 问大家的提取
 ```dotenv
+前台问大家提取
 #运行npm run tm-pro，问大家，打开之后可以多刷新一次，
 #复制json文件到浏览器问题列表
 #https://web.m.taobao.com/app/mtb/ask-everyone/list?pha=true&disableNav=YES&refId=#id
 #之后去问题列表详情页 打开 执行 pro_start()
 #复制出来所有问题列表+回答到json1.json里面
 #再次运行 npm run tm-pro-pr 将把问题写入 json.text里面
+
+后台问大家提取
+#复制tm-ask-download-hou.js到浏览器，然后打开后台的问大家管理页面，搜索{product_id}
+#控制台调度函数：startReadAsk();会下载{product_id}-问大家.zip
 ```
 
 ## 提取评价

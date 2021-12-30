@@ -198,12 +198,12 @@
         //     })
         // })
     }
-    window.startReadComent = () => {
+    window.startReadAsk = () => {
         next_btn = document.querySelector('.next-pagination-list').nextElementSibling;
         startTask(() => {
             console.log('收集完成,开始下载评论;')
             download();
         });
     }
-    console.log('下载问大家函数：startReadComent()')
+    console.log('下载问大家函数：startReadAsk()')
 })();
