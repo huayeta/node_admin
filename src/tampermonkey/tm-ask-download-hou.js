@@ -95,7 +95,7 @@
                 clickNext();
                 sleep(3000).then(() => {
                     currentPage++;
-                    startReadComent(cb);
+                    startReadAsk(cb);
                 })
             } else {
                 console.log(Coments);
