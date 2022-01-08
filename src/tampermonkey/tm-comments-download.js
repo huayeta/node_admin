@@ -20,6 +20,7 @@
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度
     const is_save_photo = true; // 是否保存评论
+    window.is_comment_download_now = false; // 是否立即触发下载
     const product_id = new URLSearchParams(window.location.search.slice(1)).get('id');
     const Zip = new JSZip();
     const getIsNext = () => next_btn.getAttribute('data-page');
@@ -101,6 +102,7 @@
     const startTask = (cb) => {
         readComment();
         console.log(`第${currentPage}页完成`);
+        if(window.is_comment_download_now)return cb && cb();
         if (getIsNext()) {
             clickNext();
             sleep(3000).then(() => {
