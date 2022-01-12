@@ -44,6 +44,9 @@
         // 获取答案
         const btn = tr.querySelector('td:nth-child(1) span');
         const ev = new Event('click',{"bubbles":true, "cancelable":false});
+        // 如果没有答案就返回
+        if(btn === null) return cb();
+        
         btn.dispatchEvent(ev);
         sleep(2000).then(()=>{
             const answers = tr.nextElementSibling.querySelectorAll('tbody>tr');
