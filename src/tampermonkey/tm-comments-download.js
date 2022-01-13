@@ -104,7 +104,7 @@
     }
     const startTask = (cb) => {
         readComment();
-        return cb(); //测试
+        // return cb(); //测试
         console.log(`第${currentPage}页完成`);
         if(window.is_comment_download_now)return cb && cb();
         if (getIsNext()) {
