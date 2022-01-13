@@ -21,6 +21,9 @@
     const select_qz = true; // 是否强制长度
     const is_save_photo = true; // 是否保存评论
     window.is_comment_download_now = false; // 是否立即触发下载
+    let Counter = 0; // 下载图片的进度
+    let ImgLength = 0; // 总图片的length
+    const maxDownload = 200; // 一次下载图片最多多少
     const product_id = new URLSearchParams(window.location.search.slice(1)).get('id');
     const Zip = new JSZip();
     const getIsNext = () => next_btn.getAttribute('data-page');
@@ -101,6 +104,7 @@
     }
     const startTask = (cb) => {
         readComment();
+        return cb(); //测试
         console.log(`第${currentPage}页完成`);
         if(window.is_comment_download_now)return cb && cb();
         if (getIsNext()) {
@@ -154,12 +158,18 @@
             min
         }
     }
-    function startDownload(params) {
+    /**
+     * 下载JSZip对象
+     * @param {JSZip} zipD 下载的对象
+     * @param {string} filenameA 下载的文件名 
+     * @param {function} cb 下载完成后的回调函数
+     */
+    function startDownload(zipD,filenameA=product_id,cb=()=>{}) {
         console.log(`正在打包评论...`)
-        Zip.generateAsync({ type: "blob" }).then(function (content) {
-            console.log('打包成功')
+        zipD.generateAsync({ type: "blob" }).then(function (content) {
             // 下载的文件名
-            var filename = product_id + '.zip';
+            var filename = filenameA + '.zip';
+            console.log(`打包成功...-${filename}`)
             // 创建隐藏的可下载链接
             var eleLink = document.createElement('a');
             eleLink.download = filename;
@@ -171,32 +181,99 @@
             eleLink.click();
             // 然后移除
             document.body.removeChild(eleLink);
-            console.log(`下载完成评论...`)
+            console.log(`下载完成评论...-${filename}`);
+            cb();
         });
+    }
+    /**
+     * 给JSZip添加图片
+     * @param {JSZip} zipD 添加图片的JSZip对象 
+     * @param {array} imgArr 添加图片的数组
+     * @param {function} cb 添加完图片后的回调函数
+     */
+    function pushImg(zipD=Zip,imgArr=[],cb) {
+        var img = zipD.folder('images');
+        let index = 0;
+        imgArr.forEach(photo => {
+            getBase64Image(photo.url).then(base64 => {
+                img.file(`${photo.name}.${photo.min}`, base64.split(',')[1], { base64: true });
+                Counter++;
+                index++;
+                console.log(`第${Counter}/${ImgLength}个图片下载完成...`)
+                if (imgArr.length === index) {
+                    cb();
+                }
+            })
+        })
+    }
+    /**
+     * 开始下载图片
+     * @param {array} imgArr 下载的图片数组 
+     * @param {string} imgFolder 下载zip的名字
+     * @param {function} cb 下载完成后的回调函数 
+     */
+    function startImagesDownload(imgArr=[],imgFolder='images',cb=()=>{}) {
+        const zip1 = new JSZip();
+        pushImg(zip1,imgArr,()=>{
+            startDownload(zip1,imgFolder,cb)
+        })
+    }
+    /**
+     * 循环下载图片
+     * @param {array} imgArr 需要下载的图片总数组 
+     * @param {function} cb 下载成功后的毁掉函数
+     */
+    let imgIndex = 0;
+    function loopImagesDownload(imgArr=[],cb=()=>{}) {
+        const arr = imgArr.splice(0,maxDownload);
+        imgIndex++;
+        startImagesDownload(arr,`${product_id}-images-${imgIndex}`,()=>{
+            if(imgArr.length>0){
+                loopImagesDownload(imgArr,cb)
+            }else{
+                cb();
+            }
+        })
     }
     function download() {
         Zip.file("评价.txt", Coments.join('\r\n'));
         // Zip.file('图片.txt', JSON.stringify(Photos));
         // startDownload();
         if(!is_save_photo) return startDownload();
-        var img = Zip.folder("images");
-        let index = 0;
         const down_photos = [];
         Photos.forEach(photo => {
             photo.photos.forEach((phot, ind) => {
                 down_photos.push(getImgMin(phot, `${photo.id}-${ind}`))
             })
         })
-        down_photos.forEach(photo => {
-            getBase64Image(photo.url).then(base64 => {
-                img.file(`${photo.name}.${photo.min}`, base64.split(',')[1], { base64: true });
-                index++;
-                console.log(`第${index}/${down_photos.length}个图片下载完成...`)
-                if (down_photos.length === index) {
-                    startDownload();
-                }
+        ImgLength = down_photos.length;
+        if(ImgLength<= maxDownload){
+            pushImg(Zip,down_photos,()=>{
+                startDownload(Zip,product_id);
             })
-        })
+        }else{
+            startDownload(Zip,`${product_id}-comments`,()=>{
+                loopImagesDownload(down_photos);
+            })
+        }
+        // var img = Zip.folder("images");
+        // let index = 0;
+        // const down_photos = [];
+        // Photos.forEach(photo => {
+        //     photo.photos.forEach((phot, ind) => {
+        //         down_photos.push(getImgMin(phot, `${photo.id}-${ind}`))
+        //     })
+        // })
+        // down_photos.forEach(photo => {
+        //     getBase64Image(photo.url).then(base64 => {
+        //         img.file(`${photo.name}.${photo.min}`, base64.split(',')[1], { base64: true });
+        //         index++;
+        //         console.log(`第${index}/${down_photos.length}个图片下载完成...`)
+        //         if (down_photos.length === index) {
+        //             startDownload();
+        //         }
+        //     })
+        // })
     }
     window.startReadComent = () => {
         next_btn = document.querySelector('.rate-paginator').lastElementChild;
