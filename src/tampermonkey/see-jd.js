@@ -15,7 +15,7 @@
     eleLink.textContent='查看所有类目';
     eleLink.addEventListener('click',function(){
         // document.querySelector('.text-red.pointer').dispatchEvent(ev);
-        const spans = document.querySelectorAll('.text-red.pointer');
+        const spans = document.querySelectorAll('span.search-btn');
         // Array.prototype.forEach.call(spans,span=>{
         //     const ev = new Event('click',{"bubbles":true, "cancelable":false});
         //     span.dispatchEvent(ev);
@@ -25,7 +25,7 @@
             if(spanAs.length>0){
                 const ev = new Event('click',{"bubbles":true, "cancelable":false});
                 const span = spanAs.splice(0,1)[0];
-                if(span.textContent.includes('点击获取')){
+                if(span.textContent.includes('点击查询')){
                     span.dispatchEvent(ev);
                     setTimeout(clickSpan,300);
                 }else{
