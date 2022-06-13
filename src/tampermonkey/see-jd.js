@@ -27,7 +27,7 @@
                 const span = spanAs.splice(0,1)[0];
                 if(span.textContent.includes('点击查询')){
                     span.dispatchEvent(ev);
-                    setTimeout(clickSpan,300);
+                    setTimeout(clickSpan,30);
                 }else{
                     clickSpan();
                 }               
@@ -69,7 +69,9 @@
                 }
             }
         })
-        alert(JSON.stringify(obj)+'\n'+JSON.stringify(arr));
+        const result = '汇总：\n'+JSON.stringify(obj)+'\n按照顺序汇总：\n'+arr.map(str=>`  `+JSON.stringify(str)+'\n');
+        alert(result);
+        console.log(result);
         // console.log(obj);
         // console.log(arr);
     },false)
