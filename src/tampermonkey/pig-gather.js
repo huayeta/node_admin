@@ -185,7 +185,7 @@
             location.reload();
         },false)
         if (!$PendingTrs) return;
-        console.log(DATA);
+        // console.log(DATA);
         Array.prototype.forEach.call($PendingTrs, ($tr, index) => {
             formatPendingTr($tr);
         })
