@@ -13,13 +13,13 @@
     // Your code here...
     // {
     //     phone：[
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time }
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time,pig_note }
     //     ]
     // }
     // 获取已完成小猪数据
-    const DATA = localStorage.getItem('completeOrders')?JSON.parse(localStorage.getItem('completeOrders')):{};
-    const storageData =()=>{
-        localStorage.setItem('completeOrders',JSON.stringify(DATA));
+    const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
+    const storageData = () => {
+        localStorage.setItem('completeOrders', JSON.stringify(DATA));
     }
     // 获得每个tr数据
     const getTrData = ($tr) => {
@@ -37,15 +37,15 @@
         // console.log($trs);
         // console.log(getTrData($trs[0]))
         if (!$trs) true;
-        const length = 100 || $trs.length-1;
-        for(let i = length;i--;i>=0){
+        const length = JSON.stringify(DATA).length == 2 ? $trs.length - 1 : 100;
+        for (let i = length; i--; i >= 0) {
             const $tr = $trs[i];
             const trData = getTrData($tr);
             // DATA.push(getTrData($tr));
-            if(!DATA[trData.pig_phone]){
-                DATA[trData.pig_phone]=[trData];
-            }else{
-                if(DATA[trData.pig_phone].find(data=>data.pig_id==trData.pig_id))continue;
+            if (!DATA[trData.pig_phone]) {
+                DATA[trData.pig_phone] = [trData];
+            } else {
+                if (DATA[trData.pig_phone].find(data => data.pig_id == trData.pig_id)) continue;
                 DATA[trData.pig_phone].unshift(trData);
             }
         }
@@ -71,35 +71,35 @@
     //         }
     //     ]
     // }
-//   下载函数
-    const Download = ()=>{
-        const blob = new Blob([JSON.stringify(DATA)],{
-            type:'text/plain;charset=utf-8'
+    //   下载函数
+    const Download = () => {
+        const blob = new Blob([JSON.stringify(DATA)], {
+            type: 'text/plain;charset=utf-8'
         });
         const src = window.URL.createObjectURL(blob);
-        if(!src)return;
+        if (!src) return;
         const link = document.createElement('a');
-        link.style.display='none';
+        link.style.display = 'none';
         link.href = src;
-        link.setAttribute('download',`小猪数据${new Date().toLocaleDateString()}.txt`);
+        link.setAttribute('download', `小猪数据${new Date().toLocaleDateString()}.txt`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(blob);
     }
-    if(localStorage.getItem('downloadTime')){
-        if((new Date().getTime()-7*24*60*60*1000)>new Date(localStorage.getItem('downloadTime')).getTime()){
+    if (localStorage.getItem('downloadTime')) {
+        if ((new Date().getTime() - 7 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('downloadTime')).getTime()) {
             Download();
         }
-    }else{
+    } else {
         Download();
-        localStorage.setItem('downloadTime',new Date().toLocaleString());
+        localStorage.setItem('downloadTime', new Date().toLocaleString());
     }
     // 找到phone数据里面的不同qq数组
-    const findQqs = (datas,qq) => {
+    const findQqs = (datas, qq) => {
         const arr = [];
         datas.forEach(data => {
-            if (data.pig_qq!=qq && !arr.includes(data.pig_qq)) {
+            if (data.pig_qq && data.pig_qq != qq && !arr.includes(data.pig_qq)) {
                 arr.push(data.pig_qq);
             }
         })
@@ -130,17 +130,34 @@
     //         }
     //     ],"2752648533"
     // ));
+    // 找到phone数据里面的note数据
+    const findNotes = (datas)=>{
+        const arr = [];
+        datas.forEach(data=>{
+            if(data.pig_note)arr.push(data.pig_note);
+        })
+        return arr;
+    }
     // 格式化等待完成的数据
-    const formatPendingTr = ($tr) => {
-        const $phone = $tr.querySelector('td:nth-child(5)');
+    // 格式化phones的记录数据
+    const formatePhoneDatas = Datas => {
+        return Datas.filter(data => data.pig_id);
+    }
+    const formatTr = ($tr,phone_index=5,qq_index=8,date_index=14) => {
+        // console.log($tr);
+        const $phone = $tr.querySelector(`td:nth-child(${phone_index})`);
         const phone = $phone.textContent;
-        const $qq = $tr.querySelector('td:nth-child(8)');
+        const $qq = $tr.querySelector(`td:nth-child(${qq_index})`);
         const qq = $qq.textContent;
-        const Datas = DATA[phone];
-        // console.log(phone,qq);
-        if(!Datas)return;
-        // console.log(DATA[phone],qq);
-        const Qqs = findQqs(Datas,qq);
+        // console.log(phone, qq);
+        // console.log(Datas);
+        // 如果不存在就返回
+        if (!DATA[phone]) return;
+        const Datas = formatePhoneDatas(DATA[phone]);
+        // 如果没有记录就返回
+        if (Datas.length == 0) return;
+        // console.log(DATA[phone], qq);
+        const Qqs = findQqs(DATA[phone], qq);
         // console.log(Qqs);
         // console.log(arr);
         // 如果有不一样的qq号
@@ -150,6 +167,14 @@
             qqDiv.innerHTML = `有不同的qq号：${Qqs.join('，')}`;
             $qq.append(qqDiv);
         }
+        // 标注备注信息
+        const Notes = findNotes(DATA[phone]);
+        if(Notes.length>0){
+            const Div = document.createElement('div');
+            Div.style = 'color:#1000ff;';
+            Div.innerHTML = `备注：${Notes.join('，')}`;
+            $qq.append(Div);
+        }
         // 标注已做单数量
         const $completeTr = $tr.querySelector('td:nth-child(6)');
         const div = document.createElement('div');
@@ -157,41 +182,122 @@
         div.innerHTML = `已做单:${Datas.length}`;
         $completeTr.append(div);
         // 最近做单日期
-        const $registrTr = $tr.querySelector('td:nth-child(14)');
+        const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
         const $lately = document.createElement('div');
         $lately.style = 'color:red;';
         $lately.innerHTML = `最近做单日期:${Datas[0].pig_over_time}`;
         $registrTr.append($lately);
     }
+    // 等待完成格式化tr
     const startFormatPendingCon = () => {
         const $PendingCon = document.querySelector('.release_content .content_inner:nth-child(2)');
         const $PendingTrs = $PendingCon.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
-        // // 添加不同qq
-        const qqAdd = document.createElement('div');
-        qqAdd.className="search";
-        qqAdd.style='display:flex;';
-        qqAdd.innerHTML=`<input class="search_input phone" placeholder="会员手机号" /><input class="search_input qq" placeholder="qq号" /><button class="search_btn add">添加不同qq</button>`;
-        $PendingCon.prepend(qqAdd);
-        qqAdd.querySelector('.add').addEventListener('click',(e)=>{
-            const qq = qqAdd.querySelector('.qq').value;
-            const phone = qqAdd.querySelector('.phone').value;
-            // console.log(qq,phone);
-            if(!DATA[phone])DATA[phone]=[];
-            DATA[phone].push({
-                pig_phone:phone,
-                pig_qq:qq,
-            })
-            storageData();
-            location.reload();
-        },false)
+
         if (!$PendingTrs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($PendingTrs, ($tr, index) => {
-            formatPendingTr($tr);
+            formatTr($tr,5,8);
         })
         // formatPendingTr($PendingTrs[0]);
     }
     startFormatPendingCon();
-    // console.log($PendingTrs);
+    // 等待审核格式化tr
+    const startFormatAuditingCon = ()=>{
+        const $Con = document.querySelector('.release_content .content_inner:nth-child(3)');
+        const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
 
+        if (!$Trs) return;
+        // console.log($Trs);
+        Array.prototype.forEach.call($Trs, ($tr, index) => {
+            formatTr($tr,6,9);
+        })
+    }
+    startFormatAuditingCon();
+    // 已完成格式化前100tr
+    const startFormatCompleteCon = ()=>{
+        const $Con = document.querySelector('.release_content .content_inner:nth-child(5)');
+        const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
+
+        if (!$Trs) return;
+        // console.log(DATA);
+        Array.prototype.forEach.call($Trs, ($tr, index) => {
+            if(index<100)formatTr($tr,5,9);
+        })
+    }
+    startFormatCompleteCon();
+    // 已取消格式化前100tr
+    const startFormatCancelCon = ()=>{
+        const $Con = document.querySelector('.release_content .content_inner:nth-child(6)');
+        const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
+
+        if (!$Trs) return;
+        // console.log(DATA);
+        Array.prototype.forEach.call($Trs, ($tr, index) => {
+            if(index<100)formatTr($tr,5,7,12);
+        })
+    }
+    startFormatCancelCon();
+    // 添加不同qq
+    const AddQQDiv = () => {
+        const qqAdd = document.createElement('div');
+        qqAdd.className = "search";
+        qqAdd.style = 'display:flex; align-items:center; margin-bottom:-10px;';
+        qqAdd.innerHTML = `
+            <input class="search_input phone" placeholder="会员手机号" />
+            <div style="margin-left:10px;">
+                <div style="margin-bottom:10px;"><input class="search_input qq" placeholder="qq号" /><button class="search_btn add">添加不同qq</button><button class="search_btn del" style="background:red;margin-left:15px;">删除qq</button></div>
+                <div><input class="search_input note" placeholder="备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
+            </div>
+        `;
+        document.querySelector('.release_tab').before(qqAdd);
+        qqAdd.querySelector('.add').addEventListener('click', (e) => {
+            const qq = qqAdd.querySelector('.qq').value;
+            const phone = qqAdd.querySelector('.phone').value;
+            // console.log(qq,phone);
+            if (!DATA[phone]) DATA[phone] = [];
+            DATA[phone].push({
+                pig_phone: phone,
+                pig_qq: qq,
+            })
+            storageData();
+            alert('qq添加成功');
+            location.reload();
+        }, false)
+        qqAdd.querySelector('.del').addEventListener('click', e => {
+            const qq = qqAdd.querySelector('.qq').value;
+            const phone = qqAdd.querySelector('.phone').value;
+            if (!DATA[phone]) DATA[phone] = [];
+            const datas = DATA[phone].filter(data => data.pig_id || data.pig_qq != qq);
+            console.log(datas);
+            DATA[phone] = datas;
+            storageData();
+            alert('qq删除成功');
+            location.reload();
+        }, false)
+        qqAdd.querySelector('.add-note').addEventListener('click', (e) => {
+            const note = qqAdd.querySelector('.note').value;
+            const phone = qqAdd.querySelector('.phone').value;
+            // console.log(qq,phone);
+            if (!DATA[phone]) DATA[phone] = [];
+            DATA[phone].push({
+                pig_phone: phone,
+                pig_note: note,
+            })
+            storageData();
+            alert('备注添加成功');
+            location.reload();
+        }, false)
+        qqAdd.querySelector('.del-note').addEventListener('click', e => {
+            const note = qqAdd.querySelector('.note').value;
+            const phone = qqAdd.querySelector('.phone').value;
+            if (!DATA[phone]) DATA[phone] = [];
+            const datas = DATA[phone].filter(data => data.pig_note != note);
+            console.log(datas);
+            DATA[phone] = datas;
+            storageData();
+            alert('备注删除成功');
+            location.reload();
+        }, false)
+    }
+    AddQQDiv();
 })();
