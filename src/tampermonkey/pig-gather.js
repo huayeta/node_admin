@@ -2,7 +2,7 @@
 // @name         小猪平台-汇总数据
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  提交完成数据
+// @description  汇总数据，并持久化保存，1周自动下载一次
 // @author       You
 // @match        http://ewr.btyy.vip/home/member/fangdan.html
 // @grant        none
