@@ -13,7 +13,9 @@
     // Your code here...
     // {
     //     phone：[
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time,pig_note }
+    //         {pig_phone,pig_note}
+    //         {pig_phone,pig_qq}
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time }
     //     ]
     // }
     // 获取已完成小猪数据
