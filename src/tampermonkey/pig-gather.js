@@ -397,9 +397,11 @@
             const $note = e.target.parentNode;
             const index = [...Mnote.children].indexOf($note);
             // console.log(index);
-            notes.splice(index, 1);
-            $note.remove();
-            updateNotes();
+            if(confirm('确定删除吗？')){
+                notes.splice(index, 1);
+                $note.remove();
+                updateNotes();
+            } 
         }, 'div span')
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
