@@ -72,7 +72,7 @@
     //     ]
     // }
     //   下载函数
-    const MDownload = (data,name)=>{
+    const MDownload = (data, name) => {
         const blob = new Blob(data, {
             type: 'text/plain;charset=utf-8'
         });
@@ -89,12 +89,12 @@
     }
     // MDownload([1],'2');
     const Download = () => {
-        const data ={
+        const data = {
             completeOrders: DATA,
-            notes:localStorage.getItem('notes'),
-            downloadTime:localStorage.getItem('downloadTime')
+            notes: localStorage.getItem('notes'),
+            downloadTime: localStorage.getItem('downloadTime')
         }
-        MDownload([JSON.stringify(data)],'小猪数据');
+        MDownload([JSON.stringify(data)], '小猪数据');
     }
     if (localStorage.getItem('downloadTime')) {
         if ((new Date().getTime() - 7 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('downloadTime')).getTime()) {
@@ -280,13 +280,15 @@
         qqAdd.querySelector('.del').addEventListener('click', e => {
             const qq = qqAdd.querySelector('.qq').value;
             const phone = qqAdd.querySelector('.phone').value;
-            if (!DATA[phone]) DATA[phone] = [];
-            const datas = DATA[phone].filter(data => data.pig_id || data.pig_qq != qq);
-            console.log(datas);
-            DATA[phone] = datas;
-            storageData();
-            alert('qq删除成功');
-            location.reload();
+            if (confirm('确定删除吗？')) {
+                if (!DATA[phone]) DATA[phone] = [];
+                const datas = DATA[phone].filter(data => data.pig_id || data.pig_qq != qq);
+                console.log(datas);
+                DATA[phone] = datas;
+                storageData();
+                alert('qq删除成功');
+                location.reload();
+            }
         }, false)
         qqAdd.querySelector('.add-note').addEventListener('click', (e) => {
             const note = qqAdd.querySelector('.note').value;
@@ -304,20 +306,22 @@
         qqAdd.querySelector('.del-note').addEventListener('click', e => {
             const note = qqAdd.querySelector('.note').value;
             const phone = qqAdd.querySelector('.phone').value;
-            if (!DATA[phone]) DATA[phone] = [];
-            const datas = DATA[phone].filter(data => data.pig_note != note);
-            console.log(datas);
-            DATA[phone] = datas;
-            storageData();
-            alert('备注删除成功');
-            location.reload();
+            if (confirm('确定删除吗？')) {
+                if (!DATA[phone]) DATA[phone] = [];
+                const datas = DATA[phone].filter(data => data.pig_note != note);
+                console.log(datas);
+                DATA[phone] = datas;
+                storageData();
+                alert('备注删除成功');
+                location.reload();
+            }
         }, false)
         qqAdd.querySelector('.add-gnote').addEventListener('click', (e) => {
             const gnote = qqAdd.querySelector('.gnote').value;
-            if(!gnote)return;
+            if (!gnote) return;
             const notes = localStorage.getItem('notes') ? JSON.parse(localStorage.getItem('notes')) : [];
             notes.push(gnote);
-            localStorage.setItem('notes',JSON.stringify(notes));
+            localStorage.setItem('notes', JSON.stringify(notes));
             alert('备注网页添加成功');
             location.reload();
         }, false)
@@ -397,11 +401,11 @@
             const $note = e.target.parentNode;
             const index = [...Mnote.children].indexOf($note);
             // console.log(index);
-            if(confirm('确定删除吗？')){
+            if (confirm('确定删除吗？')) {
                 notes.splice(index, 1);
                 $note.remove();
                 updateNotes();
-            } 
+            }
         }, 'div span')
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
