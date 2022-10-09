@@ -72,8 +72,8 @@
     //     ]
     // }
     //   下载函数
-    const Download = () => {
-        const blob = new Blob([JSON.stringify(DATA)], {
+    const MDownload = (data,name)=>{
+        const blob = new Blob(data, {
             type: 'text/plain;charset=utf-8'
         });
         const src = window.URL.createObjectURL(blob);
@@ -81,11 +81,20 @@
         const link = document.createElement('a');
         link.style.display = 'none';
         link.href = src;
-        link.setAttribute('download', `小猪数据${new Date().toLocaleDateString()}.txt`);
+        link.setAttribute('download', `${name}${new Date().toLocaleDateString()}.txt`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(blob);
+    }
+    // MDownload([1],'2');
+    const Download = () => {
+        const data ={
+            completeOrders: DATA,
+            notes:localStorage.getItem('notes'),
+            downloadTime:localStorage.getItem('downloadTime')
+        }
+        MDownload([JSON.stringify(data)],'小猪数据');
     }
     if (localStorage.getItem('downloadTime')) {
         if ((new Date().getTime() - 7 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('downloadTime')).getTime()) {
@@ -131,10 +140,10 @@
     //     ],"2752648533"
     // ));
     // 找到phone数据里面的note数据
-    const findNotes = (datas)=>{
+    const findNotes = (datas) => {
         const arr = [];
-        datas.forEach(data=>{
-            if(data.pig_note)arr.push(data.pig_note);
+        datas.forEach(data => {
+            if (data.pig_note) arr.push(data.pig_note);
         })
         return arr;
     }
@@ -143,7 +152,7 @@
     const formatePhoneDatas = Datas => {
         return Datas.filter(data => data.pig_id);
     }
-    const formatTr = ($tr,phone_index=5,qq_index=8,date_index=14) => {
+    const formatTr = ($tr, phone_index = 5, qq_index = 8, date_index = 14) => {
         // console.log($tr);
         const $phone = $tr.querySelector(`td:nth-child(${phone_index})`);
         const phone = $phone.textContent;
@@ -169,7 +178,7 @@
         }
         // 标注备注信息
         const Notes = findNotes(DATA[phone]);
-        if(Notes.length>0){
+        if (Notes.length > 0) {
             const Div = document.createElement('div');
             Div.style = 'color:#1000ff;';
             Div.innerHTML = `备注：${Notes.join('，')}`;
@@ -196,44 +205,44 @@
         if (!$PendingTrs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($PendingTrs, ($tr, index) => {
-            formatTr($tr,5,8);
+            formatTr($tr, 5, 8);
         })
         // formatPendingTr($PendingTrs[0]);
     }
     startFormatPendingCon();
     // 等待审核格式化tr
-    const startFormatAuditingCon = ()=>{
+    const startFormatAuditingCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(3)');
         const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
 
         if (!$Trs) return;
         // console.log($Trs);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            formatTr($tr,6,9);
+            formatTr($tr, 6, 9);
         })
     }
     startFormatAuditingCon();
     // 已完成格式化前100tr
-    const startFormatCompleteCon = ()=>{
+    const startFormatCompleteCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(5)');
         const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
 
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if(index<100)formatTr($tr,5,9);
+            if (true || index < 100) formatTr($tr, 5, 9);
         })
     }
     startFormatCompleteCon();
     // 已取消格式化前100tr
-    const startFormatCancelCon = ()=>{
+    const startFormatCancelCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(6)');
         const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
 
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if(index<100)formatTr($tr,5,7,12);
+            if (index < 100) formatTr($tr, 5, 7, 12);
         })
     }
     startFormatCancelCon();
@@ -241,13 +250,18 @@
     const AddQQDiv = () => {
         const qqAdd = document.createElement('div');
         qqAdd.className = "search";
-        qqAdd.style = 'display:flex; align-items:center; margin-bottom:-10px;';
+        qqAdd.style = 'display:flex; align-items:center; height:auto; margin-top:15px;';
         qqAdd.innerHTML = `
+            <style>
+                .search .search_input{width:150px;}
+            </style>
             <input class="search_input phone" placeholder="会员手机号" />
-            <div style="margin-left:10px;">
+            <div style="margin-left:10px; margin-right:20px;">
                 <div style="margin-bottom:10px;"><input class="search_input qq" placeholder="qq号" /><button class="search_btn add">添加不同qq</button><button class="search_btn del" style="background:red;margin-left:15px;">删除qq</button></div>
-                <div><input class="search_input note" placeholder="备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
+                <div><input class="search_input note" placeholder="用户备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
             </div>
+            <input class="search_input gnote" placeholder="网页备注" /><button class="search_btn add-gnote">添加网页备注</button>
+            <button class="search_btn download" style="background:rebeccapurple;margin-left:15px;">下载数据</button>
         `;
         document.querySelector('.release_tab').before(qqAdd);
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
@@ -298,6 +312,96 @@
             alert('备注删除成功');
             location.reload();
         }, false)
+        qqAdd.querySelector('.add-gnote').addEventListener('click', (e) => {
+            const gnote = qqAdd.querySelector('.gnote').value;
+            if(!gnote)return;
+            const notes = localStorage.getItem('notes') ? JSON.parse(localStorage.getItem('notes')) : [];
+            notes.push(gnote);
+            localStorage.setItem('notes',JSON.stringify(notes));
+            alert('备注网页添加成功');
+            location.reload();
+        }, false)
+        qqAdd.querySelector('.download').addEventListener('click', (e) => {
+            Download();
+        }, false)
     }
     AddQQDiv();
+    //添加一个备注
+    function addEventListener(el, eventName, eventHandler, selector) {
+        if (selector) {
+            const wrappedHandler = (e) => {
+                if (e.target && e.target.matches(selector)) {
+                    eventHandler(e);
+                }
+            };
+            el.addEventListener(eventName, wrappedHandler);
+            return wrappedHandler;
+        } else {
+            el.addEventListener(eventName, eventHandler);
+            return eventHandler;
+        }
+    }
+    const AddNote = () => {
+        const Div = document.createElement('div');
+        Div.innerHTML = `
+            <style>
+                .m-note{
+                    display:flex;
+                    margin-top: 15px;
+                    margin-bottom: -45px;
+                    flex-wrap: wrap;
+                }
+                .m-note>div{
+                    display:inline-block;
+                    margin-right: 15px;
+                    line-height:2;
+                    background: #e1e0e0;
+                    padding:0 0 0 15px;
+                    margin-bottom: 15px;
+                    user-select: none;
+                }
+                .m-note>div:hover{
+                    background: #efefef;
+                }
+                .m-note>div span{
+                    display: inline-block;
+                    padding: 0 15px;
+                    background: red;
+                    color: #fff;
+                    margin-left: 15px;
+                    cursor: pointer;
+                    transition: 0.3s;
+                }
+                .m-note>div span:hover{
+                    scale: 0.8;
+                }
+            </style>
+            <div class="m-note">
+                <!-- <div>备注1<span>×</span></div> -->
+            </div>
+        `;
+        const Mnote = Div.querySelector('.m-note');
+        document.querySelector('.release_tab').before(Div);
+        const notes = localStorage.getItem('notes') ? JSON.parse(localStorage.getItem('notes')) : [];
+        if (notes.length > 0) {
+            let txt = '';
+            notes.forEach(note => {
+                txt += `<div>${note}<span>×</span></div>`;
+            })
+            Mnote.innerHTML = txt;
+        }
+        const updateNotes = () => {
+            localStorage.setItem('notes', JSON.stringify(notes));
+        }
+        addEventListener(Mnote, 'click', (e) => {
+            const $note = e.target.parentNode;
+            const index = [...Mnote.children].indexOf($note);
+            // console.log(index);
+            notes.splice(index, 1);
+            $note.remove();
+            updateNotes();
+        }, 'div span')
+        // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
+    }
+    AddNote();
 })();
