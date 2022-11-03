@@ -37,8 +37,8 @@
         }
     }
     const readComment = () => {
-        const tables = document.querySelectorAll('.next-table-body table');
-        Array.prototype.forEach.call(tables, table => {
+        const trs = document.querySelectorAll('.next-table-body tr');
+        Array.prototype.forEach.call(trs, table => {
             const rates = table.querySelectorAll('.l-rate-content');
             if (rates && rates[0]) {
                 const rate =  rates[0];
@@ -80,6 +80,7 @@
         // console.log(Coments);
         // console.log(Photos);
     }
+    window.readComment=readComment;
     const clickNext = () => {
         const ev = new Event('click',{"bubbles":true, "cancelable":false});
         next_btn.dispatchEvent(ev);

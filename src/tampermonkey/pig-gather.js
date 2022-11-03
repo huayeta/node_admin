@@ -5,6 +5,7 @@
 // @description  汇总数据，并持久化保存，1周自动下载一次
 // @author       You
 // @match        http://ewr.btyy.vip/home/member/fangdan.html
+// @match        http://pig.com/home/member/fangdan.html
 // @grant        none
 // ==/UserScript==
 
@@ -97,6 +98,7 @@
             downloadTime: localStorage.getItem('downloadTime')
         }
         MDownload([JSON.stringify(data)], '小猪数据');
+        localStorage.setItem('downloadTime', new Date().toLocaleString());
     }
     if (localStorage.getItem('downloadTime')) {
         if ((new Date().getTime() - 7 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('downloadTime')).getTime()) {
@@ -104,7 +106,7 @@
         }
     } else {
         Download();
-        localStorage.setItem('downloadTime', new Date().toLocaleString());
+
     }
     // 找到phone数据里面的不同qq数组
     const findQqs = (datas, qq) => {
@@ -412,4 +414,8 @@
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
     AddNote();
+    window.PIG={
+        Download,
+        findNotes,findQqs
+    }
 })();
