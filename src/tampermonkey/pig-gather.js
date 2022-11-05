@@ -349,7 +349,7 @@
                     <input class="search_input j-phone" placeholder="用户手机号" />
                     <button class="search_btn j-findPhoneBtn" style="width:auto;padding: 0 10px;">查询phone做单数据</button>
                     <input class="search_input j-qq" placeholder="用户qq" style="margin-left: 15px;" />
-                    <button class="search_btn j-findQqBtn" style=“background:rebeccapurple;width:auto;padding: 0 10px;”>查询qq做单数据</button>
+                    <button class="search_btn j-findQqBtn" style="background:rebeccapurple;width:auto;padding: 0 10px;">查询qq做单数据</button>
                 </div>
             </div>
         `;
@@ -360,6 +360,8 @@
             if (phone && DATA[phone]) {
                 console.log(DATA[phone]);
                 alert(JSON.stringify(DATA[phone]));
+            }else{
+                alert('没找到记录')
             }
         })
         // qq查询
@@ -381,6 +383,8 @@
                 if (arr.length > 0) {
                     console.log(arr);
                     alert(JSON.stringify(arr));
+                }else{
+                    alert('没找到记录')
                 }
             }
         })
