@@ -31,7 +31,7 @@
         const pig_qq = $tr.querySelector('td:nth-child(9)').textContent;
         const pig_register_time = $tr.querySelector('td:nth-child(10)').textContent;
         const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
-        return { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time };
+        return { pig_id, pig_phone, pig_qq, pig_over_time, pig_register_time };
     }
     const getData = () => {
         const $con = document.querySelector('.release_content .content_inner:nth-child(5)');
@@ -334,9 +334,9 @@
     }
     AddQQDiv();
     // 添加一个通过手机查询做单记录的功能
-    const addFindDataByPhoneDiv = ()=>{
+    const addFindDataByPhoneDiv = () => {
         const Div = document.createElement('div');
-        Div.innerHTML=`
+        Div.innerHTML = `
             <div class="">
                 <style>
                     .m-findDate{
@@ -347,17 +347,41 @@
                 <div class="m-findData search">
                     <img class="search_icon" src="/static/home/images/userCenter/search.png" alt="查询">
                     <input class="search_input j-phone" placeholder="用户手机号" />
-                    <button class="search_btn j-findBtn">查询做单数据</button>
-                    <span style="color:red;">*通过用户的手机号查询他的做单记录</span>
+                    <button class="search_btn j-findPhoneBtn" style="width:auto;padding: 0 10px;">查询phone做单数据</button>
+                    <input class="search_input j-qq" placeholder="用户qq" style="margin-left: 15px;" />
+                    <button class="search_btn j-findQqBtn" style=“background:rebeccapurple;width:auto;padding: 0 10px;”>查询qq做单数据</button>
                 </div>
             </div>
         `;
         document.querySelector('.release_tab').before(Div);
-        Div.querySelector('.j-findBtn').addEventListener('click',(e)=>{
+        // phone查询
+        Div.querySelector('.j-findPhoneBtn').addEventListener('click', (e) => {
             const phone = Div.querySelector('.j-phone').value;
-            if(phone && DATA[phone]){
+            if (phone && DATA[phone]) {
                 console.log(DATA[phone]);
                 alert(JSON.stringify(DATA[phone]));
+            }
+        })
+        // qq查询
+        Div.querySelector('.j-findQqBtn').addEventListener('click', () => {
+            const qq = Div.querySelector('.j-qq').value;
+            const arr = [];
+            if (qq) {
+                const phones = Object.keys(DATA);
+                for (let phone of phones) {
+                    const datas = DATA[phone];
+                    for (let data of datas) {
+                        if (data.pig_qq == qq) {
+                            arr.push(datas);
+                            break;
+                        }
+                    }
+                }
+                // console.log(arr,qq)
+                if (arr.length > 0) {
+                    console.log(arr);
+                    alert(JSON.stringify(arr));
+                }
             }
         })
     }
@@ -442,9 +466,9 @@
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
     AddNote();
-    
-    window.PIG={
+
+    window.PIG = {
         Download,
-        findNotes,findQqs
+        findNotes, findQqs
     }
 })();
