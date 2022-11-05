@@ -4,8 +4,7 @@
 // @version      0.1
 // @description  汇总数据，并持久化保存，1周自动下载一次
 // @author       You
-// @match        http://ewr.btyy.vip/home/member/fangdan.html
-// @match        http://pig.com/home/member/fangdan.html
+// @match        http://sde.meiduoduo.xyz/home/member/fangdan.html
 // @grant        none
 // ==/UserScript==
 
@@ -14,9 +13,9 @@
     // Your code here...
     // {
     //     phone：[
-    //         {pig_phone,pig_note}
-    //         {pig_phone,pig_qq}
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time }
+    //         {pig_phone,pig_note} 添加备注
+    //         {pig_phone,pig_qq} 添加不同的qq
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time } 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
@@ -334,6 +333,35 @@
         }, false)
     }
     AddQQDiv();
+    // 添加一个通过手机查询做单记录的功能
+    const addFindDataByPhoneDiv = ()=>{
+        const Div = document.createElement('div');
+        Div.innerHTML=`
+            <div class="">
+                <style>
+                    .m-findDate{
+                        display:flex;
+                        margin-top:15px;
+                    }
+                </style>
+                <div class="m-findData search">
+                    <img class="search_icon" src="/static/home/images/userCenter/search.png" alt="查询">
+                    <input class="search_input j-phone" placeholder="用户手机号" />
+                    <button class="search_btn j-findBtn">查询做单数据</button>
+                    <span style="color:red;">*通过用户的手机号查询他的做单记录</span>
+                </div>
+            </div>
+        `;
+        document.querySelector('.release_tab').before(Div);
+        Div.querySelector('.j-findBtn').addEventListener('click',(e)=>{
+            const phone = Div.querySelector('.j-phone').value;
+            if(phone && DATA[phone]){
+                console.log(DATA[phone]);
+                alert(JSON.stringify(DATA[phone]));
+            }
+        })
+    }
+    addFindDataByPhoneDiv();
     //添加一个备注
     function addEventListener(el, eventName, eventHandler, selector) {
         if (selector) {
@@ -414,6 +442,7 @@
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
     AddNote();
+    
     window.PIG={
         Download,
         findNotes,findQqs
