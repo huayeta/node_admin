@@ -155,7 +155,7 @@
     const formatePhoneDatas = Datas => {
         return Datas.filter(data => data.pig_id);
     }
-    const formatTr = ($tr, phone_index = 5, qq_index = 8, date_index = 14) => {
+    const formatTr = ($tr, phone_index = 5, qq_index = 8, date_index = 14, type) => {
         // console.log($tr);
         const $phone = $tr.querySelector(`td:nth-child(${phone_index})`);
         const phone = $phone.textContent;
@@ -164,7 +164,26 @@
         // console.log(phone, qq);
         // console.log(Datas);
         // 如果不存在就返回
-        if (!DATA[phone]) return;
+        if (!DATA[phone]) {
+
+            // 如果type==2，等待完成列表
+            if (type == 2) {
+                const Div = document.createElement('div');
+                Div.className = 'search';
+                Div.style = 'margin-top: 10px;'
+                Div.innerHTML = `
+            <button class="search_btn j-btn">添加记录</button>
+            `;
+                $phone.append(Div);
+                const $btn =Div.querySelector('.j-btn');
+                $btn.addEventListener('click',e=>{
+                    DATA[phone]=[];
+                    alert('添加记录成功~')
+                },false)
+            }
+
+            return;
+        }
         const Datas = formatePhoneDatas(DATA[phone]);
         // 如果没有记录就返回
         if (Datas.length == 0) return;
@@ -208,7 +227,7 @@
         if (!$PendingTrs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($PendingTrs, ($tr, index) => {
-            formatTr($tr, 5, 8);
+            formatTr($tr, 5, 8, 14, 2);
         })
         // formatPendingTr($PendingTrs[0]);
     }
@@ -249,7 +268,7 @@
         })
     }
     startFormatCancelCon();
-    // 添加不同qq
+    // 添加不同qq，用户备注
     const AddQQDiv = () => {
         const qqAdd = document.createElement('div');
         qqAdd.className = "search";
@@ -271,7 +290,11 @@
             const qq = qqAdd.querySelector('.qq').value;
             const phone = qqAdd.querySelector('.phone').value;
             // console.log(qq,phone);
-            if (!DATA[phone]) DATA[phone] = [];
+            if (!DATA[phone]) {
+                alert('找不到对应的记录~')
+                return;
+                // DATA[phone] = [];
+            }
             DATA[phone].push({
                 pig_phone: phone,
                 pig_qq: qq,
@@ -284,7 +307,11 @@
             const qq = qqAdd.querySelector('.qq').value;
             const phone = qqAdd.querySelector('.phone').value;
             if (confirm('确定删除吗？')) {
-                if (!DATA[phone]) DATA[phone] = [];
+                if (!DATA[phone]) {
+                    alert('找不到对应的记录~')
+                    return;
+                    // DATA[phone] = [];
+                }
                 const datas = DATA[phone].filter(data => data.pig_id || data.pig_qq != qq);
                 console.log(datas);
                 DATA[phone] = datas;
@@ -297,7 +324,11 @@
             const note = qqAdd.querySelector('.note').value;
             const phone = qqAdd.querySelector('.phone').value;
             // console.log(qq,phone);
-            if (!DATA[phone]) DATA[phone] = [];
+            if (!DATA[phone]) {
+                alert('找不到对应的记录~')
+                return;
+                // DATA[phone] = [];
+            }
             DATA[phone].push({
                 pig_phone: phone,
                 pig_note: note,
@@ -310,7 +341,11 @@
             const note = qqAdd.querySelector('.note').value;
             const phone = qqAdd.querySelector('.phone').value;
             if (confirm('确定删除吗？')) {
-                if (!DATA[phone]) DATA[phone] = [];
+                if (!DATA[phone]) {
+                    alert('找不到对应的记录~')
+                    return;
+                    // DATA[phone] = [];
+                }
                 const datas = DATA[phone].filter(data => data.pig_note != note);
                 console.log(datas);
                 DATA[phone] = datas;
@@ -360,7 +395,7 @@
             if (phone && DATA[phone]) {
                 console.log(DATA[phone]);
                 alert(JSON.stringify(DATA[phone]));
-            }else{
+            } else {
                 alert('没找到记录')
             }
         })
@@ -383,7 +418,7 @@
                 if (arr.length > 0) {
                     console.log(arr);
                     alert(JSON.stringify(arr));
-                }else{
+                } else {
                     alert('没找到记录')
                 }
             }
