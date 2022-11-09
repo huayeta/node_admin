@@ -16,6 +16,7 @@
     var $span = $('span[onclick^="isPtTop"]');
     const pt_top_zuanshi = $('#pt_top_zuanshi').text();
     const span_length = $span.length;
+    const time = 25000;
     const ptGood = goods_id => {
         var url = '/home/member/ispttop.html';
         return new Promise((resolve, reject) => {
@@ -47,7 +48,7 @@
                         }
                     }
                 });
-            }, 25000);
+            }, time);
         });
     };
     const spanPtGood = async span => {
@@ -69,6 +70,10 @@
             }
             await Promise.all(arr);
             location.reload();
+        }else{
+            setTimeout(() => {
+                location.reload();
+            }, time);
         }
     }
     ajaxSpanLength(span_length>=3?3:span_length);
