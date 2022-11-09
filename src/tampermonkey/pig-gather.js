@@ -268,7 +268,7 @@
         })
     }
     startFormatCancelCon();
-    // 添加不同qq，用户备注
+    // 添加不同qq，用户备注，网页备注
     const AddQQDiv = () => {
         const qqAdd = document.createElement('div');
         qqAdd.className = "search";
@@ -368,7 +368,7 @@
         }, false)
     }
     AddQQDiv();
-    // 添加一个通过手机查询做单记录的功能
+    // 添加一个通过手机查询做单记录的功能，通过qq查找做单记录
     const addFindDataByPhoneDiv = () => {
         const Div = document.createElement('div');
         Div.innerHTML = `
@@ -396,7 +396,8 @@
                 console.log(DATA[phone]);
                 alert(JSON.stringify(DATA[phone]));
             } else {
-                alert('没找到记录')
+                alert('没找到记录');
+                location.reload();
             }
         })
         // qq查询
@@ -419,7 +420,8 @@
                     console.log(arr);
                     alert(JSON.stringify(arr));
                 } else {
-                    alert('没找到记录')
+                    alert('没找到记录');
+                    location.reload();
                 }
             }
         })
