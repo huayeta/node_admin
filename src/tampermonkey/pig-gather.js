@@ -184,9 +184,7 @@
 
             return;
         }
-        const Datas = formatePhoneDatas(DATA[phone]);
-        // 如果没有记录就返回
-        if (Datas.length == 0) return;
+        const Datas = formatePhoneDatas(DATA[phone]);  
         // console.log(DATA[phone], qq);
         const Qqs = findQqs(DATA[phone], qq);
         // console.log(Qqs);
@@ -206,6 +204,8 @@
             Div.innerHTML = `备注：${Notes.join('，')}`;
             $qq.append(Div);
         }
+        // 如果没有记录就返回
+        if (Datas.length == 0) return;
         // 标注已做单数量
         const $completeTr = $tr.querySelector('td:nth-child(6)');
         const div = document.createElement('div');
