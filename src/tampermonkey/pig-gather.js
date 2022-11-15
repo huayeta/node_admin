@@ -403,7 +403,7 @@
                 alert(JSON.stringify(DATA[phone]));
             } else {
                 alert('没找到记录');
-                location.reload();
+                // location.reload();
             }
         })
         // qq查询
@@ -427,7 +427,7 @@
                     alert(JSON.stringify(arr));
                 } else {
                     alert('没找到记录');
-                    location.reload();
+                    // location.reload();
                 }
             }
         })
