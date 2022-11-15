@@ -178,6 +178,7 @@
                 const $btn =Div.querySelector('.j-btn');
                 $btn.addEventListener('click',e=>{
                     DATA[phone]=[];
+                    storageData();
                     alert('添加记录成功~')
                 },false)
             }
@@ -205,7 +206,12 @@
             $qq.append(Div);
         }
         // 如果没有记录就返回
-        if (Datas.length == 0) return;
+        if (Datas.length == 0) {
+
+            // 格式化注册时间到现在多久了
+            
+            return;
+        }
         // 标注已做单数量
         const $completeTr = $tr.querySelector('td:nth-child(6)');
         const div = document.createElement('div');
