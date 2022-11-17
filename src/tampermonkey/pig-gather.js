@@ -175,17 +175,17 @@
             <button class="search_btn j-btn">添加记录</button>
             `;
                 $phone.append(Div);
-                const $btn =Div.querySelector('.j-btn');
-                $btn.addEventListener('click',e=>{
-                    DATA[phone]=[];
+                const $btn = Div.querySelector('.j-btn');
+                $btn.addEventListener('click', e => {
+                    DATA[phone] = [];
                     storageData();
                     alert('添加记录成功~')
-                },false)
+                }, false)
             }
 
             return;
         }
-        const Datas = formatePhoneDatas(DATA[phone]);  
+        const Datas = formatePhoneDatas(DATA[phone]);
         // console.log(DATA[phone], qq);
         const Qqs = findQqs(DATA[phone], qq);
         // console.log(Qqs);
@@ -209,7 +209,7 @@
         if (Datas.length == 0) {
 
             // 格式化注册时间到现在多久了
-            
+
             return;
         }
         // 标注已做单数量
@@ -283,7 +283,10 @@
             <style>
                 .search .search_input{width:150px;}
             </style>
-            <input class="search_input phone" placeholder="会员手机号" />
+            <div>
+                <div style="margin-bottom:10px;"><input class="search_input phone" placeholder="通过会员手机号" /></div>
+                <div><input class="search_input byqq" placeholder="通过会员qq" /></div>
+            </div>
             <div style="margin-left:10px; margin-right:20px;">
                 <div style="margin-bottom:10px;"><input class="search_input qq" placeholder="qq号" /><button class="search_btn add">添加不同qq</button><button class="search_btn del" style="background:red;margin-left:15px;">删除qq</button></div>
                 <div><input class="search_input note" placeholder="用户备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
@@ -292,6 +295,13 @@
             <button class="search_btn download" style="background:rebeccapurple;margin-left:15px;">下载数据</button>
         `;
         document.querySelector('.release_tab').before(qqAdd);
+        // 不同qq查找到手机号
+        qqAdd.querySelector('.byqq').addEventListener('input',e=>{
+            const qq = e.target.value;
+            const $phone = qqAdd.querySelector('.phone');
+            const datas = findDatasByQq(qq);
+            if(datas.length === 1) $phone.value= datas[0][0].pig_phone;
+        })
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
             const phone = qqAdd.querySelector('.phone').value;
@@ -374,6 +384,21 @@
         }, false)
     }
     AddQQDiv();
+    // 通过qq查询到做单数据
+    function findDatasByQq(qq) {
+        const arr = [];
+        const phones = Object.keys(DATA);
+        for (let phone of phones) {
+            const datas = DATA[phone];
+            for (let data of datas) {
+                if (data.pig_qq == qq) {
+                    arr.push(datas);
+                    break;
+                }
+            }
+        }
+        return arr;
+    }
     // 添加一个通过手机查询做单记录的功能，通过qq查找做单记录
     const addFindDataByPhoneDiv = () => {
         const Div = document.createElement('div');
@@ -384,6 +409,9 @@
                         display:flex;
                         margin-top:15px;
                     }
+                    .u-con p{
+                        line-height: 1.5;
+                    }
                 </style>
                 <div class="m-findData search">
                     <img class="search_icon" src="/static/home/images/userCenter/search.png" alt="查询">
@@ -391,42 +419,82 @@
                     <button class="search_btn j-findPhoneBtn" style="width:auto;padding: 0 10px;">查询phone做单数据</button>
                     <input class="search_input j-qq" placeholder="用户qq" style="margin-left: 15px;" />
                     <button class="search_btn j-findQqBtn" style="background:rebeccapurple;width:auto;padding: 0 10px;">查询qq做单数据</button>
-                </div>
+                    <button class="search_btn j-findQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">查询不同的qq</button>
+                    </div>
+                <div class="u-con"></div>
             </div>
         `;
         document.querySelector('.release_tab').before(Div);
+        const $con = Div.querySelector('.u-con');
+        const setCon = arr => {
+            let str = '';
+            if (arr.length > 0) {
+                arr.forEach(date => {
+                    str += `<p>${JSON.stringify(date)}</p>`;
+                })
+            }
+            $con.innerHTML = str;
+        }
         // phone查询
         Div.querySelector('.j-findPhoneBtn').addEventListener('click', (e) => {
             const phone = Div.querySelector('.j-phone').value;
             if (phone && DATA[phone]) {
                 console.log(DATA[phone]);
-                alert(JSON.stringify(DATA[phone]));
+                // alert(JSON.stringify(DATA[phone]));
+                setCon(DATA[phone]);
             } else {
-                alert('没找到记录');
+                // alert('没找到记录');
+                setCon(['没找到做单记录']);
                 // location.reload();
             }
         })
-        // qq查询
+
         Div.querySelector('.j-findQqBtn').addEventListener('click', () => {
             const qq = Div.querySelector('.j-qq').value;
-            const arr = [];
             if (qq) {
-                const phones = Object.keys(DATA);
-                for (let phone of phones) {
-                    const datas = DATA[phone];
-                    for (let data of datas) {
-                        if (data.pig_qq == qq) {
-                            arr.push(datas);
-                            break;
-                        }
-                    }
-                }
+                const arr = findDatasByQq(qq);
                 // console.log(arr,qq)
                 if (arr.length > 0) {
+                    // 判断是否有一个qq多个手机的情况存在
                     console.log(arr);
-                    alert(JSON.stringify(arr));
+                    if (arr.length === 1) {
+                        setCon(arr[0]);
+                    } else {
+                        setCon(arr);
+                    }
+                    // alert(JSON.stringify(arr));
                 } else {
-                    alert('没找到记录');
+                    // alert('没找到记录');
+                    setCon(['没找到做单记录'])
+                    // location.reload();
+                }
+            }
+        })
+        // 查询不同的qq
+        Div.querySelector('.j-findQqs').addEventListener('click', () => {
+            const qq = Div.querySelector('.j-qq').value;
+            if (qq) {
+                const arr = findDatasByQq(qq);
+                // console.log(arr,qq)
+                if (arr.length > 0) {
+                    // 判断是否有一个qq多个手机的情况存在
+                    console.log(arr);
+                    if (arr.length === 1) {
+                        // setCon(arr[0]);
+                        const datas = arr[0];
+                        const qqs = findQqs(datas, qq);
+                        if (qqs.length > 0) {
+                            setCon(qqs);
+                        } else {
+                            setCon(['没有找到不同的qq'])
+                        }
+                    } else {
+                        setCon(arr);
+                    }
+                    // alert(JSON.stringify(arr));
+                } else {
+                    // alert('没找到记录');
+                    setCon(['没找到做单记录'])
                     // location.reload();
                 }
             }
