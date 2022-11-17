@@ -295,7 +295,6 @@
                         <div><input class="search_input note" placeholder="用户备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
                     </div>
                     <input class="search_input gnote" placeholder="网页备注" /><button class="search_btn add-gnote">添加网页备注</button>
-                    <button class="search_btn download" style="background:rebeccapurple;margin-left:15px;">下载数据</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -311,6 +310,7 @@
                         <button class="search_btn j-findPhoneBtn" style="width:auto;padding: 0 10px;">查询phone做单数据</button>
                         <button class="search_btn j-findQqBtn" style="background:rebeccapurple;width:auto;padding: 0 10px;">查询qq做单数据</button>
                         <button class="search_btn j-findQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">查询不同的qq</button>
+                        <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
                     </div>
                     <div class="u-con"></div>
                 </div>
@@ -410,10 +410,7 @@
             localStorage.setItem('notes', JSON.stringify(notes));
             alert('备注网页添加成功');
             location.reload();
-        }, false)
-        qqAdd.querySelector('.download').addEventListener('click', (e) => {
-            Download();
-        }, false)
+        }, false)   
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
         const setCon = arr => {
@@ -425,6 +422,9 @@
             }
             $con.innerHTML = str;
         }
+        $btns.querySelector('.download').addEventListener('click', (e) => {
+            Download();
+        }, false)
         // phone查询
         $btns.querySelector('.j-findPhoneBtn').addEventListener('click', (e) => {
             const phone = $phone.value;
