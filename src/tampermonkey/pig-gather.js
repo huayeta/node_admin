@@ -15,11 +15,18 @@
     //     phone：[
     //         {pig_phone,pig_note} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time } 正常小猪单
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre? } 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
+    const QQS={
+        '31':'小艾-1',
+        '30':'小欣-2',
+        '20':'小云-3',
+        '54':'小韵-4',
+        '21':'小菜菜'
+    }
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
     }
@@ -27,11 +34,18 @@
     const getTrData = ($tr) => {
         // console.log($tr);
         const pig_id = $tr.querySelector('td:nth-child(1)').textContent;
+        const pig_title = $tr.querySelector('td:nth-child(2)').textContent;
         const pig_phone = $tr.querySelector('td:nth-child(5)').textContent;
         const pig_qq = $tr.querySelector('td:nth-child(9)').textContent;
         const pig_register_time = $tr.querySelector('td:nth-child(10)').textContent;
         const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
-        return { pig_id, pig_phone, pig_qq, pig_over_time, pig_register_time };
+        
+        let result = { pig_id, pig_phone, pig_qq, pig_over_time, pig_register_time };
+        let arr = /^.&.，(\d+?)\：/.exec(pig_title);
+        if(arr){
+            result.qq_exec_pre= arr[1];
+        }
+        return result;
     }
     const getData = () => {
         const $con = document.querySelector('.release_content .content_inner:nth-child(5)');
@@ -39,6 +53,7 @@
         // console.log($trs);
         // console.log(getTrData($trs[0]))
         if (!$trs) true;
+        //如果DATA是一个空对象就全部循环了
         const length = JSON.stringify(DATA).length == 2 ? $trs.length - 1 : 100;
         for (let i = length; i--; i >= 0) {
             const $tr = $trs[i];
@@ -47,7 +62,11 @@
             if (!DATA[trData.pig_phone]) {
                 DATA[trData.pig_phone] = [trData];
             } else {
-                if (DATA[trData.pig_phone].find(data => data.pig_id == trData.pig_id)) continue;
+                const index = DATA[trData.pig_phone].findIndex(data => data.pig_id == trData.pig_id)
+                if (index!=-1) {
+                    if(!DATA[trData.pig_phone][index].qq_exec_pre && trData.qq_exec_pre)DATA[trData.pig_phone][index].qq_exec_pre=trData.qq_exec_pre;
+                    continue;
+                }
                 DATA[trData.pig_phone].unshift(trData);
             }
         }
@@ -222,7 +241,9 @@
         const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
         const $lately = document.createElement('div');
         $lately.style = 'color:red;';
-        $lately.innerHTML = `最近做单日期:${Datas[0].pig_over_time}`;
+        let latelyStr = `<p>最近做单日期:${Datas[0].pig_over_time}</p>`;
+        if(Datas[0].qq_exec_pre)latelyStr+=`<P>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</P>`;
+        $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
     }
     // 等待完成格式化tr
