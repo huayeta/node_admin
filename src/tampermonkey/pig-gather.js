@@ -194,7 +194,7 @@
         if (Qqs.length > 0) {
             const qqDiv = document.createElement('div');
             qqDiv.style = 'color:red;';
-            qqDiv.innerHTML = `有不同的qq号：${Qqs.join('，')}`;
+            qqDiv.innerHTML = `有不同的qq号：${Qqs.map(qq=>`<p>${qq}</p>`).join('')}`;
             $qq.append(qqDiv);
         }
         // 标注备注信息
