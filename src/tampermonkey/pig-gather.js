@@ -13,6 +13,7 @@
     // Your code here...
     // {
     //     phone：[
+    //         {pig_phone,qq_exec_pre,pig_over_time} 添加做单记录            
     //         {pig_phone,pig_note} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
     //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre? } 正常小猪单
@@ -20,12 +21,12 @@
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
-    const QQS={
-        '31':'小艾-1',
-        '30':'小欣-2',
-        '20':'小云-3',
-        '54':'小韵-4',
-        '21':'小菜菜'
+    const QQS = {
+        '31': '小艾-1',
+        '30': '小欣-2',
+        '20': '小云-3',
+        '54': '小韵-4',
+        '21': '小菜菜'
     }
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
@@ -39,11 +40,11 @@
         const pig_qq = $tr.querySelector('td:nth-child(9)').textContent;
         const pig_register_time = $tr.querySelector('td:nth-child(10)').textContent;
         const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
-        
+
         let result = { pig_id, pig_phone, pig_qq, pig_over_time, pig_register_time };
         let arr = /^.&.，(\d+?)\：/.exec(pig_title);
-        if(arr){
-            result.qq_exec_pre= arr[1];
+        if (arr) {
+            result.qq_exec_pre = arr[1];
         }
         return result;
     }
@@ -63,8 +64,8 @@
                 DATA[trData.pig_phone] = [trData];
             } else {
                 const index = DATA[trData.pig_phone].findIndex(data => data.pig_id == trData.pig_id)
-                if (index!=-1) {
-                    if(!DATA[trData.pig_phone][index].qq_exec_pre && trData.qq_exec_pre)DATA[trData.pig_phone][index].qq_exec_pre=trData.qq_exec_pre;
+                if (index != -1) {
+                    if (!DATA[trData.pig_phone][index].qq_exec_pre && trData.qq_exec_pre) DATA[trData.pig_phone][index].qq_exec_pre = trData.qq_exec_pre;
                     continue;
                 }
                 DATA[trData.pig_phone].unshift(trData);
@@ -172,7 +173,7 @@
     // 格式化等待完成的数据
     // 格式化phones的记录数据
     const formatePhoneDatas = Datas => {
-        return Datas.filter(data => data.pig_id);
+        return Datas.filter(data => data.pig_over_time);
     }
     const formatTr = ($tr, phone_index = 5, qq_index = 8, date_index = 14, type) => {
         // console.log($tr);
@@ -213,7 +214,7 @@
         if (Qqs.length > 0) {
             const qqDiv = document.createElement('div');
             qqDiv.style = 'color:red;';
-            qqDiv.innerHTML = `有不同的qq号：${Qqs.map(qq=>`<p>${qq}</p>`).join('')}`;
+            qqDiv.innerHTML = `有不同的qq号：${Qqs.map(qq => `<p>${qq}</p>`).join('')}`;
             $qq.append(qqDiv);
         }
         // 标注备注信息
@@ -242,7 +243,7 @@
         const $lately = document.createElement('div');
         $lately.style = 'color:red;';
         let latelyStr = `<p>最近做单日期:${Datas[0].pig_over_time}</p>`;
-        if(Datas[0].qq_exec_pre)latelyStr+=`<P>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</P>`;
+        if (Datas[0].qq_exec_pre) latelyStr += `<P>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</P>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
     }
@@ -298,6 +299,10 @@
     // 添加不同qq，用户备注，网页备注
     const AddQQDiv = () => {
         const qqAdd = document.createElement('div');
+        let option_strs = '';
+        Object.keys(QQS).forEach(num => {
+            option_strs += `<option value=${num}>${QQS[num]}</option>`;
+        })
         qqAdd.innerHTML = `
             <div class="">
                 <div class="search m-search">
@@ -315,7 +320,10 @@
                         <div style="margin-bottom:10px;"><input class="search_input qq" placeholder="qq号" /><button class="search_btn add">添加不同qq</button><button class="search_btn del" style="background:red;margin-left:15px;">删除qq</button></div>
                         <div><input class="search_input note" placeholder="用户备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
                     </div>
-                    <input class="search_input gnote" placeholder="网页备注" /><button class="search_btn add-gnote">添加网页备注</button>
+                    <div>
+                        <div style="margin-bottom: 10px;"><input class="search_input gnote" placeholder="网页备注" /><button class="search_btn add-gnote">添加网页备注</button></div>
+                        <div><select class="search_input qq_exec_pre" style="width:190px;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button></div>    
+                    </div>
                 </div>
                 <div class="btns">
                     <style>
@@ -346,17 +354,18 @@
             const qq = $byQQ.value;
             const datas = findDatasByQq(qq);
             console.log(datas);
-            if(datas.length>0){
+            if (datas.length > 0) {
                 if (datas.length === 1) {
                     $phone.value = datas[0][0].pig_phone;
-                }else{
+                } else {
                     $phone.value = '有多个手机号';
                 }
-            }else{
+            } else {
                 $phone.value = '';
             }
-            
+
         })
+        // 添加qq
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
             const phone = $phone.value;
@@ -374,6 +383,7 @@
             alert('qq添加成功');
             location.reload();
         }, false)
+        // 删除qq
         qqAdd.querySelector('.del').addEventListener('click', e => {
             const qq = qqAdd.querySelector('.qq').value;
             const phone = $phone.value;
@@ -391,6 +401,7 @@
                 location.reload();
             }
         }, false)
+        // 添加备注
         qqAdd.querySelector('.add-note').addEventListener('click', (e) => {
             const note = qqAdd.querySelector('.note').value;
             const phone = $phone.value;
@@ -408,6 +419,7 @@
             alert('备注添加成功');
             location.reload();
         }, false)
+        // 删除备注
         qqAdd.querySelector('.del-note').addEventListener('click', e => {
             const note = qqAdd.querySelector('.note').value;
             const phone = $phone.value;
@@ -425,6 +437,7 @@
                 location.reload();
             }
         }, false)
+        // 添加网页备注
         qqAdd.querySelector('.add-gnote').addEventListener('click', (e) => {
             const gnote = qqAdd.querySelector('.gnote').value;
             if (!gnote) return;
@@ -433,7 +446,24 @@
             localStorage.setItem('notes', JSON.stringify(notes));
             alert('备注网页添加成功');
             location.reload();
-        }, false)   
+        }, false)
+        // 添加做单记录
+        qqAdd.querySelector('.add-record').addEventListener('click', e => {
+            const phone = $phone.value;
+            const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
+            const record = { pig_phone: phone, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre };
+            if (!DATA[phone]) {
+                alert('找不到对应的记录~')
+                return;
+                // DATA[phone] = [];
+            }
+            // setCon([record])
+            DATA[phone].unshift(record);
+            storageData();
+            alert('添加做单记录成功');
+            location.reload();
+        }, false)
+        // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
         const setCon = arr => {
@@ -445,10 +475,11 @@
             }
             $con.innerHTML = str;
         }
+        // 下载按钮
         $btns.querySelector('.download').addEventListener('click', (e) => {
             Download();
         }, false)
-        // phone查询
+        // phone查询做单记录
         $btns.querySelector('.j-findPhoneBtn').addEventListener('click', (e) => {
             const phone = $phone.value;
             if (phone && DATA[phone]) {
@@ -461,7 +492,7 @@
                 // location.reload();
             }
         })
-
+        // qq查询做单记录
         $btns.querySelector('.j-findQqBtn').addEventListener('click', () => {
             const qq = $byQQ.value;
             if (qq) {
