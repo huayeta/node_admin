@@ -332,8 +332,8 @@
                         <button class="search_btn j-findQqBtn" style="background:rebeccapurple;width:auto;padding: 0 10px;">查询qq做单数据</button>
                         <button class="search_btn j-findQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">查询不同的qq</button>
                         <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
+                        <span style="color:darkmagenta; margin-left:10p;">${JSON.stringify(QQS)}</span>
                     </div>
-                    <div style="color:darkmagenta;">${JSON.stringify(QQS)}</div>
                     <div class="u-con"></div>
                 </div>
             </div>
