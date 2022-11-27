@@ -186,7 +186,7 @@
         if (!DATA[phone]) {
 
             // 如果type==2，等待完成列表
-            if (type == 2) {
+            if (type == 2 || true) {
                 const Div = document.createElement('div');
                 Div.className = 'search';
                 Div.style = 'margin-top: 10px;'
@@ -333,6 +333,7 @@
                         <button class="search_btn j-findQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">查询不同的qq</button>
                         <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
                     </div>
+                    <div style="color:darkmagenta;">${JSON.stringify(QQS)}</div>
                     <div class="u-con"></div>
                 </div>
             </div>
@@ -344,6 +345,7 @@
         qqAdd.querySelector('.byqq').addEventListener('input', e => {
             const qq = $byQQ.value;
             const datas = findDatasByQq(qq);
+            console.log(datas);
             if(datas.length>0){
                 if (datas.length === 1) {
                     $phone.value = datas[0][0].pig_phone;
