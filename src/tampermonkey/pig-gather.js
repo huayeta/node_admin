@@ -36,7 +36,7 @@
         // console.log($tr);
         const pig_id = $tr.querySelector('td:nth-child(1)').textContent;
         const pig_title = $tr.querySelector('td:nth-child(2)').textContent;
-        const pig_phone = $tr.querySelector('td:nth-child(5)').textContent;
+        const pig_phone = trim($tr.querySelector('td:nth-child(5)').textContent);
         const pig_qq = $tr.querySelector('td:nth-child(9)').textContent;
         const pig_register_time = $tr.querySelector('td:nth-child(10)').textContent;
         const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
@@ -175,12 +175,19 @@
     const formatePhoneDatas = Datas => {
         return Datas.filter(data => data.pig_over_time);
     }
+    function trim(str){
+        if(!str)return str;
+        str = str.replace(/\ +/g,'');
+        str = str.replace(/[\r\n\t]/g,'');
+        str = str.trim();
+        return str;
+    }
     const formatTr = ($tr, phone_index = 5, qq_index = 8, date_index = 14, type) => {
         // console.log($tr);
         const $phone = $tr.querySelector(`td:nth-child(${phone_index})`);
-        const phone = $phone.textContent;
+        const phone = trim($phone.textContent);
         const $qq = $tr.querySelector(`td:nth-child(${qq_index})`);
-        const qq = $qq.textContent;
+        const qq = trim($qq.textContent);
         // console.log(phone, qq);
         // console.log(Datas);
         // 如果不存在就返回
@@ -217,6 +224,32 @@
             qqDiv.innerHTML = `有不同的qq号：${Qqs.map(qq => `<p>${qq}</p>`).join('')}`;
             $qq.append(qqDiv);
         }
+        // 标注是否有多个手机号
+        if(qq=='3510322952' || true){
+            let phones_arr = findPhonesByQq(qq);
+            if(phones_arr.length>0){
+                if(Qqs.length>0){
+                    Qqs.forEach(qq=>{
+                        console.log(findPhonesByQq(qq))
+                        phones_arr=phones_arr.concat(findPhonesByQq(qq))
+                    });
+                }
+                console.log(phones_arr);
+                // 去重
+                phones_arr = [...new Set(phones_arr)];
+                console.log(phones_arr);
+                // 去除自身phone
+                phones_arr = phones_arr.filter(phone_tmp=>phone_tmp!=phone);
+                console.log(phones_arr);
+                if(phones_arr.length>0){
+                    const Div = document.createElement('div');
+                    Div.style = 'color:red;';
+                    Div.innerHTML = `有不同的手机号：${phones_arr.join('，')}`;
+                    $phone.append(Div);
+                }        
+            }
+        }
+        
         // 标注备注信息
         const Notes = findNotes(DATA[phone]);
         if (Notes.length > 0) {
@@ -533,7 +566,17 @@
                             setCon(['没有找到不同的qq'])
                         }
                     } else {
-                        setCon(arr);
+                        // setCon(arr);
+                        let results = [];
+                        arr.forEach(datas=>{
+                            const qqs = findQqs(datas,qq);
+                            if(qqs.length>0){
+                                results.push(qqs);
+                            }else{
+                                results.push(['没有找到不同的qq'])
+                            }
+                        })
+                        setCon(results);
                     }
                     // alert(JSON.stringify(arr));
                 } else {
@@ -558,6 +601,15 @@
                 }
             }
         }
+        return arr;
+    }
+    // 通过qq查询到手机数组
+    function findPhonesByQq(qq) {
+        const arr = [];
+        const datas = findDatasByQq(qq);
+        datas.forEach(data=>{
+            if(data.length>0 && !arr.includes(data[0].pig_phone))arr.push(trim(data[0].pig_phone));
+        })
         return arr;
     }
     // 添加一个通过手机查询做单记录的功能，通过qq查找做单记录
