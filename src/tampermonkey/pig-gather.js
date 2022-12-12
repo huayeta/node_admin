@@ -37,7 +37,7 @@
         const pig_id = $tr.querySelector('td:nth-child(1)').textContent;
         const pig_title = $tr.querySelector('td:nth-child(2)').textContent;
         const pig_phone = trim($tr.querySelector('td:nth-child(5)').textContent);
-        const pig_qq = $tr.querySelector('td:nth-child(9)').textContent;
+        const pig_qq = trim($tr.querySelector('td:nth-child(9)').textContent);
         const pig_register_time = $tr.querySelector('td:nth-child(10)').textContent;
         const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
 
@@ -234,17 +234,21 @@
                         phones_arr=phones_arr.concat(findPhonesByQq(qq))
                     });
                 }
-                console.log(phones_arr);
+                // console.log(phones_arr);
                 // 去重
                 phones_arr = [...new Set(phones_arr)];
-                console.log(phones_arr);
+                // console.log(phones_arr);
                 // 去除自身phone
                 phones_arr = phones_arr.filter(phone_tmp=>phone_tmp!=phone);
-                console.log(phones_arr);
+                // console.log(phones_arr);
                 if(phones_arr.length>0){
                     const Div = document.createElement('div');
-                    Div.style = 'color:red;';
-                    Div.innerHTML = `有不同的手机号：${phones_arr.join('，')}`;
+                    Div.style = 'color:blueviolet;';
+                    let str = phones_arr.reduce((a,b)=>{
+                        const Datas = formatePhoneDatas(DATA[b]);
+                        return `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</p>`
+                    },'')
+                    Div.innerHTML = `有不同的手机号：${str}`;
                     $phone.append(Div);
                 }        
             }
@@ -403,6 +407,7 @@
             const qq = qqAdd.querySelector('.qq').value;
             const phone = $phone.value;
             // console.log(qq,phone);
+            if(!phone)return alert('手机号不能为空');
             if (!DATA[phone]) {
                 alert('找不到对应的记录~')
                 return;
@@ -438,6 +443,7 @@
         qqAdd.querySelector('.add-note').addEventListener('click', (e) => {
             const note = qqAdd.querySelector('.note').value;
             const phone = $phone.value;
+             if(!phone)return alert('手机号不能为空');
             // console.log(qq,phone);
             if (!DATA[phone]) {
                 alert('找不到对应的记录~')
@@ -595,7 +601,7 @@
         for (let phone of phones) {
             const datas = DATA[phone];
             for (let data of datas) {
-                if (data.pig_qq == qq) {
+                if (trim(data.pig_qq) == trim(qq)) {
                     arr.push(datas);
                     break;
                 }
