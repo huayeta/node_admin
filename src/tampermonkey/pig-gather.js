@@ -413,6 +413,10 @@
                 return;
                 // DATA[phone] = [];
             }
+            if(!qq){
+                alert('qq不能为空')
+                return;
+            }
             DATA[phone].push({
                 pig_phone: phone,
                 pig_qq: qq,
@@ -449,6 +453,10 @@
                 alert('找不到对应的记录~')
                 return;
                 // DATA[phone] = [];
+            }
+            if(!note){
+                alert('note不能为空')
+                return;
             }
             DATA[phone].push({
                 pig_phone: phone,
