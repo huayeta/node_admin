@@ -225,12 +225,12 @@
             $qq.append(qqDiv);
         }
         // 标注是否有多个手机号
-        if(qq=='3510322952' || true){
+        if(qq=='1451603208' && type==2 || true){
             let phones_arr = findPhonesByQq(qq);
-            if(phones_arr.length>0){
+            if(phones_arr.length>0 || true){
                 if(Qqs.length>0){
                     Qqs.forEach(qq=>{
-                        console.log(findPhonesByQq(qq))
+                        // console.log(findPhonesByQq(qq))
                         phones_arr=phones_arr.concat(findPhonesByQq(qq))
                     });
                 }
@@ -242,6 +242,7 @@
                 phones_arr = phones_arr.filter(phone_tmp=>phone_tmp!=phone);
                 // console.log(phones_arr);
                 if(phones_arr.length>0){
+                    // console.log(`插入${JSON.stringify(phones_arr)}`)
                     const Div = document.createElement('div');
                     Div.style = 'color:blueviolet;';
                     let str = phones_arr.reduce((a,b)=>{
@@ -251,6 +252,7 @@
                     Div.innerHTML = `有不同的手机号：${str}`;
                     $phone.append(Div);
                 }        
+                // console.log('11111111111111')
             }
         }
         
