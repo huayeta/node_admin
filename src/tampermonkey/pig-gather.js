@@ -247,6 +247,9 @@
                     Div.style = 'color:blueviolet;';
                     let str = phones_arr.reduce((a,b)=>{
                         const Datas = formatePhoneDatas(DATA[b]);
+                        if(Datas.length==0){
+                            return `<p>${b}，<br/>已做单：${Datas.length}`;
+                        }
                         return `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</p>`
                     },'')
                     Div.innerHTML = `有不同的手机号：${str}`;
