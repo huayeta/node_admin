@@ -5,6 +5,7 @@
 // @description  try to take over the world!
 // @author       You
 // @match        https://*.detail.tmall.com/item.htm*
+// @math         https://detail.tmall.com/item_o.htm*
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==

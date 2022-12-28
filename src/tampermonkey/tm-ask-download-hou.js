@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  try to take over the world!
 // @author       You
-// @match        https://rate.taobao.com/sellercenterv2/index.htm/ask-all*
+// @match        https://qn.taobao.com/home.htm/comment-manage/ask-all*
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==
@@ -48,7 +48,7 @@
         if(btn === null) return cb();
         
         btn.dispatchEvent(ev);
-        sleep(2000).then(()=>{
+        sleep(6000).then(()=>{
             const answers = tr.nextElementSibling.querySelectorAll('tbody>tr');
             const arr = [];
             // console.log(answers);

@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  try to take over the world!
 // @author       You
-// @match        https://rate.taobao.com/sellercenterv2/index.htm/list/rateWait4PC?*
+// @match        https://qn.taobao.com/home.htm/comment-manage/list/rateWait4PC?*
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==
@@ -37,7 +37,7 @@
         }
     }
     const readComment = () => {
-        const trs = document.querySelectorAll('.next-table-body tr');
+        const trs = document.querySelectorAll('.next-loading-wrap>div>.next-table-medium>table[role=table]>thead~tbody.next-table-body>tr');
         Array.prototype.forEach.call(trs, table => {
             const rates = table.querySelectorAll('.l-rate-content');
             if (rates && rates[0]) {
@@ -56,26 +56,28 @@
                     Photos.push({ id: Index, photos: pre_photos });
                 }
                 // Coments.push(pre_photos.length > 0 ? `有图片：${Index}：${pre_comment}` : pre_comment);
-                addComment(pre_comment,pre_photos.length > 0 ? `有图片：${Index}：` : '')
+                let is_append_str = '';
+                if(table.classList.contains('next-table-expanded-row'))is_append_str='追：';
+                addComment(pre_comment,pre_photos.length > 0 ? `有图片：${Index}：${is_append_str}` : `${is_append_str}`)
             }
-            if(rates && rates[1]){
-                const rate =  rates[1];
-                // 获取追评
-                const span = rate.querySelectorAll('.rate-content span');
-                const append_comment = span.length!==0?span[1].textContent:'';
-                const append_photos = [];
-                const append_lis = rate.querySelectorAll('.l-media-gallery img');
-                append_lis && Array.prototype.forEach.call(append_lis, li => {
-                    append_photos.push(li.getAttribute('src'));
-                })
-                // console.log(append_comment, append_photos);
-                if(append_photos.length > 0){
-                    Index = Index+1;
-                    Photos.push({ id: Index, photos: append_photos });
-                }
-                // Coments.push(append_photos.length > 0 ? `有图片：${Index}：追：${append_comment}` : `追：${append_comment}`);
-                addComment(append_comment,append_photos.length > 0 ? `有图片：${Index}：追：` : `追：`);
-            }
+            // if(rates && rates[1]){
+            //     const rate =  rates[1];
+            //     // 获取追评
+            //     const span = rate.querySelectorAll('.rate-content span');
+            //     const append_comment = span.length!==0?span[1].textContent:'';
+            //     const append_photos = [];
+            //     const append_lis = rate.querySelectorAll('.l-media-gallery img');
+            //     append_lis && Array.prototype.forEach.call(append_lis, li => {
+            //         append_photos.push(li.getAttribute('src'));
+            //     })
+            //     // console.log(append_comment, append_photos);
+            //     if(append_photos.length > 0){
+            //         Index = Index+1;
+            //         Photos.push({ id: Index, photos: append_photos });
+            //     }
+            //     // Coments.push(append_photos.length > 0 ? `有图片：${Index}：追：${append_comment}` : `追：${append_comment}`);
+            //     addComment(append_comment,append_photos.length > 0 ? `有图片：${Index}：追：` : `追：`);
+            // }
         })
         // console.log(Coments);
         // console.log(Photos);
@@ -94,7 +96,7 @@
         // return console.log(Coments,Photos);
         if (getIsNext()) {
             clickNext();
-            sleep(3000).then(() => {
+            sleep(6000).then(() => {
                 currentPage++;
                 startReadComent(cb);
             })
