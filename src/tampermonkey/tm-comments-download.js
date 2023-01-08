@@ -9,7 +9,7 @@
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==
-
+// https://detail.tmall.com/item_o.htm?spm=a21dvs.23580594.0.0.3a3f3d0dJtteF3&releaseId=318828&bucketId=447258&id=677570069244
 (function () {
     'use strict';
     // Your code here...
@@ -21,7 +21,7 @@
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度
     const is_save_photo = true; // 是否保存评论
-    const sleep_time = 3000; //延迟多久开始下一页拉去
+    const sleep_time = 6000; //延迟多久开始下一页拉去
     window.is_comment_download_now = false; // 是否立即触发下载
     let Counter = 0; // 下载图片的进度
     let ImgLength = 0; // 总图片的length

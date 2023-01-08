@@ -13,7 +13,7 @@
     // Your code here...
     // {
     //     phone：[
-    //         {pig_phone,qq_exec_pre,pig_over_time} 添加做单记录            
+    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time} 添加做单记录            
     //         {pig_phone,pig_note} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
     //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre? } 正常小猪单
@@ -175,6 +175,23 @@
     const formatePhoneDatas = Datas => {
         return Datas.filter(data => data.pig_over_time);
     }
+    // 人性化的做单记录数据
+    const humanDatas = datas =>{
+        // 备注数据
+        let notes = findNotes(datas);
+        // 做单数据
+        let records = formatePhoneDatas(datas);
+        // 找到所有的qq号
+        let qqs = findQqs(datas,'1');
+        return{
+            phone: datas[0].pig_phone,
+            qqs:qqs,
+            record_num: records.length,
+            notes:notes,
+            record_time: records.length>0 && records[0].pig_over_time,
+            record_qq: records.length>0 && QQS[records[0].qq_exec_pre],
+        }
+    }
     function trim(str){
         if(!str)return str;
         str = str.replace(/\ +/g,'');
@@ -248,9 +265,9 @@
                     let str = phones_arr.reduce((a,b)=>{
                         const Datas = formatePhoneDatas(DATA[b]);
                         if(Datas.length==0){
-                            return `<p>${b}，<br/>已做单：${Datas.length}`;
+                            return a+`<p>${b}，<br/>已做单：${Datas.length}`;
                         }
-                        return `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</p>`
+                        return a+`<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</p>`
                     },'')
                     Div.innerHTML = `有不同的手机号：${str}`;
                     $phone.append(Div);
@@ -382,9 +399,39 @@
                         <button class="search_btn j-findQqBtn" style="background:rebeccapurple;width:auto;padding: 0 10px;">查询qq做单数据</button>
                         <button class="search_btn j-findQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">查询不同的qq</button>
                         <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
+                        <button class="search_btn j-gatherQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">筛选qq</button>
                         <span style="color:darkmagenta; margin-left:10p;">${JSON.stringify(QQS)}</span>
                     </div>
-                    <div class="u-con"></div>
+                    <div class="u-con">
+                        <!-- <table class="common_table">
+                            <tbody>
+                                <tr>
+                                    <th>手机号</th>
+                                    <th>全部qq号</th>
+                                    <th>已做单数量</th>
+                                    <th>备注</th>
+                                    <th>最近做单日期</th>
+                                    <th>最近做单qq号</th>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p>18711111111</p>
+                                        <p>有多个手机号</p>
+                                    </td>
+                                    <td style="color: blueviolet;">
+                                        <p>8282828282</p>
+                                        <p>223221223</p>
+                                    </td>
+                                    <td style="color:red;">10</td>
+                                    <td style="color: rgb(16, 0, 255);">
+                                        <p>账号被抓</p>
+                                    </td>
+                                    <td style="color:red;">2022-12-29 15:49:48</td>
+                                    <td>小韵-4</td>
+                                </tr>
+                            </tbody>
+                        </table> -->
+                    </div>
                 </div>
             </div>
         `;
@@ -395,7 +442,7 @@
         qqAdd.querySelector('.byqq').addEventListener('input', e => {
             const qq = $byQQ.value;
             const datas = findDatasByQq(qq);
-            console.log(datas);
+            // console.log(datas);
             if (datas.length > 0) {
                 if (datas.length === 1) {
                     $phone.value = datas[0][0].pig_phone;
@@ -441,7 +488,7 @@
                     // DATA[phone] = [];
                 }
                 const datas = DATA[phone].filter(data => data.pig_id || data.pig_qq != qq);
-                console.log(datas);
+                // console.log(datas);
                 DATA[phone] = datas;
                 storageData();
                 alert('qq删除成功');
@@ -482,7 +529,7 @@
                     // DATA[phone] = [];
                 }
                 const datas = DATA[phone].filter(data => data.pig_note != note);
-                console.log(datas);
+                // console.log(datas);
                 DATA[phone] = datas;
                 storageData();
                 alert('备注删除成功');
@@ -502,12 +549,17 @@
         // 添加做单记录
         qqAdd.querySelector('.add-record').addEventListener('click', e => {
             const phone = $phone.value;
+            const qq = $byQQ.value;
             const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
-            const record = { pig_phone: phone, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre };
+            const record = { pig_phone: phone,pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre };
             if (!DATA[phone]) {
-                alert('找不到对应的记录~')
+                alert('找不到对应的phone记录~')
                 return;
                 // DATA[phone] = [];
+            }
+            if(!qq){
+                alert('qq不能为空~');
+                return;
             }
             // setCon([record])
             DATA[phone].unshift(record);
@@ -522,7 +574,7 @@
             let str = '';
             if (arr.length > 0) {
                 arr.forEach(date => {
-                    str += `<p>${JSON.stringify(date)}</p>`;
+                    str += `<div>${typeof date ==='string'?date:JSON.stringify(date)}</div>`;
                 })
             }
             $con.innerHTML = str;
@@ -535,7 +587,7 @@
         $btns.querySelector('.j-findPhoneBtn').addEventListener('click', (e) => {
             const phone = $phone.value;
             if (phone && DATA[phone]) {
-                console.log(DATA[phone]);
+                // console.log(DATA[phone]);
                 // alert(JSON.stringify(DATA[phone]));
                 setCon(DATA[phone]);
             } else {
@@ -552,7 +604,7 @@
                 // console.log(arr,qq)
                 if (arr.length > 0) {
                     // 判断是否有一个qq多个手机的情况存在
-                    console.log(arr);
+                    // console.log(arr);
                     if (arr.length === 1) {
                         setCon(arr[0]);
                     } else {
@@ -574,7 +626,7 @@
                 // console.log(arr,qq)
                 if (arr.length > 0) {
                     // 判断是否有一个qq多个手机的情况存在
-                    console.log(arr);
+                    // console.log(arr);
                     if (arr.length === 1) {
                         // setCon(arr[0]);
                         const datas = arr[0];
@@ -605,8 +657,79 @@
                 }
             }
         })
+        // 筛选做单过的qq号
+        qqAdd.querySelector('.j-gatherQqs').addEventListener('click',()=>{
+            let endTime = new Date(new Date().getTime()-20*24*60*60*1000);
+            let startTime = new Date(new Date().getTime()-30*24*60*60*1000);
+            let DateRecords = [];
+            const DatePhones = Object.keys(DATA);
+            for (let phone of DatePhones) {
+                const datas = DATA[phone];
+                let data = datas[0];
+                if(data.pig_over_time){
+                    DateRecords.push(datas[0])
+                }
+            }
+            DateRecords.sort((a,b)=>{
+                if(new Date(a.pig_over_time)>new Date(b.pig_over_time)){
+                    return -1;
+                }else{
+                    return 1;
+                }
+            })
+            let records = [];
+            DateRecords.forEach(record=>{
+                if(records.length<30 && new Date(record.pig_over_time)<endTime){
+                    records.push(DATA[record.pig_phone]);
+                }
+            })
+            // console.log(records);
+            let trs = '';
+            records.forEach(datas=>{
+                let humanData = humanDatas(datas);
+                // console.log(humanData);
+                trs+=`
+                <tr>
+                    <td>
+                        <p>${humanData.phone}</p>
+                    </td>
+                    <td style="color: blueviolet;">
+                        ${humanData.qqs.reduce((a,b)=>{
+                            return a+`<p>${b}</p>`;
+                        },'')}
+                    </td>
+                    <td style="color:red;">${humanData.record_num}</td>
+                    <td style="color: rgb(16, 0, 255);">
+                        ${humanData.notes.reduce((a,b)=>{
+                            return a+`<p>${b}</p>`;
+                        },'')}
+                    </td>
+                    <td style="color:red;">${humanData.record_time}</td>
+                    <td>${humanData.record_qq}</td>
+                </tr>
+                `
+            })
+            let table = `
+            <table class="common_table">
+                <tbody>
+                    <tr>
+                        <th>手机号</th>
+                        <th>全部qq号</th>
+                        <th>已做单数量</th>
+                        <th>备注</th>
+                        <th>最近做单日期</th>
+                        <th>最近做单qq号</th>
+                    </tr>
+                    ${trs}
+                </tbody>
+            </table>
+            `
+            setCon([table]);
+        },false)
     }
     AddQQDiv();
+    // 格式化phone的做单数据格式
+    // function formatePhoneDatas
     // 通过qq查询到做单数据
     function findDatasByQq(qq) {
         const arr = [];
