@@ -680,7 +680,9 @@
             let records = [];
             DateRecords.forEach(record=>{
                 if(records.length<30 && new Date(record.pig_over_time)<endTime){
-                    records.push(DATA[record.pig_phone]);
+                    let datas = DATA[record.pig_phone];
+                    const notes = findNotes(datas).join('');
+                    if(notes.indexOf('被抓')==-1 && notes.indexOf('满月')==-1 && notes.indexOf('删订单')==-1)records.push(datas);
                 }
             })
             // console.log(records);
