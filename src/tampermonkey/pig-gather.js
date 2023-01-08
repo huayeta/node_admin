@@ -183,6 +183,8 @@
         let records = formatePhoneDatas(datas);
         // 找到所有的qq号
         let qqs = findQqs(datas,'1');
+        // 找到不同的手机号
+        let diffPhones = findDiffPhonesByDatas(datas);
         return{
             phone: datas[0].pig_phone,
             qqs:qqs,
@@ -190,7 +192,22 @@
             notes:notes,
             record_time: records.length>0 && records[0].pig_over_time,
             record_qq: records.length>0 && QQS[records[0].qq_exec_pre],
+            diffPhones: diffPhones,
         }
+    }
+    // 找到不同的手机号
+    const findDiffPhonesByDatas = (datas)=>{
+        // 找到所有的qq号
+        let qqs = findQqs(datas,'1');
+        if(qqs.length==0)return [];
+        let phones_arr = findPhonesByQq(qqs[0]);
+        qqs.forEach(qq=>{
+            // console.log(findPhonesByQq(qq))
+            phones_arr=phones_arr.concat(findPhonesByQq(qq))
+        });
+        // 去重
+        phones_arr = [...new Set(phones_arr)];
+        return phones_arr;
     }
     function trim(str){
         if(!str)return str;
@@ -682,7 +699,9 @@
                 if(records.length<30 && new Date(record.pig_over_time)<endTime){
                     let datas = DATA[record.pig_phone];
                     const notes = findNotes(datas).join('');
-                    if(notes.indexOf('被抓')==-1 && notes.indexOf('满月')==-1 && notes.indexOf('删订单')==-1)records.push(datas);
+                    const record_datas = formatePhoneDatas(datas);
+                    const diffPhones = findDiffPhonesByDatas(datas);
+                    if(notes.indexOf('被抓')==-1 && notes.indexOf('满月')==-1 && notes.indexOf('删订单')==-1 && record_datas.length>=2 && diffPhones.length ==1)records.push(datas);
                 }
             })
             // console.log(records);
