@@ -31,6 +31,42 @@
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
     }
+    //提醒phone数据
+    const RDATA ={
+        // {phone:time}
+        datas:{},
+        setDatas:(datas)=>{
+            RDATA.datas = datas;
+            RDATA.storageData();
+        },
+        addData:(phone)=>{
+            RDATA.datas[phone] = new Date().toLocaleString();
+            RDATA.storageData();
+        },
+        isExist:(phone)=>{
+            if(RDATA.datas[phone])return true;
+            return false;
+        },
+        getDatas: ()=>{
+            let datas = localStorage.getItem('remindDatas') ? JSON.parse(localStorage.getItem('remindDatas')) : {};
+            const results = {};
+            const phones = Object.keys(datas);
+            if(phones.length>0){
+                phones.forEach(phone=>{
+                    const time = datas[phone];
+                    if(new Date(time)> new Date(new Date().getTime()-5*24*60*60*1000)){
+                        results[phone]=time;
+                    }
+                })
+            }
+            // console.log(results);
+            RDATA.setDatas(results);
+        },
+        storageData: ()=>{
+            localStorage.setItem('remindDatas', JSON.stringify(RDATA.datas));
+        },
+    }
+    RDATA.getDatas();
     // 获得每个tr数据
     const getTrData = ($tr) => {
         // console.log($tr);
@@ -114,7 +150,8 @@
         const data = {
             completeOrders: DATA,
             notes: localStorage.getItem('notes'),
-            downloadTime: localStorage.getItem('downloadTime')
+            downloadTime: localStorage.getItem('downloadTime'),
+            remindDatas: localStorage.getItem('remindDatas')
         }
         MDownload([JSON.stringify(data)], '小猪数据');
         localStorage.setItem('downloadTime', new Date().toLocaleString());
@@ -596,6 +633,7 @@
             }
             $con.innerHTML = str;
         }
+        
         // 下载按钮
         $btns.querySelector('.download').addEventListener('click', (e) => {
             Download();
@@ -674,7 +712,16 @@
                 }
             }
         })
+        
         // 筛选做单过的qq号
+        addEventListener($con, 'click', (e) => {
+            const $btn = e.target;
+            const $parent = $btn.parentNode;
+            const phone = $parent.querySelector('.j-phone').textContent;
+            $btn.textContent = '已去除';
+            $btn.style = 'color:gray;margin-left:10px;';
+            RDATA.addData(phone);
+        }, '.j-remindPhone')
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click',()=>{
             let endTime = new Date(new Date().getTime()-20*24*60*60*1000);
             let startTime = new Date(new Date().getTime()-30*24*60*60*1000);
@@ -696,12 +743,19 @@
             })
             let records = [];
             DateRecords.forEach(record=>{
-                if(records.length<30 && new Date(record.pig_over_time)<endTime){
+                if(records.length<5 && new Date(record.pig_over_time)<endTime){
                     let datas = DATA[record.pig_phone];
                     const notes = findNotes(datas).join('');
                     const record_datas = formatePhoneDatas(datas);
                     const diffPhones = findDiffPhonesByDatas(datas);
-                    if(notes.indexOf('被抓')==-1 && notes.indexOf('满月')==-1 && notes.indexOf('删订单')==-1 && record_datas.length>=2 && diffPhones.length ==1)records.push(datas);
+                    if(
+                        notes.indexOf('被抓')==-1 
+                        && notes.indexOf('满月')==-1 
+                        && notes.indexOf('删订单')==-1 
+                        && record_datas.length>=2 
+                        && diffPhones.length ==1
+                        && !RDATA.isExist(record.pig_phone)
+                    )records.push(datas);
                 }
             })
             // console.log(records);
@@ -712,7 +766,7 @@
                 trs+=`
                 <tr>
                     <td>
-                        <p>${humanData.phone}</p>
+                        <p><span class="j-phone">${humanData.phone}</span><a style="color:red;margin-left:10px;" class="j-remindPhone">去除提醒</a></p>
                     </td>
                     <td style="color: blueviolet;">
                         ${humanData.qqs.reduce((a,b)=>{
