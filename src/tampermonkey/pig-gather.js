@@ -32,37 +32,37 @@
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
     }
     //提醒phone数据
-    const RDATA ={
+    const RDATA = {
         // {phone:time}
-        datas:{},
-        setDatas:(datas)=>{
+        datas: {},
+        setDatas: (datas) => {
             RDATA.datas = datas;
             RDATA.storageData();
         },
-        addData:(phone)=>{
+        addData: (phone) => {
             RDATA.datas[phone] = new Date().toLocaleString();
             RDATA.storageData();
         },
-        isExist:(phone)=>{
-            if(RDATA.datas[phone])return true;
+        isExist: (phone) => {
+            if (RDATA.datas[phone]) return true;
             return false;
         },
-        getDatas: ()=>{
+        getDatas: () => {
             let datas = localStorage.getItem('remindDatas') ? JSON.parse(localStorage.getItem('remindDatas')) : {};
             const results = {};
             const phones = Object.keys(datas);
-            if(phones.length>0){
-                phones.forEach(phone=>{
+            if (phones.length > 0) {
+                phones.forEach(phone => {
                     const time = datas[phone];
-                    if(new Date(time)> new Date(new Date().getTime()-5*24*60*60*1000)){
-                        results[phone]=time;
+                    if (new Date(time) > new Date(new Date().getTime() - 5 * 24 * 60 * 60 * 1000)) {
+                        results[phone] = time;
                     }
                 })
             }
             // console.log(results);
             RDATA.setDatas(results);
         },
-        storageData: ()=>{
+        storageData: () => {
             localStorage.setItem('remindDatas', JSON.stringify(RDATA.datas));
         },
     }
@@ -213,43 +213,43 @@
         return Datas.filter(data => data.pig_over_time);
     }
     // 人性化的做单记录数据
-    const humanDatas = datas =>{
+    const humanDatas = datas => {
         // 备注数据
         let notes = findNotes(datas);
         // 做单数据
         let records = formatePhoneDatas(datas);
         // 找到所有的qq号
-        let qqs = findQqs(datas,'1');
+        let qqs = findQqs(datas, '1');
         // 找到不同的手机号
         let diffPhones = findDiffPhonesByDatas(datas);
-        return{
+        return {
             phone: datas[0].pig_phone,
-            qqs:qqs,
+            qqs: qqs,
             record_num: records.length,
-            notes:notes,
-            record_time: records.length>0 && records[0].pig_over_time,
-            record_qq: records.length>0 && QQS[records[0].qq_exec_pre],
+            notes: notes,
+            record_time: records.length > 0 && records[0].pig_over_time,
+            record_qq: records.length > 0 && QQS[records[0].qq_exec_pre],
             diffPhones: diffPhones,
         }
     }
     // 找到不同的手机号
-    const findDiffPhonesByDatas = (datas)=>{
+    const findDiffPhonesByDatas = (datas) => {
         // 找到所有的qq号
-        let qqs = findQqs(datas,'1');
-        if(qqs.length==0)return [];
+        let qqs = findQqs(datas, '1');
+        if (qqs.length == 0) return [];
         let phones_arr = findPhonesByQq(qqs[0]);
-        qqs.forEach(qq=>{
+        qqs.forEach(qq => {
             // console.log(findPhonesByQq(qq))
-            phones_arr=phones_arr.concat(findPhonesByQq(qq))
+            phones_arr = phones_arr.concat(findPhonesByQq(qq))
         });
         // 去重
         phones_arr = [...new Set(phones_arr)];
         return phones_arr;
     }
-    function trim(str){
-        if(!str)return str;
-        str = str.replace(/\ +/g,'');
-        str = str.replace(/[\r\n\t]/g,'');
+    function trim(str) {
+        if (!str) return str;
+        str = str.replace(/\ +/g, '');
+        str = str.replace(/[\r\n\t]/g, '');
         str = str.trim();
         return str;
     }
@@ -296,13 +296,13 @@
             $qq.append(qqDiv);
         }
         // 标注是否有多个手机号
-        if(qq=='1451603208' && type==2 || true){
+        if (qq == '1451603208' && type == 2 || true) {
             let phones_arr = findPhonesByQq(qq);
-            if(phones_arr.length>0 || true){
-                if(Qqs.length>0){
-                    Qqs.forEach(qq=>{
+            if (phones_arr.length > 0 || true) {
+                if (Qqs.length > 0) {
+                    Qqs.forEach(qq => {
                         // console.log(findPhonesByQq(qq))
-                        phones_arr=phones_arr.concat(findPhonesByQq(qq))
+                        phones_arr = phones_arr.concat(findPhonesByQq(qq))
                     });
                 }
                 // console.log(phones_arr);
@@ -310,26 +310,26 @@
                 phones_arr = [...new Set(phones_arr)];
                 // console.log(phones_arr);
                 // 去除自身phone
-                phones_arr = phones_arr.filter(phone_tmp=>phone_tmp!=phone);
+                phones_arr = phones_arr.filter(phone_tmp => phone_tmp != phone);
                 // console.log(phones_arr);
-                if(phones_arr.length>0){
+                if (phones_arr.length > 0) {
                     // console.log(`插入${JSON.stringify(phones_arr)}`)
                     const Div = document.createElement('div');
                     Div.style = 'color:blueviolet;';
-                    let str = phones_arr.reduce((a,b)=>{
+                    let str = phones_arr.reduce((a, b) => {
                         const Datas = formatePhoneDatas(DATA[b]);
-                        if(Datas.length==0){
-                            return a+`<p>${b}，<br/>已做单：${Datas.length}`;
+                        if (Datas.length == 0) {
+                            return a + `<p>${b}，<br/>已做单：${Datas.length}`;
                         }
-                        return a+`<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</p>`
-                    },'')
+                        return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</p>`
+                    }, '')
                     Div.innerHTML = `有不同的手机号：${str}`;
                     $phone.append(Div);
-                }        
+                }
                 // console.log('11111111111111')
             }
         }
-        
+
         // 标注备注信息
         const Notes = findNotes(DATA[phone]);
         if (Notes.length > 0) {
@@ -513,13 +513,13 @@
             const qq = qqAdd.querySelector('.qq').value;
             const phone = $phone.value;
             // console.log(qq,phone);
-            if(!phone)return alert('手机号不能为空');
+            if (!phone) return alert('手机号不能为空');
             if (!DATA[phone]) {
                 alert('找不到对应的记录~')
                 return;
                 // DATA[phone] = [];
             }
-            if(!qq){
+            if (!qq) {
                 alert('qq不能为空')
                 return;
             }
@@ -553,14 +553,14 @@
         qqAdd.querySelector('.add-note').addEventListener('click', (e) => {
             const note = qqAdd.querySelector('.note').value;
             const phone = $phone.value;
-             if(!phone)return alert('手机号不能为空');
+            if (!phone) return alert('手机号不能为空');
             // console.log(qq,phone);
             if (!DATA[phone]) {
                 alert('找不到对应的记录~')
                 return;
                 // DATA[phone] = [];
             }
-            if(!note){
+            if (!note) {
                 alert('note不能为空')
                 return;
             }
@@ -605,13 +605,13 @@
             const phone = $phone.value;
             const qq = $byQQ.value;
             const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
-            const record = { pig_phone: phone,pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre };
+            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre };
             if (!DATA[phone]) {
                 alert('找不到对应的phone记录~')
                 return;
                 // DATA[phone] = [];
             }
-            if(!qq){
+            if (!qq) {
                 alert('qq不能为空~');
                 return;
             }
@@ -628,12 +628,12 @@
             let str = '';
             if (arr.length > 0) {
                 arr.forEach(date => {
-                    str += `<div>${typeof date ==='string'?date:JSON.stringify(date)}</div>`;
+                    str += `<div>${typeof date === 'string' ? date : JSON.stringify(date)}</div>`;
                 })
             }
             $con.innerHTML = str;
         }
-        
+
         // 下载按钮
         $btns.querySelector('.download').addEventListener('click', (e) => {
             Download();
@@ -694,11 +694,11 @@
                     } else {
                         // setCon(arr);
                         let results = [];
-                        arr.forEach(datas=>{
-                            const qqs = findQqs(datas,qq);
-                            if(qqs.length>0){
+                        arr.forEach(datas => {
+                            const qqs = findQqs(datas, qq);
+                            if (qqs.length > 0) {
                                 results.push(qqs);
-                            }else{
+                            } else {
                                 results.push(['没有找到不同的qq'])
                             }
                         })
@@ -712,7 +712,7 @@
                 }
             }
         })
-        
+
         // 筛选做单过的qq号
         addEventListener($con, 'click', (e) => {
             const $btn = e.target;
@@ -722,62 +722,62 @@
             $btn.style = 'color:gray;margin-left:10px;';
             RDATA.addData(phone);
         }, '.j-remindPhone')
-        qqAdd.querySelector('.j-gatherQqs').addEventListener('click',()=>{
-            let endTime = new Date(new Date().getTime()-20*24*60*60*1000);
-            let startTime = new Date(new Date().getTime()-30*24*60*60*1000);
+        qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
+            let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
+            let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
             let DateRecords = [];
             const DatePhones = Object.keys(DATA);
             for (let phone of DatePhones) {
                 const datas = DATA[phone];
                 let data = datas[0];
-                if(data.pig_over_time){
+                if (data.pig_over_time) {
                     DateRecords.push(datas[0])
                 }
             }
-            DateRecords.sort((a,b)=>{
-                if(new Date(a.pig_over_time)>new Date(b.pig_over_time)){
+            DateRecords.sort((a, b) => {
+                if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
                     return -1;
-                }else{
+                } else {
                     return 1;
                 }
             })
             let records = [];
-            DateRecords.forEach(record=>{
-                if(records.length<5 && new Date(record.pig_over_time)<endTime){
+            DateRecords.forEach(record => {
+                if (records.length < 5 && new Date(record.pig_over_time) < endTime) {
                     let datas = DATA[record.pig_phone];
                     const notes = findNotes(datas).join('');
                     const record_datas = formatePhoneDatas(datas);
                     const diffPhones = findDiffPhonesByDatas(datas);
-                    if(
-                        notes.indexOf('被抓')==-1 
-                        && notes.indexOf('满月')==-1 
-                        && notes.indexOf('删订单')==-1 
-                        && record_datas.length>=2 
-                        && diffPhones.length ==1
+                    if (
+                        notes.indexOf('被抓') == -1
+                        && notes.indexOf('满月') == -1
+                        && notes.indexOf('删订单') == -1
+                        && record_datas.length >= 2
+                        && diffPhones.length == 1
                         && !RDATA.isExist(record.pig_phone)
-                    )records.push(datas);
+                    ) records.push(datas);
                 }
             })
             // console.log(records);
             let trs = '';
-            records.forEach(datas=>{
+            records.forEach(datas => {
                 let humanData = humanDatas(datas);
                 // console.log(humanData);
-                trs+=`
+                trs += `
                 <tr>
                     <td>
                         <p><span class="j-phone">${humanData.phone}</span><a style="color:red;margin-left:10px;" class="j-remindPhone">去除提醒</a></p>
                     </td>
                     <td style="color: blueviolet;">
-                        ${humanData.qqs.reduce((a,b)=>{
-                            return a+`<p>${b}</p>`;
-                        },'')}
+                        ${humanData.qqs.reduce((a, b) => {
+                    return a + `<p>${b}</p>`;
+                }, '')}
                     </td>
                     <td style="color:red;">${humanData.record_num}</td>
                     <td style="color: rgb(16, 0, 255);">
-                        ${humanData.notes.reduce((a,b)=>{
-                            return a+`<p>${b}</p>`;
-                        },'')}
+                        ${humanData.notes.reduce((a, b) => {
+                    return a + `<p>${b}</p>`;
+                }, '')}
                     </td>
                     <td style="color:red;">${humanData.record_time}</td>
                     <td>${humanData.record_qq}</td>
@@ -800,7 +800,7 @@
             </table>
             `
             setCon([table]);
-        },false)
+        }, false)
     }
     AddQQDiv();
     // 格式化phone的做单数据格式
@@ -824,8 +824,8 @@
     function findPhonesByQq(qq) {
         const arr = [];
         const datas = findDatasByQq(qq);
-        datas.forEach(data=>{
-            if(data.length>0 && !arr.includes(data[0].pig_phone))arr.push(trim(data[0].pig_phone));
+        datas.forEach(data => {
+            if (data.length > 0 && !arr.includes(data[0].pig_phone)) arr.push(trim(data[0].pig_phone));
         })
         return arr;
     }
