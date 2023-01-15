@@ -228,12 +228,14 @@
             record_num: records.length,
             notes: notes,
             record_time: records.length > 0 && records[0].pig_over_time,
-            record_qq: records.length > 0 && QQS[records[0].qq_exec_pre],
+            record_qq: records.length > 0 && (QQS[records[0].qq_exec_pre] || ''),
             diffPhones: diffPhones,
         }
     }
     // 找到不同的手机号
     const findDiffPhonesByDatas = (datas) => {
+        if(datas.length==0)return [];
+        const phone = datas[0].pig_phone;
         // 找到所有的qq号
         let qqs = findQqs(datas, '1');
         if (qqs.length == 0) return [];
@@ -244,6 +246,8 @@
         });
         // 去重
         phones_arr = [...new Set(phones_arr)];
+        // 去除自身phone
+        phones_arr = phones_arr.filter(phone_tmp => phone_tmp != phone);
         return phones_arr;
     }
     function trim(str) {
@@ -409,6 +413,51 @@
         })
     }
     startFormatCancelCon();
+    // 得到做单的trs
+    function getDataTable(records,isBtn=false){
+        let trs = '';
+        records.forEach(datas => {
+            let humanData = humanDatas(datas);
+            // console.log(humanData);
+            trs += `
+            <tr>
+                <td>
+                    <p><span class="j-phone">${humanData.phone}</span>${isBtn?'<a style="color:red;margin-left:10px;" class="j-remindPhone">去除提醒</a>':''}</p>
+                    ${humanData.diffPhones.length >0?('<p style="color:red;">有不同的手机号：'+JSON.stringify(humanData.diffPhones)+'</p>'):''}
+                </td>
+                <td style="color: blueviolet;">
+                    ${humanData.qqs.reduce((a, b) => {
+                return a + `<p>${b}</p>`;
+            }, '')}
+                </td>
+                <td style="color:red;">${humanData.record_num}</td>
+                <td style="color: rgb(16, 0, 255);">
+                    ${humanData.notes.reduce((a, b) => {
+                return a + `<p>${b}</p>`;
+            }, '')}
+                </td>
+                <td style="color:red;">${humanData.record_time}</td>
+                <td>${humanData.record_qq}</td>
+            </tr>
+            `
+        })
+        let table = `
+        <table class="common_table">
+            <tbody>
+                <tr>
+                    <th>手机号</th>
+                    <th>全部qq号</th>
+                    <th>已做单数量</th>
+                    <th>备注</th>
+                    <th>最近做单日期</th>
+                    <th>最近做单qq号</th>
+                </tr>
+                ${trs}
+            </tbody>
+        </table>
+        `
+        return table;
+    }
     // 添加不同qq，用户备注，网页备注
     const AddQQDiv = () => {
         const qqAdd = document.createElement('div');
@@ -624,14 +673,18 @@
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
-        const setCon = arr => {
+        const getCon = arr =>{
             let str = '';
             if (arr.length > 0) {
                 arr.forEach(date => {
                     str += `<div>${typeof date === 'string' ? date : JSON.stringify(date)}</div>`;
                 })
             }
-            $con.innerHTML = str;
+            return str;
+        }
+        const setCon = arr => {
+            const con = getCon(arr);
+            $con.innerHTML = con;
         }
 
         // 下载按钮
@@ -644,7 +697,9 @@
             if (phone && DATA[phone]) {
                 // console.log(DATA[phone]);
                 // alert(JSON.stringify(DATA[phone]));
-                setCon(DATA[phone]);
+                let datas = DATA[phone];
+                let table = getDataTable([datas])
+                setCon([getCon(datas),table]);
             } else {
                 // alert('没找到记录');
                 setCon(['没找到做单记录']);
@@ -661,9 +716,16 @@
                     // 判断是否有一个qq多个手机的情况存在
                     // console.log(arr);
                     if (arr.length === 1) {
-                        setCon(arr[0]);
+                        // 单手机
+                        let datas = arr[0];
+                        let table = getDataTable([datas])
+                        setCon([getCon(datas),table]);
+                        // setCon(arr[0]);
                     } else {
-                        setCon(arr);
+                        // 多手机号
+                        let str = getCon(arr);
+                        let table = getDataTable(arr);
+                        setCon([str+table]);
                     }
                     // alert(JSON.stringify(arr));
                 } else {
@@ -723,7 +785,7 @@
             RDATA.addData(phone);
         }, '.j-remindPhone')
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
-            let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
+            let endTime = new Date(new Date().getTime() - 17 * 24 * 60 * 60 * 1000);
             let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
             let DateRecords = [];
             const DatePhones = Object.keys(DATA);
@@ -753,52 +815,13 @@
                         && notes.indexOf('满月') == -1
                         && notes.indexOf('删订单') == -1
                         && record_datas.length >= 2
-                        && diffPhones.length == 1
+                        && diffPhones.length == 0
                         && !RDATA.isExist(record.pig_phone)
                     ) records.push(datas);
                 }
             })
             // console.log(records);
-            let trs = '';
-            records.forEach(datas => {
-                let humanData = humanDatas(datas);
-                // console.log(humanData);
-                trs += `
-                <tr>
-                    <td>
-                        <p><span class="j-phone">${humanData.phone}</span><a style="color:red;margin-left:10px;" class="j-remindPhone">去除提醒</a></p>
-                    </td>
-                    <td style="color: blueviolet;">
-                        ${humanData.qqs.reduce((a, b) => {
-                    return a + `<p>${b}</p>`;
-                }, '')}
-                    </td>
-                    <td style="color:red;">${humanData.record_num}</td>
-                    <td style="color: rgb(16, 0, 255);">
-                        ${humanData.notes.reduce((a, b) => {
-                    return a + `<p>${b}</p>`;
-                }, '')}
-                    </td>
-                    <td style="color:red;">${humanData.record_time}</td>
-                    <td>${humanData.record_qq}</td>
-                </tr>
-                `
-            })
-            let table = `
-            <table class="common_table">
-                <tbody>
-                    <tr>
-                        <th>手机号</th>
-                        <th>全部qq号</th>
-                        <th>已做单数量</th>
-                        <th>备注</th>
-                        <th>最近做单日期</th>
-                        <th>最近做单qq号</th>
-                    </tr>
-                    ${trs}
-                </tbody>
-            </table>
-            `
+            const table = getDataTable(records,true);
             setCon([table]);
         }, false)
     }
