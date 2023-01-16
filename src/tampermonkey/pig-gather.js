@@ -493,6 +493,7 @@
                             display:flex;
                             margin-top:15px;
                         }
+                        
                         .u-con p{
                             line-height: 1.5;
                         }
@@ -684,7 +685,7 @@
         }
         const setCon = arr => {
             const con = getCon(arr);
-            $con.innerHTML = con;
+            $con.innerHTML = con + '<div style="height:1px; background:#c2b7cd;"></div>';
         }
 
         // 下载按钮
