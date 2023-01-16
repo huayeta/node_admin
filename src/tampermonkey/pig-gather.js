@@ -845,8 +845,8 @@
         }, false)
         qqAdd.querySelector('.j-gatherRegisterQqs').addEventListener('click', () => {
             GatherQqs(humanData => {
-                return new Date(humanData.register_time) < new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000)
-                    && new Date(humanData.record_time) - 30 * 24 * 60 * 60 * 10000 > new Date(humanData.register_time);
+                // 注册时间超过1个月 做单时间跟注册时间相隔1个月以上
+                return new Date(humanData.record_time) - 30 * 24 * 60 * 60 * 10000 > new Date(humanData.register_time);
             })
         }, false)
     }
