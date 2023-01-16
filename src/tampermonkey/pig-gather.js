@@ -222,11 +222,20 @@
         let qqs = findQqs(datas, '1');
         // 找到不同的手机号
         let diffPhones = findDiffPhonesByDatas(datas);
+        // 找到注册时间
+        let register_time = '';
+        for (let i = 0; i < records.length; i++) {
+            if (records[i].pig_register_time) {
+                register_time = records[i].pig_register_time;
+                break;
+            }
+        }
         return {
             phone: datas[0].pig_phone,
             qqs: qqs,
             record_num: records.length,
             notes: notes,
+            register_time: register_time,
             record_time: records.length > 0 && records[0].pig_over_time,
             record_qq: records.length > 0 && (QQS[records[0].qq_exec_pre] || ''),
             diffPhones: diffPhones,
@@ -234,7 +243,7 @@
     }
     // 找到不同的手机号
     const findDiffPhonesByDatas = (datas) => {
-        if(datas.length==0)return [];
+        if (datas.length == 0) return [];
         const phone = datas[0].pig_phone;
         // 找到所有的qq号
         let qqs = findQqs(datas, '1');
@@ -414,7 +423,7 @@
     }
     startFormatCancelCon();
     // 得到做单的trs
-    function getDataTable(records,isBtn=false){
+    function getDataTable(records, isBtn = false) {
         let trs = '';
         records.forEach(datas => {
             let humanData = humanDatas(datas);
@@ -422,8 +431,8 @@
             trs += `
             <tr>
                 <td>
-                    <p><span class="j-phone">${humanData.phone}</span>${isBtn?'<a style="color:red;margin-left:10px;" class="j-remindPhone">去除提醒</a>':''}</p>
-                    ${humanData.diffPhones.length >0?('<p style="color:red;">有不同的手机号：'+JSON.stringify(humanData.diffPhones)+'</p>'):''}
+                    <p><span class="j-phone">${humanData.phone}</span>${isBtn ? '<a style="color:red;margin-left:10px;" class="j-remindPhone">去除提醒</a>' : ''}</p>
+                    ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
@@ -436,6 +445,7 @@
                 return a + `<p>${b}</p>`;
             }, '')}
                 </td>
+                <td>${humanData.register_time}</td>
                 <td style="color:red;">${humanData.record_time}</td>
                 <td>${humanData.record_qq}</td>
             </tr>
@@ -449,6 +459,7 @@
                     <th>全部qq号</th>
                     <th>已做单数量</th>
                     <th>备注</th>
+                    <th>注册时间</th>
                     <th>最近做单日期</th>
                     <th>最近做单qq号</th>
                 </tr>
@@ -504,6 +515,7 @@
                         <button class="search_btn j-findQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">查询不同的qq</button>
                         <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">筛选qq</button>
+                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;margin-left:10px; width:auto; padding:0 10px;">注册时间筛选qq</button>
                         <span style="color:darkmagenta; margin-left:10p;">${JSON.stringify(QQS)}</span>
                     </div>
                     <div class="u-con">
@@ -674,7 +686,7 @@
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
-        const getCon = arr =>{
+        const getCon = arr => {
             let str = '';
             if (arr.length > 0) {
                 arr.forEach(date => {
@@ -700,7 +712,7 @@
                 // alert(JSON.stringify(DATA[phone]));
                 let datas = DATA[phone];
                 let table = getDataTable([datas])
-                setCon([getCon(datas),table]);
+                setCon([getCon(datas), table]);
             } else {
                 // alert('没找到记录');
                 setCon(['没找到做单记录']);
@@ -720,13 +732,13 @@
                         // 单手机
                         let datas = arr[0];
                         let table = getDataTable([datas])
-                        setCon([getCon(datas),table]);
+                        setCon([getCon(datas), table]);
                         // setCon(arr[0]);
                     } else {
                         // 多手机号
                         let str = getCon(arr);
                         let table = getDataTable(arr);
-                        setCon([str+table]);
+                        setCon([str + table]);
                     }
                     // alert(JSON.stringify(arr));
                 } else {
@@ -785,7 +797,7 @@
             $btn.style = 'color:gray;margin-left:10px;';
             RDATA.addData(phone);
         }, '.j-remindPhone')
-        qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
+        function GatherQqs(cb = () => true) {
             let endTime = new Date(new Date().getTime() - 17 * 24 * 60 * 60 * 1000);
             let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
             let DateRecords = [];
@@ -808,6 +820,7 @@
             DateRecords.forEach(record => {
                 if (records.length < 5 && new Date(record.pig_over_time) < endTime) {
                     let datas = DATA[record.pig_phone];
+                    const humanData = humanDatas(datas);
                     const notes = findNotes(datas).join('');
                     const record_datas = formatePhoneDatas(datas);
                     const diffPhones = findDiffPhonesByDatas(datas);
@@ -815,15 +828,26 @@
                         notes.indexOf('被抓') == -1
                         && notes.indexOf('满月') == -1
                         && notes.indexOf('删订单') == -1
-                        && record_datas.length >= 2
                         && diffPhones.length == 0
                         && !RDATA.isExist(record.pig_phone)
+                        && cb(humanData)
                     ) records.push(datas);
                 }
             })
             // console.log(records);
-            const table = getDataTable(records,true);
+            const table = getDataTable(records, true);
             setCon([table]);
+        }
+        qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
+            GatherQqs(humanData => {
+                return humanData.record_num >= 2;
+            })
+        }, false)
+        qqAdd.querySelector('.j-gatherRegisterQqs').addEventListener('click', () => {
+            GatherQqs(humanData => {
+                return new Date(humanData.register_time) < new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000)
+                    && new Date(humanData.record_time) - 30 * 24 * 60 * 60 * 10000 > new Date(humanData.register_time);
+            })
         }, false)
     }
     AddQQDiv();
