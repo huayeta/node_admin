@@ -24,9 +24,9 @@
     const QQS = {
         '31': '小艾-1',
         '30': '小欣-2',
+        '21': '小菜-5',
         '20': '小云-3',
         '54': '小韵-4',
-        '21': '小菜菜'
     }
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
@@ -235,6 +235,7 @@
             qqs: qqs,
             record_num: records.length,
             notes: notes,
+            records: records,
             register_time: register_time,
             record_time: records.length > 0 && records[0].pig_over_time,
             record_qq: records.length > 0 && (QQS[records[0].qq_exec_pre] || ''),
@@ -673,8 +674,8 @@
                 return;
                 // DATA[phone] = [];
             }
-            if (!qq) {
-                alert('qq不能为空~');
+            if (!qq || !phone) {
+                alert('qq或手机不能为空~');
                 return;
             }
             // setCon([record])
@@ -821,9 +822,8 @@
                 if (records.length < 5 && new Date(record.pig_over_time) < endTime) {
                     let datas = DATA[record.pig_phone];
                     const humanData = humanDatas(datas);
-                    const notes = findNotes(datas).join('');
-                    const record_datas = formatePhoneDatas(datas);
-                    const diffPhones = findDiffPhonesByDatas(datas);
+                    const notes = humanData.notes.join('');
+                    const diffPhones = humanData.diffPhones;
                     if (
                         notes.indexOf('被抓') == -1
                         && notes.indexOf('满月') == -1
