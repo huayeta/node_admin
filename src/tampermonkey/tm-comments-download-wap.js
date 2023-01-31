@@ -216,7 +216,7 @@
         Zip.file("评价.txt", Coments.join('\r\n'));
         // Zip.file('图片.txt', JSON.stringify(Photos));
         // startDownload();
-        if(!is_save_photo) return startDownload();
+        if (!is_save_photo || Photos.length === 0) return startDownload(Zip, product_id);
         const down_photos = [];
         Photos.forEach(photo => {
             photo.photos.forEach((phot, ind) => {

@@ -5,7 +5,7 @@
 // @description  try to take over the world!
 // @author       You
 // @match        https://*.detail.tmall.com/item.htm*
-// @math         https://detail.tmall.com/item_o.htm*
+// @match         https://detail.tmall.com/item_o.htm*
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==
@@ -29,7 +29,7 @@
     const product_id = new URLSearchParams(window.location.search.slice(1)).get('id');
     const Zip = new JSZip();
     const getIsNext = () => next_btn.getAttribute('data-page');
-    const addComment = (str,fir)=>{
+    const addComment = (str, fir) => {
         if (
             ((str &&
                 !str.includes('此用户没有填写评价') &&
@@ -37,7 +37,7 @@
                 str.length >= +select_length)) ||
             fir
         ) {
-            if(select_qz && str.length < +select_length)return;
+            if (select_qz && str.length < +select_length) return;
             // console.log(str)
             Coments.push(`${fir}${str}`);
         }
@@ -55,12 +55,12 @@
                     photos.push(li.getAttribute('data-src'));
                 })
                 // console.log(comment, photos);
-                if(photos.length>0){
-                    Index = Index+1;
+                if (photos.length > 0) {
+                    Index = Index + 1;
                     Photos.push({ id: Index, photos: photos })
                 }
                 // Coments.push(photos.length > 0 ? `有图片：${Index}：${comment}` : comment);
-                addComment(comment,photos.length>0?`有图片：${Index}：`:'')
+                addComment(comment, photos.length > 0 ? `有图片：${Index}：` : '')
             } else {
                 // 获取首次评论
                 const premiere = tr.querySelector('.tm-rate-premiere');
@@ -71,12 +71,12 @@
                     pre_photos.push(li.getAttribute('data-src'));
                 })
                 // console.log(pre_comment, pre_photos);
-                if(pre_photos.length > 0){
-                    Index = Index+1;
+                if (pre_photos.length > 0) {
+                    Index = Index + 1;
                     Photos.push({ id: Index, photos: pre_photos });
                 }
                 // Coments.push(pre_photos.length > 0 ? `有图片：${Index}：${pre_comment}` : pre_comment);
-                addComment(pre_comment,pre_photos.length > 0 ? `有图片：${Index}：` : '')
+                addComment(pre_comment, pre_photos.length > 0 ? `有图片：${Index}：` : '')
                 // 获取追评
                 const append = tr.querySelector('.tm-rate-append');
                 const append_comment = append.querySelector('.tm-rate-fulltxt').textContent;
@@ -86,12 +86,12 @@
                     append_photos.push(li.getAttribute('data-src'));
                 })
                 // console.log(append_comment, append_photos);
-                if(append_photos.length > 0){
-                    Index = Index+1;
+                if (append_photos.length > 0) {
+                    Index = Index + 1;
                     Photos.push({ id: Index, photos: append_photos });
                 }
                 // Coments.push(append_photos.length > 0 ? `有图片：${Index}：追：${append_comment}` : `追：${append_comment}`);
-                addComment(append_comment,append_photos.length > 0 ? `有图片：${Index}：追：` : `追：`);
+                addComment(append_comment, append_photos.length > 0 ? `有图片：${Index}：追：` : `追：`);
             }
         })
         // console.log(Coments);
@@ -108,7 +108,7 @@
         readComment();
         // return cb(); //测试
         console.log(`第${currentPage}页完成`);
-        if(window.is_comment_download_now)return cb && cb();
+        if (window.is_comment_download_now) return cb && cb();
         if (getIsNext()) {
             clickNext();
             sleep(sleep_time).then(() => {
@@ -166,7 +166,7 @@
      * @param {string} filenameA 下载的文件名 
      * @param {function} cb 下载完成后的回调函数
      */
-    function startDownload(zipD,filenameA=product_id,cb=()=>{}) {
+    function startDownload(zipD, filenameA = product_id, cb = () => { }) {
         console.log(`正在打包评论...`)
         zipD.generateAsync({ type: "blob" }).then(function (content) {
             // 下载的文件名
@@ -193,7 +193,7 @@
      * @param {array} imgArr 添加图片的数组
      * @param {function} cb 添加完图片后的回调函数
      */
-    function pushImg(zipD=Zip,imgArr=[],cb) {
+    function pushImg(zipD = Zip, imgArr = [], cb) {
         var img = zipD.folder('images');
         let index = 0;
         imgArr.forEach(photo => {
@@ -214,10 +214,10 @@
      * @param {string} imgFolder 下载zip的名字
      * @param {function} cb 下载完成后的回调函数 
      */
-    function startImagesDownload(imgArr=[],imgFolder='images',cb=()=>{}) {
+    function startImagesDownload(imgArr = [], imgFolder = 'images', cb = () => { }) {
         const zip1 = new JSZip();
-        pushImg(zip1,imgArr,()=>{
-            startDownload(zip1,imgFolder,cb)
+        pushImg(zip1, imgArr, () => {
+            startDownload(zip1, imgFolder, cb)
         })
     }
     /**
@@ -226,13 +226,13 @@
      * @param {function} cb 下载成功后的毁掉函数
      */
     let imgIndex = 0;
-    function loopImagesDownload(imgArr=[],cb=()=>{}) {
-        const arr = imgArr.splice(0,maxDownload);
+    function loopImagesDownload(imgArr = [], cb = () => { }) {
+        const arr = imgArr.splice(0, maxDownload);
         imgIndex++;
-        startImagesDownload(arr,`${product_id}-images-${imgIndex}`,()=>{
-            if(imgArr.length>0){
-                loopImagesDownload(imgArr,cb)
-            }else{
+        startImagesDownload(arr, `${product_id}-images-${imgIndex}`, () => {
+            if (imgArr.length > 0) {
+                loopImagesDownload(imgArr, cb)
+            } else {
                 cb();
             }
         })
@@ -241,7 +241,7 @@
         Zip.file("评价.txt", Coments.join('\r\n'));
         // Zip.file('图片.txt', JSON.stringify(Photos));
         // startDownload();
-        if(!is_save_photo) return startDownload();
+        if (!is_save_photo || Photos.length === 0) return startDownload(Zip, product_id);
         const down_photos = [];
         Photos.forEach(photo => {
             photo.photos.forEach((phot, ind) => {
@@ -249,12 +249,12 @@
             })
         })
         ImgLength = down_photos.length;
-        if(ImgLength<= maxDownload){
-            pushImg(Zip,down_photos,()=>{
-                startDownload(Zip,product_id);
+        if (ImgLength <= maxDownload) {
+            pushImg(Zip, down_photos, () => {
+                startDownload(Zip, product_id);
             })
-        }else{
-            startDownload(Zip,`${product_id}-comments`,()=>{
+        } else {
+            startDownload(Zip, `${product_id}-comments`, () => {
                 loopImagesDownload(down_photos);
             })
         }
