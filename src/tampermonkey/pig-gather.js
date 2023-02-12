@@ -5,6 +5,7 @@
 // @description  汇总数据，并持久化保存，1周自动下载一次
 // @author       You
 // @match        http://sde.meiduoduo.xyz/home/member/fangdan.html
+// @match        http://121.36.254.159/home/member/fangdan.html
 // @grant        none
 // ==/UserScript==
 
@@ -147,11 +148,13 @@
     }
     // MDownload([1],'2');
     const Download = () => {
+        const notes = localStorage.getItem('notes');
+        const remindDatas = localStorage.getItem('remindDatas');
         const data = {
             completeOrders: DATA,
-            notes: localStorage.getItem('notes'),
+            notes: notes?JSON.parse(notes):{},
             downloadTime: localStorage.getItem('downloadTime'),
-            remindDatas: localStorage.getItem('remindDatas')
+            remindDatas: remindDatas?JSON.parse(remindDatas):{}
         }
         MDownload([JSON.stringify(data)], '小猪数据');
         localStorage.setItem('downloadTime', new Date().toLocaleString());
