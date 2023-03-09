@@ -15,7 +15,7 @@
     // {
     //     phone：[
     //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time} 添加做单记录            
-    //         {pig_phone,pig_note} 添加备注
+    //         {pig_phone,pig_note,create_time?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
     //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre? } 正常小猪单
     //     ]
@@ -160,7 +160,7 @@
         localStorage.setItem('downloadTime', new Date().toLocaleString());
     }
     if (localStorage.getItem('downloadTime')) {
-        if ((new Date().getTime() - 7 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('downloadTime')).getTime()) {
+        if ((new Date().getTime() - 2 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('downloadTime')).getTime()) {
             Download();
         }
     } else {
@@ -633,6 +633,7 @@
             DATA[phone].push({
                 pig_phone: phone,
                 pig_note: note,
+                create_time: new Date().toLocaleString(),
             })
             storageData();
             alert('备注添加成功');
