@@ -502,9 +502,13 @@
                         <div><select class="search_input qq_exec_pre" style="width:190px;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button></div>    
                     </div>
                 </div>
+                <div class="search m-search j-order-search">
+                    查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
+                    " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:rebeccapurple;"></div>
+                </div>
                 <div class="btns">
                     <style>
-                        .m-findDate{
+                        .m-findData{
                             display:flex;
                             margin-top:15px;
                         }
@@ -515,7 +519,7 @@
                     </style>
                     <div class="m-findData search">
                         <button class="search_btn j-findPhoneBtn" style="width:auto;padding: 0 10px;">查询phone做单数据</button>
-                        <button class="search_btn j-findQqBtn" style="background:rebeccapurple;width:auto;padding: 0 10px;">查询qq做单数据</button>
+                        <button class="search_btn j-findQqBtn" style="background:rebeccapurple;width:auto;padding: 0 10px; margin-left: 10px;">查询qq做单数据</button>
                         <button class="search_btn j-findQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">查询不同的qq</button>
                         <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">筛选qq</button>
@@ -574,6 +578,100 @@
             }
 
         })
+        // 查询订单是否违规
+        qqAdd.querySelector('.j-order-search .order-search').addEventListener('click',e=>{
+            const orderId = qqAdd.querySelector('.j-order-search .order-id').value;
+            const orderCon = qqAdd.querySelector('.j-order-search .orderCon');
+            if(!orderId)return alert('orderId不能为空');
+            const orders = `1815460827279566990
+            1817271266178243978
+            1817602140122228778
+            1818450084014675383
+            1818994044235558870
+            1819666059839260884
+            1820644357963458575
+            1821554187209890384
+            1821618951688497696
+            1821810109273800189
+            1822312310661445377
+            1823295759851146875
+            1823621881203264981
+            1824302570776340779
+            1824969901410090571
+            1831027296791183189
+            1831718247294838292
+            1831736103281374186
+            1831783945148713274
+            1832321931280585070
+            1835027977116394569
+            1835096810379981390
+            1835896441989075470
+            1836854328088966987
+            1836970932968243991
+            1837831224766583186
+            1837952331899825187
+            1839129423001243978
+            3190959723616364654
+            3191587059587307714
+            3192445730788521941
+            3192504733519047144
+            3192803786331532508
+            3195283609116755832
+            3195432109106209462
+            3198573576234885237
+            3199014686311448558
+            3201166045056787309
+            3201576913120363460
+            3201880284350859443
+            3202044267374821153
+            3202624008802117151
+            3202841306961540348
+            3202890627003246163
+            3203070879560232923
+            3207732087442232348
+            3209679506353748507
+            3210699350591053005
+            3211138729432520952
+            3211661016453896810
+            3212619266528146630
+            3212904279346053428
+            3217762692087755832
+            3218768318492747345
+            3220567814304371042
+            3223369263087317159
+            3226285584630180333
+            3228127194350624425
+            3230169913790882809
+            3230666712936008344
+            3230962021394255823
+            3231643932945951609
+            3232967185098257100
+            3234538839108838232
+            3236926212108539009
+            3238153994286784749
+            3239680824760638209
+            3240270687419466310
+            3240440822117633848
+            3241540045784541124
+            3241856880304298565
+            3241966179425558217
+            3241985007211782311
+            3243672109846001439
+            3244695950175609617
+            3244760426194303255
+            3245687533552476225
+            3246714147055822559
+            3248038440214419642
+            3248499278529970547
+            3250881255956635934
+            3251040555375086858`.split(`
+            `);
+            if(orders.includes(orderId)){
+                orderCon.innerHTML='查询到艾跃被抓;'
+            }else{
+                orderCon.innerHTML='没查询到;'
+            }
+        },false)
         // 添加qq
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
