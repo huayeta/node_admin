@@ -5,6 +5,7 @@
 // @description  try to take over the world!
 // @author       You
 // @match        https://qn.taobao.com/home.htm/comment-manage/list/rateWait4PC?*
+// @match        https://myseller.taobao.com/home.htm/comment-manage/list/rateWait4PC?*
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==
