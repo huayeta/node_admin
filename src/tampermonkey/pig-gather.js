@@ -504,7 +504,7 @@
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
-                    " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:rebeccapurple;"></div>
+                    " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
                 </div>
                 <div class="btns">
                     <style>
@@ -668,7 +668,7 @@
             3251040555375086858`.split(`
             `);
             if(ordersA.includes(orderId.trim())){
-                orderConArr.push('查询到艾跃被抓;')
+                orderConArr.push('<span style="color:red;">查询到艾跃被抓;</span>')
             }else{
                 orderConArr.push('没查询到;');
             }
@@ -856,7 +856,7 @@
             3278454375894878527`.split(`
             `);
             if(ordersW.includes(orderId.trim())){
-                orderConArr.push('查询到万阁被抓;')
+                orderConArr.push('<span style="color:red;">查询到万阁被抓;</span>')
             }else{
                 orderConArr.push('没查询到;');
             }
