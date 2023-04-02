@@ -511,6 +511,7 @@
                         .m-findData{
                             display:flex;
                             margin-top:15px;
+                            align-items:center;
                         }
                         
                         .u-con p{
@@ -524,7 +525,7 @@
                         <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">筛选qq</button>
                         <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;margin-left:10px; width:auto; padding:0 10px;">注册时间筛选qq</button>
-                        <span style="color:darkmagenta; margin-left:10p;">${JSON.stringify(QQS)}</span>
+                        <span style="color:darkmagenta; margin-left:10px;">${JSON.stringify(QQS)}</span>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -1091,7 +1092,7 @@
             RDATA.addData(phone);
         }, '.j-remindPhone')
         function GatherQqs(cb = () => true) {
-            let endTime = new Date(new Date().getTime() - 17 * 24 * 60 * 60 * 1000);
+            let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
             let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
             let DateRecords = [];
             const DatePhones = Object.keys(DATA);
