@@ -55,7 +55,7 @@
             if (phones.length > 0) {
                 phones.forEach(phone => {
                     const time = datas[phone];
-                    if (new Date(time) > new Date(new Date().getTime() - 5 * 24 * 60 * 60 * 1000)) {
+                    if (new Date(time) > new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000)) {
                         results[phone] = time;
                     }
                 })
@@ -435,7 +435,7 @@
             trs += `
             <tr>
                 <td>
-                    <p><span class="j-phone">${humanData.phone}</span>${isBtn ? '<a style="color:red;margin-left:10px;" class="j-remindPhone">去除提醒</a>' : ''}</p>
+                    <p><span class="j-phone">${humanData.phone}</span>${isBtn ? '<a style="color:red;margin-left:10px;" class="j-remindPhone" data-qq="'+humanData.qqs[0]+'">copy去除</a>' : ''}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
@@ -854,7 +854,63 @@
             3276788618269048001
             3276833655508970547
             3276979563953783439
-            3278454375894878527`.split(`
+            3278454375894878527
+            1838655769859227798
+            1842793969472774868
+            1842815208214100993
+            1843890459457088794
+            1846571306365673299
+            1847105617022869885
+            1849140409913467989
+            1849233794477290469
+            1851280932663232684
+            1852003671185149192
+            1853829301885129679
+            1855320422308905997
+            1855622283978774773
+            1855710876138324170
+            1857172515168093683
+            1857723963318865897
+            1857776703844942484
+            1858188183649838292
+            1858213814811825187
+            1858584145352673299
+            1858701865101442088
+            1860882387829960984
+            1861583127716247585
+            3239050464113762101
+            3249087123203110709
+            3250985042413173265
+            3252114432300352112
+            3252630169261296212
+            3252913993899289145
+            3254934458454392033
+            3256049126629532508
+            3262588166236481249
+            3267777096570744545
+            3271763918734885237
+            3272242755439223548
+            3274302708745828606
+            3275774139403167404
+            3276585721754100425
+            3276615925232657824
+            3277475715268914861
+            3277520424478173265
+            3279698499622476426
+            3280511163369079433
+            3280976964579540821
+            3281826746487536250
+            3282338415486859443
+            3283011829994790145
+            3283243885729102000
+            3283306418516153633
+            3284279354714146630
+            3284761321493727162
+            3286111105118307714
+            3286537671437523320
+            3286907497902330011
+            3287605251535298565
+            3290361733324747345`.split(`
             `);
             if(ordersW.includes(orderId.trim())){
                 orderConArr.push('<span style="color:red;">查询到万阁被抓;</span>')
@@ -1081,14 +1137,26 @@
                 }
             }
         })
-
+        function copyToClipboard(text){
+            const domIpt = document.createElement('textarea');
+            domIpt.style.position='absolute';
+            domIpt.style.left = '-9999px';
+            domIpt.style.top = '-9999px';
+            document.body.appendChild(domIpt);
+            domIpt.value = text;
+            domIpt.select();
+            document.execCommand('copy');
+            document.body.removeChild(domIpt);
+        }
         // 筛选做单过的qq号
         addEventListener($con, 'click', (e) => {
             const $btn = e.target;
             const $parent = $btn.parentNode;
+            const qq = $btn.getAttribute('data-qq');
             const phone = $parent.querySelector('.j-phone').textContent;
             $btn.textContent = '已去除';
             $btn.style = 'color:gray;margin-left:10px;';
+            copyToClipboard(qq);
             RDATA.addData(phone);
         }, '.j-remindPhone')
         function GatherQqs(cb = () => true) {
