@@ -14,6 +14,7 @@
     // Your code here...
     // {
     //     phone：[
+    //         {pig_phone,ww_exec} 做单旺旺号
     //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time} 添加做单记录            
     //         {pig_phone,pig_note,create_time?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
@@ -126,6 +127,30 @@
         storageData();
     }
     getData();
+    // 一些工具函数
+    const Tools = {
+        alertFuc:obj =>{
+            const keys = Object.keys(obj);
+            const values = Object.values(obj);
+            let result = false;
+            for(let i =0;i++;i<keys.length){
+                if(!values[i]){
+                    alert(`${keys[i]}不能为空`);
+                    result = true;
+                    break;
+                }
+            }
+            return result;
+        },
+        // 添加旺旺号
+        addWW: (pig_phone,ww_exec)=>{
+            if(Tools.alertFuc({pig_phone,ww_exec}))return false;
+            if(!DATA[pig_phone])return alert('不存在小猪数据');
+            DATA[pig_phone].push({pig_phone:pig_phone,ww_exec:ww_exec});
+            storageData();
+            return true;
+        }
+    }
     // const DATA = getData();
     // const DATA = {
     //     '18829904058':[
@@ -225,19 +250,27 @@
         })
         return arr;
     }
+    // 找到phone的旺旺账号
+    const findWWExecs = (datas) =>{
+        const arr = [];
+        datas.forEach(data=>{
+            if(data.ww_exec) arr.push(data.ww_exec);
+        })
+        return arr;
+    }
     // 格式化等待完成的数据
-    // 格式化phones的记录数据
+    // 找到phone的做单数据
     const formatePhoneDatas = Datas => {
         return Datas.filter(data => data.pig_over_time);
     }
     // 人性化的做单记录数据
-    const humanDatas = datas => {
+    const humanDatas = (datas,qq="1") => {
         // 备注数据
         let notes = findNotes(datas);
         // 做单数据
         let records = formatePhoneDatas(datas);
         // 找到所有的qq号
-        let qqs = findQqs(datas, '1');
+        let qqs = findQqs(datas, qq);
         // 找到不同的手机号
         let diffPhones = findDiffPhonesByDatas(datas);
         // 找到注册时间
@@ -248,6 +281,8 @@
                 break;
             }
         }
+        // 找到旺旺账号
+        let wwExecs = findWWExecs(datas);
         return {
             phone: datas[0].pig_phone,
             qqs: qqs,
@@ -256,9 +291,10 @@
             records: records,
             register_time: register_time,
             record_time: records.length > 0 && records[0].pig_over_time,
-            record_qq: records.length > 0 && (QQS[records[0].qq_exec_pre].text || ''),
-            record_color: records.length > 0 && (QQS[records[0].qq_exec_pre].color || ''),
+            record_qq: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].text || ''),
+            record_color: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].color || ''),
             diffPhones: diffPhones,
+            wwExecs:wwExecs,
         }
     }
     // 找到不同的手机号
@@ -268,7 +304,8 @@
         // 找到所有的qq号
         let qqs = findQqs(datas, '1');
         if (qqs.length == 0) return [];
-        let phones_arr = findPhonesByQq(qqs[0]);
+        // let phones_arr = findPhonesByQq(qqs[0]);
+        let phones_arr = [];
         qqs.forEach(qq => {
             // console.log(findPhonesByQq(qq))
             phones_arr = phones_arr.concat(findPhonesByQq(qq))
@@ -316,9 +353,10 @@
 
             return;
         }
-        const Datas = formatePhoneDatas(DATA[phone]);
+        const humans = humanDatas(DATA[phone],qq);
+        const Datas = humans.records;
         // console.log(DATA[phone], qq);
-        const Qqs = findQqs(DATA[phone], qq);
+        const Qqs = humans.qqs;
         // console.log(Qqs);
         // console.log(arr);
         // 如果有不一样的qq号
@@ -330,41 +368,56 @@
         }
         // 标注是否有多个手机号
         if (qq == '1451603208' && type == 2 || true) {
-            let phones_arr = findPhonesByQq(qq);
-            if (phones_arr.length > 0 || true) {
-                if (Qqs.length > 0) {
-                    Qqs.forEach(qq => {
-                        // console.log(findPhonesByQq(qq))
-                        phones_arr = phones_arr.concat(findPhonesByQq(qq))
-                    });
-                }
-                // console.log(phones_arr);
-                // 去重
-                phones_arr = [...new Set(phones_arr)];
-                // console.log(phones_arr);
-                // 去除自身phone
-                phones_arr = phones_arr.filter(phone_tmp => phone_tmp != phone);
-                // console.log(phones_arr);
-                if (phones_arr.length > 0) {
-                    // console.log(`插入${JSON.stringify(phones_arr)}`)
-                    const Div = document.createElement('div');
-                    Div.style = 'color:blueviolet;';
-                    let str = phones_arr.reduce((a, b) => {
-                        const Datas = formatePhoneDatas(DATA[b]);
-                        if (Datas.length == 0) {
-                            return a + `<p>${b}，<br/>已做单：${Datas.length}`;
-                        }
-                        return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</p>`
-                    }, '')
-                    Div.innerHTML = `有不同的手机号：${str}`;
-                    $phone.append(Div);
-                }
-                // console.log('11111111111111')
+            const phones_arr = humans.diffPhones;
+            if (phones_arr.length > 0) {
+                // console.log(`插入${JSON.stringify(phones_arr)}`)
+                const Div = document.createElement('div');
+                Div.style = 'color:blueviolet;';
+                let str = phones_arr.reduce((a, b) => {
+                    const Datas = formatePhoneDatas(DATA[b]);
+                    if (Datas.length == 0) {
+                        return a + `<p>${b}，<br/>已做单：${Datas.length}`;
+                    }
+                    return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</p>`
+                }, '')
+                Div.innerHTML = `有不同的手机号：${str}`;
+                $phone.append(Div);
             }
+            // let phones_arr = findPhonesByQq(qq);
+            // if (phones_arr.length > 0 || true) {
+            //     if (Qqs.length > 0) {
+            //         Qqs.forEach(qq => {
+            //             // console.log(findPhonesByQq(qq))
+            //             phones_arr = phones_arr.concat(findPhonesByQq(qq))
+            //         });
+            //     }
+            //     // console.log(phones_arr);
+            //     // 去重
+            //     phones_arr = [...new Set(phones_arr)];
+            //     // console.log(phones_arr);
+            //     // 去除自身phone
+            //     phones_arr = phones_arr.filter(phone_tmp => phone_tmp != phone);
+            //     // console.log(phones_arr);
+            //     if (phones_arr.length > 0) {
+            //         // console.log(`插入${JSON.stringify(phones_arr)}`)
+            //         const Div = document.createElement('div');
+            //         Div.style = 'color:blueviolet;';
+            //         let str = phones_arr.reduce((a, b) => {
+            //             const Datas = formatePhoneDatas(DATA[b]);
+            //             if (Datas.length == 0) {
+            //                 return a + `<p>${b}，<br/>已做单：${Datas.length}`;
+            //             }
+            //             return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</p>`
+            //         }, '')
+            //         Div.innerHTML = `有不同的手机号：${str}`;
+            //         $phone.append(Div);
+            //     }
+            //     // console.log('11111111111111')
+            // }
         }
 
         // 标注备注信息
-        const Notes = findNotes(DATA[phone]);
+        const Notes = humans.notes;
         if (Notes.length > 0) {
             const Div = document.createElement('div');
             Div.style = 'color:#1000ff;';
@@ -392,6 +445,14 @@
         if (Datas[0].qq_exec_pre) latelyStr += `<P>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</P>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
+        // 标注旺旺号
+        if(humans.wwExecs.length>0){
+            const $wwTr = $tr.querySelector('td:nth-child(7)');
+            const $wwDiv = document.createElement('div');
+            $wwDiv.style = 'color: rgb(16, 0, 255);';
+            $wwDiv.innerHTML= `旺旺号：${humans.wwExecs.join('，')}`;
+            $wwTr.append($wwDiv);
+        }
     }
     // 等待完成格式化tr
     const startFormatPendingCon = () => {
@@ -438,7 +499,7 @@
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (index < 100) formatTr($tr, 5, 7, 12);
+            if (index < 20) formatTr($tr, 5, 7, 12);
         })
     }
     startFormatCancelCon();
@@ -459,6 +520,11 @@
                 return a + `<p>${b}</p>`;
             }, '')}
                 </td>
+                <td style="color:red;">
+                    ${humanData.wwExecs.reduce((a, b) => {
+                        return a + `<p>${b}</p>`;
+                    }, '')}
+                </td>
                 <td style="color:${humanData.record_color}">${humanData.record_qq}</td>
                 <td style="color:red;">${humanData.record_time}</td>
                 <td style="color:red;">${humanData.record_num}</td>
@@ -477,6 +543,7 @@
                 <tr>
                     <th>手机号</th>
                     <th>全部qq号</th>
+                    <th>旺旺号</th>
                     <th>最近做单qq号</th>
                     <th>最近做单日期</th>
                     <th>已做单数量</th>
@@ -521,6 +588,8 @@
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
+                    <input class="search_input ww-id" placeholder="旺旺号" /> <button class="search_btn ww-add
+                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -586,7 +655,10 @@
             // console.log(datas);
             if (datas.length > 0) {
                 if (datas.length === 1) {
-                    $phone.value = datas[0][0].pig_phone;
+                    const phone = datas[0][0].pig_phone;
+                    $phone.value = phone;
+                    const wwExecs = findWWExecs(DATA[phone]);
+                    qqAdd.querySelector('.j-order-search .ww-id').value = wwExecs.join('，');
                 } else {
                     $phone.value = '有多个手机号';
                 }
@@ -935,6 +1007,32 @@
             }
             orderCon.innerHTML = orderConArr.join('，');
         },false)
+        // 添加旺旺号
+        qqAdd.querySelector('.j-order-search .ww-add').addEventListener('click',e=>{
+            const wwId = qqAdd.querySelector('.j-order-search .ww-id').value;
+            const phone = $phone.value;
+            const result = Tools.addWW(phone,wwId);
+            if(result)alert('添加旺旺成功');
+        },false)
+        // 删除旺旺号
+        qqAdd.querySelector('.j-order-search .ww-del').addEventListener('click', e => {
+            const wwId = qqAdd.querySelector('.j-order-search .ww-id').value;
+            const phone = $phone.value;
+            if (confirm('确定删除吗？')) {
+                if (!DATA[phone]) {
+                    alert('找不到对应的记录~')
+                    return;
+                    // DATA[phone] = [];
+                }
+                // console.log(wwId);
+                const datas = DATA[phone].filter(data => data.pig_id || data.ww_exec != wwId);
+                // console.log(datas);
+                DATA[phone] = datas;
+                storageData();
+                alert('旺旺号删除成功');
+                location.reload();
+            }
+        }, false)
         // 添加qq
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
