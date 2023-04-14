@@ -23,11 +23,26 @@
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
     const QQS = {
-        '31': '小艾-1',
-        '30': '小欣-2',
-        '21': '小菜-5',
-        '20': '小云-3',
-        '54': '小韵-4',
+        '31': {
+            text:'小艾-1',
+            color:'blueviolet',
+        },
+        '30': {
+            text:'小欣-2',
+            color:'red',
+        },
+        '21': {
+            text:'小菜-5',
+            color:'black',
+        },
+        '20': {
+            text:'小云-3',
+            color:'rebeccapurple',
+        },
+        '54': {
+            text:'小韵-4',
+            color:'fuchsia'
+        },
     }
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
@@ -241,7 +256,8 @@
             records: records,
             register_time: register_time,
             record_time: records.length > 0 && records[0].pig_over_time,
-            record_qq: records.length > 0 && (QQS[records[0].qq_exec_pre] || ''),
+            record_qq: records.length > 0 && (QQS[records[0].qq_exec_pre].text || ''),
+            record_color: records.length > 0 && (QQS[records[0].qq_exec_pre].color || ''),
             diffPhones: diffPhones,
         }
     }
@@ -338,7 +354,7 @@
                         if (Datas.length == 0) {
                             return a + `<p>${b}，<br/>已做单：${Datas.length}`;
                         }
-                        return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</p>`
+                        return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</p>`
                     }, '')
                     Div.innerHTML = `有不同的手机号：${str}`;
                     $phone.append(Div);
@@ -373,7 +389,7 @@
         const $lately = document.createElement('div');
         $lately.style = 'color:red;';
         let latelyStr = `<p>最近做单日期:${Datas[0].pig_over_time}</p>`;
-        if (Datas[0].qq_exec_pre) latelyStr += `<P>最近做单qq：${QQS[Datas[0].qq_exec_pre]}</P>`;
+        if (Datas[0].qq_exec_pre) latelyStr += `<P>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</P>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
     }
@@ -443,7 +459,7 @@
                 return a + `<p>${b}</p>`;
             }, '')}
                 </td>
-                <td>${humanData.record_qq}</td>
+                <td style="color:${humanData.record_color}">${humanData.record_qq}</td>
                 <td style="color:red;">${humanData.record_time}</td>
                 <td style="color:red;">${humanData.record_num}</td>
                 <td style="color: rgb(16, 0, 255);">
@@ -478,7 +494,7 @@
         const qqAdd = document.createElement('div');
         let option_strs = '';
         Object.keys(QQS).forEach(num => {
-            option_strs += `<option value=${num}>${QQS[num]}</option>`;
+            option_strs += `<option value=${num}>${QQS[num].text}</option>`;
         })
         qqAdd.innerHTML = `
             <div class="">
@@ -525,7 +541,7 @@
                         <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">筛选qq</button>
                         <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;margin-left:10px; width:auto; padding:0 10px;">注册时间筛选qq</button>
-                        <span style="color:darkmagenta; margin-left:10px;">${JSON.stringify(QQS)}</span>
+                        <span style="color:darkmagenta; margin-left:10px;">${JSON.stringify(Object.keys(QQS).map(qq_exec_pre=>QQS[qq_exec_pre].text))}</span>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
