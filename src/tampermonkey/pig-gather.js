@@ -435,7 +435,7 @@
             trs += `
             <tr>
                 <td>
-                    <p><span class="j-phone">${humanData.phone}</span>${isBtn ? '<a style="color:red;margin-left:10px;" class="j-remindPhone" data-qq="'+humanData.qqs[0]+'">copy去除</a>' : ''}</p>
+                    <p><span class="j-phone">${humanData.phone}</span>${isBtn ? '<a style="color:red;margin-left:10px;cursor:pointer;" class="j-remindPhone" data-qq="'+humanData.qqs[0]+'">copy去除</a>' : ''}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
@@ -443,6 +443,8 @@
                 return a + `<p>${b}</p>`;
             }, '')}
                 </td>
+                <td>${humanData.record_qq}</td>
+                <td style="color:red;">${humanData.record_time}</td>
                 <td style="color:red;">${humanData.record_num}</td>
                 <td style="color: rgb(16, 0, 255);">
                     ${humanData.notes.reduce((a, b) => {
@@ -450,8 +452,6 @@
             }, '')}
                 </td>
                 <td>${humanData.register_time}</td>
-                <td style="color:red;">${humanData.record_time}</td>
-                <td>${humanData.record_qq}</td>
             </tr>
             `
         })
@@ -461,11 +461,11 @@
                 <tr>
                     <th>手机号</th>
                     <th>全部qq号</th>
+                    <th>最近做单qq号</th>
+                    <th>最近做单日期</th>
                     <th>已做单数量</th>
                     <th>备注</th>
                     <th>注册时间</th>
-                    <th>最近做单日期</th>
-                    <th>最近做单qq号</th>
                 </tr>
                 ${trs}
             </tbody>
