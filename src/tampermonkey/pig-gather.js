@@ -284,7 +284,7 @@
         // 找到旺旺账号
         let wwExecs = findWWExecs(datas);
         return {
-            phone: datas[0].pig_phone,
+            phone: datas.length>0 && datas[0].pig_phone,
             qqs: qqs,
             record_num: records.length,
             notes: notes,
@@ -1390,6 +1390,7 @@
             const DatePhones = Object.keys(DATA);
             for (let phone of DatePhones) {
                 const datas = DATA[phone];
+                if(datas.length==0)continue;
                 let data = datas[0];
                 if (data.pig_over_time) {
                     DateRecords.push(datas[0])
