@@ -146,6 +146,13 @@
         addWW: (pig_phone,ww_exec)=>{
             if(Tools.alertFuc({pig_phone,ww_exec}))return false;
             if(!DATA[pig_phone])return alert('不存在小猪数据');
+            // 判断是否已经有旺旺
+            const datas = DATA[pig_phone];
+            let tx = false;
+            for(let data of datas){
+                if(data.ww_exec && data.ww_exec == ww_exec)tx=true;
+            }
+            if(tx = true) return alert('已经添加过旺旺号了');
             DATA[pig_phone].push({pig_phone:pig_phone,ww_exec:ww_exec});
             storageData();
             return true;
@@ -424,6 +431,14 @@
             Div.innerHTML = `备注：${Notes.join('，')}`;
             $qq.append(Div);
         }
+        // 标注旺旺号
+        if(humans.wwExecs.length>0){
+            const $wwTr = $tr.querySelector('td:nth-child(7)');
+            const $wwDiv = document.createElement('div');
+            $wwDiv.style = 'color: rgb(16, 0, 255);';
+            $wwDiv.innerHTML= `旺旺号：${humans.wwExecs.join('，')}`;
+            $wwTr.append($wwDiv);
+        }
         // 如果没有记录就返回
         if (Datas.length == 0) {
 
@@ -445,14 +460,6 @@
         if (Datas[0].qq_exec_pre) latelyStr += `<P>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</P>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
-        // 标注旺旺号
-        if(humans.wwExecs.length>0){
-            const $wwTr = $tr.querySelector('td:nth-child(7)');
-            const $wwDiv = document.createElement('div');
-            $wwDiv.style = 'color: rgb(16, 0, 255);';
-            $wwDiv.innerHTML= `旺旺号：${humans.wwExecs.join('，')}`;
-            $wwTr.append($wwDiv);
-        }
     }
     // 等待完成格式化tr
     const startFormatPendingCon = () => {
