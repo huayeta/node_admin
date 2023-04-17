@@ -152,7 +152,7 @@
             for(let data of datas){
                 if(data.ww_exec && data.ww_exec == ww_exec)tx=true;
             }
-            if(tx = true) return alert('已经添加过旺旺号了');
+            if(tx == true) return alert('已经添加过旺旺号了');
             DATA[pig_phone].push({pig_phone:pig_phone,ww_exec:ww_exec});
             storageData();
             return true;
