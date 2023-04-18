@@ -15,10 +15,10 @@
     // {
     //     phone：[
     //         {pig_phone,ww_exec} 做单旺旺号
-    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time} 添加做单记录            
+    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?} 添加做单记录            
     //         {pig_phone,pig_note,create_time?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre? } 正常小猪单
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label? } 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
@@ -45,12 +45,66 @@
             color:'fuchsia'
         },
     }
+    const LABELS = [
+        {
+            label: '万阁',
+            options:['痔疮6','肛裂5','肛瘘7'],
+        },
+        {
+            label: '广浴隆',
+            options:['肛瘘9','肛裂5'],
+        },
+        {
+            label: '艾跃',
+            options:['痔疮5','疱疹2','白斑2'],
+        }
+    ];
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
     }
+    // 店铺缓存数据
+    const SHOPDATAS = {
+        // {pig_id:shop_label}
+        datas:{},
+        getDatas:()=>{
+            let datas = localStorage.getItem('shopDatas') ? JSON.parse(localStorage.getItem('shopDatas')) : {};
+            SHOPDATAS.datas = datas;
+        },
+        storageData: () => {
+            localStorage.setItem('shopDatas', JSON.stringify(SHOPDATAS.datas));
+        },
+        addData:(pig_id,shop_label)=>{
+            if(Tools.alertFuc({pig_id}))return false;
+            SHOPDATAS.datas[pig_id]=shop_label;
+            if(!shop_label)SHOPDATAS.delData(pig_id);
+            SHOPDATAS.storageData();
+            return true;
+        },
+        delData:(pig_id)=>{
+            delete SHOPDATAS.datas[pig_id];
+            SHOPDATAS.storageData();
+        },
+        appendShopLable: (pig_phone,pig_id,shop_label)=>{
+            if(Tools.alertFuc({pig_phone,pig_id}))return false;
+            if(!DATA[pig_phone]) return alert('不存在做单数据');
+            const datas = DATA[pig_phone];
+            for(let i=0;i<datas.length;i++){
+                if(datas[i].pig_id == pig_id){
+                    DATA[pig_phone][i].shop_label = shop_label;
+                    if(!shop_label) delete DATA[pig_phone][i].shop_label;
+                    SHOPDATAS.delData(pig_id);
+                    storageData();
+                }
+            }
+        },
+        getData:(pig_id)=>{
+            return SHOPDATAS.datas[pig_id];
+        }
+    }
+    SHOPDATAS.getDatas();
     //提醒phone数据
     const RDATA = {
-        // {phone:time}
+        // {phone:time}[]
         datas: {},
         setDatas: (datas) => {
             RDATA.datas = datas;
@@ -112,6 +166,10 @@
         for (let i = length; i--; i >= 0) {
             const $tr = $trs[i];
             const trData = getTrData($tr);
+            const shop_label =SHOPDATAS.getData(trData.pig_id);
+            if(shop_label){
+                trData.shop_label = shop_label; 
+            }
             // DATA.push(getTrData($tr));
             if (!DATA[trData.pig_phone]) {
                 DATA[trData.pig_phone] = [trData];
@@ -133,7 +191,7 @@
             const keys = Object.keys(obj);
             const values = Object.values(obj);
             let result = false;
-            for(let i =0;i++;i<keys.length){
+            for(let i =0;i<keys.length;i++){
                 if(!values[i]){
                     alert(`${keys[i]}不能为空`);
                     result = true;
@@ -336,6 +394,7 @@
         const phone = trim($phone.textContent);
         const $qq = $tr.querySelector(`td:nth-child(${qq_index})`);
         const qq = trim($qq.textContent);
+        const pig_id = trim($tr.querySelector('td:nth-child(1)').textContent);
         // console.log(phone, qq);
         // console.log(Datas);
         // 如果不存在就返回
@@ -439,6 +498,38 @@
             $wwDiv.innerHTML= `旺旺号：${humans.wwExecs.join('，')}`;
             $wwTr.append($wwDiv);
         }
+        // 标注店铺
+        {
+            const $shop = document.createElement('select');
+            $shop.innerHTML = `<option value="">没有选择</option>`+LABELS.map(shop=>{
+                return `<optgroup label='${shop.label}'>${shop.options.map(option=>`<option value='${shop.label}-${option}'>${shop.label}-${option}</option>`).reduce((a,b)=>a+b,'')}</optgroup>`;
+            }).reduce((a,b)=>a+b,'');
+            $shop.style = 'width:auto;';
+            $shop.addEventListener('change',e=>{
+                const value = e.target.value;
+                // console.log(value);
+                if(type!=5){
+                    SHOPDATAS.addData(pig_id,value);
+                }else{
+                    // 如果是已完成列表
+                    SHOPDATAS.appendShopLable(phone,pig_id,value);
+                }
+            },false)
+            if(type!=5){
+                if(SHOPDATAS.getData(pig_id)){
+                    $shop.value = SHOPDATAS.getData(pig_id);
+                }
+            }else{
+                // 已完成列表
+                DATA[phone] && DATA[phone].length>0 && DATA[phone].forEach(data=>{
+                    if(data.pig_id == pig_id && data.shop_label){
+                        $shop.value = data.shop_label;
+                    }
+                })
+            }
+            const $lastTd = $tr.querySelector('td:last-child');
+            $lastTd.prepend($shop);
+        }
         // 如果没有记录就返回
         if (Datas.length == 0) {
 
@@ -494,7 +585,7 @@
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (true || index < 100) formatTr($tr, 5, 9);
+            if (true || index < 100) formatTr($tr, 5, 9,14,5);
         })
     }
     startFormatCompleteCon();
