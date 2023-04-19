@@ -45,22 +45,36 @@
             color:'fuchsia'
         },
     }
-    const LABELS = [
-        {
-            label: '万阁',
-            options:['痔疮6','肛裂5','肛瘘7'],
-        },
-        {
-            label: '广浴隆',
-            options:['肛瘘9','肛裂5'],
-        },
-        {
-            label: '艾跃',
-            options:['痔疮5','疱疹2','白斑2'],
-        }
-    ];
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
+    }
+    // 店铺数据
+    const LABELS = {
+        datas:[
+            {
+                label: '万阁',
+                options:['痔疮6','肛裂5','肛瘘7'],
+            },
+            {
+                label: '广浴隆',
+                options:['肛瘘9','肛裂5'],
+            },
+            {
+                label: '艾跃',
+                options:['痔疮5','疱疹2','白斑2'],
+            }
+        ],
+        getShopOptionsHtml:()=>{
+            return `<option value="">没有选择</option>`+LABELS.datas.map(shop=>{
+                return `<optgroup label='${shop.label}'>${shop.options.map(option=>`<option value='${shop.label}-${option}'>${shop.label}-${option}</option>`).reduce((a,b)=>a+b,'')}</optgroup>`;
+            }).reduce((a,b)=>a+b,'');
+        },
+        getShopElement: ()=>{
+            const $shop = document.createElement('select');
+            $shop.innerHTML = LABELS.getShopOptionsHtml();
+            $shop.style = 'width:auto;';
+            return $shop;
+        }
     }
     // 店铺缓存数据
     const SHOPDATAS = {
@@ -214,6 +228,20 @@
             DATA[pig_phone].push({pig_phone:pig_phone,ww_exec:ww_exec});
             storageData();
             return true;
+        },
+        findPhoneByWW:(ww_exec)=>{
+            const arr = [];
+            Object.keys(DATA).forEach(phone=>{
+                const datas = DATA[phone];
+                for(let i=0;i<datas.length;i++){
+                    const data = datas[i];
+                    if(data.ww_exec == ww_exec){
+                        arr.push(data.pig_phone);
+                        break;
+                    }
+                }
+            })
+            return arr;
         }
     }
     // const DATA = getData();
@@ -397,6 +425,39 @@
         const pig_id = trim($tr.querySelector(`td:nth-child(${type==3?2:1})`).textContent);
         // console.log(phone, qq);
         // console.log(Datas);
+        // 标注店铺
+        {
+            // const $shop = document.createElement('select');
+            // $shop.innerHTML = `<option value="">没有选择</option>`+LABELS.map(shop=>{
+            //     return `<optgroup label='${shop.label}'>${shop.options.map(option=>`<option value='${shop.label}-${option}'>${shop.label}-${option}</option>`).reduce((a,b)=>a+b,'')}</optgroup>`;
+            // }).reduce((a,b)=>a+b,'');
+            // $shop.style = 'width:auto;';
+            const $shop = LABELS.getShopElement();
+            $shop.addEventListener('change',e=>{
+                const value = e.target.value;
+                // console.log(value);
+                if(type!=5){
+                    SHOPDATAS.addData(pig_id,value);
+                }else{
+                    // 如果是已完成列表
+                    SHOPDATAS.appendShopLable(phone,pig_id,value);
+                }
+            },false)
+            if(type!=5){
+                if(SHOPDATAS.getData(pig_id)){
+                    $shop.value = SHOPDATAS.getData(pig_id);
+                }
+            }else{
+                // 已完成列表
+                DATA[phone] && DATA[phone].length>0 && DATA[phone].forEach(data=>{
+                    if(data.pig_id == pig_id && data.shop_label){
+                        $shop.value = data.shop_label;
+                    }
+                })
+            }
+            const $lastTd = $tr.querySelector('td:last-child');
+            $lastTd.prepend($shop);
+        }
         // 如果不存在就返回
         if (!DATA[phone]) {
 
@@ -498,38 +559,7 @@
             $wwDiv.innerHTML= `旺旺号：${humans.wwExecs.join('，')}`;
             $wwTr.append($wwDiv);
         }
-        // 标注店铺
-        {
-            const $shop = document.createElement('select');
-            $shop.innerHTML = `<option value="">没有选择</option>`+LABELS.map(shop=>{
-                return `<optgroup label='${shop.label}'>${shop.options.map(option=>`<option value='${shop.label}-${option}'>${shop.label}-${option}</option>`).reduce((a,b)=>a+b,'')}</optgroup>`;
-            }).reduce((a,b)=>a+b,'');
-            $shop.style = 'width:auto;';
-            $shop.addEventListener('change',e=>{
-                const value = e.target.value;
-                // console.log(value);
-                if(type!=5){
-                    SHOPDATAS.addData(pig_id,value);
-                }else{
-                    // 如果是已完成列表
-                    SHOPDATAS.appendShopLable(phone,pig_id,value);
-                }
-            },false)
-            if(type!=5){
-                if(SHOPDATAS.getData(pig_id)){
-                    $shop.value = SHOPDATAS.getData(pig_id);
-                }
-            }else{
-                // 已完成列表
-                DATA[phone] && DATA[phone].length>0 && DATA[phone].forEach(data=>{
-                    if(data.pig_id == pig_id && data.shop_label){
-                        $shop.value = data.shop_label;
-                    }
-                })
-            }
-            const $lastTd = $tr.querySelector('td:last-child');
-            $lastTd.prepend($shop);
-        }
+        
         // 如果没有记录就返回
         if (Datas.length == 0) {
 
@@ -688,6 +718,7 @@
                     " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
                     <input class="search_input ww-id" placeholder="旺旺号" /> <button class="search_btn ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button>
+                    <select class="search_input shop-id" style="width:auto; margin-left: 10px;">${LABELS.getShopOptionsHtml()}</select>
                 </div>
                 <div class="btns">
                     <style>
@@ -765,6 +796,17 @@
             }
 
         })
+        // 旺旺号变化之后的反应
+        qqAdd.querySelector('.j-order-search .ww-id').addEventListener('input',e=>{
+            const wwExec = e.target.value;
+            if(wwExec){
+                const phoneArr = Tools.findPhoneByWW(wwExec);
+                // console.log(phoneArr);
+                if(phoneArr.length>0){
+                    $phone.value = phoneArr.join(',');
+                }
+            }
+        },false)
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click',e=>{
             const orderId = qqAdd.querySelector('.j-order-search .order-id').value;
@@ -1339,15 +1381,15 @@
             const phone = $phone.value;
             const qq = $byQQ.value;
             const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
-            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre };
+            const ww_exec = qqAdd.querySelector('.j-order-search .shop-id').value;
+            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre ,ww_exec};
+            if(Tools.alertFuc({ww_exec,phone,qq,qq_exec_pre}))return;
+            // console.log(record);
+            // return;
             if (!DATA[phone]) {
                 alert('找不到对应的phone记录~')
                 return;
                 // DATA[phone] = [];
-            }
-            if (!qq || !phone) {
-                alert('qq或手机不能为空~');
-                return;
             }
             // setCon([record])
             DATA[phone].unshift(record);
