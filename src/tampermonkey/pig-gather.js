@@ -394,7 +394,7 @@
         const phone = trim($phone.textContent);
         const $qq = $tr.querySelector(`td:nth-child(${qq_index})`);
         const qq = trim($qq.textContent);
-        const pig_id = trim($tr.querySelector('td:nth-child(1)').textContent);
+        const pig_id = trim($tr.querySelector(`td:nth-child(${type==3?2:1})`).textContent);
         // console.log(phone, qq);
         // console.log(Datas);
         // 如果不存在就返回
@@ -486,7 +486,7 @@
         const Notes = humans.notes;
         if (Notes.length > 0) {
             const Div = document.createElement('div');
-            Div.style = 'color:#1000ff;';
+            Div.style = 'color:#1000ff;max-width: 100px;margin:0 auto;';
             Div.innerHTML = `备注：${Notes.join('，')}`;
             $qq.append(Div);
         }
@@ -573,7 +573,7 @@
         if (!$Trs) return;
         // console.log($Trs);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            formatTr($tr, 6, 9);
+            formatTr($tr, 6, 9,14,3);
         })
     }
     startFormatAuditingCon();
