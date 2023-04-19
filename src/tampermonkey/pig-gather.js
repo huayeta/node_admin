@@ -688,8 +688,10 @@
     const AddQQDiv = () => {
         const qqAdd = document.createElement('div');
         let option_strs = '';
+        const qqs_obj = {};
         Object.keys(QQS).forEach(num => {
             option_strs += `<option value=${num}>${QQS[num].text}</option>`;
+            qqs_obj[num] = QQS[num].text;
         })
         qqAdd.innerHTML = `
             <div class="">
@@ -739,7 +741,7 @@
                         <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">筛选qq</button>
                         <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;margin-left:10px; width:auto; padding:0 10px;">注册时间筛选qq</button>
-                        <span style="color:darkmagenta; margin-left:10px;">${JSON.stringify(Object.keys(QQS).map(qq_exec_pre=>QQS[qq_exec_pre].text))}</span>
+                        <span style="color:darkmagenta; margin-left:10px;">${JSON.stringify(qqs_obj)}</span>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
