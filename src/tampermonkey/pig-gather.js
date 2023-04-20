@@ -1385,7 +1385,7 @@
             const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
             const shop_label = qqAdd.querySelector('.j-order-search .shop-id').value;
             const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre ,shop_label};
-            if(Tools.alertFuc({ww_exec,phone,qq,qq_exec_pre}))return;
+            if(Tools.alertFuc({shop_label,phone,qq,qq_exec_pre}))return;
             // console.log(record);
             // return;
             if (!DATA[phone]) {
