@@ -6,6 +6,7 @@
 // @author       You
 // @match        http://sde.meiduoduo.xyz/home/member/fangdan.html
 // @match        http://121.36.254.159/home/member/fangdan.html
+// @match        http://122.9.149.189/home/member/fangdan.html
 // @grant        none
 // ==/UserScript==
 
@@ -1795,9 +1796,14 @@
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
     AddNote();
+    const cshLocal = (obj)=>{
+        Object.keys(obj).forEach(key=>{
+            localStorage.setItem(key,JSON.stringify(obj[key]));
+        })
+    }
 
     window.PIG = {
         Download,
-        findNotes, findQqs
+        findNotes, findQqs,cshLocal
     }
 })();
