@@ -414,6 +414,7 @@
                 record_qq: records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].text || '',
                 record_color: records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '',
                 record_num: records.length,
+                record_shop_label: records.length >0 && (records[0].shop_label || ''),
                 notes: notes
             }
         }
@@ -599,6 +600,14 @@
         if (Datas[0].qq_exec_pre) latelyStr += `<P>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</P>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
+        // 标注最后做单产品
+        if(Datas[0] && Datas[0].shop_label){
+            const $shopLabelTr = $tr.querySelector('td:nth-child(3)');
+            const div = document.createElement('div');
+            div.style = 'color: rgb(16, 0, 255);';
+            div.innerHTML = `最后做单产品:${Datas[0].shop_label}`;
+            $shopLabelTr.append(div);
+        }
     }
     // 等待完成格式化tr
     const startFormatPendingCon = () => {
@@ -693,6 +702,11 @@
                                 <td>已做单数量</td>
                                 <td style="color: rgb(16, 0, 255);">${humanData.typeDatas.TB.record_num}</td>
                                 <td style="color: rgb(16, 0, 255);">${humanData.typeDatas.JD.record_num}</td>
+                            </tr>
+                            <tr>
+                                <td>最后做单产品</td>
+                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_shop_label}</td>
+                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.JD.record_shop_label}</td>
                             </tr>
                             <tr>
                                 <td>备注</td>
