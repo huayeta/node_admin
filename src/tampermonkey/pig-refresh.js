@@ -4,10 +4,9 @@
 // @version      0.1
 // @description  无限置顶小猪任务
 // @author       You
-// @match        http://44.73u18.cn/*
-// @match        http://feifei.xi56p.cn/*
-// @match        http://jiutiangw.com/*
-// @match        http://lmt66.cn/*
+// @match        http://190.92.199.222/home/member/my_wallet.html
+// @match        http://190.92.199.222/home/member/fangdan.html
+// @match        http://190.92.199.222/home/cash/cardlist_uncheck.html
 // @grant        none
 // ==/UserScript==
 
@@ -16,7 +15,7 @@
     var $span = $('span[onclick^="isPtTop"]');
     const pt_top_zuanshi = $('#pt_top_zuanshi').text();
     const span_length = $span.length;
-    const time = 25000;
+    const time = 250000;
     const ptGood = goods_id => {
         var url = '/home/member/ispttop.html';
         return new Promise((resolve, reject) => {

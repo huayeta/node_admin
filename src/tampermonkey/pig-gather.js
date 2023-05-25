@@ -4,9 +4,7 @@
 // @version      0.1
 // @description  汇总数据，并持久化保存，1周自动下载一次
 // @author       You
-// @match        http://sde.meiduoduo.xyz/home/member/fangdan.html
-// @match        http://121.36.254.159/home/member/fangdan.html
-// @match        http://122.9.149.189/home/member/fangdan.html
+// @match        http://190.92.199.222/home/member/fangdan.html
 // @grant        none
 // ==/UserScript==
 
