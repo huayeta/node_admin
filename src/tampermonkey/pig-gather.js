@@ -361,7 +361,7 @@
         const arr = [];
         datas.forEach(data => {
             const obj = Tools.copyObj(data);
-            if(!obj.pig_type)obj.pig_type = 'TB';
+            if (!obj.pig_type) obj.pig_type = 'TB';
             if (obj.pig_type == pig_type && obj.pig_note) arr.push(obj.pig_note);
         })
         return arr;
@@ -412,7 +412,7 @@
                 record_qq: records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].text || '',
                 record_color: records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '',
                 record_num: records.length,
-                record_shop_label: records.length >0 && (records[0].shop_label || ''),
+                record_shop_label: records.length > 0 && (records[0].shop_label || ''),
                 notes: notes
             }
         }
@@ -596,16 +596,9 @@
         $lately.style = 'color:red;';
         let latelyStr = `<p>最近做单日期:${Datas[0].pig_over_time}</p>`;
         if (Datas[0].qq_exec_pre) latelyStr += `<P>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</P>`;
+        if (Datas[0].shop_label) latelyStr += `<p>最后做单产品:${Datas[0].shop_label}</p>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
-        // 标注最后做单产品
-        if(Datas[0] && Datas[0].shop_label){
-            const $shopLabelTr = $tr.querySelector('td:nth-child(3)');
-            const div = document.createElement('div');
-            div.style = 'color: rgb(16, 0, 255);';
-            div.innerHTML = `最后做单产品:${Datas[0].shop_label}`;
-            $shopLabelTr.append(div);
-        }
     }
     // 等待完成格式化tr
     const startFormatPendingCon = () => {
@@ -1442,7 +1435,7 @@
             const note = qqAdd.querySelector('.note').value;
             const phone = $phone.value;
             const pig_type = $pigType.value;
-            if (Tools.alertFuc({phone,note,pig_type})) return;
+            if (Tools.alertFuc({ phone, note, pig_type })) return;
             // console.log(qq,phone);
             if (!DATA[phone]) {
                 alert('找不到对应的记录~')
@@ -1452,7 +1445,7 @@
             DATA[phone].push({
                 pig_phone: phone,
                 pig_note: note,
-                pig_type:pig_type,
+                pig_type: pig_type,
                 create_time: new Date().toLocaleString(),
             })
             storageData();
@@ -1494,8 +1487,8 @@
             const pig_type = $pigType.value;
             const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
             const shop_label = qqAdd.querySelector('.shop-id').value;
-            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label,pig_type };
-            if (Tools.alertFuc({ shop_label, phone, qq, qq_exec_pre,pig_type })) return;
+            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type };
+            if (Tools.alertFuc({ shop_label, phone, qq, qq_exec_pre, pig_type })) return;
             // console.log(record);
             // return;
             if (!DATA[phone]) {
@@ -1690,14 +1683,14 @@
             const pig_type = $pigType.value;
             GatherQqs(humanData => {
                 return humanData.record_num >= 2;
-            },pig_type)
+            }, pig_type)
         }, false)
         qqAdd.querySelector('.j-gatherRegisterQqs').addEventListener('click', () => {
             const pig_type = $pigType.value;
             GatherQqs(humanData => {
                 // 注册时间超过1个月 做单时间跟注册时间相隔1个月以上
                 return new Date(humanData.record_time) - 30 * 24 * 60 * 60 * 10000 > new Date(humanData.register_time);
-            },pig_type)
+            }, pig_type)
         }, false)
     }
     AddQQDiv();
@@ -1808,14 +1801,14 @@
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
     AddNote();
-    const cshLocal = (obj)=>{
-        Object.keys(obj).forEach(key=>{
-            localStorage.setItem(key,JSON.stringify(obj[key]));
+    const cshLocal = (obj) => {
+        Object.keys(obj).forEach(key => {
+            localStorage.setItem(key, JSON.stringify(obj[key]));
         })
     }
 
     window.PIG = {
         Download,
-        findNotes, findQqs,cshLocal
+        findNotes, findQqs, cshLocal
     }
 })();
