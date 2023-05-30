@@ -696,8 +696,8 @@
                             </tr>
                             <tr>
                                 <td>最后做单产品</td>
-                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_shop_label}</td>
-                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.JD.record_shop_label}</td>
+                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_shop_label || ''}</td>
+                                <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_shop_label || ''}</td>
                             </tr>
                             <tr>
                                 <td>备注</td>
@@ -741,7 +741,7 @@
         let option_strs = '';
         const qqs_obj = {};
         Object.keys(QQS).forEach(num => {
-            option_strs += `<option value=${num}>${QQS[num].text}</option>`;
+            option_strs += `<option value=${num} ${num == '54'?`selected`:''}>${QQS[num].text}</option>`;
             qqs_obj[num] = QQS[num].text;
         })
         qqAdd.innerHTML = `
