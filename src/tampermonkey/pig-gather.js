@@ -1427,16 +1427,17 @@
             const qq = qqAdd.querySelector('.qq').value;
             const phone = $phone.value;
             // console.log(qq,phone);
-            if (!phone) return alert('手机号不能为空');
+            if(Tools.alertFuc({qq,phone})) return;
+            // if (!phone) return alert('手机号不能为空');
             if (!DATA[phone]) {
                 alert('找不到对应的记录~')
                 return;
                 // DATA[phone] = [];
             }
-            if (!qq) {
-                alert('qq不能为空')
-                return;
-            }
+            // if (!qq) {
+            //     alert('qq不能为空')
+            //     return;
+            // }
             DATA[phone].push({
                 pig_phone: phone,
                 pig_qq: qq,
