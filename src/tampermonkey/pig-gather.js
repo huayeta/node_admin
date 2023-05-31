@@ -14,10 +14,10 @@
     // {
     //     phone：[
     //         {pig_phone,ww_exec} 做单旺旺号
-    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?,pig_type?} 添加做单记录            
+    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?,pig_type?,is_comment?:0|1} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? } 正常小猪单
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? ,is_comment?:0|1} 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
@@ -213,6 +213,12 @@
                 pig_type = 'JD';
             }
             return pig_type;
+        },
+        lastAddCommentByPhone: (phone)=>{
+            if(phone && DATA[phone]){
+                DATA[phone][0].is_comment = '1';
+                storageData();
+            }
         }
     }
     // 获得每个tr数据
@@ -650,15 +656,22 @@
     }
     startFormatCancelCon();
     // 得到做单的trs
-    function getDataTable(records, isBtn = false) {
+    function getDataTable(records, btn = false) {
         let trs = '';
         records.forEach(datas => {
             let humanData = humanDatas(datas);
             // console.log(humanData);
+            let btnStr = '';
+            if(typeof btn == 'string' && btn){
+                btnStr = btn;
+            }
+            if(typeof btn =='object'){
+                btnStr =  `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}">${btn.text}</a>`;
+            }
             trs += `
             <tr>
                 <td>
-                    <p><span class="j-phone">${humanData.phone}</span>${isBtn ? '<a style="color:red;margin-left:10px;cursor:pointer;" class="j-remindPhone" data-qq="' + humanData.qqs[0] + '">copy去除</a>' : ''}</p>
+                    <p><span class="j-phone">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
@@ -785,19 +798,26 @@
                             margin-top:15px;
                             align-items:center;
                         }
+                        .m-findData .search_btn{
+                            width:auto;
+                            padding: 0 10px;
+                            margin-right: 10px;
+                            white-space: nowrap;
+                        }
                         
                         .u-con p{
                             line-height: 1.5;
                         }
                     </style>
                     <div class="m-findData search">
-                        <button class="search_btn j-findPhoneBtn" style="width:auto;padding: 0 10px;">查询phone做单数据</button>
-                        <button class="search_btn j-findQqBtn" style="background:rebeccapurple;width:auto;padding: 0 10px; margin-left: 10px;">查询qq做单数据</button>
-                        <button class="search_btn j-findQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">查询不同的qq</button>
-                        <button class="search_btn download" style="background:rebeccapurple;margin-left:10px;">下载数据</button>
-                        <button class="search_btn j-gatherQqs" style="width:auto;padding: 0 10px; margin-left: 10px;">筛选qq</button>
-                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;margin-left:10px; width:auto; padding:0 10px;">注册时间筛选qq</button>
-                        <span style="color:darkmagenta; margin-left:10px;">${JSON.stringify(qqs_obj)}</span>
+                        <button class="search_btn j-findPhoneBtn" style="">查询phone做单数据</button>
+                        <button class="search_btn j-findQqBtn" style="background:rebeccapurple;">查询qq做单数据</button>
+                        <button class="search_btn j-findQqs" style="">查询不同的qq</button>
+                        <button class="search_btn download" style="background:rebeccapurple;">下载数据</button>
+                        <button class="search_btn j-gatherQqs" style="">筛选qq</button>
+                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq</button>
+                        <button class="search_btn j-gatherShop" style="">查询店铺做单数据</button>
+                        <span style="color:darkmagenta; ">${JSON.stringify(qqs_obj)}</span>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -1676,7 +1696,7 @@
                 }
             })
             // console.log(records);
-            const table = getDataTable(records, true);
+            const table = getDataTable(records, {text:'copy去除',className:'j-remindPhone'});
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
@@ -1692,6 +1712,44 @@
                 return new Date(humanData.record_time) - 30 * 24 * 60 * 60 * 10000 > new Date(humanData.register_time);
             }, pig_type)
         }, false)
+        // 通过店铺找到做单数据
+        qqAdd.querySelector('.j-gatherShop').addEventListener('click',()=>{
+            const arr = [];
+            const shop_label = qqAdd.querySelector('.shop-id').value;
+            const phones = Object.keys(DATA);
+            if(!shop_label)return;
+            for (let phone of phones) {
+                const datas = DATA[phone];
+                if (trim(datas[0].shop_label) == trim(shop_label) && datas[0].is_comment!='1') {
+                    arr.push(datas[0]);
+                }
+            }
+            arr.sort((a, b) => {
+                if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            })
+            // console.log(arr);
+            const phoneDatas = [];
+            for(let i=0;i<5;i++){
+                phoneDatas.push(DATA[arr[i].pig_phone]);
+            }
+            // console.log(phoneDatas);
+            const table = getDataTable(phoneDatas, {text:'标注已评',className:'j-addComment'});
+            setCon([table]);
+        },false)
+        addEventListener($con, 'click', (e) => {
+            const $btn = e.target;
+            const $parent = $btn.parentNode;
+            // const qq = $btn.getAttribute('data-qq');
+            const phone = $btn.getAttribute('data-phone');
+            $btn.textContent = '已评论';
+            $btn.style = 'color:gray;margin-left:10px;';
+            // console.log(qq,phone);
+            Tools.lastAddCommentByPhone(phone);
+        }, '.j-addComment')
     }
     AddQQDiv();
     // 格式化phone的做单数据格式
