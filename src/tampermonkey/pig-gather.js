@@ -71,7 +71,7 @@
         ],
         getShopOptionsHtml: (pig_type = 'TB') => {
             const datas = (pig_type == 'TB' ? LABELS.datas : LABELS.jd_datas);
-            return `<option value="">没有选择</option>` + datas.map(shop => {
+            return `<option value="">没有选择店铺</option>` + datas.map(shop => {
                 return `<optgroup label='${shop.label}'>${shop.options.map(option => `<option value='${shop.label}-${option}'>${shop.label}-${option}</option>`).reduce((a, b) => a + b, '')}</optgroup>`;
             }).reduce((a, b) => a + b, '');
         },
