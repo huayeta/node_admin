@@ -789,7 +789,8 @@
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
                     <input class="search_input ww-id" placeholder="旺旺号" /> <button class="search_btn ww-add
-                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button>
+                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button> 
+                    <button class="search_btn last-comment" style="background:rebeccapurple; margin-left:10px;">标注已评</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -1409,6 +1410,18 @@
                 location.reload();
             }
         }, false)
+        // 标注已评
+        qqAdd.querySelector('.j-order-search .last-comment').addEventListener('click',()=>{
+            const phone = $phone.value;
+            if (Tools.alertFuc({ phone })) return;
+            if (!DATA[phone]) {
+                alert('找不到对应的记录~')
+                return;
+                // DATA[phone] = [];
+            }
+            Tools.lastAddCommentByPhone(phone);
+            alert('标注已评成功');
+        },false)
         // 添加qq
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
