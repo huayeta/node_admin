@@ -1745,9 +1745,11 @@
                     return -1;
                 }
             })
+            if(arr.length==0)return setCon(['没有找到做单记录']);
             // console.log(arr);
             const phoneDatas = [];
-            for(let i=0;i<5;i++){
+            const forLen = arr.length<5?arr.length:5;
+            for(let i=0;i<forLen;i++){
                 phoneDatas.push(DATA[arr[i].pig_phone]);
             }
             // console.log(phoneDatas);
