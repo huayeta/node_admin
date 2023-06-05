@@ -559,7 +559,7 @@
                     if (Datas.length == 0) {
                         return a + `<p>${b}，<br/>已做单：${Datas.length}`;
                     }
-                    return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</p>`
+                    return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]?QQS[Datas[0].qq_exec_pre].text:Datas[0].qq_exec_pre}</p>`
                 }, '')
                 Div.innerHTML = `有不同的手机号：${str}`;
                 $phone.append(Div);
@@ -791,6 +791,7 @@
                     <input class="search_input ww-id" placeholder="旺旺号" /> <button class="search_btn ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button> 
                     <button class="search_btn last-comment" style="background:rebeccapurple; margin-left:10px;">标注已评</button>
+                    <select class="search_input screen" style="margin-left: 10px;"><option value="1" selected>筛选被抓</option><option value="0">不筛选被抓</option></select>
                 </div>
                 <div class="btns">
                     <style>
@@ -1665,6 +1666,7 @@
         function GatherQqs(cb = () => true, pig_type = 'TB') {
             let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
             let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
+            const is_screen = qqAdd.querySelector('.screen').value;
             let DateRecords = [];
             const DatePhones = Object.keys(DATA);
             const getLastTypeData = (datas, pig_type) => {
@@ -1700,13 +1702,16 @@
                     const notes = humanData.notes.join('');
                     const diffPhones = humanData.diffPhones;
                     if (
-                        notes.indexOf('被抓') == -1 &&
                         notes.indexOf('满月') == -1
                         && notes.indexOf('删订单') == -1
                         && diffPhones.length == 0
                         && !RDATA.isExist(record.pig_phone)
                         && cb(humanData)
-                    ) records.push(datas);
+                    ) {
+                        if((is_screen=='1' && notes.indexOf('被抓') == -1) || is_screen=='0'){
+                            records.push(datas);
+                        }
+                    }
                 }
             })
             // console.log(records);
