@@ -55,7 +55,7 @@
         const arr = /isPtTop\('(\d+)'/.exec(str);
         if (arr) {
             const goods_id = arr[1];
-            console.log(goods_id);
+            // console.log(goods_id);
             await ptGood(goods_id);
         }
         console.log(str);

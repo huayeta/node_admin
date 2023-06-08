@@ -214,25 +214,25 @@
             }
             return pig_type;
         },
-        lastAddCommentByPhone: (phone)=>{
-            if(phone && DATA[phone]){
+        lastAddCommentByPhone: (phone) => {
+            if (phone && DATA[phone]) {
                 DATA[phone][0].is_comment = '1';
                 storageData();
             }
         },
-        addRecord:(phone,parentNode,text)=>{
+        addRecord: (phone, parentNode, text) => {
             const button = document.createElement('button');
             button.className = 'search_btn';
             button.innerHTML = text || "添加记录";
-            button.addEventListener('click',()=>{
-                if(typeof phone == 'function')phone = phone();
-                if(Tools.alertFuc({phone}))return;
-                if(DATA[phone])return alert('已经存在记录~');
+            button.addEventListener('click', () => {
+                if (typeof phone == 'function') phone = phone();
+                if (Tools.alertFuc({ phone })) return;
+                if (DATA[phone]) return alert('已经存在记录~');
                 DATA[phone] = [];
                 storageData();
                 alert('添加记录成功~')
-            },false)
-            if(parentNode){
+            }, false)
+            if (parentNode) {
                 parentNode.append(button);
             }
             return button;
@@ -537,7 +537,7 @@
                 const Div = document.createElement('div');
                 Div.className = 'search';
                 Div.style = 'margin-top: 10px;';
-                Tools.addRecord(phone,Div);
+                Tools.addRecord(phone, Div);
                 $phone.append(Div);
             }
 
@@ -568,7 +568,7 @@
                     if (Datas.length == 0) {
                         return a + `<p>${b}，<br/>已做单：${Datas.length}`;
                     }
-                    return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre]?QQS[Datas[0].qq_exec_pre].text:Datas[0].qq_exec_pre}</p>`
+                    return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre] ? QQS[Datas[0].qq_exec_pre].text : Datas[0].qq_exec_pre}</p>`
                 }, '')
                 Div.innerHTML = `有不同的手机号：${str}`;
                 $phone.append(Div);
@@ -671,11 +671,11 @@
             let humanData = humanDatas(datas);
             // console.log(humanData);
             let btnStr = '';
-            if(typeof btn == 'string' && btn){
+            if (typeof btn == 'string' && btn) {
                 btnStr = btn;
             }
-            if(typeof btn =='object'){
-                btnStr =  `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}">${btn.text}</a>`;
+            if (typeof btn == 'object') {
+                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}">${btn.text}</a>`;
             }
             trs += `
             <tr>
@@ -742,7 +742,7 @@
             `
         })
         let table = `
-        <table class="common_table">
+        <table class="common_table" style="margin-top:10px; margin-bottom:10px;">
             <tbody>
                 <tr>
                     <th>手机号</th>
@@ -763,7 +763,7 @@
         let option_strs = '';
         const qqs_obj = {};
         Object.keys(QQS).forEach(num => {
-            option_strs += `<option value=${num} ${num == '54'?`selected`:''}>${QQS[num].text}</option>`;
+            option_strs += `<option value=${num} ${num == '54' ? `selected` : ''}>${num}：${QQS[num].text}</option>`;
             qqs_obj[num] = QQS[num].text;
         })
         qqAdd.innerHTML = `
@@ -815,11 +815,11 @@
                             margin-right: 10px;
                             white-space: nowrap;
                         }
-                        
                         .u-con p{
                             line-height: 1.5;
                         }
                     </style>
+                    <!-- <div style="color:darkmagenta; ">${JSON.stringify(qqs_obj)}</div> -->
                     <div class="m-findData search">
                         <button class="search_btn j-findPhoneBtn" style="">查询phone做单数据</button>
                         <button class="search_btn j-findQqBtn" style="background:rebeccapurple;">查询qq做单数据</button>
@@ -829,7 +829,6 @@
                         <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据</button>
                         <div class="j-addOtherRecord"></div>
-                        <span style="color:darkmagenta; ">${JSON.stringify(qqs_obj)}</span>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -1422,7 +1421,7 @@
             }
         }, false)
         // 标注已评
-        qqAdd.querySelector('.j-order-search .last-comment').addEventListener('click',()=>{
+        qqAdd.querySelector('.j-order-search .last-comment').addEventListener('click', () => {
             const phone = $phone.value;
             if (Tools.alertFuc({ phone })) return;
             if (!DATA[phone]) {
@@ -1432,13 +1431,13 @@
             }
             Tools.lastAddCommentByPhone(phone);
             alert('标注已评成功');
-        },false)
+        }, false)
         // 添加qq
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
             const phone = $phone.value;
             // console.log(qq,phone);
-            if(Tools.alertFuc({qq,phone})) return;
+            if (Tools.alertFuc({ qq, phone })) return;
             // if (!phone) return alert('手机号不能为空');
             if (!DATA[phone]) {
                 alert('找不到对应的记录~')
@@ -1561,7 +1560,7 @@
         }
         const setCon = arr => {
             const con = getCon(arr);
-            $con.innerHTML = con + '<div style="height:1px; background:#c2b7cd;"></div>';
+            $con.innerHTML = con + '<div style="height:1px; background:#c2b7cd; margin-top: 10px;"></div>';
         }
 
         // 下载按钮
@@ -1576,7 +1575,7 @@
                 // alert(JSON.stringify(DATA[phone]));
                 let datas = DATA[phone];
                 let table = getDataTable([datas])
-                setCon([getCon(datas), table]);
+                setCon([table, getCon(datas)]);
             } else {
                 // alert('没找到记录');
                 setCon(['没找到做单记录']);
@@ -1596,13 +1595,13 @@
                         // 单手机
                         let datas = arr[0];
                         let table = getDataTable([datas])
-                        setCon([getCon(datas), table]);
+                        setCon([table, getCon(datas)]);
                         // setCon(arr[0]);
                     } else {
                         // 多手机号
                         let str = getCon(arr);
                         let table = getDataTable(arr);
-                        setCon([str + table]);
+                        setCon([table + str]);
                     }
                     // alert(JSON.stringify(arr));
                 } else {
@@ -1718,14 +1717,14 @@
                         && !RDATA.isExist(record.pig_phone)
                         && cb(humanData)
                     ) {
-                        if((is_screen=='1' && notes.indexOf('被抓') == -1) || is_screen=='0'){
+                        if ((is_screen == '1' && notes.indexOf('被抓') == -1) || is_screen == '0') {
                             records.push(datas);
                         }
                     }
                 }
             })
             // console.log(records);
-            const table = getDataTable(records, {text:'copy去除',className:'j-remindPhone'});
+            const table = getDataTable(records, { text: 'copy去除', className: 'j-remindPhone' });
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
@@ -1742,14 +1741,14 @@
             }, pig_type)
         }, false)
         // 通过店铺找到做单数据
-        qqAdd.querySelector('.j-gatherShop').addEventListener('click',()=>{
+        qqAdd.querySelector('.j-gatherShop').addEventListener('click', () => {
             const arr = [];
             const shop_label = qqAdd.querySelector('.shop-id').value;
             const phones = Object.keys(DATA);
-            if(!shop_label)return;
+            if (!shop_label) return;
             for (let phone of phones) {
                 const datas = DATA[phone];
-                if (trim(datas[0].shop_label) == trim(shop_label) && datas[0].is_comment!='1') {
+                if (trim(datas[0].shop_label) == trim(shop_label) && datas[0].is_comment != '1') {
                     arr.push(datas[0]);
                 }
             }
@@ -1760,17 +1759,17 @@
                     return -1;
                 }
             })
-            if(arr.length==0)return setCon(['没有找到做单记录']);
+            if (arr.length == 0) return setCon(['没有找到做单记录']);
             // console.log(arr);
             const phoneDatas = [];
-            const forLen = arr.length<5?arr.length:5;
-            for(let i=0;i<forLen;i++){
+            const forLen = arr.length < 5 ? arr.length : 5;
+            for (let i = 0; i < forLen; i++) {
                 phoneDatas.push(DATA[arr[i].pig_phone]);
             }
             // console.log(phoneDatas);
-            const table = getDataTable(phoneDatas, {text:'标注已评',className:'j-addComment'});
+            const table = getDataTable(phoneDatas, { text: '标注已评', className: 'j-addComment' });
             setCon([table]);
-        },false)
+        }, false)
         addEventListener($con, 'click', (e) => {
             const $btn = e.target;
             const $parent = $btn.parentNode;
@@ -1784,9 +1783,9 @@
         {
             // 添加非手机记录
             const $addOtherRecordBtn = qqAdd.querySelector('.j-addOtherRecord');
-            Tools.addRecord(()=>{
+            Tools.addRecord(() => {
                 return $phone.value;
-            },$addOtherRecordBtn,'添加非手机记录');
+            }, $addOtherRecordBtn, '添加非手机记录');
             // .addEventListener('click',(e)=>{
             //     const $btn = e.target;
             //     console.log($btn);
@@ -1796,7 +1795,7 @@
             //     // $btn.append(document.createElement('button'))
             // },false)
         }
-        
+
     }
     AddQQDiv();
     // 格式化phone的做单数据格式
