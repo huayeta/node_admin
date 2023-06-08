@@ -227,6 +227,7 @@
             button.addEventListener('click',()=>{
                 if(typeof phone == 'function')phone = phone();
                 if(Tools.alertFuc({phone}))return;
+                if(DATA[phone])return alert('已经存在记录~');
                 DATA[phone] = [];
                 storageData();
                 alert('添加记录成功~')
