@@ -219,6 +219,22 @@
                 DATA[phone][0].is_comment = '1';
                 storageData();
             }
+        },
+        addRecord:(phone,parentNode,text)=>{
+            const button = document.createElement('button');
+            button.className = 'search_btn';
+            button.innerHTML = text || "添加记录";
+            button.addEventListener('click',()=>{
+                if(typeof phone == 'function')phone = phone();
+                if(Tools.alertFuc({phone}))return;
+                DATA[phone] = [];
+                storageData();
+                alert('添加记录成功~')
+            },false)
+            if(parentNode){
+                parentNode.append(button);
+            }
+            return button;
         }
     }
     // 获得每个tr数据
@@ -519,17 +535,9 @@
             if (type == 2 || true) {
                 const Div = document.createElement('div');
                 Div.className = 'search';
-                Div.style = 'margin-top: 10px;'
-                Div.innerHTML = `
-            <button class="search_btn j-btn">添加记录</button>
-            `;
+                Div.style = 'margin-top: 10px;';
+                Tools.addRecord(phone,Div);
                 $phone.append(Div);
-                const $btn = Div.querySelector('.j-btn');
-                $btn.addEventListener('click', e => {
-                    DATA[phone] = [];
-                    storageData();
-                    alert('添加记录成功~')
-                }, false)
             }
 
             return;
@@ -791,7 +799,7 @@
                     <input class="search_input ww-id" placeholder="旺旺号" /> <button class="search_btn ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button> 
                     <button class="search_btn last-comment" style="background:rebeccapurple; margin-left:10px;">标注已评</button>
-                    <select class="search_input screen" style="margin-left: 10px;"><option value="1" selected>筛选被抓</option><option value="0">不筛选被抓</option></select>
+                    <select class="search_input screen"><option value="1" selected>筛选被抓</option><option value="0">不筛选被抓</option></select>
                 </div>
                 <div class="btns">
                     <style>
@@ -819,6 +827,7 @@
                         <button class="search_btn j-gatherQqs" style="">筛选qq</button>
                         <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据</button>
+                        <div class="j-addOtherRecord"></div>
                         <span style="color:darkmagenta; ">${JSON.stringify(qqs_obj)}</span>
                     </div>
                     <div class="u-con">
@@ -1771,6 +1780,22 @@
             // console.log(qq,phone);
             Tools.lastAddCommentByPhone(phone);
         }, '.j-addComment')
+        {
+            // 添加非手机记录
+            const $addOtherRecordBtn = qqAdd.querySelector('.j-addOtherRecord');
+            Tools.addRecord(()=>{
+                return $phone.value;
+            },$addOtherRecordBtn,'添加非手机记录');
+            // .addEventListener('click',(e)=>{
+            //     const $btn = e.target;
+            //     console.log($btn);
+            //     console.log($phone);
+            //     const phone = $phone.value;
+            //     Tools.addRecord(phone,$btn);
+            //     // $btn.append(document.createElement('button'))
+            // },false)
+        }
+        
     }
     AddQQDiv();
     // 格式化phone的做单数据格式
