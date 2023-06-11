@@ -145,7 +145,7 @@
             if (phones.length > 0) {
                 phones.forEach(phone => {
                     const time = datas[phone];
-                    if (new Date(time) > new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000)) {
+                    if (new Date(time) > new Date(new Date().getTime() - 14 * 24 * 60 * 60 * 1000)) {
                         results[phone] = time;
                     }
                 })
@@ -1717,7 +1717,7 @@
                         && !RDATA.isExist(record.pig_phone)
                         && cb(humanData)
                     ) {
-                        if ((is_screen == '1' && notes.indexOf('被抓') == -1) || is_screen == '0') {
+                        if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号')!=-1)) || is_screen == '0') {
                             records.push(datas);
                         }
                     }
