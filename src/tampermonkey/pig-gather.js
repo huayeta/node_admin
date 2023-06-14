@@ -215,10 +215,15 @@
             return pig_type;
         },
         lastAddCommentByPhone: (phone,is_comment='1') => {
-            if (phone && DATA[phone]) {
-                DATA[phone][0].is_comment = is_comment;
-                storageData();
+            if (Tools.alertFuc({ phone,is_comment })) return false;
+            if (!DATA[phone]) {
+                alert('找不到对应的记录~')
+                return false;
+                // DATA[phone] = [];
             }
+            DATA[phone][0].is_comment = is_comment;
+            storageData();
+            return true;
         },
         addRecord: (phone, parentNode, text) => {
             const button = document.createElement('button');
@@ -476,6 +481,7 @@
                 record_num: records.length,
                 record_shop_label_last: records.length > 0 && (records[0].shop_label || ''),
                 record_shop_labels : shopLabels.join('-'),
+                record_comment: records.length > 0 && records[0].is_comment,
                 notes: notes.map(note=>note.pig_note),
             }
         }
@@ -714,8 +720,15 @@
             if (typeof btn == 'string' && btn) {
                 btnStr = btn;
             }
-            if (typeof btn == 'object') {
-                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}">${btn.text}</a>`;
+            if (Object.prototype.toString.call(btn) == '[object Object]') {
+                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}" data-datas="${JSON.stringify(btn).replaceAll('"',"'")}">${btn.text}</a>`;
+            }
+            if(Object.prototype.toString.call(btn) == '[object Array]'){
+                btnStr+='<div style="margin-top:10px;margin-right:-10px;">';
+                btn.forEach(bt=>{
+                    btnStr+= `<a style="color:red;margin-right:10px;cursor:pointer;" class="${bt.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}" data-datas="${JSON.stringify(bt).replaceAll('"',"'")}">${bt.text}</a>`;
+                })
+                btnStr+='</div>';
             }
             trs += `
             <tr>
@@ -765,6 +778,11 @@
                                 <td>做单店铺顺序</td>
                                 <td>${humanData.typeDatas.TB.record_shop_labels || ''}</td>
                                 <td>${humanData.typeDatas.JD.record_shop_labels || ''}</td>
+                            </tr>
+                            <tr>
+                                <td>评论状态</td>
+                                <td>${humanData.typeDatas.TB.record_comment=='1'?'<span style="color:gray;">已经评价</span>':humanData.typeDatas.TB.record_comment=='-1'?'<span style="color:rgb(16, 0, 255);">默认评价</span>':humanData.typeDatas.TB.record_comment || ''}</td>
+                                <td>${humanData.typeDatas.JD.record_comment=='1'?'<span style="color:gray;">已经评价</span>':humanData.typeDatas.JD.record_comment=='-1'?'<span style="color:rgb(16, 0, 255);">默认评价</span>':humanData.typeDatas.JD.record_comment || ''}</td>
                             </tr>
                             <tr>
                                 <td>备注</td>
@@ -1475,14 +1493,8 @@
             $comment.addEventListener('click',()=>{
                 const is_comment = $comment.getAttribute('data-comment');
                 const phone = $phone.value;
-                if (Tools.alertFuc({ phone,is_comment })) return;
-                if (!DATA[phone]) {
-                    alert('找不到对应的记录~')
-                    return;
-                    // DATA[phone] = [];
-                }
-                Tools.lastAddCommentByPhone(phone,is_comment);
-                alert(`标注${is_comment=='1'?'已评':is_comment=='-1'?'默认评价':''}成功`);
+                const result = Tools.lastAddCommentByPhone(phone,is_comment);
+                if(result)alert(`标注${is_comment=='1'?'已评':is_comment=='-1'?'默认评价':''}成功`);
             },false)
         })
         // 添加qq
@@ -1802,8 +1814,8 @@
             if (!shop_label) return;
             for (let phone of phones) {
                 const datas = DATA[phone];
-                if (trim(datas[0].shop_label) == trim(shop_label) && datas[0].is_comment != '1') {
-                    if(comment_sel === '' || (comment_sel==datas[0].is_comment)){
+                if (trim(datas[0].shop_label) == trim(shop_label)) {
+                    if((comment_sel === '' && !datas[0].is_comment) || (comment_sel && comment_sel==datas[0].is_comment)){
                         arr.push(datas[0]);
                     }
                 }
@@ -1823,18 +1835,20 @@
                 phoneDatas.push(DATA[arr[i].pig_phone]);
             }
             // console.log(phoneDatas);
-            const table = getDataTable(phoneDatas, { text: '标注已评', className: 'j-addComment' });
+            const table = getDataTable(phoneDatas, comment_sel===''?[{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' },{ text: '标注默认评价', className: 'j-addComment',texted:'已默认评价',val:'-1' }]:comment_sel=='-1'?{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' }:'');
             setCon([table]);
         }, false)
         addEventListener($con, 'click', (e) => {
             const $btn = e.target;
             const $parent = $btn.parentNode;
             // const qq = $btn.getAttribute('data-qq');
+            console.log($btn.getAttribute('data-datas'));
+            const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'",'"'));
             const phone = $btn.getAttribute('data-phone');
-            $btn.textContent = '已评论';
-            $btn.style = 'color:gray;margin-left:10px;';
+            $btn.textContent = datas.texted;
+            $btn.style.color = 'gray';
             // console.log(qq,phone);
-            Tools.lastAddCommentByPhone(phone);
+            Tools.lastAddCommentByPhone(phone,datas.val);
         }, '.j-addComment')
         {
             // 添加非手机记录
