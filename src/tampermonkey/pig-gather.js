@@ -14,7 +14,7 @@
     // {
     //     phone：[
     //         {pig_phone,ww_exec} 做单旺旺号
-    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?,pig_type?,is_comment?:0|1} 添加做单记录            
+    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?,pig_type?,is_comment?:0没评|1已评|-1默认评} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
     //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? ,is_comment?:0|1} 正常小猪单
@@ -214,9 +214,9 @@
             }
             return pig_type;
         },
-        lastAddCommentByPhone: (phone) => {
+        lastAddCommentByPhone: (phone,is_comment='1') => {
             if (phone && DATA[phone]) {
-                DATA[phone][0].is_comment = '1';
+                DATA[phone][0].is_comment = is_comment;
                 storageData();
             }
         },
@@ -832,20 +832,12 @@
                         <div style="margin-bottom: 10px;"><input class="search_input gnote" placeholder="网页备注" /><button class="search_btn add-gnote">添加网页备注</button></div>
                         <div><select class="search_input qq_exec_pre" style="width:190px;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button></div>    
                     </div>
-                    <div>
-                        <div style="margin-bottom:10px;"><select class="search_input shop-id" style="width:160px; margin-left: 10px;">${LABELS.getShopOptionsHtml()}</select></div>
-                        <div>
-                            <select class="search_input pig-type" style="width:160px;margin-left:10px;"><option value="TB">TB</option><option value="JD">JD</option></select>
-                        </div>
-                    </div>
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
                     <input class="search_input ww-id" placeholder="旺旺号" /> <button class="search_btn ww-add
-                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button> 
-                    <button class="search_btn last-comment" style="background:rebeccapurple; margin-left:10px;">标注已评</button>
-                    <select class="search_input screen"><option value="1" selected>筛选被抓</option><option value="0">不筛选被抓</option></select>
+                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -859,6 +851,11 @@
                             padding: 0 10px;
                             margin-right: 10px;
                             white-space: nowrap;
+                        }
+                        .m-findData .search_input{
+                            width: auto;
+                            margin-right: 10px;
+                            padding-left: 10px;
                         }
                         .u-con p{
                             line-height: 1.5;
@@ -874,6 +871,14 @@
                         <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据</button>
                         <div class="j-addOtherRecord"></div>
+                    </div>
+                    <div class="m-findData search" style="margin-top:0px;">
+                        <button class="search_btn j-comment" data-comment="1" style="">标注已评价</button>
+                        <button class="search_btn j-comment" data-comment="-1" style="background:rebeccapurple;">标注默认评价</button>
+                        <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
+                        <select class="search_input j-screen"><option value="1" selected>筛选被抓</option><option value="0">不筛选被抓</option></select>
+                        <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
+                        <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -911,7 +916,7 @@
         document.querySelector('.release_tab').before(qqAdd);
         const $phone = qqAdd.querySelector('.phone');
         const $byQQ = qqAdd.querySelector('.byqq');
-        const $pigType = qqAdd.querySelector('.pig-type');
+        const $pigType = qqAdd.querySelector('.j-pig-type');
         // 不同qq查找到手机号
         qqAdd.querySelector('.byqq').addEventListener('input', e => {
             const qq = $byQQ.value;
@@ -1465,18 +1470,21 @@
                 location.reload();
             }
         }, false)
-        // 标注已评
-        qqAdd.querySelector('.j-order-search .last-comment').addEventListener('click', () => {
-            const phone = $phone.value;
-            if (Tools.alertFuc({ phone })) return;
-            if (!DATA[phone]) {
-                alert('找不到对应的记录~')
-                return;
-                // DATA[phone] = [];
-            }
-            Tools.lastAddCommentByPhone(phone);
-            alert('标注已评成功');
-        }, false)
+        // 标注评价
+        Array.prototype.forEach.call(qqAdd.querySelectorAll('.j-comment'),($comment,index)=>{
+            $comment.addEventListener('click',()=>{
+                const is_comment = $comment.getAttribute('data-comment');
+                const phone = $phone.value;
+                if (Tools.alertFuc({ phone,is_comment })) return;
+                if (!DATA[phone]) {
+                    alert('找不到对应的记录~')
+                    return;
+                    // DATA[phone] = [];
+                }
+                Tools.lastAddCommentByPhone(phone,is_comment);
+                alert(`标注${is_comment=='1'?'已评':is_comment=='-1'?'默认评价':''}成功`);
+            },false)
+        })
         // 添加qq
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
@@ -1575,7 +1583,7 @@
             const qq = $byQQ.value;
             const pig_type = $pigType.value;
             const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
-            const shop_label = qqAdd.querySelector('.shop-id').value;
+            const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type };
             if (Tools.alertFuc({ shop_label, phone, qq, qq_exec_pre, pig_type })) return;
             // console.log(record);
@@ -1720,7 +1728,7 @@
         function GatherQqs(cb = () => true, pig_type = 'TB') {
             let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
             let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
-            const is_screen = qqAdd.querySelector('.screen').value;
+            const is_screen = qqAdd.querySelector('.j-screen').value;
             let DateRecords = [];
             const DatePhones = Object.keys(DATA);
             const getLastTypeData = (datas, pig_type) => {
@@ -1788,13 +1796,16 @@
         // 通过店铺找到做单数据
         qqAdd.querySelector('.j-gatherShop').addEventListener('click', () => {
             const arr = [];
-            const shop_label = qqAdd.querySelector('.shop-id').value;
+            const shop_label = qqAdd.querySelector('.j-shop-id').value;
+            const comment_sel = qqAdd.querySelector('.j-comment-sel').value;
             const phones = Object.keys(DATA);
             if (!shop_label) return;
             for (let phone of phones) {
                 const datas = DATA[phone];
                 if (trim(datas[0].shop_label) == trim(shop_label) && datas[0].is_comment != '1') {
-                    arr.push(datas[0]);
+                    if(comment_sel === '' || (comment_sel==datas[0].is_comment)){
+                        arr.push(datas[0]);
+                    }
                 }
             }
             arr.sort((a, b) => {
