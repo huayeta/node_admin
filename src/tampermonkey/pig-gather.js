@@ -711,7 +711,7 @@
     }
     startFormatCancelCon();
     // 得到做单的trs
-    function getDataTable(records, btn = false) {
+    function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' },{ text: '标注默认评价', className: 'j-addComment',texted:'已默认评价',val:'-1' }]) {
         let trs = '';
         records.forEach(datas => {
             let humanData = humanDatas(datas);
@@ -891,8 +891,6 @@
                         <div class="j-addOtherRecord"></div>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
-                        <button class="search_btn j-comment" data-comment="1" style="">标注已评价</button>
-                        <button class="search_btn j-comment" data-comment="-1" style="background:rebeccapurple;">标注默认评价</button>
                         <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <select class="search_input j-screen"><option value="1" selected>筛选被抓</option><option value="0">不筛选被抓</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
@@ -1489,14 +1487,14 @@
             }
         }, false)
         // 标注评价
-        Array.prototype.forEach.call(qqAdd.querySelectorAll('.j-comment'),($comment,index)=>{
-            $comment.addEventListener('click',()=>{
-                const is_comment = $comment.getAttribute('data-comment');
-                const phone = $phone.value;
-                const result = Tools.lastAddCommentByPhone(phone,is_comment);
-                if(result)alert(`标注${is_comment=='1'?'已评':is_comment=='-1'?'默认评价':''}成功`);
-            },false)
-        })
+        // Array.prototype.forEach.call(qqAdd.querySelectorAll('.j-comment'),($comment,index)=>{
+        //     $comment.addEventListener('click',()=>{
+        //         const is_comment = $comment.getAttribute('data-comment');
+        //         const phone = $phone.value;
+        //         const result = Tools.lastAddCommentByPhone(phone,is_comment);
+        //         if(result)alert(`标注${is_comment=='1'?'已评':is_comment=='-1'?'默认评价':''}成功`);
+        //     },false)
+        // })
         // 添加qq
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
@@ -1838,6 +1836,7 @@
             const table = getDataTable(phoneDatas, comment_sel===''?[{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' },{ text: '标注默认评价', className: 'j-addComment',texted:'已默认评价',val:'-1' }]:comment_sel=='-1'?{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' }:'');
             setCon([table]);
         }, false)
+        // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {
             const $btn = e.target;
             const $parent = $btn.parentNode;
