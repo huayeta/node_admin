@@ -401,6 +401,9 @@
     const findShopLabels = (datas,switch_time) => {
         const results = [];
         datas.forEach((data,index)=>{
+            if(datas[index-1] && new Date(new Date(data.pig_over_time).getTime() + 2 * 24 * 60 * 60 * 1000) > new Date(datas[index-1].pig_over_time)){
+                return;
+            }
             // 添加已换号
             if(switch_time){
                 if(new Date(switch_time)>new Date(data.pig_over_time)){
