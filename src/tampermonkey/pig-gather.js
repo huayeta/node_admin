@@ -385,7 +385,7 @@
         datas.forEach(data => {
             const obj = Tools.copyObj(data);
             if (!obj.pig_type) obj.pig_type = 'TB';
-            if (obj.pig_type == pig_type && obj.pig_note) arr.push(obj.pig_note);
+            if (obj.pig_type == pig_type && obj.pig_note) arr.push(obj);
         })
         return arr;
     }
@@ -396,6 +396,29 @@
             if (data.ww_exec) arr.push(data.ww_exec);
         })
         return arr;
+    }
+    // 汇总phone数据里面的店铺数据
+    const findShopLabels = (datas,switch_time) => {
+        const results = [];
+        datas.forEach((data,index)=>{
+            // 添加已换号
+            if(switch_time){
+                if(new Date(switch_time)>new Date(data.pig_over_time)){
+                    results.unshift('<span style="color:red;">已换号</span>');
+                    switch_time = undefined;
+                }
+            }
+            if(data.shop_label){
+                const shopLabels = data.shop_label.split('-');
+                // 合并店铺
+                if(datas[index+1] && datas[index+1].shop_label && datas[index+1].shop_label.indexOf(shopLabels[0])!==-1){
+                    results.unshift(shopLabels[1])
+                }else{
+                    results.unshift(data.shop_label);
+                }
+            }
+        })
+        return results;
     }
     // 格式化等待完成的数据
     // 找到phone对应的pig_type得做单数据
@@ -428,6 +451,14 @@
             const records = getDatasByPigType(datas, pig_type);
             // 备注数据
             let notes = findNotes(datas, pig_type);
+            let switch_time;
+            notes.forEach(note=>{
+                if(note.pig_note && note.pig_note.indexOf('已换号')!==-1){
+                    switch_time =note.create_time;
+                }
+            })
+            // 汇总店铺做单记录
+            let shopLabels = findShopLabels(records,switch_time);
             // console.log(records);
             return {
                 datas: records,
@@ -435,8 +466,9 @@
                 record_qq: records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].text || '',
                 record_color: records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '',
                 record_num: records.length,
-                record_shop_label: records.length > 0 && (records[0].shop_label || ''),
-                notes: notes
+                record_shop_label_last: records.length > 0 && (records[0].shop_label || ''),
+                record_shop_labels : shopLabels.join('-'),
+                notes: notes.map(note=>note.pig_note),
             }
         }
         // 找到旺旺账号
@@ -444,7 +476,7 @@
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
             qqs: qqs,
-            notes: notes,
+            notes: notes.map(note=>note.pig_note),
             records: records,
             typeDatas: {
                 'TB': formateDatasByPigType(datas, 'TB'),
@@ -718,8 +750,13 @@
                             </tr>
                             <tr>
                                 <td>最后做单产品</td>
-                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_shop_label || ''}</td>
-                                <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_shop_label || ''}</td>
+                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_shop_label_last || ''}</td>
+                                <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_shop_label_last || ''}</td>
+                            </tr>
+                            <tr>
+                                <td>做单店铺顺序</td>
+                                <td>${humanData.typeDatas.TB.record_shop_labels || ''}</td>
+                                <td>${humanData.typeDatas.JD.record_shop_labels || ''}</td>
                             </tr>
                             <tr>
                                 <td>备注</td>
