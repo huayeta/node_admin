@@ -403,7 +403,8 @@
         datas.forEach((data,index)=>{
             // 添加已换号
             if(switch_time){
-                if(new Date(switch_time)>new Date(data.pig_over_time)){
+                // 3天误差
+                if(new Date(new Date(switch_time).getTime() - 3 * 24 * 60 * 60 * 1000)>new Date(data.pig_over_time)){
                     results.unshift('<span style="color:red;">已换号</span>');
                     switch_time = undefined;
                 }
