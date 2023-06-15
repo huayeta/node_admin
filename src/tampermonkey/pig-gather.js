@@ -403,7 +403,7 @@
         return arr;
     }
     // 汇总phone数据里面的店铺数据
-    const findShopLabels = (datas,switch_time) => {
+    const findShopLabels = (datas,switch_time,record_color) => {
         const results = [];
         datas.forEach((data,index)=>{
             // 添加已换号
@@ -418,9 +418,9 @@
                 const shopLabels = data.shop_label.split('-');
                 // 合并店铺
                 if(datas[index+1] && datas[index+1].shop_label && datas[index+1].shop_label.indexOf(shopLabels[0])!==-1){
-                    results.unshift(shopLabels[1])
+                    results.unshift((record_color && index===0)?`<span style="color:${record_color}">${shopLabels[1]}</span>`:shopLabels[1]);
                 }else{
-                    results.unshift(data.shop_label);
+                    results.unshift((record_color && index===0)?`<span style="color:${record_color}">${data.shop_label}</span>`:data.shop_label);
                 }
             }
         })
@@ -464,6 +464,9 @@
             const records = getDatasByPigType(datas, pig_type);
             // 备注数据
             let notes = findNotes(datas, pig_type);
+            // 记录颜色
+            const record_color = records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '';
+            // 切换时间
             let switch_time;
             notes.forEach(note=>{
                 if(note.pig_note && note.pig_note.indexOf('已换号')!==-1){
@@ -471,13 +474,13 @@
                 }
             })
             // 汇总店铺做单记录
-            let shopLabels = findShopLabels(records,switch_time);
+            let shopLabels = findShopLabels(records,switch_time,record_color);
             // console.log(records);
             return {
                 datas: records,
                 record_time: records.length > 0 && records[0].pig_over_time || '',
                 record_qq: records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].text || '',
-                record_color: records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '',
+                record_color: record_color,
                 record_num: records.length,
                 record_shop_label_last: records.length > 0 && (records[0].shop_label || ''),
                 record_shop_labels : shopLabels.join('-'),
@@ -769,11 +772,11 @@
                                 <td style="color: rgb(16, 0, 255);">${humanData.typeDatas.TB.record_num}</td>
                                 <td style="color: rgb(16, 0, 255);">${humanData.typeDatas.JD.record_num}</td>
                             </tr>
-                            <tr>
+                            <!-- <tr>
                                 <td>最后做单产品</td>
                                 <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_shop_label_last || ''}</td>
                                 <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_shop_label_last || ''}</td>
-                            </tr>
+                            </tr> -->
                             <tr>
                                 <td>做单店铺顺序</td>
                                 <td>${humanData.typeDatas.TB.record_shop_labels || ''}</td>
