@@ -736,17 +736,17 @@
             trs += `
             <tr>
                 <td>
-                    <p><span class="j-phone">${humanData.phone}</span>${btnStr}</p>
+                    <p><span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
-                return a + `<p>${b}</p>`;
+                return a + `<p class="j-copyText">${b}</p>`;
             }, '')}
                 </td>
                 <td style="color:red;">
                     ${humanData.wwExecs.reduce((a, b) => {
-                return a + `<p>${b}</p>`;
+                return a + `<p class="j-copyText">${b}</p>`;
             }, '')}
                 </td>
                 <td>
@@ -895,7 +895,7 @@
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
-                        <select class="search_input j-screen"><option value="1" selected>筛选被抓</option><option value="0">不筛选被抓</option></select>
+                        <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                     </div>
@@ -1738,6 +1738,22 @@
             copyToClipboard(qq);
             RDATA.addData(phone);
         }, '.j-remindPhone')
+        // 点击copy
+        addEventListener($con,'click',e=>{
+            const $text = e.target;
+            const text = $text.textContent;
+            $text.style.cursor = 'pointer';
+            $text.title='点击复制';
+            copyToClipboard(text);
+            const copyed = $text.getAttribute('data-copyed');
+            if(copyed!=='1'){
+                const $after = document.createElement('span');
+                $after.style = 'color:gray;margin-left:3px;';
+                $after.textContent = '已复制';
+                $text.after($after);
+            }
+            $text.setAttribute('data-copyed','1');
+        },'.j-copyText')
         function GatherQqs(cb = () => true, pig_type = 'TB') {
             let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
             let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
