@@ -214,6 +214,7 @@
             }
             return pig_type;
         },
+        // 通过手机给最后一个记录添加评论或者默认评论或者直接评论
         lastAddCommentByPhone: (phone,is_comment='1') => {
             if (Tools.alertFuc({ phone,is_comment })) return false;
             if (!DATA[phone]) {
@@ -225,6 +226,7 @@
             storageData();
             return true;
         },
+        // 添加做单记录按钮
         addRecord: (phone, parentNode, text) => {
             const button = document.createElement('button');
             button.className = 'search_btn';
@@ -241,6 +243,31 @@
                 parentNode.append(button);
             }
             return button;
+        },
+        // 判断是否是做单记录
+        isRecord:(data)=>{
+            if(data.pig_over_time)return true;
+            return false;
+        },
+        // 缩短记录
+        getShortDatas :(datas,len)=>{
+            const arr = [];
+            let index = 0;
+            datas.forEach(data=>{
+                if(arr.length>=len){
+                    if(!Tools.isRecord(data)){
+                        arr.push(data);
+                    }else{
+                        index++;
+                    }
+                }else{
+                    arr.push(data);
+                }
+            })
+            if(index>0){
+                arr.splice(len,0, `<span style="color:gray;">.......此处省略${index}个记录........</span>`);
+            }
+            return arr;
         }
     }
     // 获得每个tr数据
@@ -1615,13 +1642,12 @@
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
-        const getCon = arr => {
+        const getCon = (arr,len) => {
             let str = '';
-            if (arr.length > 0) {
-                arr.forEach(date => {
-                    str += `<div>${typeof date === 'string' ? date : JSON.stringify(date)}</div>`;
-                })
-            }
+            const datas = Tools.getShortDatas(arr,len);
+            datas.forEach(data=>{
+                str += `<div>${typeof data === 'string' ? data : JSON.stringify(data)}</div>`;
+            })
             return str;
         }
         const setCon = arr => {
@@ -1641,7 +1667,7 @@
                 // alert(JSON.stringify(DATA[phone]));
                 let datas = DATA[phone];
                 let table = getDataTable([datas])
-                setCon([table, getCon(datas)]);
+                setCon([table, getCon(datas,3)]);
             } else {
                 // alert('没找到记录');
                 setCon(['没找到做单记录']);
@@ -1661,7 +1687,7 @@
                         // 单手机
                         let datas = arr[0];
                         let table = getDataTable([datas])
-                        setCon([table, getCon(datas)]);
+                        setCon([table, getCon(datas,3)]);
                         // setCon(arr[0]);
                     } else {
                         // 多手机号
