@@ -459,7 +459,7 @@
         const datas = Tools.copyObj(Datas);
         return datas.filter((data,index) => {
             if (!data.pig_type) data.pig_type = 'TB';
-            if(data.pig_over_time && data.pig_type == pig_type){
+            if(Tools.isRecord(data) && data.pig_type == pig_type){
                 // 筛选出来连续做单错误记录
                 if(datas[index-1] && new Date(new Date(data.pig_over_time).getTime() + 2 * 24 * 60 * 60 * 1000) > new Date(datas[index-1].pig_over_time)){
                     return false;
