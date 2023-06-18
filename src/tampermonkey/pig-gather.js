@@ -1871,6 +1871,10 @@
                 }
             })
             if (arr.length == 0) return setCon(['没有找到做单记录']);
+            let dyStr = '';
+            if(arr.length>5){
+                dyStr+=`<div style="margin-bottom: 10px; color:gray;">....还剩下<span style="color:red;">${arr.length-5}</span>个.....</div>`
+            }
             // console.log(arr);
             const phoneDatas = [];
             const forLen = arr.length < 5 ? arr.length : 5;
@@ -1879,7 +1883,7 @@
             }
             // console.log(phoneDatas);
             const table = getDataTable(phoneDatas, comment_sel===''?[{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' },{ text: '标注默认评价', className: 'j-addComment',texted:'已默认评价',val:'-1' }]:comment_sel=='-1'?{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' }:'');
-            setCon([table]);
+            setCon([dyStr + table]);
         }, false)
         // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {

@@ -15,7 +15,7 @@
     var $span = $('span[onclick^="isPtTop"]');
     const pt_top_zuanshi = $('#pt_top_zuanshi').text();
     const span_length = $span.length;
-    const time = 250000;
+    const time = 500000;
     const ptGood = goods_id => {
         var url = '/home/member/ispttop.html';
         return new Promise((resolve, reject) => {
