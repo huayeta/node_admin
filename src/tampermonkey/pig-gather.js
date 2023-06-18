@@ -925,6 +925,7 @@
                         <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
+                        <button class="search_btn j-searchNote" style="">模糊搜索用户备注</button>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -1913,7 +1914,24 @@
             //     // $btn.append(document.createElement('button'))
             // },false)
         }
-
+        // 模糊搜索用户备注
+        addEventListener(qqAdd,'click',e=>{
+            const note = qqAdd.querySelector('.note').value;
+            if(Tools.alertFuc({note}))return false;
+            const arr = [];
+            const phones = Object.keys(DATA);
+            for (let phone of phones) {
+                const datas = DATA[phone];
+                for (let data of datas) {
+                    if (data.pig_note && data.pig_note.indexOf(note)!==-1) {
+                        arr.push(datas);
+                        break;
+                    }
+                }
+            }
+            const table = getDataTable(arr);
+            setCon([table]);
+        },'.j-searchNote')
     }
     AddQQDiv();
     // 格式化phone的做单数据格式
