@@ -14,7 +14,7 @@
     // {
     //     phone：[
     //         {pig_phone,ww_exec} 做单旺旺号
-    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?,pig_type?,is_comment?:0没评|1已评|-1默认评} 添加做单记录            
+    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
     //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? ,is_comment?:0|1} 正常小猪单
@@ -22,6 +22,7 @@
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
+    const COMETYPE = ['pig','A97QQ'];
     const QQS = {
         '31': {
             text: '小艾-1',
@@ -190,6 +191,25 @@
             DATA[pig_phone].push({ pig_phone: pig_phone, ww_exec: ww_exec });
             storageData();
             return true;
+        },
+        // 添加倒数第二个旺旺号
+        addWWBackSecond : (pig_phone,ww_exec)=>{
+            if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
+            if (!DATA[pig_phone]) return alert('不存在小猪数据');
+            // 判断是否已经有旺旺
+            const datas = DATA[pig_phone];
+            let tx = false;
+            let second;
+            for (let index in datas) {
+                const data = datas[index];
+                if (data.ww_exec && data.ww_exec == ww_exec) tx = true;
+                if(data.ww_exec)second=index;
+            }
+            if (tx == true) return alert('已经添加过旺旺号了');
+            if(!second)return alert('没有添加过旺旺号');
+            DATA[pig_phone].splice(second-1,0,{pig_phone:pig_phone,ww_exec:ww_exec});
+            storageData();
+            return  true;
         },
         findPhoneByWW: (ww_exec) => {
             const arr = [];
@@ -511,6 +531,7 @@
                 record_num: records.length,
                 record_shop_label_last: records.length > 0 && (records[0].shop_label || ''),
                 record_shop_labels : shopLabels.join('-'),
+                record_come_type: records.length > 0?records[0].come_type || 'pig':'',
                 record_comment: records.length > 0 && records[0].is_comment,
                 notes: notes.map(note=>note.pig_note),
             }
@@ -785,6 +806,11 @@
                                 <th>JD</th>
                             </tr>
                             <tr>
+                                <td>最近做单渠道</td>
+                                <td style="color:gray;">${humanData.typeDatas.TB.record_come_type}</td>
+                                <td style="color:gray;">${humanData.typeDatas.JD.record_come_type}</td>
+                            </tr>
+                            <tr>
                                 <td>最近做单qq号</td>
                                 <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_qq}</td>
                                 <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_qq}</td>
@@ -810,7 +836,7 @@
                                 <td>${humanData.typeDatas.JD.record_shop_labels || ''}</td>
                             </tr>
                             <tr>
-                                <td>评论状态</td>
+                                <td>最近评论状态</td>
                                 <td>${humanData.typeDatas.TB.record_comment=='1'?'<span style="color:gray;">已经评价</span>':humanData.typeDatas.TB.record_comment=='-1'?'<span style="color:rgb(16, 0, 255);">默认评价</span>':humanData.typeDatas.TB.record_comment || ''}</td>
                                 <td>${humanData.typeDatas.JD.record_comment=='1'?'<span style="color:gray;">已经评价</span>':humanData.typeDatas.JD.record_comment=='-1'?'<span style="color:rgb(16, 0, 255);">默认评价</span>':humanData.typeDatas.JD.record_comment || ''}</td>
                             </tr>
@@ -886,6 +912,7 @@
                     " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
                     <input class="search_input ww-id" placeholder="旺旺号" /> <button class="search_btn ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button>
+                    <button class="search_btn ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -925,6 +952,7 @@
                         <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
+                        <select class="search_input j-come-type">${COMETYPE.map(type=>`<option value="${type}">${type}</option>`)}</select>
                         <button class="search_btn j-searchNote" style="">模糊搜索用户备注</button>
                     </div>
                     <div class="u-con">
@@ -964,6 +992,7 @@
         const $phone = qqAdd.querySelector('.phone');
         const $byQQ = qqAdd.querySelector('.byqq');
         const $pigType = qqAdd.querySelector('.j-pig-type');
+        const $comeType = qqAdd.querySelector('.j-come-type');
         // 不同qq查找到手机号
         qqAdd.querySelector('.byqq').addEventListener('input', e => {
             const qq = $byQQ.value;
@@ -1514,8 +1543,14 @@
                 DATA[phone] = datas;
                 storageData();
                 alert('旺旺号删除成功');
-                location.reload();
             }
+        }, false)
+        // 添加倒数旺旺号
+        qqAdd.querySelector('.j-order-search .ww-add-back-second').addEventListener('click', e => {
+            const wwId = qqAdd.querySelector('.j-order-search .ww-id').value;
+            const phone = $phone.value;
+            const result = Tools.addWWBackSecond(phone, wwId);
+            if (result) alert('添加旺旺成功');
         }, false)
         // 标注评价
         // Array.prototype.forEach.call(qqAdd.querySelectorAll('.j-comment'),($comment,index)=>{
@@ -1625,8 +1660,9 @@
             const pig_type = $pigType.value;
             const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
-            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type };
-            if (Tools.alertFuc({ shop_label, phone, qq, qq_exec_pre, pig_type })) return;
+            const come_type = $comeType.value;
+            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type,come_type };
+            if (Tools.alertFuc({ shop_label, phone, qq, qq_exec_pre, pig_type,come_type })) return;
             // console.log(record);
             // return;
             if (!DATA[phone]) {
