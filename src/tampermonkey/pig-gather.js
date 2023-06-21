@@ -1583,7 +1583,6 @@
             })
             storageData();
             alert('qq添加成功');
-            location.reload();
         }, false)
         // 删除qq
         qqAdd.querySelector('.del').addEventListener('click', e => {
@@ -1600,7 +1599,6 @@
                 DATA[phone] = datas;
                 storageData();
                 alert('qq删除成功');
-                location.reload();
             }
         }, false)
         // 添加备注
@@ -1623,7 +1621,6 @@
             })
             storageData();
             alert('备注添加成功');
-            location.reload();
         }, false)
         // 删除备注
         qqAdd.querySelector('.del-note').addEventListener('click', e => {
@@ -1640,7 +1637,6 @@
                 DATA[phone] = datas;
                 storageData();
                 alert('备注删除成功');
-                location.reload();
             }
         }, false)
         // 添加网页备注
