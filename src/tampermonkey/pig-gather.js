@@ -22,7 +22,7 @@
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
-    const COMETYPE = ['pig','A97QQ'];
+    const COMETYPE = ['pig', 'A97QQ'];
     const QQS = {
         '31': {
             text: '小艾-1',
@@ -193,7 +193,7 @@
             return true;
         },
         // 添加倒数第二个旺旺号
-        addWWBackSecond : (pig_phone,ww_exec)=>{
+        addWWBackSecond: (pig_phone, ww_exec) => {
             if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
             if (!DATA[pig_phone]) return alert('不存在小猪数据');
             // 判断是否已经有旺旺
@@ -203,15 +203,16 @@
             for (let index in datas) {
                 const data = datas[index];
                 if (data.ww_exec && data.ww_exec == ww_exec) tx = true;
-                if(data.ww_exec)second=index;
+                if (data.ww_exec) second = index;
             }
             if (tx == true) return alert('已经添加过旺旺号了');
-            if(!second)return alert('没有添加过旺旺号');
-            DATA[pig_phone].splice(second-1,0,{pig_phone:pig_phone,ww_exec:ww_exec});
+            if (!second) return alert('没有添加过旺旺号');
+            DATA[pig_phone].splice(second - 1, 0, { pig_phone: pig_phone, ww_exec: ww_exec });
             storageData();
-            return  true;
+            return true;
         },
-        findPhoneByWW: (ww_exec) => {
+        // 通过旺旺找到phones
+        findPhonesByWW: (ww_exec) => {
             const arr = [];
             Object.keys(DATA).forEach(phone => {
                 const datas = DATA[phone];
@@ -225,6 +226,24 @@
             })
             return arr;
         },
+        // 找到所有的旺旺号
+        findWwsByDatas: (datas) => {
+            let arr = [];
+            datas.forEach(data => {
+                if (data.ww_exec) {
+                    arr.push(data.ww_exec);
+                }
+            })
+            return arr;
+        },
+        // 通过phone找到所有的ww
+        findWwsByPhones: (phones) => {
+            let arr = [];
+            phones.forEach(phone => {
+                arr = arr.concat(Tools.findWwsByDatas(DATA[phone]));
+            })
+            return arr;
+        },
         getPigType: (str) => {
             let pig_type = str;
             if (pig_type.search('TB') !== -1) {
@@ -235,8 +254,8 @@
             return pig_type;
         },
         // 通过手机给最后一个记录添加评论或者默认评论或者直接评论
-        lastAddCommentByPhone: (phone,is_comment='1') => {
-            if (Tools.alertFuc({ phone,is_comment })) return false;
+        lastAddCommentByPhone: (phone, is_comment = '1') => {
+            if (Tools.alertFuc({ phone, is_comment })) return false;
             if (!DATA[phone]) {
                 alert('找不到对应的记录~')
                 return false;
@@ -265,27 +284,27 @@
             return button;
         },
         // 判断是否是做单记录
-        isRecord:(data)=>{
-            if(data.pig_over_time)return true;
+        isRecord: (data) => {
+            if (data.pig_over_time) return true;
             return false;
         },
         // 缩短记录
-        getShortDatas :(datas,len)=>{
+        getShortDatas: (datas, len) => {
             const arr = [];
             let index = 0;
-            datas.forEach(data=>{
-                if(arr.length>=len){
-                    if(!Tools.isRecord(data)){
+            datas.forEach(data => {
+                if (arr.length >= len) {
+                    if (!Tools.isRecord(data)) {
                         arr.push(data);
-                    }else{
+                    } else {
                         index++;
                     }
-                }else{
+                } else {
                     arr.push(data);
                 }
             })
-            if(index>0){
-                arr.splice(len,0, `<span style="color:gray;">.......此处省略${index}个记录........</span>`);
+            if (index > 0) {
+                arr.splice(len, 0, `<span style="color:gray;">.......此处省略${index}个记录........</span>`);
             }
             return arr;
         }
@@ -450,24 +469,24 @@
         return arr;
     }
     // 汇总phone数据里面的店铺数据
-    const findShopLabels = (datas,switch_time,record_color) => {
+    const findShopLabels = (datas, switch_time, record_color) => {
         const results = [];
-        datas.forEach((data,index)=>{
+        datas.forEach((data, index) => {
             // 添加已换号
-            if(switch_time){
+            if (switch_time) {
                 // 3天误差
-                if(new Date(new Date(switch_time).getTime() - 3 * 24 * 60 * 60 * 1000)>new Date(data.pig_over_time)){
+                if (new Date(new Date(switch_time).getTime() - 3 * 24 * 60 * 60 * 1000) > new Date(data.pig_over_time)) {
                     results.unshift('<span style="color:red;">已换号</span>');
                     switch_time = undefined;
                 }
             }
-            if(data.shop_label){
+            if (data.shop_label) {
                 const shopLabels = data.shop_label.split('-');
                 // 合并店铺
-                if(datas[index+1] && datas[index+1].shop_label && datas[index+1].shop_label.indexOf(shopLabels[0])!==-1){
-                    results.unshift((record_color && index===0)?`<span style="color:${record_color}">${shopLabels[1]}</span>`:shopLabels[1]);
-                }else{
-                    results.unshift((record_color && index===0)?`<span style="color:${record_color}">${data.shop_label}</span>`:data.shop_label);
+                if (datas[index + 1] && datas[index + 1].shop_label && datas[index + 1].shop_label.indexOf(shopLabels[0]) !== -1) {
+                    results.unshift((record_color && index === 0) ? `<span style="color:${record_color}">${shopLabels[1]}</span>` : shopLabels[1]);
+                } else {
+                    results.unshift((record_color && index === 0) ? `<span style="color:${record_color}">${data.shop_label}</span>` : data.shop_label);
                 }
             }
         })
@@ -477,11 +496,11 @@
     // 找到phone对应的pig_type得做单数据
     const getDatasByPigType = (Datas = [], pig_type = 'TB') => {
         const datas = Tools.copyObj(Datas);
-        return datas.filter((data,index) => {
+        return datas.filter((data, index) => {
             if (!data.pig_type) data.pig_type = 'TB';
-            if(Tools.isRecord(data) && data.pig_type == pig_type){
+            if (Tools.isRecord(data) && data.pig_type == pig_type) {
                 // 筛选出来连续做单错误记录
-                if(datas[index-1] && new Date(new Date(data.pig_over_time).getTime() + 2 * 24 * 60 * 60 * 1000) > new Date(datas[index-1].pig_over_time)){
+                if (datas[index - 1] && new Date(new Date(data.pig_over_time).getTime() + 2 * 24 * 60 * 60 * 1000) > new Date(datas[index - 1].pig_over_time)) {
                     return false;
                 }
                 return true;
@@ -515,13 +534,13 @@
             const record_color = records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '';
             // 切换时间
             let switch_time;
-            notes.forEach(note=>{
-                if(note.pig_note && note.pig_note.indexOf('已换号')!==-1){
-                    switch_time =note.create_time;
+            notes.forEach(note => {
+                if (note.pig_note && note.pig_note.indexOf('已换号') !== -1) {
+                    switch_time = note.create_time;
                 }
             })
             // 汇总店铺做单记录
-            let shopLabels = findShopLabels(records,switch_time,record_color);
+            let shopLabels = findShopLabels(records, switch_time, record_color);
             // console.log(records);
             return {
                 datas: records,
@@ -530,10 +549,10 @@
                 record_color: record_color,
                 record_num: records.length,
                 record_shop_label_last: records.length > 0 && (records[0].shop_label || ''),
-                record_shop_labels : shopLabels.join('-'),
-                record_come_type: records.length > 0?records[0].come_type || 'pig':'',
+                record_shop_labels: shopLabels.join('-'),
+                record_come_type: records.length > 0 ? records[0].come_type || 'pig' : '',
                 record_comment: records.length > 0 && records[0].is_comment,
-                notes: notes.map(note=>note.pig_note),
+                notes: notes.map(note => note.pig_note),
             }
         }
         // 找到旺旺账号
@@ -541,7 +560,7 @@
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
             qqs: qqs,
-            notes: notes.map(note=>note.pig_note),
+            notes: notes.map(note => note.pig_note),
             records: records,
             typeDatas: {
                 'TB': formateDatasByPigType(datas, 'TB'),
@@ -571,6 +590,12 @@
         });
         // 去重
         phones_arr = [...new Set(phones_arr)];
+        // 找到所有的旺号
+        const wws = Tools.findWwsByPhones(phones_arr);
+        // 通过旺旺找到所有的phones
+        wws.forEach(ww => {
+            phones_arr = phones_arr.concat(Tools.findPhonesByWW(ww));
+        })
         // 去除自身phone
         phones_arr = phones_arr.filter(phone_tmp => phone_tmp != phone);
         return phones_arr;
@@ -762,7 +787,7 @@
     }
     startFormatCancelCon();
     // 得到做单的trs
-    function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' },{ text: '标注默认评价', className: 'j-addComment',texted:'已默认评价',val:'-1' }]) {
+    function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }]) {
         let trs = '';
         records.forEach(datas => {
             let humanData = humanDatas(datas);
@@ -772,14 +797,14 @@
                 btnStr = btn;
             }
             if (Object.prototype.toString.call(btn) == '[object Object]') {
-                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}" data-datas="${JSON.stringify(btn).replaceAll('"',"'")}">${btn.text}</a>`;
+                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}" data-datas="${JSON.stringify(btn).replaceAll('"', "'")}">${btn.text}</a>`;
             }
-            if(Object.prototype.toString.call(btn) == '[object Array]'){
-                btnStr+='<div style="margin-top:10px;margin-right:-10px;">';
-                btn.forEach(bt=>{
-                    btnStr+= `<a style="color:red;margin-right:10px;cursor:pointer;" class="${bt.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}" data-datas="${JSON.stringify(bt).replaceAll('"',"'")}">${bt.text}</a>`;
+            if (Object.prototype.toString.call(btn) == '[object Array]') {
+                btnStr += '<div style="margin-top:10px;margin-right:-10px;">';
+                btn.forEach(bt => {
+                    btnStr += `<a style="color:red;margin-right:10px;cursor:pointer;" class="${bt.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}" data-datas="${JSON.stringify(bt).replaceAll('"', "'")}">${bt.text}</a>`;
                 })
-                btnStr+='</div>';
+                btnStr += '</div>';
             }
             trs += `
             <tr>
@@ -837,8 +862,8 @@
                             </tr>
                             <tr>
                                 <td>最近评论状态</td>
-                                <td>${humanData.typeDatas.TB.record_comment=='1'?'<span style="color:gray;">已经评价</span>':humanData.typeDatas.TB.record_comment=='-1'?'<span style="color:rgb(16, 0, 255);">默认评价</span>':humanData.typeDatas.TB.record_comment || ''}</td>
-                                <td>${humanData.typeDatas.JD.record_comment=='1'?'<span style="color:gray;">已经评价</span>':humanData.typeDatas.JD.record_comment=='-1'?'<span style="color:rgb(16, 0, 255);">默认评价</span>':humanData.typeDatas.JD.record_comment || ''}</td>
+                                <td>${humanData.typeDatas.TB.record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas.TB.record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas.TB.record_comment || ''}</td>
+                                <td>${humanData.typeDatas.JD.record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas.JD.record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas.JD.record_comment || ''}</td>
                             </tr>
                             <tr>
                                 <td>备注</td>
@@ -952,7 +977,7 @@
                         <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
-                        <select class="search_input j-come-type">${COMETYPE.map(type=>`<option value="${type}">${type}</option>`)}</select>
+                        <select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type}">${type}</option>`)}</select>
                         <button class="search_btn j-searchNote" style="">模糊搜索用户备注</button>
                     </div>
                     <div class="u-con">
@@ -1016,10 +1041,13 @@
         qqAdd.querySelector('.j-order-search .ww-id').addEventListener('input', e => {
             const wwExec = e.target.value;
             if (wwExec) {
-                const phoneArr = Tools.findPhoneByWW(wwExec);
+                const phoneArr = Tools.findPhonesByWW(wwExec);
                 // console.log(phoneArr);
                 if (phoneArr.length > 0) {
                     $phone.value = phoneArr.join(',');
+                    setCon(['']);
+                }else{
+                    setCon(['没有找到phone']);
                 }
             }
         }, false)
@@ -1657,8 +1685,8 @@
             const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const come_type = $comeType.value;
-            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type,come_type };
-            if (Tools.alertFuc({ shop_label, phone, qq, qq_exec_pre, pig_type,come_type })) return;
+            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type, come_type };
+            if (Tools.alertFuc({ shop_label, phone, qq, qq_exec_pre, pig_type, come_type })) return;
             // console.log(record);
             // return;
             if (!DATA[phone]) {
@@ -1675,10 +1703,10 @@
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
-        const getCon = (arr,len) => {
+        const getCon = (arr, len) => {
             let str = '';
-            const datas = Tools.getShortDatas(arr,len);
-            datas.forEach(data=>{
+            const datas = Tools.getShortDatas(arr, len);
+            datas.forEach(data => {
                 str += `<div>${typeof data === 'string' ? data : JSON.stringify(data)}</div>`;
             })
             return str;
@@ -1700,7 +1728,7 @@
                 // alert(JSON.stringify(DATA[phone]));
                 let datas = DATA[phone];
                 let table = getDataTable([datas])
-                setCon([table, getCon(datas,3)]);
+                setCon([table, getCon(datas, 3)]);
             } else {
                 // alert('没找到记录');
                 setCon(['没找到做单记录']);
@@ -1720,7 +1748,7 @@
                         // 单手机
                         let datas = arr[0];
                         let table = getDataTable([datas])
-                        setCon([table, getCon(datas,3)]);
+                        setCon([table, getCon(datas, 3)]);
                         // setCon(arr[0]);
                     } else {
                         // 多手机号
@@ -1798,21 +1826,21 @@
             RDATA.addData(phone);
         }, '.j-remindPhone')
         // 点击copy
-        addEventListener($con,'click',e=>{
+        addEventListener($con, 'click', e => {
             const $text = e.target;
             const text = $text.textContent;
             $text.style.cursor = 'pointer';
-            $text.title='点击复制';
+            $text.title = '点击复制';
             copyToClipboard(text);
             const copyed = $text.getAttribute('data-copyed');
-            if(copyed!=='1'){
+            if (copyed !== '1') {
                 const $after = document.createElement('span');
                 $after.style = 'color:gray;margin-left:3px;';
                 $after.textContent = '已复制';
                 $text.after($after);
             }
-            $text.setAttribute('data-copyed','1');
-        },'.j-copyText')
+            $text.setAttribute('data-copyed', '1');
+        }, '.j-copyText')
         function GatherQqs(cb = () => true, pig_type = 'TB') {
             let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
             let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -1858,7 +1886,7 @@
                         && !RDATA.isExist(record.pig_phone)
                         && cb(humanData)
                     ) {
-                        if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号')!=-1)) || is_screen == '0') {
+                        if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
                             records.push(datas);
                         }
                     }
@@ -1891,7 +1919,7 @@
             for (let phone of phones) {
                 const datas = DATA[phone];
                 if (trim(datas[0].shop_label) == trim(shop_label)) {
-                    if((comment_sel === '' && !datas[0].is_comment) || (comment_sel && comment_sel==datas[0].is_comment)){
+                    if ((comment_sel === '' && !datas[0].is_comment) || (comment_sel && comment_sel == datas[0].is_comment)) {
                         arr.push(datas[0]);
                     }
                 }
@@ -1905,8 +1933,8 @@
             })
             if (arr.length == 0) return setCon(['没有找到做单记录']);
             let dyStr = '';
-            if(arr.length>5){
-                dyStr+=`<div style="margin-bottom: 10px; color:gray;">....还剩下<span style="color:red;">${arr.length-5}</span>个.....</div>`
+            if (arr.length > 5) {
+                dyStr += `<div style="margin-bottom: 10px; color:gray;">....还剩下<span style="color:red;">${arr.length - 5}</span>个.....</div>`
             }
             // console.log(arr);
             const phoneDatas = [];
@@ -1915,7 +1943,7 @@
                 phoneDatas.push(DATA[arr[i].pig_phone]);
             }
             // console.log(phoneDatas);
-            const table = getDataTable(phoneDatas, comment_sel===''?[{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' },{ text: '标注默认评价', className: 'j-addComment',texted:'已默认评价',val:'-1' }]:comment_sel=='-1'?{ text: '标注已评价', className: 'j-addComment',texted:"已评价",val:'1' }:'');
+            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
             setCon([dyStr + table]);
         }, false)
         // 标注已评跟默认评价按钮
@@ -1924,12 +1952,12 @@
             const $parent = $btn.parentNode;
             // const qq = $btn.getAttribute('data-qq');
             console.log($btn.getAttribute('data-datas'));
-            const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'",'"'));
+            const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
             const phone = $btn.getAttribute('data-phone');
             $btn.textContent = datas.texted;
             $btn.style.color = 'gray';
             // console.log(qq,phone);
-            Tools.lastAddCommentByPhone(phone,datas.val);
+            Tools.lastAddCommentByPhone(phone, datas.val);
         }, '.j-addComment')
         {
             // 添加非手机记录
@@ -1947,15 +1975,15 @@
             // },false)
         }
         // 模糊搜索用户备注
-        addEventListener(qqAdd,'click',e=>{
+        addEventListener(qqAdd, 'click', e => {
             const note = qqAdd.querySelector('.note').value;
-            if(Tools.alertFuc({note}))return false;
+            if (Tools.alertFuc({ note })) return false;
             const arr = [];
             const phones = Object.keys(DATA);
             for (let phone of phones) {
                 const datas = DATA[phone];
                 for (let data of datas) {
-                    if (data.pig_note && data.pig_note.indexOf(note)!==-1) {
+                    if (data.pig_note && data.pig_note.indexOf(note) !== -1) {
                         arr.push(datas);
                         break;
                     }
@@ -1963,7 +1991,7 @@
             }
             const table = getDataTable(arr);
             setCon([table]);
-        },'.j-searchNote')
+        }, '.j-searchNote')
     }
     AddQQDiv();
     // 格式化phone的做单数据格式
