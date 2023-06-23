@@ -4,9 +4,9 @@
 // @version      0.1
 // @description  无限置顶小猪任务
 // @author       You
-// @match        http://190.92.199.222/home/member/my_wallet.html
-// @match        http://190.92.199.222/home/member/fangdan.html
-// @match        http://190.92.199.222/home/cash/cardlist_uncheck.html
+// @match        http://116.63.136.65/home/member/my_wallet.html
+// @match        http://116.63.136.65/home/member/fangdan.html
+// @match        http://116.63.136.65/home/cash/cardlist_uncheck.html
 // @grant        none
 // ==/UserScript==
 

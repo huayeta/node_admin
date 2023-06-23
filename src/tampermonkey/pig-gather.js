@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  汇总数据，并持久化保存，1周自动下载一次
 // @author       You
-// @match        http://190.92.199.222/home/member/fangdan.html
+// @match        http://116.63.136.65/home/member/fangdan.html
 // @grant        none
 // ==/UserScript==
 
