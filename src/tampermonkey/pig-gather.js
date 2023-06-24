@@ -22,7 +22,7 @@
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
-    const COMETYPE = ['pig', 'A97QQ'];
+    const COMETYPE = [{name:'pig',fix:''}, {name:'A97QQ',fix:'QQ'}];
     const QQS = {
         '31': {
             text: '小艾-1',
@@ -973,11 +973,12 @@
                         <div class="j-addOtherRecord"></div>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
-                        <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
+                        <select class="search_input j-screen-time"><option value="1">筛选正序</option><option value="-1" selected>筛选逆序</option></select>
+                        <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
-                        <select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type}">${type}</option>`)}</select>
+                        <select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.name}">${type.name}</option>`)}</select>
                         <button class="search_btn j-searchNote" style="">模糊搜索用户备注</button>
                     </div>
                     <div class="u-con">
@@ -1018,6 +1019,19 @@
         const $byQQ = qqAdd.querySelector('.byqq');
         const $pigType = qqAdd.querySelector('.j-pig-type');
         const $comeType = qqAdd.querySelector('.j-come-type');
+        // 当come-type变动的话
+        $comeType.addEventListener('change',e=>{
+            const come_type = $comeType.value;
+            let fix;
+            COMETYPE.forEach(type=>{
+                if(type.name==come_type)fix = type.fix;
+            })
+            const qq = $byQQ.value;
+            const phone = $phone.value;
+            if(fix && qq && !phone){
+                $phone.value = `${fix}-${qq}`;
+            }
+        },false)
         // 不同qq查找到手机号
         qqAdd.querySelector('.byqq').addEventListener('input', e => {
             const qq = $byQQ.value;
@@ -1843,8 +1857,10 @@
         }, '.j-copyText')
         function GatherQqs(cb = () => true, pig_type = 'TB') {
             let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
-            let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
+            // let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
+            let startTime = new Date('2023-5-1');
             const is_screen = qqAdd.querySelector('.j-screen').value;
+            const screen_time =parseInt(qqAdd.querySelector('.j-screen-time').value,10);
             let DateRecords = [];
             const DatePhones = Object.keys(DATA);
             const getLastTypeData = (datas, pig_type) => {
@@ -1863,18 +1879,18 @@
                 const datas = DATA[phone];
                 if (datas.length == 0) continue;
                 let data = getLastTypeData(datas, pig_type);
-                if (data) DateRecords.push(data);
+                if (data && new Date(data.pig_over_time)>startTime && new Date(data.pig_over_time)<endTime) DateRecords.push(data);
             }
             DateRecords.sort((a, b) => {
                 if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
-                    return -1;
+                    return screen_time;
                 } else {
-                    return 1;
+                    return -screen_time;
                 }
             })
             let records = [];
             DateRecords.forEach(record => {
-                if (records.length < 5 && new Date(record.pig_over_time) < endTime) {
+                if (records.length < 5) {
                     let datas = DATA[record.pig_phone];
                     const humanData = humanDatas(datas);
                     const notes = humanData.notes.join('');
@@ -1890,6 +1906,8 @@
                             records.push(datas);
                         }
                     }
+                }else{
+                    return;
                 }
             })
             // console.log(records);
@@ -1990,7 +2008,7 @@
                 }
             }
             const table = getDataTable(arr);
-            setCon([table]);
+            setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`,table]);
         }, '.j-searchNote')
     }
     AddQQDiv();
