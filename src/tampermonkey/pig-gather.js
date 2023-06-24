@@ -13,7 +13,7 @@
     // Your code here...
     // {
     //     phone：[
-    //         {pig_phone,ww_exec} 做单旺旺号
+    //         {pig_phone,ww_exec,is_del?:'1'} 做单旺旺号
     //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
@@ -22,7 +22,7 @@
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
-    const COMETYPE = [{name:'pig',fix:''}, {name:'A97QQ',fix:'QQ'}];
+    const COMETYPE = [{ name: 'pig', fix: '' }, { name: 'A97QQ', fix: 'QQ' }];
     const QQS = {
         '31': {
             text: '小艾-1',
@@ -227,11 +227,11 @@
             return arr;
         },
         // 找到所有的旺旺号
-        findWwsByDatas: (datas) => {
+        findWwsByDatas: (datas = [], is_complete = false) => {
             let arr = [];
             datas.forEach(data => {
                 if (data.ww_exec) {
-                    arr.push(data.ww_exec);
+                    arr.push(is_complete ? data : data.ww_exec);
                 }
             })
             return arr;
@@ -241,6 +241,27 @@
             let arr = [];
             phones.forEach(phone => {
                 arr = arr.concat(Tools.findWwsByDatas(DATA[phone]));
+            })
+            return arr;
+        },
+        // 判断ww是否被抓
+        isDelWwByDatas: (ww, datas = []) => {
+            let result = false;
+            if (datas.length > 0) {
+                datas.forEach(data => {
+                    if (data.pig_note && new RegExp(`\（${ww}\）.+?被抓`).exec(data.pig_note)) {
+                        result = true;
+                    }
+                })
+            }
+            return result;
+        },
+        // 找到phone数据里面的note数据
+        findNotesByDatas: (datas, pig_type) => {
+            const arr = [];
+            datas.forEach(data => {
+                const obj = Tools.copyObj(data);
+                if ((!pig_type || obj.pig_type == pig_type) && obj.pig_note) arr.push(obj);
             })
             return arr;
         },
@@ -307,6 +328,29 @@
                 arr.splice(len, 0, `<span style="color:gray;">.......此处省略${index}个记录........</span>`);
             }
             return arr;
+        },
+        // 整理DATA里面的被抓旺旺
+        formateWwFromData: () => {
+            for (let phone in DATA) {
+                // if (phone != '17302314464') continue;
+                const datas = DATA[phone];
+                const wws = Tools.findWwsByDatas(datas);
+                const notes = Tools.findNotesByDatas(datas);
+                // console.log(wws, notes);
+                if (wws.length > 0) {
+                    wws.forEach(ww => {
+                        if (Tools.isDelWwByDatas(ww, notes)) {
+                            DATA[phone] = datas.map(data => {
+                                if (data.ww_exec == ww) {
+                                    data.is_del = '1';
+                                }
+                                return data;
+                            })
+                        }
+                    })
+                }
+            }
+            storageData();
         }
     }
     // 获得每个tr数据
@@ -355,6 +399,7 @@
                 DATA[trData.pig_phone].unshift(trData);
             }
         }
+        Tools.formateWwFromData();
         storageData();
     }
     getData();
@@ -557,6 +602,7 @@
         }
         // 找到旺旺账号
         let wwExecs = findWWExecs(datas);
+        const wws = Tools.findWwsByDatas(datas, true);
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
             qqs: qqs,
@@ -573,6 +619,7 @@
             record_num: records.length,
             diffPhones: diffPhones,
             wwExecs: wwExecs,
+            wws: wws
         }
     }
     // 找到不同的手机号
@@ -818,8 +865,8 @@
             }, '')}
                 </td>
                 <td style="color:red;">
-                    ${humanData.wwExecs.reduce((a, b) => {
-                return a + `<p class="j-copyText">${b}</p>`;
+                    ${humanData.wws.reduce((a, b) => {
+                return a + (b.is_del?`<del class="j-copyText" style="color:gray">${b.ww_exec}</del>`:`<p class="j-copyText">${b.ww_exec}</p>`);
             }, '')}
                 </td>
                 <td>
@@ -1020,18 +1067,18 @@
         const $pigType = qqAdd.querySelector('.j-pig-type');
         const $comeType = qqAdd.querySelector('.j-come-type');
         // 当come-type变动的话
-        $comeType.addEventListener('change',e=>{
+        $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
             let fix;
-            COMETYPE.forEach(type=>{
-                if(type.name==come_type)fix = type.fix;
+            COMETYPE.forEach(type => {
+                if (type.name == come_type) fix = type.fix;
             })
             const qq = $byQQ.value;
             const phone = $phone.value;
-            if(fix && qq && !phone){
+            if (fix && qq && !phone) {
                 $phone.value = `${fix}-${qq}`;
             }
-        },false)
+        }, false)
         // 不同qq查找到手机号
         qqAdd.querySelector('.byqq').addEventListener('input', e => {
             const qq = $byQQ.value;
@@ -1060,7 +1107,7 @@
                 if (phoneArr.length > 0) {
                     $phone.value = phoneArr.join(',');
                     setCon(['']);
-                }else{
+                } else {
                     setCon(['没有找到phone']);
                 }
             }
@@ -1860,7 +1907,7 @@
             // let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
             let startTime = new Date('2023-5-1');
             const is_screen = qqAdd.querySelector('.j-screen').value;
-            const screen_time =parseInt(qqAdd.querySelector('.j-screen-time').value,10);
+            const screen_time = parseInt(qqAdd.querySelector('.j-screen-time').value, 10);
             let DateRecords = [];
             const DatePhones = Object.keys(DATA);
             const getLastTypeData = (datas, pig_type) => {
@@ -1879,7 +1926,7 @@
                 const datas = DATA[phone];
                 if (datas.length == 0) continue;
                 let data = getLastTypeData(datas, pig_type);
-                if (data && new Date(data.pig_over_time)>startTime && new Date(data.pig_over_time)<endTime) DateRecords.push(data);
+                if (data && new Date(data.pig_over_time) > startTime && new Date(data.pig_over_time) < endTime) DateRecords.push(data);
             }
             DateRecords.sort((a, b) => {
                 if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
@@ -1906,7 +1953,7 @@
                             records.push(datas);
                         }
                     }
-                }else{
+                } else {
                     return;
                 }
             })
@@ -2008,7 +2055,7 @@
                 }
             }
             const table = getDataTable(arr);
-            setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`,table]);
+            setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`, table]);
         }, '.j-searchNote')
     }
     AddQQDiv();
