@@ -866,7 +866,7 @@
                 </td>
                 <td style="color:red;">
                     ${humanData.wws.reduce((a, b) => {
-                return a + (b.is_del?`<del class="j-copyText" style="color:gray">${b.ww_exec}</del>`:`<p class="j-copyText">${b.ww_exec}</p>`);
+                return a + (b.is_del?`<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>`:`<p class="j-copyText">${b.ww_exec}</p>`);
             }, '')}
                 </td>
                 <td>
@@ -904,7 +904,7 @@
                             </tr> -->
                             <tr>
                                 <td>做单店铺顺序</td>
-                                <td>${humanData.typeDatas.TB.record_shop_labels || ''}</td>
+                                <td style="width:170px;padding:10px;">${humanData.typeDatas.TB.record_shop_labels || ''}</td>
                                 <td>${humanData.typeDatas.JD.record_shop_labels || ''}</td>
                             </tr>
                             <tr>
