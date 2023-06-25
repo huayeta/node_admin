@@ -351,6 +351,11 @@
                 }
             }
             storageData();
+        },
+        // 修改最后一个记录
+        modifyLastRecord: (phone, obj = {}) => {
+            Object.assign(DATA[phone][0], obj);
+            storageData();
         }
     }
     // 获得每个tr数据
@@ -866,7 +871,7 @@
                 </td>
                 <td style="color:red;">
                     ${humanData.wws.reduce((a, b) => {
-                return a + (b.is_del?`<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>`:`<p class="j-copyText">${b.ww_exec}</p>`);
+                return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
             }, '')}
                 </td>
                 <td>
@@ -1027,6 +1032,7 @@
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                         <select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.name}">${type.name}</option>`)}</select>
                         <button class="search_btn j-searchNote" style="">模糊搜索用户备注</button>
+                        <button class="search_btn j-modifyLastRecord" style="">修改最后一个记录</button>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -1066,6 +1072,7 @@
         const $byQQ = qqAdd.querySelector('.byqq');
         const $pigType = qqAdd.querySelector('.j-pig-type');
         const $comeType = qqAdd.querySelector('.j-come-type');
+        const $qqExecPre = qqAdd.querySelector('.qq_exec_pre');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -1743,7 +1750,7 @@
             const phone = $phone.value;
             const qq = $byQQ.value;
             const pig_type = $pigType.value;
-            const qq_exec_pre = qqAdd.querySelector('.qq_exec_pre').value;
+            const qq_exec_pre = $qqExecPre.value;
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const come_type = $comeType.value;
             const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type, come_type };
@@ -2016,7 +2023,7 @@
             const $btn = e.target;
             const $parent = $btn.parentNode;
             // const qq = $btn.getAttribute('data-qq');
-            console.log($btn.getAttribute('data-datas'));
+            // console.log($btn.getAttribute('data-datas'));
             const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
             const phone = $btn.getAttribute('data-phone');
             $btn.textContent = datas.texted;
@@ -2057,6 +2064,15 @@
             const table = getDataTable(arr);
             setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`, table]);
         }, '.j-searchNote')
+        // 修改最后一个做单记录
+        addEventListener(qqAdd, 'click', e => {
+            const phone = $phone.value;
+            const shop_label = qqAdd.querySelector('.j-shop-id').value;
+            const qq_exec_pre = $qqExecPre.value;
+            if (Tools.alertFuc({ phone, shop_label, qq_exec_pre })) return;
+            Tools.modifyLastRecord(phone, { shop_label, qq_exec_pre });
+            alert('修改成功');
+        }, '.j-modifyLastRecord')
     }
     AddQQDiv();
     // 格式化phone的做单数据格式
