@@ -14,10 +14,10 @@
     // {
     //     phone：[
     //         {pig_phone,ww_exec,is_del?:'1'} 做单旺旺号
-    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子} 添加做单记录            
+    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? ,is_comment?:0|1} 正常小猪单
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? ,is_comment?:0|1，is_remind?:'-1'是否提醒} 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
@@ -136,6 +136,9 @@
             RDATA.storageData();
         },
         isExist: (phone) => {
+            // 查询是否暂时不再提醒
+            if(DATA[phone] && DATA[phone][0].is_remind=='-1') return true;
+            // 查询是否记录多少天不再提醒
             if (RDATA.datas[phone]) return true;
             return false;
         },
@@ -355,6 +358,11 @@
         // 修改最后一个记录
         modifyLastRecord: (phone, obj = {}) => {
             Object.assign(DATA[phone][0], obj);
+            storageData();
+        },
+        // 不再提醒
+        noRemind: (phone)=>{
+            DATA[phone][0].is_remind= '-1';
             storageData();
         }
     }
@@ -1026,7 +1034,7 @@
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
-                        <select class="search_input j-screen-time"><option value="1">筛选正序</option><option value="-1" selected>筛选逆序</option></select>
+                        <select class="search_input j-screen-time"><option value="1" selected>筛选正序</option><option value="-1">筛选逆序</option></select>
                         <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
@@ -1887,12 +1895,20 @@
             const $btn = e.target;
             const $parent = $btn.parentNode;
             const qq = $btn.getAttribute('data-qq');
-            const phone = $parent.querySelector('.j-phone').textContent;
+            const phone = $btn.getAttribute('data-phone');
             $btn.textContent = '已去除';
-            $btn.style = 'color:gray;margin-left:10px;';
+            $btn.style.color = 'gray';
             copyToClipboard(qq);
             RDATA.addData(phone);
         }, '.j-remindPhone')
+        //不再提醒
+        addEventListener($con,'click',e=>{
+            const $btn = e.target;
+            const phone = $btn.getAttribute('data-phone');
+            Tools.noRemind(phone);
+            $btn.textContent = '已不再提醒';
+            $btn.style.color = 'gray';
+        },'.j-no-remind')
         // 点击copy
         addEventListener($con, 'click', e => {
             const $text = e.target;
@@ -1965,7 +1981,7 @@
                 }
             })
             // console.log(records);
-            const table = getDataTable(records, { text: 'copy去除', className: 'j-remindPhone' });
+            const table = getDataTable(records, [{ text: 'copy去除', className: 'j-remindPhone' },{text:'不再提醒',className:'j-no-remind'}]);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
