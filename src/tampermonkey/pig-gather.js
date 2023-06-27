@@ -364,6 +364,12 @@
         noRemind: (phone)=>{
             DATA[phone][0].is_remind= '-1';
             storageData();
+        },
+        // 全能搜索 qq,phone,note,ww
+        almightySearch:(arr=[])=>{
+            const result = [];
+            if(arr.length==0)return result;
+            
         }
     }
     // 获得每个tr数据
@@ -1035,12 +1041,16 @@
                     <div class="m-findData search" style="margin-top:0px;">
                         <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
                         <select class="search_input j-screen-time"><option value="1" selected>筛选正序</option><option value="-1">筛选逆序</option></select>
+                        <input class="search_input j-search-time" placeholder="搜索时间" value="2023-04-01" type="date" />
                         <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                         <select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.name}">${type.name}</option>`)}</select>
+                    </div>
+                    <div class="m-findData search" style="margin-top:0px;">
                         <button class="search_btn j-searchNote" style="">模糊搜索用户备注</button>
                         <button class="search_btn j-modifyLastRecord" style="">修改最后一个记录</button>
+                        <button class="search_btn j-almightySearch" style="">QQ旺旺备注全能搜索</button>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -1081,6 +1091,7 @@
         const $pigType = qqAdd.querySelector('.j-pig-type');
         const $comeType = qqAdd.querySelector('.j-come-type');
         const $qqExecPre = qqAdd.querySelector('.qq_exec_pre');
+        const $searchTime = qqAdd.querySelector('.j-search-time');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -1928,7 +1939,7 @@
         function GatherQqs(cb = () => true, pig_type = 'TB') {
             let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
             // let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
-            let startTime = new Date('2023-5-1');
+            let startTime = new Date($searchTime.value);
             const is_screen = qqAdd.querySelector('.j-screen').value;
             const screen_time = parseInt(qqAdd.querySelector('.j-screen-time').value, 10);
             let DateRecords = [];
