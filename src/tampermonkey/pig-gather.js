@@ -337,12 +337,13 @@
             for (let phone in DATA) {
                 // if (phone != '17302314464') continue;
                 const datas = DATA[phone];
-                const wws = Tools.findWwsByDatas(datas);
+                const wws = Tools.findWwsByDatas(datas,true);
                 const notes = Tools.findNotesByDatas(datas);
                 // console.log(wws, notes);
                 if (wws.length > 0) {
-                    wws.forEach(ww => {
-                        if (Tools.isDelWwByDatas(ww, notes)) {
+                    wws.forEach(wwObj => {
+                        const ww = wwObj.ww_exec;
+                        if (!wwObj.is_del && Tools.isDelWwByDatas(ww, notes)) {
                             DATA[phone] = datas.map(data => {
                                 if (data.ww_exec == ww) {
                                     data.is_del = '1';
