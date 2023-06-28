@@ -137,7 +137,7 @@
         },
         isExist: (phone) => {
             // 查询是否暂时不再提醒
-            if(DATA[phone] && DATA[phone][0].is_remind=='-1') return true;
+            if (DATA[phone] && DATA[phone][0].is_remind == '-1') return true;
             // 查询是否记录多少天不再提醒
             if (RDATA.datas[phone]) return true;
             return false;
@@ -337,7 +337,7 @@
             for (let phone in DATA) {
                 // if (phone != '17302314464') continue;
                 const datas = DATA[phone];
-                const wws = Tools.findWwsByDatas(datas,true);
+                const wws = Tools.findWwsByDatas(datas, true);
                 const notes = Tools.findNotesByDatas(datas);
                 // console.log(wws, notes);
                 if (wws.length > 0) {
@@ -362,15 +362,59 @@
             storageData();
         },
         // 不再提醒
-        noRemind: (phone)=>{
-            DATA[phone][0].is_remind= '-1';
+        noRemind: (phone) => {
+            DATA[phone][0].is_remind = '-1';
             storageData();
         },
-        // 全能搜索 qq,phone,note,ww
-        almightySearch:(arr=[])=>{
-            const result = [];
-            if(arr.length==0)return result;
-            
+        // 通过keyword找到phone搜索范围qq,phone,note,ww
+        findPhonesByKeyword: (keyword) => {
+            const results = [];
+            if (!keyword) return results;
+            for (let phone in DATA) {
+                const datas = DATA[phone];
+                datas.forEach(data => {
+                    if (data.pig_qq == keyword || data.pig_phone == keyword || data.ww_exec == keyword || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                        if(!results.includes(phone))results.push(phone);
+                    }
+                })
+            }
+            return results;
+        },
+        // 通过keyword找到所有keyword返回qq,phone,ww数组
+        findAllKeywordByKeyword: (keyword) => {
+            const phones = Tools.findPhonesByKeyword(keyword);
+            // console.log(phones);
+            const arr = [];
+            phones.forEach(phone => {
+                const datas = DATA[phone];
+                datas.forEach(data => {
+                    if (data.pig_qq || !arr.includes(data.pig_qq)) arr.push(data.pig_qq);
+                    if (data.pig_phone || !arr.includes(data.pig_phone)) arr.push(data.pig_phone);
+                    if (data.ww_exec || !arr.includes(data.ww_exec)) arr.push(data.ww_exec);
+                })
+            })
+            // console.log(arr);
+            return arr;
+        },
+        // 全能搜索 keywords=[qq,phone,ww]
+        almightySearch: (keywords = []) => {
+            let result = [];
+            if (keywords.length == 0) return result;
+            //所有的关键字
+            let arr = [];
+            keywords.forEach(keyword => {
+                arr = arr.concat(Tools.findAllKeywordByKeyword(keyword));
+            })
+            // 去重
+            arr = [...new Set(arr)];
+            // console.log(arr);
+            arr.forEach(keyword => {
+                result = result.concat(Tools.findPhonesByKeyword(keyword));
+            })
+            // 去重
+            result = [...new Set(result)];
+            // console.log(result);
+            return result;
         }
     }
     // 获得每个tr数据
@@ -655,14 +699,14 @@
             // console.log(findPhonesByQq(qq))
             phones_arr = phones_arr.concat(findPhonesByQq(qq))
         });
-        // 去重
-        phones_arr = [...new Set(phones_arr)];
         // 找到所有的旺号
         const wws = Tools.findWwsByPhones(phones_arr);
         // 通过旺旺找到所有的phones
         wws.forEach(ww => {
             phones_arr = phones_arr.concat(Tools.findPhonesByWW(ww));
         })
+        // 去重
+        phones_arr = [...new Set(phones_arr)];
         // 去除自身phone
         phones_arr = phones_arr.filter(phone_tmp => phone_tmp != phone);
         return phones_arr;
@@ -1002,7 +1046,7 @@
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
-                    <input class="search_input ww-id" placeholder="旺旺号" /> <button class="search_btn ww-add
+                    <input class="search_input ww-id j-ww-exec" placeholder="旺旺号" /> <button class="search_btn ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button>
                     <button class="search_btn ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
                 </div>
@@ -1051,7 +1095,7 @@
                     <div class="m-findData search" style="margin-top:0px;">
                         <button class="search_btn j-searchNote" style="">模糊搜索用户备注</button>
                         <button class="search_btn j-modifyLastRecord" style="">修改最后一个记录</button>
-                        <button class="search_btn j-almightySearch" style="">QQ旺旺备注全能搜索</button>
+                        <button class="search_btn j-almightySearch" style="">QQ手机旺旺全能搜索</button>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -1089,6 +1133,7 @@
         document.querySelector('.release_tab').before(qqAdd);
         const $phone = qqAdd.querySelector('.phone');
         const $byQQ = qqAdd.querySelector('.byqq');
+        const $ww = qqAdd.querySelector('.j-ww-exec');
         const $pigType = qqAdd.querySelector('.j-pig-type');
         const $comeType = qqAdd.querySelector('.j-come-type');
         const $qqExecPre = qqAdd.querySelector('.qq_exec_pre');
@@ -1914,13 +1959,13 @@
             RDATA.addData(phone);
         }, '.j-remindPhone')
         //不再提醒
-        addEventListener($con,'click',e=>{
+        addEventListener($con, 'click', e => {
             const $btn = e.target;
             const phone = $btn.getAttribute('data-phone');
             Tools.noRemind(phone);
             $btn.textContent = '已不再提醒';
             $btn.style.color = 'gray';
-        },'.j-no-remind')
+        }, '.j-no-remind')
         // 点击copy
         addEventListener($con, 'click', e => {
             const $text = e.target;
@@ -1993,7 +2038,7 @@
                 }
             })
             // console.log(records);
-            const table = getDataTable(records, [{ text: 'copy去除', className: 'j-remindPhone' },{text:'不再提醒',className:'j-no-remind'}]);
+            const table = getDataTable(records, [{ text: 'copy去除', className: 'j-remindPhone' }, { text: '不再提醒', className: 'j-no-remind' }]);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
@@ -2043,7 +2088,7 @@
                 phoneDatas.push(DATA[arr[i].pig_phone]);
             }
             // console.log(phoneDatas);
-            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' },{text:'不再提醒',className:'j-no-remind'}] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
+            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
             setCon([dyStr + table]);
         }, false)
         // 标注已评跟默认评价按钮
@@ -2101,6 +2146,34 @@
             Tools.modifyLastRecord(phone, { shop_label, qq_exec_pre });
             alert('修改成功');
         }, '.j-modifyLastRecord')
+        // 全能搜索
+        addEventListener(qqAdd, 'click', e => {
+            const qq = $byQQ.value;
+            const phone = $phone.value;
+            const ww = $ww.value;
+            const keywords = [qq, phone, ww].filter(keyword => keyword);
+            if (keywords.length == 0) return alert('请填写关键字qq||phone|ww!');
+            // console.log(keywords);
+            // console.log(Tools.findPhonesByKeyword(qq));
+            // return;
+            const arr = Tools.almightySearch(keywords).map(phone => DATA[phone]);
+            if (arr.length == 0) return setCon(['没找到做单记录']);
+            // 判断是否有一个qq多个手机的情况存在
+            // console.log(arr);
+            if (arr.length === 1) {
+                // 单手机
+                let datas = arr[0];
+                let table = getDataTable([datas])
+                setCon([table, getCon(datas, 3)]);
+                // setCon(arr[0]);
+            } else {
+                // 多手机号
+                let str = getCon(arr);
+                let table = getDataTable(arr);
+                setCon([table + str]);
+            }
+            // alert(JSON.stringify(arr));
+        }, '.j-almightySearch')
     }
     AddQQDiv();
     // 格式化phone的做单数据格式
