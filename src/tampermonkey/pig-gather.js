@@ -2171,13 +2171,13 @@
                 // 单手机
                 let datas = arr[0];
                 let table = getDataTable([datas])
-                setCon([table, getCon(datas, 3)]);
+                setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`,table, getCon(datas, 3)]);
                 // setCon(arr[0]);
             } else {
                 // 多手机号
                 let str = getCon(arr);
                 let table = getDataTable(arr);
-                setCon([table + str]);
+                setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`,table + str]);
             }
             // alert(JSON.stringify(arr));
         }, '.j-almightySearch')
