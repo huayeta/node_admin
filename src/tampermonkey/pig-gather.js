@@ -22,7 +22,7 @@
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
-    const COMETYPE = [{ name: 'pig', fix: '' }, { name: 'A97QQ', fix: 'QQ' }];
+    const COMETYPE = [{ name: 'pig', fix: '',value:'pig' }, { name: 'A97-欢乐购秒杀1群', fix: 'QQ',value:'626195966' }];
     const QQS = {
         '31': {
             text: '小艾-1',
@@ -414,6 +414,14 @@
             // 去重
             result = [...new Set(result)];
             // console.log(result);
+            return result;
+        },
+        //找到做单渠道name
+        findNameByComeTypeValue:(value)=>{
+            let result=value;
+            COMETYPE.forEach(come_type=>{
+                if(come_type.value==value)result = come_type.name;
+            })
             return result;
         }
     }
@@ -943,8 +951,8 @@
                             </tr>
                             <tr>
                                 <td>最近做单渠道</td>
-                                <td style="color:gray;">${humanData.typeDatas.TB.record_come_type}</td>
-                                <td style="color:gray;">${humanData.typeDatas.JD.record_come_type}</td>
+                                <td style="color:gray;">${Tools.findNameByComeTypeValue(humanData.typeDatas.TB.record_come_type)}</td>
+                                <td style="color:gray;">${Tools.findNameByComeTypeValue(humanData.typeDatas.JD.record_come_type)}</td>
                             </tr>
                             <tr>
                                 <td>最近做单qq号</td>
@@ -1090,7 +1098,7 @@
                         <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
-                        <select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.name}">${type.name}</option>`)}</select>
+                        <select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`)}</select>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <button class="search_btn j-searchNote" style="">模糊搜索用户备注</button>
@@ -1143,7 +1151,7 @@
             const come_type = $comeType.value;
             let fix;
             COMETYPE.forEach(type => {
-                if (type.name == come_type) fix = type.fix;
+                if (type.value == come_type) fix = type.fix;
             })
             const qq = $byQQ.value;
             const phone = $phone.value;
@@ -1178,9 +1186,9 @@
                 // console.log(phoneArr);
                 if (phoneArr.length > 0) {
                     $phone.value = phoneArr.join(',');
-                    setCon(['']);
+                    // setCon(['']);
                 } else {
-                    setCon(['没有找到phone']);
+                    // setCon(['没有找到phone']);
                 }
             }
         }, false)
@@ -2142,8 +2150,9 @@
             const phone = $phone.value;
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const qq_exec_pre = $qqExecPre.value;
-            if (Tools.alertFuc({ phone, shop_label, qq_exec_pre })) return;
-            Tools.modifyLastRecord(phone, { shop_label, qq_exec_pre });
+            const come_type = $comeType.value;
+            if (Tools.alertFuc({ phone, shop_label, qq_exec_pre,come_type })) return;
+            Tools.modifyLastRecord(phone, { shop_label, qq_exec_pre,come_type });
             alert('修改成功');
         }, '.j-modifyLastRecord')
         // 全能搜索
