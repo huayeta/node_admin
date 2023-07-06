@@ -22,7 +22,12 @@
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
-    const COMETYPE = [{ name: 'pig', fix: '', value: 'pig' }, { name: 'A97-欢乐购秒杀1群', fix: 'QQ', value: '626195966' }, { name: 'A97-欢乐购火箭1群', fix: 'QQ', value: '272916421' }];
+    const COMETYPE = [
+        { name: 'pig', fix: '', value: 'pig' }, 
+        { name: 'A97-欢乐购秒杀1群', fix: 'QQ', value: '626195966' }, 
+        { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
+        { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
+    ];
     const QQS = {
         '31': {
             text: '小艾-1',
@@ -525,7 +530,7 @@
         localStorage.setItem('downloadTime', new Date().toLocaleString());
     }
     if (localStorage.getItem('downloadTime')) {
-        if ((new Date().getTime() - 2 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('downloadTime')).getTime()) {
+        if ((new Date().getTime() - 1 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('downloadTime')).getTime() || new Date(localStorage.getItem('downloadTime')).getDate() != new Date().getDate()) {
             Download();
         }
     } else {
@@ -2171,13 +2176,13 @@
                 // 单手机
                 let datas = arr[0];
                 let table = getDataTable([datas])
-                setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`,table, getCon(datas, 3)]);
+                setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`, table, getCon(datas, 3)]);
                 // setCon(arr[0]);
             } else {
                 // 多手机号
                 let str = getCon(arr);
                 let table = getDataTable(arr);
-                setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`,table + str]);
+                setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`, table + str]);
             }
             // alert(JSON.stringify(arr));
         }, '.j-almightySearch')
