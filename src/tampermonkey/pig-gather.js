@@ -431,7 +431,7 @@
             // console.log(arr);
             return arr;
         },
-        // 全能搜索 keywords=[qq,phone,ww]
+        // 全能搜索得到phone keywords=[qq,phone,ww]
         almightySearch: (keywords = []) => {
             let result = [];
             if (keywords.length == 0) return result;
@@ -1127,8 +1127,8 @@
                         <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据</button>
                         <button class="search_btn j-modifyLastRecord" style="background:rebeccapurple;">修改最后一个记录</button>
-                        <div class="j-addOtherRecord"></div>
-                        <button class="search_btn j-addRecordQqWw" style="background:rebeccapurple;">创建新纪录并qq和旺旺</button>
+                        <!-- <div class="j-addOtherRecord"></div> -->
+                        <button class="search_btn j-addRecordQqWw">创建新纪录并添加qq和旺旺</button>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
@@ -1193,23 +1193,30 @@
                 $phone.value = `${fix}-${qq}`;
             }
         }, false)
-        // 不同qq查找到手机号
+        // qq改变后填充phone和旺旺
         qqAdd.querySelector('.byqq').addEventListener('input', e => {
             const qq = $byQQ.value;
-            const datas = findDatasByQq(qq);
-            // console.log(datas);
-            if (datas.length > 0) {
-                if (datas.length === 1) {
-                    const phone = datas[0][0].pig_phone;
-                    $phone.value = phone;
-                    const wwExecs = findWWExecs(DATA[phone]);
-                    qqAdd.querySelector('.j-order-search .ww-id').value = wwExecs.join('，');
-                } else {
-                    $phone.value = '有多个手机号';
-                }
-            } else {
-                $phone.value = '';
-            }
+            const phones = Tools.almightySearch([qq]);
+            if(phones.length==0)return $phone.value = 0;
+            if(phones.length>1)return $phone.value = '有多个手机号';
+            const phone = phones[0];
+            $phone.value = phone;
+            const wws = Tools.findWwsByPhones([phone]);
+            qqAdd.querySelector('.j-order-search .ww-id').value = wws.join('，');
+            // const datas = findDatasByQq(qq);
+            // // console.log(datas);
+            // if (datas.length > 0) {
+            //     if (datas.length === 1) {
+            //         const phone = datas[0][0].pig_phone;
+            //         $phone.value = phone;
+            //         const wwExecs = findWWExecs(DATA[phone]);
+            //         qqAdd.querySelector('.j-order-search .ww-id').value = wwExecs.join('，');
+            //     } else {
+            //         $phone.value = '有多个手机号';
+            //     }
+            // } else {
+            //     $phone.value = '';
+            // }
 
         })
         // 旺旺号变化之后的反应
@@ -2132,18 +2139,10 @@
         }, '.j-addComment')
         {
             // 添加非手机记录
-            const $addOtherRecordBtn = qqAdd.querySelector('.j-addOtherRecord');
-            Tools.addRecordBtn(() => {
-                return $phone.value;
-            }, $addOtherRecordBtn, '添加非手机记录');
-            // .addEventListener('click',(e)=>{
-            //     const $btn = e.target;
-            //     console.log($btn);
-            //     console.log($phone);
-            //     const phone = $phone.value;
-            //     Tools.addRecord(phone,$btn);
-            //     // $btn.append(document.createElement('button'))
-            // },false)
+            // const $addOtherRecordBtn = qqAdd.querySelector('.j-addOtherRecord');
+            // Tools.addRecordBtn(() => {
+            //     return $phone.value;
+            // }, $addOtherRecordBtn, '添加非手机记录');
         }
         // 模糊搜索用户备注
         // addEventListener(qqAdd, 'click', e => {
