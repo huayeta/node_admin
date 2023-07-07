@@ -663,7 +663,7 @@
     // 人性化的做单记录数据
     const humanDatas = (datas, qq = "1", pig_type = 'TB') => {
         // 备注数据
-        let notes = findNotes(datas, pig_type);
+        let notes = Tools.findNotesByDatas(datas, pig_type);
         // pig_type做单数据
         let records = getDatasByPigType(datas, pig_type);
         // 找到所有的qq号
@@ -681,7 +681,7 @@
         function formateDatasByPigType(datas, pig_type) {
             const records = getDatasByPigType(datas, pig_type);
             // 备注数据
-            let notes = findNotes(datas, pig_type);
+            let notes = Tools.findNotesByDatas(datas, pig_type);
             // 记录颜色
             const record_color = records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '';
             // 切换时间
