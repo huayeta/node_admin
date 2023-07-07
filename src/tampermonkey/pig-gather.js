@@ -23,10 +23,10 @@
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
     const COMETYPE = [
-        { name: 'pig', fix: '', value: 'pig' }, 
-        { name: 'A97-欢乐购秒杀1群', fix: 'QQ', value: '626195966' }, 
+        { name: 'pig', fix: '', value: 'pig' },
+        { name: 'A97-欢乐购秒杀1群', fix: 'QQ', value: '626195966' },
         { name: 'A97-欢乐购秒杀2群', fix: 'QQ', value: '244917614' },
-        { name: 'A97-欢乐购秒杀11群', fix: 'QQ', value: '1074927054' }, 
+        { name: 'A97-欢乐购秒杀11群', fix: 'QQ', value: '1074927054' },
         { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
     ];
@@ -266,6 +266,17 @@
             }
             return result;
         },
+        // 添加不同的qq
+        addQq: (pig_phone, pig_qq) => {
+            if (Tools.alertFuc({ pig_phone, pig_qq })) return false;
+            if (!DATA[pig_phone]) return alert('不存在小猪数据');
+            DATA[phone].push({
+                pig_phone: pig_phone,
+                pig_qq: pig_qq,
+            })
+            storageData();
+            return true;
+        },
         // 找到phone数据里面的note数据
         findNotesByDatas: (datas, pig_type) => {
             const arr = [];
@@ -296,23 +307,40 @@
             storageData();
             return true;
         },
+        // 添加做单记录
+        addRecord:(phone)=>{
+            if(Tools.alertFuc({phone}))return;
+            if (DATA[phone]){
+                alert('已经存在记录~');
+                return false;
+            }
+            DATA[phone] = [];
+            storageData();
+            return true;
+        },
         // 添加做单记录按钮
-        addRecord: (phone, parentNode, text) => {
+        addRecordBtn: (phone, parentNode, text) => {
             const button = document.createElement('button');
             button.className = 'search_btn';
             button.innerHTML = text || "添加记录";
             button.addEventListener('click', () => {
                 if (typeof phone == 'function') phone = phone();
-                if (Tools.alertFuc({ phone })) return;
-                if (DATA[phone]) return alert('已经存在记录~');
-                DATA[phone] = [];
-                storageData();
-                alert('添加记录成功~')
+                const result = Tools.addRecord(phone);
+                if(result)alert('添加记录成功~');
             }, false)
             if (parentNode) {
                 parentNode.append(button);
             }
             return button;
+        },
+        // 添加新做单记录并添加qq和旺旺
+        addRecordQqWw:(phone,qq,ww_exec)=>{
+            if (Tools.alertFuc({ phone, qq,ww_exec })) return false;
+            //添加自定义做单记录
+            if(Tools.addRecord(phone) && Tools.addQq(phone,qq) && Tools.addWW(phone,ww_exec)){
+                return true;
+            }
+            return false;
         },
         // 判断是否是做单记录
         isRecord: (data) => {
@@ -785,7 +813,7 @@
                 const Div = document.createElement('div');
                 Div.className = 'search';
                 Div.style = 'margin-top: 10px;';
-                Tools.addRecord(phone, Div);
+                Tools.addRecordBtn(phone, Div);
                 $phone.append(Div);
             }
 
@@ -1100,6 +1128,7 @@
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据</button>
                         <button class="search_btn j-modifyLastRecord" style="background:rebeccapurple;">修改最后一个记录</button>
                         <div class="j-addOtherRecord"></div>
+                        <button class="search_btn j-addRecordQqWw" style="background:rebeccapurple;">创建新纪录并qq和旺旺</button>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
@@ -1739,24 +1768,8 @@
         qqAdd.querySelector('.add').addEventListener('click', (e) => {
             const qq = qqAdd.querySelector('.qq').value;
             const phone = $phone.value;
-            // console.log(qq,phone);
-            if (Tools.alertFuc({ qq, phone })) return;
-            // if (!phone) return alert('手机号不能为空');
-            if (!DATA[phone]) {
-                alert('找不到对应的记录~')
-                return;
-                // DATA[phone] = [];
-            }
-            // if (!qq) {
-            //     alert('qq不能为空')
-            //     return;
-            // }
-            DATA[phone].push({
-                pig_phone: phone,
-                pig_qq: qq,
-            })
-            storageData();
-            alert('qq添加成功');
+            const result = Tools.addQq(phone,qq);
+            if(result)alert('qq添加成功');
         }, false)
         // 删除qq
         qqAdd.querySelector('.del').addEventListener('click', e => {
@@ -2120,7 +2133,7 @@
         {
             // 添加非手机记录
             const $addOtherRecordBtn = qqAdd.querySelector('.j-addOtherRecord');
-            Tools.addRecord(() => {
+            Tools.addRecordBtn(() => {
                 return $phone.value;
             }, $addOtherRecordBtn, '添加非手机记录');
             // .addEventListener('click',(e)=>{
@@ -2160,6 +2173,14 @@
             Tools.modifyLastRecord(phone, { shop_label, qq_exec_pre, come_type });
             alert('修改成功');
         }, '.j-modifyLastRecord')
+        // 创建新纪录并添加qq和旺旺
+        addEventListener(qqAdd,'click',e=>{
+            const phone = $phone.value;
+            const qq = $byQQ.value;
+            const ww = $ww.value;
+            const result = Tools.addRecordQqWw(phone,qq,ww);
+            if(result) alert('添加新纪录并添加qq和旺旺成功');
+        },'.j-addRecordQqWw')
         // 全能搜索
         addEventListener(qqAdd, 'click', e => {
             const qq = $byQQ.value;
