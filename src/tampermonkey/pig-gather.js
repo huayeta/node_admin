@@ -1223,7 +1223,7 @@
         qqAdd.querySelector('.j-order-search .ww-id').addEventListener('input', e => {
             const wwExec = e.target.value;
             if (wwExec) {
-                const phoneArr = Tools.findPhonesByWW(wwExec);
+                const phoneArr = Tools.almightySearch([wwExec]);
                 // console.log(phoneArr);
                 if (phoneArr.length > 0) {
                     $phone.value = phoneArr.join(',');
