@@ -1010,8 +1010,8 @@
                                 <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_shop_label_last || ''}</td>
                             </tr> -->
                             <tr>
-                                <td>做单店铺顺序</td>
-                                <td style="width:170px;padding:10px;">${humanData.typeDatas.TB.record_shop_labels || ''}</td>
+                                <td style="min-width:86px;">做单店铺顺序</td>
+                                <td style="max-width:170px;padding:10px;">${humanData.typeDatas.TB.record_shop_labels || ''}</td>
                                 <td>${humanData.typeDatas.JD.record_shop_labels || ''}</td>
                             </tr>
                             <tr>
