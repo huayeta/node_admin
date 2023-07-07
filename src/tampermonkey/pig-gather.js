@@ -25,6 +25,8 @@
     const COMETYPE = [
         { name: 'pig', fix: '', value: 'pig' }, 
         { name: 'A97-欢乐购秒杀1群', fix: 'QQ', value: '626195966' }, 
+        { name: 'A97-欢乐购秒杀2群', fix: 'QQ', value: '244917614' },
+        { name: 'A97-欢乐购秒杀11群', fix: 'QQ', value: '1074927054' }, 
         { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
     ];
