@@ -217,7 +217,7 @@
             }
             if (tx == true) return alert('已经添加过旺旺号了');
             if (!second) return alert('没有添加过旺旺号');
-            DATA[pig_phone].splice(second - 1, 0, { pig_phone: pig_phone, ww_exec: ww_exec });
+            DATA[pig_phone].splice(second, 0, { pig_phone: pig_phone, ww_exec: ww_exec });
             storageData();
             return true;
         },
@@ -270,14 +270,14 @@
         addQq: (pig_phone, pig_qq) => {
             if (Tools.alertFuc({ pig_phone, pig_qq })) return false;
             if (!DATA[pig_phone]) return alert('不存在小猪数据');
-            DATA[phone].push({
+            DATA[pig_phone].push({
                 pig_phone: pig_phone,
                 pig_qq: pig_qq,
             })
             storageData();
             return true;
         },
-        // 找到phone数据里面的note数据
+        // 找到phone数据里面的note数据obj
         findNotesByDatas: (datas, pig_type) => {
             const arr = [];
             datas.forEach(data => {
@@ -663,7 +663,7 @@
     // 人性化的做单记录数据
     const humanDatas = (datas, qq = "1", pig_type = 'TB') => {
         // 备注数据
-        let notes = Tools.findNotesByDatas(datas, pig_type);
+        let notes = findNotes(datas, pig_type);
         // pig_type做单数据
         let records = getDatasByPigType(datas, pig_type);
         // 找到所有的qq号
@@ -681,7 +681,7 @@
         function formateDatasByPigType(datas, pig_type) {
             const records = getDatasByPigType(datas, pig_type);
             // 备注数据
-            let notes = Tools.findNotesByDatas(datas, pig_type);
+            let notes = findNotes(datas, pig_type);
             // 记录颜色
             const record_color = records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '';
             // 切换时间
