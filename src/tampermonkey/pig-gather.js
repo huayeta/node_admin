@@ -277,6 +277,16 @@
             storageData();
             return true;
         },
+        // 找到所有qqs
+        findQqsByDatas : (datas, qq) => {
+            const arr = [];
+            datas.forEach(data => {
+                if (data.pig_qq && data.pig_qq != qq && !arr.includes(data.pig_qq)) {
+                    arr.push(data.pig_qq);
+                }
+            })
+            return arr;
+        },
         // 找到phone数据里面的note数据obj
         findNotesByDatas: (datas, pig_type) => {
             const arr = [];
@@ -819,10 +829,18 @@
 
             return;
         }
-        const humans = humanDatas(DATA[phone], qq, pig_type);
+        const humans = humanDatas(DATA[phone], '1', pig_type);
         const Datas = humans.records;
         // console.log(DATA[phone], qq);
-        const Qqs = humans.qqs;
+        const Qqs = humans.qqs.filter(qq_tmp=>qq_tmp!=qq);
+        {
+            // 当是等待完成列表
+            if(type == 2){
+                if(!humans.qqs.includes(qq)){
+                    Tools.addQq(phone,qq);
+                }
+            }
+        }
         // console.log(Qqs);
         // console.log(arr);
         // 如果有不一样的qq号
@@ -1197,12 +1215,16 @@
         qqAdd.querySelector('.byqq').addEventListener('input', e => {
             const qq = $byQQ.value;
             const phones = Tools.almightySearch([qq]);
-            if(phones.length==0)return $phone.value = 0;
+            if(phones.length==0){
+                $phone.value = '';
+                $ww.value = '';
+                return;
+            }
             if(phones.length>1)return $phone.value = '有多个手机号';
             const phone = phones[0];
             $phone.value = phone;
             const wws = Tools.findWwsByPhones([phone]);
-            qqAdd.querySelector('.j-order-search .ww-id').value = wws.join('，');
+            $ww.value = wws.join('，');
             // const datas = findDatasByQq(qq);
             // // console.log(datas);
             // if (datas.length > 0) {
