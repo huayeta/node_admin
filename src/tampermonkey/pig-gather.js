@@ -17,7 +17,7 @@
     //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? ,is_comment?:0|1，is_remind?:'-1'是否提醒} 正常小猪单
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
@@ -480,9 +480,10 @@
         const pig_register_time = $tr.querySelector('td:nth-child(10)').textContent;
         const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
         const pig_type = Tools.getPigType($tr.querySelector('td:nth-child(3)').textContent);
+        const real_name = trim($tr.querySelector('td:nth-child(6)').textContent);
 
 
-        let result = { pig_id, pig_phone, pig_qq, pig_over_time, pig_register_time, pig_type };
+        let result = { pig_id, pig_phone,real_name, pig_qq, pig_over_time, pig_register_time, pig_type };
         let arr = /^.&?.?，(\d+?)\：/.exec(pig_title);
         if (arr) {
             result.qq_exec_pre = arr[1];
