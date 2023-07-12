@@ -296,6 +296,17 @@
             })
             return arr;
         },
+        // 找到真实姓名
+        findRealNameByDatas: (datas)=>{
+            const real_name = '';
+            datas.forEach(data=>{
+                if(data.real_name){
+                    real_name = data.real_name;
+                    return;
+                }
+            })
+            return real_name;
+        },
         getPigType: (str) => {
             let pig_type = str;
             if (pig_type.search('TB') !== -1) {
@@ -681,6 +692,8 @@
         let qqs = findQqs(datas, qq);
         // 找到不同的手机号
         let diffPhones = findDiffPhonesByDatas(datas);
+        // 找到真实姓名
+        const real_name = Tools.findRealNameByDatas(datas);
         // 找到注册时间
         let register_time = '';
         for (let i = 0; i < records.length; i++) {
@@ -723,6 +736,7 @@
         const wws = Tools.findWwsByDatas(datas, true);
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
+            real_name:real_name,
             qqs: qqs,
             notes: notes.map(note => note.pig_note),
             records: records,
@@ -995,6 +1009,7 @@
                 return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
             }, '')}
                 </td>
+                <td>${humanData.real_name}</td>
                 <td>
                     <table style="width:100%;">
                         <tbody>
@@ -1065,6 +1080,7 @@
                     <th>手机号</th>
                     <th>全部qq号</th>
                     <th>旺旺号</th>
+                    <th>真实姓名</th>
                     <th>做单数据</th>
                     <th>注册时间</th>
                 </tr>
