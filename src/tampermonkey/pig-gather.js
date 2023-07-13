@@ -298,7 +298,7 @@
         },
         // 找到真实姓名
         findRealNameByDatas: (datas)=>{
-            const real_name = '';
+            let real_name = '';
             datas.forEach(data=>{
                 if(data.real_name){
                     real_name = data.real_name;
@@ -413,7 +413,7 @@
             storageData();
         },
         // 修改最后一个记录
-        modifyLastRecord: (phone, obj = {}) => {
+        modifyDataToLastRecord: (phone, obj = {}) => {
             Object.assign(DATA[phone][0], obj);
             storageData();
         },
@@ -794,6 +794,7 @@
         const qq = trim($qq.textContent);
         const pig_id = trim($tr.querySelector(`td:nth-child(${type == 3 ? 2 : 1})`).textContent);
         const pig_type = Tools.getPigType(trim($tr.querySelector(`td:nth-child(${type == 3 ? 4 : 3})`).textContent));
+        const real_name = trim($tr.querySelector(`td:nth-child(${type==5? (phone_index+1):(qq_index-1)})`).textContent);
         // console.log(pig_type)
         // console.log(phone, qq);
         // console.log(Datas);
@@ -851,6 +852,7 @@
         {
             // 当是等待完成列表
             if(type == 2){
+                // 如果存在没收录的qq直接收录
                 if(!humans.qqs.includes(qq)){
                     Tools.addQq(phone,qq);
                 }
@@ -907,6 +909,13 @@
             // 格式化注册时间到现在多久了
 
             return;
+        }
+        // 当是等待完成
+        if(type == 2){
+            // 如果存在没收录的真实姓名直接收录
+            if(!Datas[0].real_name && real_name){
+                Tools.modifyDataToLastRecord(phone,{real_name});
+            }
         }
         // 标注已做单数量
         const $completeTr = $tr.querySelector('td:nth-child(6)');
@@ -2208,7 +2217,7 @@
             const qq_exec_pre = $qqExecPre.value;
             const come_type = $comeType.value;
             if (Tools.alertFuc({ phone, shop_label, qq_exec_pre, come_type })) return;
-            Tools.modifyLastRecord(phone, { shop_label, qq_exec_pre, come_type });
+            Tools.modifyDataToLastRecord(phone, { shop_label, qq_exec_pre, come_type });
             alert('修改成功');
         }, '.j-modifyLastRecord')
         // 创建新纪录并添加qq和旺旺
