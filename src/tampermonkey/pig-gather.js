@@ -910,8 +910,8 @@
 
             return;
         }
-        // 当是等待完成
-        if(type == 2){
+        // 当是等待完成或已经完成
+        if(type == 2 || type == 5){
             // 如果存在没收录的真实姓名直接收录
             if(!Datas[0].real_name && real_name){
                 Tools.modifyDataToLastRecord(phone,{real_name});
