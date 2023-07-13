@@ -21,7 +21,7 @@
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度
     const is_save_photo = true; // 是否保存评论
-    const sleep_time = 6000; //延迟多久开始下一页拉去
+    const sleep_time = 12000; //延迟多久开始下一页拉去
     window.is_comment_download_now = false; // 是否立即触发下载
     let Counter = 0; // 下载图片的进度
     let ImgLength = 0; // 总图片的length
