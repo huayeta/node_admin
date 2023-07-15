@@ -5,6 +5,7 @@
 // @description  汇总数据，并持久化保存，1周自动下载一次
 // @author       You
 // @match        http://116.63.136.65/home/member/fangdan.html
+// @match        http://www.mypig.com/home/member/fangdan.html
 // @grant        none
 // ==/UserScript==
 
@@ -966,7 +967,7 @@
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (true || index < 100) formatTr($tr, 5, 9, 14, 5);
+            if (false || index < 30) formatTr($tr, 5, 9, 14, 5);
         })
     }
     startFormatCompleteCon();
@@ -2365,6 +2366,30 @@
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
     AddNote();
+    // // 评论相关的脚本
+    // const AddComment = ()=>{
+    //     const Div = document.createElement('div');
+    //     Div.innerHTML = `
+    //         <style>
+    //             .m-pig-comment>.comment-header{
+    //                 margin-bottom: 10px;
+    //             }
+    //             .m-pig-comment>.comment-header>span{
+    //                 display:inline-block;
+    //                 padding: 5px 10px;
+    //                 border-right: 1px solid gray;
+    //             }
+    //         </style>
+    //         <div class="m-pig-comment j-pig-comment">
+    //             <div class="comment-header">
+    //                 <span>肛瘘-1</span><span>肛瘘-2</span><span>痔疮-1</span><span>痔疮-2</span>
+    //             </div>
+    //         </div>
+    //     `;
+    //     const $pigComment = Div.querySelector('.j-pig-comment');
+    //     document.querySelector('.release').prepend(Div);
+    // }
+    // AddComment();
     const cshLocal = (obj) => {
         Object.keys(obj).forEach(key => {
             localStorage.setItem(key, JSON.stringify(obj[key]));

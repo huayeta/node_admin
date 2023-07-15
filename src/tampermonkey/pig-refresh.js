@@ -7,6 +7,9 @@
 // @match        http://116.63.136.65/home/member/my_wallet.html
 // @match        http://116.63.136.65/home/member/fangdan.html
 // @match        http://116.63.136.65/home/cash/cardlist_uncheck.html
+// @match        http://www.mypig.com/home/member/my_wallet.html
+// @match        http://www.mypig.com/home/member/fangdan.html
+// @match        http://www.mypig.com/home/cash/cardlist_uncheck.html
 // @grant        none
 // ==/UserScript==
 
@@ -15,7 +18,7 @@
     var $span = $('span[onclick^="isPtTop"]');
     const pt_top_zuanshi = $('#pt_top_zuanshi').text();
     const span_length = $span.length;
-    const time = 500000;
+    const time = 1000000;
     const ptGood = goods_id => {
         var url = '/home/member/ispttop.html';
         return new Promise((resolve, reject) => {
