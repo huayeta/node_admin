@@ -300,12 +300,12 @@
         // 找到真实姓名
         findRealNameByDatas: (datas)=>{
             let real_name = '';
-            datas.forEach(data=>{
+            for(let data of datas){
                 if(data.real_name){
                     real_name = data.real_name;
-                    return;
+                    break;
                 }
-            })
+            }
             return real_name;
         },
         getPigType: (str) => {
@@ -1127,7 +1127,7 @@
                         <div><input class="search_input note" placeholder="用户备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
                     </div>
                     <div>
-                        <div style="margin-bottom: 10px;"><input class="search_input gnote" placeholder="网页备注" /><button class="search_btn add-gnote">添加网页备注</button></div>
+                        <div style="margin-bottom: 10px;"><input class="search_input j-gnote" placeholder="网页备注/真实姓名" /><button class="search_btn add-gnote">添加网页备注</button><button class="search_btn j-real-name-add-btn" style="background:rebeccapurple;margin-left:15px;">修改真实姓名</button></div>
                         <div><select class="search_input qq_exec_pre" style="width:190px;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button></div>    
                     </div>
                 </div>
@@ -1159,6 +1159,9 @@
                         .u-con p{
                             line-height: 1.5;
                         }
+                        .gray{
+                            color:#d9d6d6;
+                        }
                     </style>
                     <!-- <div style="color:darkmagenta; ">${JSON.stringify(qqs_obj)}</div> -->
                     <div class="m-findData search">
@@ -1170,19 +1173,19 @@
                         <button class="search_btn download" style="background:rebeccapurple;">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="">筛选qq</button>
                         <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq</button>
-                        <button class="search_btn j-gatherShop" style="">查询店铺做单数据</button>
-                        <button class="search_btn j-modifyLastRecord" style="background:rebeccapurple;">修改最后一个记录</button>
+                        <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
+                        <button class="search_btn j-modifyLastRecord" style="background:rebeccapurple;">修改最后一个记录67</button>
                         <!-- <div class="j-addOtherRecord"></div> -->
                         <button class="search_btn j-addRecordQqWw">创建新纪录并添加qq和旺旺</button>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
-                        <select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
-                        <select class="search_input j-screen-time"><option value="1" selected>筛选正序</option><option value="-1">筛选逆序</option></select>
-                        <input class="search_input j-search-time" placeholder="搜索时间" value="2023-04-01" type="date" />
-                        <select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
-                        <select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
-                        <select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
-                        <select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`)}</select>
+                        <span class="gray">1：</span><select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
+                        <span class="gray">2：</span><select class="search_input j-screen-time"><option value="1" selected>筛选正序</option><option value="-1">筛选逆序</option></select>
+                        <span class="gray">3：</span><input class="search_input j-search-time" placeholder="搜索时间" value="2023-04-01" type="date" />
+                        <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
+                        <span class="gray">5：</span><select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
+                        <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
+                        <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`)}</select>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -1225,6 +1228,7 @@
         const $comeType = qqAdd.querySelector('.j-come-type');
         const $qqExecPre = qqAdd.querySelector('.qq_exec_pre');
         const $searchTime = qqAdd.querySelector('.j-search-time');
+        const $gNote = qqAdd.querySelector('.j-gnote');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -1884,7 +1888,7 @@
         }, false)
         // 添加网页备注
         qqAdd.querySelector('.add-gnote').addEventListener('click', (e) => {
-            const gnote = qqAdd.querySelector('.gnote').value;
+            const gnote = $gNote.value;
             if (!gnote) return;
             const notes = localStorage.getItem('notes') ? JSON.parse(localStorage.getItem('notes')) : [];
             notes.push(gnote);
@@ -1935,89 +1939,6 @@
         $btns.querySelector('.download').addEventListener('click', (e) => {
             Download();
         }, false)
-        // phone查询做单记录
-        // $btns.querySelector('.j-findPhoneBtn').addEventListener('click', (e) => {
-        //     const phone = $phone.value;
-        //     if (phone && DATA[phone]) {
-        //         // console.log(DATA[phone]);
-        //         // alert(JSON.stringify(DATA[phone]));
-        //         let datas = DATA[phone];
-        //         let table = getDataTable([datas])
-        //         setCon([table, getCon(datas, 3)]);
-        //     } else {
-        //         // alert('没找到记录');
-        //         setCon(['没找到做单记录']);
-        //         // location.reload();
-        //     }
-        // })
-        // qq查询做单记录
-        // $btns.querySelector('.j-findQqBtn').addEventListener('click', () => {
-        //     const qq = $byQQ.value;
-        //     if (qq) {
-        //         const arr = findDatasByQq(qq);
-        //         // console.log(arr,qq)
-        //         if (arr.length > 0) {
-        //             // 判断是否有一个qq多个手机的情况存在
-        //             // console.log(arr);
-        //             if (arr.length === 1) {
-        //                 // 单手机
-        //                 let datas = arr[0];
-        //                 let table = getDataTable([datas])
-        //                 setCon([table, getCon(datas, 3)]);
-        //                 // setCon(arr[0]);
-        //             } else {
-        //                 // 多手机号
-        //                 let str = getCon(arr);
-        //                 let table = getDataTable(arr);
-        //                 setCon([table + str]);
-        //             }
-        //             // alert(JSON.stringify(arr));
-        //         } else {
-        //             // alert('没找到记录');
-        //             setCon(['没找到做单记录'])
-        //             // location.reload();
-        //         }
-        //     }
-        // })
-        // 查询不同的qq
-        // $btns.querySelector('.j-findQqs').addEventListener('click', () => {
-        //     const qq = $byQQ.value;
-        //     if (qq) {
-        //         const arr = findDatasByQq(qq);
-        //         // console.log(arr,qq)
-        //         if (arr.length > 0) {
-        //             // 判断是否有一个qq多个手机的情况存在
-        //             // console.log(arr);
-        //             if (arr.length === 1) {
-        //                 // setCon(arr[0]);
-        //                 const datas = arr[0];
-        //                 const qqs = findQqs(datas, qq);
-        //                 if (qqs.length > 0) {
-        //                     setCon(qqs);
-        //                 } else {
-        //                     setCon(['没有找到不同的qq'])
-        //                 }
-        //             } else {
-        //                 // setCon(arr);
-        //                 let results = [];
-        //                 arr.forEach(datas => {
-        //                     const qqs = findQqs(datas, qq);
-        //                     if (qqs.length > 0) {
-        //                         results.push(qqs);
-        //                     } else {
-        //                         results.push(['没有找到不同的qq'])
-        //                     }
-        //                 })
-        //                 setCon(results);
-        //             }
-        //             // alert(JSON.stringify(arr));
-        //         } else {
-        //             // alert('没找到记录');
-        //             setCon(['没找到做单记录'])
-        //             // location.reload();
-        //         }
-        //     }
-        // })
         function copyToClipboard(text) {
             const domIpt = document.createElement('textarea');
             domIpt.style.position = 'absolute';
@@ -2161,7 +2082,7 @@
             if (arr.length == 0) return setCon(['没有找到做单记录']);
             let dyStr = '';
             if (arr.length > 5) {
-                dyStr += `<div style="margin-bottom: 10px; color:gray;">....还剩下<span style="color:red;">${arr.length - 5}</span>个.....</div>`
+                dyStr += `<div style="margin-bottom: 10px; color:gray;text-align: center">....还剩下<span style="color:red;">${arr.length - 5}</span>个.....</div>`
             }
             // console.log(arr);
             const phoneDatas = [];
@@ -2221,6 +2142,13 @@
             Tools.modifyDataToLastRecord(phone, { shop_label, qq_exec_pre, come_type });
             alert('修改成功');
         }, '.j-modifyLastRecord')
+        // 添加真实名字
+        addEventListener(qqAdd,'click',e=>{
+            const real_name = $gNote.value;
+            const phone = $phone.value;
+            if(Tools.alertFuc({real_name,phone})) return;
+            Tools.modifyDataToLastRecord(phone,{real_name});
+        },'.j-real-name-add-btn')
         // 创建新纪录并添加qq和旺旺
         addEventListener(qqAdd,'click',e=>{
             const phone = $phone.value;
