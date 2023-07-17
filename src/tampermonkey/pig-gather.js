@@ -15,10 +15,10 @@
     // {
     //     phone：[
     //         {pig_phone,ww_exec,is_del?:'1'} 做单旺旺号
-    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒} 添加做单记录            
+    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type? ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
+    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
@@ -187,6 +187,10 @@
         },
         copyObj: (obj) => {
             return JSON.parse(JSON.stringify(obj));
+        },
+        // 判断是否是一个日期字符串
+        isDateValid:(...val)=>{
+            return !Number.isNaN(new Date(...val).valueOf());
         },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
@@ -489,8 +493,8 @@
         const pig_title = $tr.querySelector('td:nth-child(2)').textContent;
         const pig_phone = trim($tr.querySelector('td:nth-child(5)').textContent);
         const pig_qq = trim($tr.querySelector('td:nth-child(9)').textContent);
-        const pig_register_time = $tr.querySelector('td:nth-child(10)').textContent;
-        const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
+        const pig_register_time = '';
+        const pig_over_time = $tr.querySelector('td:nth-child(13)').textContent;
         const pig_type = Tools.getPigType($tr.querySelector('td:nth-child(3)').textContent);
         const real_name = trim($tr.querySelector('td:nth-child(6)').textContent);
 
@@ -782,12 +786,12 @@
     }
     function trim(str) {
         if (!str) return str;
-        str = str.replace(/\ +/g, '');
-        str = str.replace(/[\r\n\t]/g, '');
+        // str = str.replace(/\ +/g, '');
+        // str = str.replace(/[\r\n\t]/g, '');
         str = str.trim();
         return str;
     }
-    const formatTr = ($tr, phone_index = 5, qq_index = 8, date_index = 14, type) => {
+    const formatTr = ($tr, phone_index = 5, qq_index = 8, date_index = 13, type) => {
         // console.log($tr);
         const $phone = $tr.querySelector(`td:nth-child(${phone_index})`);
         const phone = trim($phone.textContent);
@@ -918,6 +922,18 @@
                 Tools.modifyDataToLastRecord(phone,{real_name});
             }
         }
+        // 当时已经完成
+        if(type == 5){
+            // 判断完成时间是否是date的bug
+            // if(!Tools.isDateValid(humans.typeDatas[pig_type].pig_over_time)){
+            //     const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
+            //     const pig_over_time = trim($registrTr.textContent);
+            //     // console.log(humans.pig_over_time, phone,qq,pig_over_time);
+            //     if(Tools.isDateValid(pig_over_time)){
+            //         Tools.modifyDataToLastRecord(phone,{pig_over_time});
+            //     }
+            // }
+        }
         // 标注已做单数量
         const $completeTr = $tr.querySelector('td:nth-child(6)');
         const div = document.createElement('div');
@@ -942,7 +958,7 @@
         if (!$PendingTrs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($PendingTrs, ($tr, index) => {
-            formatTr($tr, 5, 8, 14, 2);
+            formatTr($tr, 5, 8, 13, 2);
         })
         // formatPendingTr($PendingTrs[0]);
     }
@@ -955,7 +971,7 @@
         if (!$Trs) return;
         // console.log($Trs);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            formatTr($tr, 6, 9, 14, 3);
+            formatTr($tr, 6, 9, 13, 3);
         })
     }
     startFormatAuditingCon();
@@ -967,7 +983,7 @@
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (false || index < 30) formatTr($tr, 5, 9, 14, 5);
+            if (false || index < 30) formatTr($tr, 5, 9, 13, 5);
         })
     }
     startFormatCompleteCon();
@@ -979,7 +995,7 @@
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (index < 20) formatTr($tr, 5, 7, 12);
+            if (index < 20) formatTr($tr, 5, 7, 11);
         })
     }
     startFormatCancelCon();
@@ -1171,8 +1187,8 @@
                         <!-- <button class="search_btn j-searchNote" style="background:rebeccapurple;">模糊搜索用户备注</button>-->
                         <!--<button class="search_btn j-findQqs" style="">查询不同的qq</button>-->
                         <button class="search_btn download" style="background:rebeccapurple;">下载数据</button>
-                        <button class="search_btn j-gatherQqs" style="">筛选qq</button>
-                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq</button>
+                        <button class="search_btn j-gatherQqs" style="">筛选qq123</button>
+                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq123</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
                         <button class="search_btn j-modifyLastRecord" style="background:rebeccapurple;">修改最后一个记录67</button>
                         <!-- <div class="j-addOtherRecord"></div> -->
@@ -2148,6 +2164,7 @@
             const phone = $phone.value;
             if(Tools.alertFuc({real_name,phone})) return;
             Tools.modifyDataToLastRecord(phone,{real_name});
+            alert('修改真实姓名成功');
         },'.j-real-name-add-btn')
         // 创建新纪录并添加qq和旺旺
         addEventListener(qqAdd,'click',e=>{
