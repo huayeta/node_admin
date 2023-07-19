@@ -302,15 +302,15 @@
             return arr;
         },
         // 找到真实姓名
-        findRealNameByDatas: (datas)=>{
-            let real_name = '';
+        findRealNamesByDatas: (datas)=>{
+            let real_name_arr = [];
             for(let data of datas){
                 if(data.real_name){
-                    real_name = data.real_name;
-                    break;
+                    real_name_arr.push(data.real_name);
                 }
             }
-            return real_name;
+            // 去重
+            return real_name_arr=[...new Set(real_name_arr)];;
         },
         getPigType: (str) => {
             let pig_type = str;
@@ -698,7 +698,7 @@
         // 找到不同的手机号
         let diffPhones = findDiffPhonesByDatas(datas);
         // 找到真实姓名
-        const real_name = Tools.findRealNameByDatas(datas);
+        const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到注册时间
         let register_time = '';
         for (let i = 0; i < records.length; i++) {
@@ -741,7 +741,7 @@
         const wws = Tools.findWwsByDatas(datas, true);
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
-            real_name:real_name,
+            real_names:real_name_arr,
             qqs: qqs,
             notes: notes.map(note => note.pig_note),
             records: records,
@@ -1035,7 +1035,7 @@
                 return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
             }, '')}
                 </td>
-                <td>${humanData.real_name}</td>
+                <td>${humanData.real_names.reduceRight((a,real_name)=>a+`<p class="j-copyText">${real_name}</p>`,'')}</td>
                 <td>
                     <table style="width:100%;">
                         <tbody>
