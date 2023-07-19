@@ -1150,7 +1150,7 @@
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
-                    <input class="search_input ww-id j-ww-exec" placeholder="旺旺号" /> <button class="search_btn ww-add
+                    <input class="search_input j-ww-exec" placeholder="旺旺号" /> <button class="search_btn ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button>
                     <button class="search_btn ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
                 </div>
@@ -1259,7 +1259,7 @@
             }
         }, false)
         // qq改变后填充phone和旺旺
-        qqAdd.querySelector('.byqq').addEventListener('input', e => {
+        $byQQ.addEventListener('input', e => {
             const qq = $byQQ.value;
             const phones = Tools.almightySearch([qq]);
             if(phones.length==0){
@@ -1267,7 +1267,10 @@
                 $ww.value = '';
                 return;
             }
-            if(phones.length>1)return $phone.value = '有多个手机号';
+            if(phones.length>1){
+                $ww.value = '';
+                return $phone.value = '有多个手机号';
+            }
             const phone = phones[0];
             $phone.value = phone;
             const wws = Tools.findWwsByPhones([phone]);
@@ -1279,7 +1282,7 @@
             //         const phone = datas[0][0].pig_phone;
             //         $phone.value = phone;
             //         const wwExecs = findWWExecs(DATA[phone]);
-            //         qqAdd.querySelector('.j-order-search .ww-id').value = wwExecs.join('，');
+            //         $ww.value = wwExecs.join('，');
             //     } else {
             //         $phone.value = '有多个手机号';
             //     }
@@ -1289,7 +1292,7 @@
 
         })
         // 旺旺号变化之后的反应
-        qqAdd.querySelector('.j-order-search .ww-id').addEventListener('input', e => {
+        $ww.addEventListener('input', e => {
             const wwExec = e.target.value;
             if (wwExec) {
                 const phoneArr = Tools.almightySearch([wwExec]);
@@ -1801,14 +1804,14 @@
         }, false)
         // 添加旺旺号
         qqAdd.querySelector('.j-order-search .ww-add').addEventListener('click', e => {
-            const wwId = qqAdd.querySelector('.j-order-search .ww-id').value;
+            const wwId = $ww.value;
             const phone = $phone.value;
             const result = Tools.addWW(phone, wwId);
             if (result) alert('添加旺旺成功');
         }, false)
         // 删除旺旺号
         qqAdd.querySelector('.j-order-search .ww-del').addEventListener('click', e => {
-            const wwId = qqAdd.querySelector('.j-order-search .ww-id').value;
+            const wwId = $ww.value;
             const phone = $phone.value;
             if (confirm('确定删除吗？')) {
                 if (!DATA[phone]) {
@@ -1826,7 +1829,7 @@
         }, false)
         // 添加倒数旺旺号
         qqAdd.querySelector('.j-order-search .ww-add-back-second').addEventListener('click', e => {
-            const wwId = qqAdd.querySelector('.j-order-search .ww-id').value;
+            const wwId = $ww.value;
             const phone = $phone.value;
             const result = Tools.addWWBackSecond(phone, wwId);
             if (result) alert('添加旺旺成功');
