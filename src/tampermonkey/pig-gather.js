@@ -499,7 +499,7 @@
         const real_name = trim($tr.querySelector('td:nth-child(6)').textContent);
 
 
-        let result = { pig_id, pig_phone,real_name, pig_qq, pig_over_time, pig_register_time, pig_type };
+        let result = { pig_id, pig_phone, pig_qq, pig_over_time, pig_register_time, pig_type,real_name };
         let arr = /^.&?.?，(\d+?)\：/.exec(pig_title);
         if (arr) {
             result.qq_exec_pre = arr[1];
@@ -1000,7 +1000,8 @@
     }
     startFormatCancelCon();
     // 得到做单的trs
-    function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }]) {
+    function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }], record_length=records.length) {
+        // console.log(record_length);
         let trs = '';
         records.forEach(datas => {
             let humanData = humanDatas(datas);
@@ -1100,6 +1101,7 @@
             `
         })
         let table = `
+        <div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${record_length}</span>个结果${record_length>records.length?`，还剩下<span style="color:red;">${record_length-records.length}</span>个待显示`:''}.....</div>
         <table class="common_table" style="margin-top:10px; margin-bottom:10px;">
             <tbody>
                 <tr>
@@ -2028,8 +2030,29 @@
                 const datas = DATA[phone];
                 if (datas.length == 0) continue;
                 let data = getLastTypeData(datas, pig_type);
-                if (data && new Date(data.pig_over_time) > startTime && new Date(data.pig_over_time) < endTime) DateRecords.push(data);
+                if (data && new Date(data.pig_over_time) > startTime && new Date(data.pig_over_time) < endTime){
+                    DateRecords.push(data)
+                }
             }
+            // 筛选符合的记录
+            DateRecords=DateRecords.filter(record => {
+                let datas = DATA[record.pig_phone];
+                const humanData = humanDatas(datas);
+                const notes = humanData.notes.join('');
+                const diffPhones = humanData.diffPhones;
+                if (
+                    (notes.indexOf('满月') == -1 || true)
+                    && notes.indexOf('删订单') == -1
+                    && (diffPhones.length == 0 || true)
+                    && !RDATA.isExist(record.pig_phone)
+                    && cb(humanData)
+                ) {
+                    if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
+                        return true;
+                    }
+                }
+            })
+            // 排序
             DateRecords.sort((a, b) => {
                 if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
                     return screen_time;
@@ -2037,30 +2060,7 @@
                     return -screen_time;
                 }
             })
-            let records = [];
-            DateRecords.forEach(record => {
-                if (records.length < 5) {
-                    let datas = DATA[record.pig_phone];
-                    const humanData = humanDatas(datas);
-                    const notes = humanData.notes.join('');
-                    const diffPhones = humanData.diffPhones;
-                    if (
-                        notes.indexOf('满月') == -1
-                        && notes.indexOf('删订单') == -1
-                        && diffPhones.length == 0
-                        && !RDATA.isExist(record.pig_phone)
-                        && cb(humanData)
-                    ) {
-                        if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
-                            records.push(datas);
-                        }
-                    }
-                } else {
-                    return;
-                }
-            })
-            // console.log(records);
-            const table = getDataTable(records, [{ text: 'copy去除', className: 'j-remindPhone' }, { text: '不再提醒', className: 'j-no-remind' }]);
+            const table = getDataTable(DateRecords.slice(0,5).map(data=>DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone' }, { text: '不再提醒', className: 'j-no-remind' }],DateRecords.length);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
@@ -2195,13 +2195,13 @@
                 // 单手机
                 let datas = arr[0];
                 let table = getDataTable([datas])
-                setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`, table, getCon(datas, 3)]);
+                setCon([table, getCon(datas, 3)]);
                 // setCon(arr[0]);
             } else {
                 // 多手机号
                 let str = getCon(arr);
                 let table = getDataTable(arr);
-                setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`, table + str]);
+                setCon([table + str]);
             }
             // alert(JSON.stringify(arr));
         }, '.j-almightySearch')
