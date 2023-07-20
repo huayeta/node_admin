@@ -858,7 +858,7 @@
             // 注册时间显示
             const register_time_p = document.createElement('p');
             register_time_p.innerHTML = `<p style="color:red;">注册时间：${pig_register_time}</p>`;
-            if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+1})`).append(register_time_p)
+            if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+2})`).append(register_time_p)
         }
         // 如果不存在就返回
         if (!DATA[phone]) {
@@ -1218,8 +1218,8 @@
                         <!-- <button class="search_btn j-searchNote" style="background:rebeccapurple;">模糊搜索用户备注</button>-->
                         <!--<button class="search_btn j-findQqs" style="">查询不同的qq</button>-->
                         <button class="search_btn download" style="background:rebeccapurple;">下载数据</button>
-                        <button class="search_btn j-gatherQqs" style="">筛选qq123</button>
-                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq123</button>
+                        <button class="search_btn j-gatherQqs" style="">筛选qq1235</button>
+                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq1235</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
                         <button class="search_btn j-modifyLastRecord" style="background:rebeccapurple;">修改最后一个记录67</button>
                         <!-- <div class="j-addOtherRecord"></div> -->
