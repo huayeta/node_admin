@@ -368,6 +368,30 @@
             }
             return false;
         },
+        // 找到注册时间
+        findRegisterTimeByDatas:(datas)=>{
+            let register_time = '';
+            for (let i = 0; i < datas.length; i++) {
+                if (datas[i].pig_register_time) {
+                    register_time = datas[i].pig_register_time;
+                    break;
+                }
+            }
+            return register_time;
+        },
+        // 获取注册时间
+        findRegisterTimeByTr:(tr)=>{
+            let register_time = '';
+            if(!tr)return register_time;
+            const result = tr.match(/!--\s+?<td>(.+?)<\/td>/);
+            if(result){
+                const time = trim(result[1]);
+                if(Tools.isDateValid(time)){
+                    register_time = time;
+                } 
+            }
+            return register_time;
+        },
         // 判断是否是做单记录
         isRecord: (data) => {
             if (data.pig_over_time) return true;
@@ -439,7 +463,7 @@
                     }
                 })
             }
-            return results;
+            return [...new Set(results)];
         },
         // 通过keyword找到所有keyword返回qq,phone,ww数组
         findAllKeywordByKeyword: (keyword) => {
@@ -455,7 +479,7 @@
                 })
             })
             // console.log(arr);
-            return arr;
+            return [...new Set(arr)];
         },
         // 全能搜索得到phone keywords=[qq,phone,ww]
         almightySearch: (keywords = []) => {
@@ -493,7 +517,7 @@
         const pig_title = $tr.querySelector('td:nth-child(2)').textContent;
         const pig_phone = trim($tr.querySelector('td:nth-child(5)').textContent);
         const pig_qq = trim($tr.querySelector('td:nth-child(9)').textContent);
-        const pig_register_time = '';
+        const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
         const pig_over_time = $tr.querySelector('td:nth-child(13)').textContent;
         const pig_type = Tools.getPigType($tr.querySelector('td:nth-child(3)').textContent);
         const real_name = trim($tr.querySelector('td:nth-child(6)').textContent);
@@ -697,16 +721,11 @@
         let qqs = findQqs(datas, qq);
         // 找到不同的手机号
         let diffPhones = findDiffPhonesByDatas(datas);
+        // let diffPhones = Tools.almightySearch(Tools.findAllKeywordByKeyword([datas[0].phone]));
         // 找到真实姓名
         const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到注册时间
-        let register_time = '';
-        for (let i = 0; i < records.length; i++) {
-            if (records[i].pig_register_time) {
-                register_time = records[i].pig_register_time;
-                break;
-            }
-        }
+        let register_time = Tools.findRegisterTimeByDatas(records);
         function formateDatasByPigType(datas, pig_type) {
             const records = getDatasByPigType(datas, pig_type);
             // 备注数据
@@ -800,6 +819,7 @@
         const pig_id = trim($tr.querySelector(`td:nth-child(${type == 3 ? 2 : 1})`).textContent);
         const pig_type = Tools.getPigType(trim($tr.querySelector(`td:nth-child(${type == 3 ? 4 : 3})`).textContent));
         const real_name = trim($tr.querySelector(`td:nth-child(${type==5? (phone_index+1):(qq_index-1)})`).textContent);
+        const register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
         // console.log(pig_type)
         // console.log(phone, qq);
         // console.log(Datas);
@@ -835,6 +855,10 @@
             }
             const $lastTd = $tr.querySelector('td:last-child');
             $lastTd.prepend($shop);
+            // 注册时间显示
+            const register_time_p = document.createElement('p');
+            register_time_p.innerHTML = `<p style="color:red;">注册时间：${register_time}</p>`;
+            if(register_time)$tr.querySelector(`td:nth-child(${qq_index+1})`).append(register_time_p)
         }
         // 如果不存在就返回
         if (!DATA[phone]) {
