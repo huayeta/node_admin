@@ -819,7 +819,7 @@
         const pig_id = trim($tr.querySelector(`td:nth-child(${type == 3 ? 2 : 1})`).textContent);
         const pig_type = Tools.getPigType(trim($tr.querySelector(`td:nth-child(${type == 3 ? 4 : 3})`).textContent));
         const real_name = trim($tr.querySelector(`td:nth-child(${type==5? (phone_index+1):(qq_index-1)})`).textContent);
-        const register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
+        const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
         // console.log(pig_type)
         // console.log(phone, qq);
         // console.log(Datas);
@@ -857,8 +857,8 @@
             $lastTd.prepend($shop);
             // 注册时间显示
             const register_time_p = document.createElement('p');
-            register_time_p.innerHTML = `<p style="color:red;">注册时间：${register_time}</p>`;
-            if(register_time)$tr.querySelector(`td:nth-child(${qq_index+1})`).append(register_time_p)
+            register_time_p.innerHTML = `<p style="color:red;">注册时间：${pig_register_time}</p>`;
+            if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+1})`).append(register_time_p)
         }
         // 如果不存在就返回
         if (!DATA[phone]) {
@@ -944,6 +944,11 @@
             // 如果存在没收录的真实姓名直接收录
             if(!Datas[0].real_name && real_name){
                 Tools.modifyDataToLastRecord(phone,{real_name});
+            }
+            // 如果没有收录注册时间直接收录
+            if(!Tools.findRegisterTimeByDatas(Datas) && pig_register_time){
+                // console.log(pig_register_time,phone);
+                // Tools.modifyDataToLastRecord(phone,{pig_register_time});
             }
         }
         // 当时已经完成
