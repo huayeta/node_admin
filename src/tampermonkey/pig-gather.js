@@ -744,6 +744,10 @@
         const pig_type = Tools.getPigType(trim($tr.querySelector(`td:nth-child(${type == 3 ? 4 : 3})`).textContent));
         const real_name = trim($tr.querySelector(`td:nth-child(${type==5? (phone_index+1):(qq_index-1)})`).textContent);
         const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
+        const $pig_task_content = $tr.querySelector(`td:nth-child(${date_index-1})`);
+        const pig_task_content = trim($pig_task_content.textContent);
+        const $pig_task_title = $tr.querySelector(`td:nth-child(${type == 3 ? 3 : 2})`);
+        const pig_task_title = trim($pig_task_title.textContent);
         // console.log(pig_type)
         // console.log(phone, qq);
         // console.log(Datas);
@@ -783,6 +787,15 @@
             const register_time_p = document.createElement('p');
             register_time_p.innerHTML = `<p style="color:red;">注册时间：${pig_register_time}</p>`;
             if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+2})`).append(register_time_p);
+            // 任务内容缩短
+            if(pig_task_content.length>100){
+                // 容错判断字数多的就是任务内容
+                $pig_task_content.innerHTML=`<p title="${pig_task_content}">${pig_task_content.slice(0,7)}任务内容...</p>`;
+            }
+            if(pig_task_title.length>25){
+                // 容差判断字数多的就是任务标题
+                $pig_task_title.innerHTML =`<p title="${pig_task_title}">${pig_task_title.slice(0,7)}任务标题...</p>`;
+            }
         }
         // 如果不存在就返回
         if (!DATA[phone]) {
@@ -911,8 +924,8 @@
         $lately.style = 'color:rgb(16, 0, 255);';
         let latelyStr = `<p>最近做单日期:${humans.typeDatas[pig_type].record_time}</p>`;
         if (humans.typeDatas[pig_type].record_qq) latelyStr += `<P>最近做单qq：${humans.typeDatas[pig_type].record_qq}</P>`;
-        if (humans.typeDatas[pig_type].record_come_type) latelyStr += `<p>最后做单渠道:${humans.typeDatas[pig_type].record_come_type}</p>`;
-        if (humans.typeDatas[pig_type].record_shop_labels) latelyStr += `<p>做单店铺顺序:${humans.typeDatas[pig_type].record_shop_labels}</p>`;
+        // if (humans.typeDatas[pig_type].record_come_type) latelyStr += `<p>最后做单渠道:${humans.typeDatas[pig_type].record_come_type}</p>`;
+        // if (humans.typeDatas[pig_type].record_shop_labels) latelyStr += `<p>做单店铺顺序:${humans.typeDatas[pig_type].record_shop_labels}</p>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
     }
