@@ -658,99 +658,7 @@
         Download();
 
     }
-    // 找到phone数据里面的不同qq数组
-    // const findQqs = (datas, qq) => {
-    //     const arr = [];
-    //     datas.forEach(data => {
-    //         if (data.pig_qq && data.pig_qq != qq && !arr.includes(data.pig_qq)) {
-    //             arr.push(data.pig_qq);
-    //         }
-    //     })
-    //     return arr;
-    // }
-    // console.log(findQqs(
-    //     [
-    //         {
-    //             "pig_id": "4733955",
-    //             "pig_phone": "13001576502",
-    //             "pig_qq": "2752648533",
-    //             "pig_register_time": "2020-05-21 17:35:50",
-    //             "pig_over_time": "2022-09-26 08:34:00"
-    //         },
-    //         {
-    //             "pig_id": "4686271",
-    //             "pig_phone": "13001576502",
-    //             "pig_qq": "222",
-    //             "pig_register_time": "2020-05-21 17:35:50",
-    //             "pig_over_time": "2022-09-08 17:52:19"
-    //         },
-    //         {
-    //             "pig_id": "4686271",
-    //             "pig_phone": "13001576502",
-    //             "pig_qq": "222",
-    //             "pig_register_time": "2020-05-21 17:35:50",
-    //             "pig_over_time": "2022-09-08 17:52:19"
-    //         }
-    //     ],"2752648533"
-    // ));
-    // 找到phone数据里面的note数据
-    // const findNotes = (datas, pig_type = 'TB') => {
-    //     const arr = [];
-    //     datas.forEach(data => {
-    //         const obj = Tools.copyObj(data);
-    //         if (!obj.pig_type) obj.pig_type = 'TB';
-    //         if (obj.pig_type == pig_type && obj.pig_note) arr.push(obj);
-    //     })
-    //     return arr;
-    // }
-    // 找到phone的旺旺账号
-    // const findWWExecs = (datas) => {
-    //     const arr = [];
-    //     datas.forEach(data => {
-    //         if (data.ww_exec) arr.push(data.ww_exec);
-    //     })
-    //     return arr;
-    // }
-    // 汇总phone数据里面的店铺数据
-    // const findShopLabels = (datas, switch_time, record_color) => {
-    //     const results = [];
-    //     datas.forEach((data, index) => {
-    //         // 添加已换号
-    //         if (switch_time) {
-    //             // 3天误差
-    //             if (new Date(new Date(switch_time).getTime() - 3 * 24 * 60 * 60 * 1000) > new Date(data.pig_over_time)) {
-    //                 results.unshift('<span style="color:red;">已换号</span>');
-    //                 switch_time = undefined;
-    //             }
-    //         }
-    //         if (data.shop_label) {
-    //             const shopLabels = data.shop_label.split('-');
-    //             // 合并店铺
-    //             if (datas[index + 1] && datas[index + 1].shop_label && datas[index + 1].shop_label.indexOf(shopLabels[0]) !== -1) {
-    //                 results.unshift((record_color && index === 0) ? `<span style="color:${record_color}">${shopLabels[1]}</span>` : shopLabels[1]);
-    //             } else {
-    //                 results.unshift((record_color && index === 0) ? `<span style="color:${record_color}">${data.shop_label}</span>` : data.shop_label);
-    //             }
-    //         }
-    //     })
-    //     return results;
-    // }
-    // 格式化等待完成的数据
-    // 找到phone对应的pig_type得做单数据
-    // const getDatasByPigType = (Datas = [], pig_type = 'TB') => {
-    //     const datas = Tools.copyObj(Datas);
-    //     return datas.filter((data, index) => {
-    //         if (!data.pig_type) data.pig_type = 'TB';
-    //         if (Tools.isRecord(data) && data.pig_type == pig_type) {
-    //             // 筛选出来连续做单错误记录
-    //             if (datas[index - 1] && new Date(new Date(data.pig_over_time).getTime() + 2 * 24 * 60 * 60 * 1000) > new Date(datas[index - 1].pig_over_time)) {
-    //                 return false;
-    //             }
-    //             return true;
-    //         }
-    //         return false;
-    //     });
-    // }
+    
     // 人性化的做单记录数据
     const humanDatas = (datas, qq = "1", pig_type = 'TB') => {
         const pig_phone = datas.length>0 && datas[0].pig_phone;
@@ -818,31 +726,7 @@
             wws: wws
         }
     }
-    // 找到不同的手机号
-    // const findDiffPhonesByDatas = (datas) => {
-    //     if (datas.length == 0) return [];
-    //     const phone = datas[0].pig_phone;
-    //     // 找到所有的qq号
-    //     let qqs = findQqs(datas, '1');
-    //     if (qqs.length == 0) return [];
-    //     // let phones_arr = findPhonesByQq(qqs[0]);
-    //     let phones_arr = [];
-    //     qqs.forEach(qq => {
-    //         // console.log(findPhonesByQq(qq))
-    //         phones_arr = phones_arr.concat(findPhonesByQq(qq))
-    //     });
-    //     // 找到所有的旺号
-    //     const wws = Tools.findWwsByPhones(phones_arr);
-    //     // 通过旺旺找到所有的phones
-    //     wws.forEach(ww => {
-    //         phones_arr = phones_arr.concat(Tools.findPhonesByWW(ww));
-    //     })
-    //     // 去重
-    //     phones_arr = [...new Set(phones_arr)];
-    //     // 去除自身phone
-    //     phones_arr = phones_arr.filter(phone_tmp => phone_tmp != phone);
-    //     return phones_arr;
-    // }
+    
     function trim(str) {
         if (!str) return str;
         // str = str.replace(/\ +/g, '');
@@ -898,7 +782,7 @@
             // 注册时间显示
             const register_time_p = document.createElement('p');
             register_time_p.innerHTML = `<p style="color:red;">注册时间：${pig_register_time}</p>`;
-            if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+2})`).append(register_time_p)
+            if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+2})`).append(register_time_p);
         }
         // 如果不存在就返回
         if (!DATA[phone]) {
@@ -963,6 +847,17 @@
             Div.innerHTML = `备注：${Notes.join('，')}`;
             $qq.append(Div);
         }
+        // 标注真实姓名
+        if(humans.real_names.length>1){
+            const arr = humans.real_names.filter(real_name_tmp=>real_name_tmp!=real_name);
+            if(arr.length>0){
+                const $realNameTr = $tr.querySelector('td:nth-child(7)');
+                const $realNameDiv = document.createElement('div');
+                $realNameDiv.style = 'color: rgb(16, 0, 255);';
+                $realNameDiv.innerHTML = `其他真实姓名：${arr.join('，')}`;
+                $realNameTr.append($realNameDiv);
+            }
+        }
         // 标注旺旺号
         if (humans.wwExecs.length > 0 && pig_type == 'TB') {
             const $wwTr = $tr.querySelector('td:nth-child(7)');
@@ -1003,6 +898,7 @@
             //     }
             // }
         }
+
         // 标注已做单数量
         const $completeTr = $tr.querySelector('td:nth-child(6)');
         const div = document.createElement('div');
@@ -1012,10 +908,11 @@
         // 最近做单日期
         const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
         const $lately = document.createElement('div');
-        $lately.style = 'color:red;';
-        let latelyStr = `<p>最近做单日期:${Datas[0].pig_over_time}</p>`;
-        if (Datas[0].qq_exec_pre) latelyStr += `<P>最近做单qq：${QQS[Datas[0].qq_exec_pre].text}</P>`;
-        if (Datas[0].shop_label) latelyStr += `<p>最后做单产品:${Datas[0].shop_label}</p>`;
+        $lately.style = 'color:rgb(16, 0, 255);';
+        let latelyStr = `<p>最近做单日期:${humans.typeDatas[pig_type].record_time}</p>`;
+        if (humans.typeDatas[pig_type].record_qq) latelyStr += `<P>最近做单qq：${humans.typeDatas[pig_type].record_qq}</P>`;
+        if (humans.typeDatas[pig_type].record_come_type) latelyStr += `<p>最后做单渠道:${humans.typeDatas[pig_type].record_come_type}</p>`;
+        if (humans.typeDatas[pig_type].record_shop_labels) latelyStr += `<p>做单店铺顺序:${humans.typeDatas[pig_type].record_shop_labels}</p>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
     }
@@ -2276,33 +2173,7 @@
         }, '.j-almightySearch')
     }
     AddQQDiv();
-    // 格式化phone的做单数据格式
-    // function formatePhoneTbDatas
-    // 通过qq查询到做单数据
-    // function findDatasByQq(qq) {
-    //     const arr = [];
-    //     const phones = Object.keys(DATA);
-    //     for (let phone of phones) {
-    //         const datas = DATA[phone];
-    //         for (let data of datas) {
-    //             if (trim(data.pig_qq) == trim(qq)) {
-    //                 arr.push(datas);
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     return arr;
-    // }
-    // 通过qq查询到手机数组
-    // function findPhonesByQq(qq) {
-    //     const arr = [];
-    //     const datas = findDatasByQq(qq);
-    //     datas.forEach(data => {
-    //         if (data.length > 0 && !arr.includes(data[0].pig_phone)) arr.push(trim(data[0].pig_phone));
-    //     })
-    //     return arr;
-    // }
-
+    
     //添加一个备注
     function addEventListener(el, eventName, eventHandler, selector) {
         if (selector) {
