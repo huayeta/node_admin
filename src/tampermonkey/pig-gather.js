@@ -18,6 +18,7 @@
     //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
+    //         {pig_phone,wx} 添加不同的wx
     //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -183,6 +184,14 @@
                     break;
                 }
             }
+            // 判断是否有pig_phone数据是否存在
+            const pig_phone = obj['pig_phone'];
+            if(keys.includes('pig_phone')){
+                if (!DATA[pig_phone]) {
+                    alert('不存在做单数据');
+                    result = true;
+                }
+            }
             return result;
         },
         copyObj: (obj) => {
@@ -291,6 +300,75 @@
                 }
             })
             return arr;
+        },
+        // 判断是否可删的联系方式
+        isDelContact:(data,key)=>{
+            let result = false;
+            if(!data || !key)return false;
+            const keys = Object.keys(data);
+            // 必须是is里面的字段
+            const is = ['pig_phone',key,'is_del'];
+            for(let k of keys){
+                if(is.includes(k)){
+                    result = true;
+                }else{
+                    result = false;
+                    break;
+                }
+            }
+            // console.log(result,keys);
+            return result;
+        },
+        // 添加联系方式
+        addContact:(pig_phone,key,value)=>{
+            if (Tools.alertFuc({ pig_phone, key,value })) return false;
+            if (!DATA[pig_phone]) return alert('不存在小猪数据');
+            DATA[pig_phone].push({
+                pig_phone: pig_phone,
+                [key]: value,
+            })
+            storageData();
+            // console.log(DATA[pig_phone]);
+            return true;
+        },
+        // 删除联系方式
+        delContact:(pig_phone,key,value)=>{
+            if (Tools.alertFuc({ pig_phone, key,value })) return false;
+            if (!DATA[pig_phone]) return alert('不存在小猪数据');
+            if (confirm('确定删除吗？')) {
+                const datas = DATA[pig_phone].filter(data => {
+                    if(data[key]==value && Tools.isDelContact(data,key))return false;
+                    return true;
+                });
+                // console.log(datas);
+                DATA[pig_phone] = datas;
+                storageData();
+                // console.log(DATA[pig_phone]);
+                // alert(`${key}=${value}删除成功`);
+                return true;
+            }
+        },
+        // 找到所有的联系方式
+        findContactsByDatas:(datas,key,excludeValue,is_complete=false)=>{
+            const arr = [];
+            datas.forEach(data => {
+                if (data[key] && data[key] != excludeValue && !arr.includes(data[key])) {
+                    arr.push(is_complete?data:data[key]);
+                }
+            })
+            return arr;
+        },
+        // 添加wx
+        // addWx:(pig_phone,wx)=>{
+        //     Tools.addContact(pig_phone,'wx',wx);
+        // },
+        // 删除wx
+        // delWx:(pig_phone,wx)=>{
+        //     Tools.delContact(pig_phone,'wx',wx);
+        // },
+        // 找到所有的wxs
+        findWxsByDatas:(datas,excludeValue,is_complete)=>{
+            return Tools.findContactsByDatas(datas,'wx',excludeValue,is_complete);
         },
         // 找到phone数据里面的note数据obj
         findNotesByDatas: (datas, pig_type='TB') => {
@@ -498,7 +576,7 @@
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (data.pig_qq == keyword || data.pig_phone == keyword || data.ww_exec == keyword || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                    if (data.pig_qq == keyword || data.pig_phone == keyword || data.ww_exec == keyword || data.wx == keyword || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
                         if (!results.includes(phone)) results.push(phone);
                     }
                 })
@@ -516,6 +594,7 @@
                     if (data.pig_qq || !arr.includes(data.pig_qq)) arr.push(data.pig_qq);
                     if (data.pig_phone || !arr.includes(data.pig_phone)) arr.push(data.pig_phone);
                     if (data.ww_exec || !arr.includes(data.ww_exec)) arr.push(data.ww_exec);
+                    if (data.wx || !arr.includes(data.wx)) arr.push(data.wx);
                 })
             })
             // console.log(arr);
@@ -675,6 +754,8 @@
         const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到注册时间
         let register_time = Tools.findRegisterTimeByDatas(records);
+        // 找到所有的wxs
+        const wxs = Tools.findWxsByDatas(datas,'',true);
         function formateDatasByPigType(datas, pig_type) {
             const records = Tools.getDatasByPigType(datas, pig_type);
             // 备注数据
@@ -723,7 +804,8 @@
             record_num: records.length,
             diffPhones: diffPhones,
             wwExecs: wws.map(ww=>ww.ww_exec),
-            wws: wws
+            wws: wws,
+            wxs:wxs,
         }
     }
     
@@ -984,6 +1066,7 @@
         let trs = '';
         records.forEach(datas => {
             let humanData = humanDatas(datas);
+            console.log(humanData);
             // console.log(humanData);
             let btnStr = '';
             if (typeof btn == 'string' && btn) {
@@ -1009,6 +1092,9 @@
                     ${humanData.qqs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${b}</p>`;
             }, '')}
+                ${humanData.wxs.length>0?`<p style="margin-top:15px; color:red;">全部wx号：</p>${humanData.wxs.reduce((a,b)=>{
+                    return a + `<p class="j-copyText">${b.wx}</p>`;
+                },'')}`:''}
                 </td>
                 <td style="color:red;">
                     ${humanData.wws.reduce((a, b) => {
@@ -1085,7 +1171,7 @@
             <tbody>
                 <tr>
                     <th>手机号</th>
-                    <th>全部qq号</th>
+                    <th>qq号和wx号</th>
                     <th>旺旺号</th>
                     <th>真实姓名</th>
                     <th>做单数据</th>
@@ -1127,6 +1213,9 @@
                         <div style="margin-bottom: 10px;"><input class="search_input j-gnote" placeholder="网页备注/真实姓名" /><button class="search_btn add-gnote">添加网页备注</button><button class="search_btn j-real-name-add-btn" style="background:rebeccapurple;margin-left:15px;">修改真实姓名</button></div>
                         <div><select class="search_input qq_exec_pre" style="width:190px;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button></div>    
                     </div>
+                </div>
+                <div class="search m-search">
+                        <input class="search_input j-contact-input" type="text" data-key="wx" placeholder="wx号" /><button class="search_btn j-contact-add" data-key="wx" style="margin-left:10px">添加wx</button><button class="search_btn j-contact-del" data-key="wx" style="background:red;margin-left:10px;">删除wx</button>
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
@@ -1226,6 +1315,7 @@
         const $qqExecPre = qqAdd.querySelector('.qq_exec_pre');
         const $searchTime = qqAdd.querySelector('.j-search-time');
         const $gNote = qqAdd.querySelector('.j-gnote');
+        const $wx = qqAdd.querySelector('.j-contact-input[data-key="wx"]');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -1239,23 +1329,26 @@
                 $phone.value = `${fix}-${qq}`;
             }
         }, false)
-        // qq改变后填充phone和旺旺
+        // qq改变后填充phone和旺旺和wx
         $byQQ.addEventListener('input', e => {
             const qq = $byQQ.value;
             const phones = Tools.almightySearch([qq]);
             if(phones.length==0){
                 $phone.value = '';
                 $ww.value = '';
+                $wx.value = '';
                 return;
             }
             if(phones.length>1){
                 $ww.value = '';
+                $wx.value = '';
                 return $phone.value = '有多个手机号';
             }
             const phone = phones[0];
             $phone.value = phone;
             const wws = Tools.findWwsByPhones([phone]);
             $ww.value = wws.join('，');
+            $wx.value = Tools.findWxsByDatas(DATA[phone]).join(',');
             // const datas = findDatasByQq(qq);
             // // console.log(datas);
             // if (datas.length > 0) {
@@ -1286,6 +1379,20 @@
                 }
             }
         }, false)
+        // wx变化之后的反应
+        // $wx.addEventListener('input', e => {
+        //     const wx = e.target.value;
+        //     if (wx) {
+        //         const phoneArr = Tools.almightySearch([wx]);
+        //         // console.log(phoneArr);
+        //         if (phoneArr.length > 0) {
+        //             $phone.value = phoneArr.join(',');
+        //             // setCon(['']);
+        //         } else {
+        //             // setCon(['没有找到phone']);
+        //         }
+        //     }
+        // }, false)
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click', e => {
             const orderId = qqAdd.querySelector('.j-order-search .order-id').value;
@@ -1919,6 +2026,41 @@
             alert('添加做单记录成功');
             location.reload();
         }, false)
+        // 添加联系方式
+        addEventListener(qqAdd, 'click', (e) => {
+            const pig_phone = $phone.value;
+            const $addBtn = e.target;
+            const key = $addBtn.getAttribute('data-key');
+            const $input = qqAdd.querySelector(`.j-contact-input[data-key="${key}"]`);
+            const value = $input.value;
+            if(Tools.addContact(pig_phone,key,value)){
+                alert('添加成功');
+            }
+        }, '.j-contact-add');
+        addEventListener(qqAdd,'click',e=>{
+            const pig_phone = $phone.value;
+            const $addBtn = e.target;
+            const key = $addBtn.getAttribute('data-key');
+            const $input = qqAdd.querySelector(`.j-contact-input[data-key="${key}"]`);
+            const value = $input.value;
+            if(Tools.delContact(pig_phone,key,value)){
+                alert('删除成功');
+            }
+        },'.j-contact-del')
+        addEventListener(qqAdd,'input',e=>{
+            const $input = e.target;
+            const value = $input.value;
+            if (value) {
+                const phoneArr = Tools.almightySearch([value]);
+                // console.log(phoneArr);
+                if (phoneArr.length > 0) {
+                    $phone.value = phoneArr.join(',');
+                    // setCon(['']);
+                } else {
+                    // setCon(['没有找到phone']);
+                }
+            }
+        },'.j-contact-input')
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
@@ -2161,8 +2303,9 @@
             const qq = $byQQ.value;
             const phone = $phone.value;
             const ww = $ww.value;
-            const keywords = [qq, phone, ww].filter(keyword => keyword);
-            if (keywords.length == 0) return alert('请填写关键字qq||phone|ww!');
+            const wx = $wx.value;
+            const keywords = [qq, phone, ww,wx].filter(keyword => keyword);
+            if (keywords.length == 0) return alert('请填写关键字qq||phone|ww|wx!');
             // console.log(keywords);
             // console.log(Tools.findPhonesByKeyword(qq));
             // return;
