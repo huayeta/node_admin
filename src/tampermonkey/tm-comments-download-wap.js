@@ -265,4 +265,6 @@
         });
     }
     console.log('下载评论函数：startReadComent()')
+    console.log('用手机页面下载评论，直接手动拖动到评论底部，出现验证码要把开发工具关掉变成电脑页面再去滑动验证，要不然不会成功');
+    console.log(`window.is_save_photo=${window.is_save_photo},true保存图片，false不保存图片，可以修改当前值`)
 })();
