@@ -636,8 +636,9 @@
         const pig_title = $tr.querySelector('td:nth-child(2)').textContent;
         const pig_phone = trim($tr.querySelector('td:nth-child(5)').textContent);
         const pig_qq = trim($tr.querySelector('td:nth-child(9)').textContent);
-        const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
-        const pig_over_time = $tr.querySelector('td:nth-child(13)').textContent;
+        const pig_register_time = trim($tr.querySelector('td:nth-child(10)').textContent);
+        // const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
+        const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
         const pig_type = Tools.getPigType($tr.querySelector('td:nth-child(3)').textContent);
         const real_name = trim($tr.querySelector('td:nth-child(6)').textContent);
 
@@ -825,7 +826,7 @@
         const pig_id = trim($tr.querySelector(`td:nth-child(${type == 3 ? 2 : 1})`).textContent);
         const pig_type = Tools.getPigType(trim($tr.querySelector(`td:nth-child(${type == 3 ? 4 : 3})`).textContent));
         const real_name = trim($tr.querySelector(`td:nth-child(${type==5? (phone_index+1):(qq_index-1)})`).textContent);
-        const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
+        // const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
         const $pig_task_content = $tr.querySelector(`td:nth-child(${date_index-1})`);
         const pig_task_content = trim($pig_task_content.textContent);
         const $pig_task_title = $tr.querySelector(`td:nth-child(${type == 3 ? 3 : 2})`);
@@ -866,9 +867,9 @@
             const $lastTd = $tr.querySelector('td:last-child');
             $lastTd.prepend($shop);
             // 注册时间显示
-            const register_time_p = document.createElement('p');
-            register_time_p.innerHTML = `<p style="color:red;">注册时间：${pig_register_time}</p>`;
-            if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+2})`).append(register_time_p);
+            // const register_time_p = document.createElement('p');
+            // register_time_p.innerHTML = `<p style="color:red;">注册时间：${pig_register_time}</p>`;
+            // if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+2})`).append(register_time_p);
             // 任务内容缩短
             if(pig_task_content.length>100){
                 // 容错判断字数多的就是任务内容
@@ -1019,7 +1020,7 @@
         if (!$PendingTrs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($PendingTrs, ($tr, index) => {
-            formatTr($tr, 5, 8, 13, 2);
+            formatTr($tr, 5, 8, 14, 2);
         })
         // formatPendingTr($PendingTrs[0]);
     }
@@ -1032,7 +1033,7 @@
         if (!$Trs) return;
         // console.log($Trs);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            formatTr($tr, 6, 9, 13, 3);
+            formatTr($tr, 6, 9, 14, 3);
         })
     }
     startFormatAuditingCon();
@@ -1044,7 +1045,7 @@
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (false || index < 20) formatTr($tr, 5, 9, 13, 5);
+            if (false || index < 20) formatTr($tr, 5, 9, 14, 5);
         })
     }
     startFormatCompleteCon();
@@ -1056,7 +1057,7 @@
         if (!$Trs) return;
         // console.log(DATA);
         Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (index < 20) formatTr($tr, 5, 7, 11);
+            if (index < 20) formatTr($tr, 5, 7, 12);
         })
     }
     startFormatCancelCon();
