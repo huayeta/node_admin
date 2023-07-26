@@ -2,7 +2,7 @@
 // @name         获取前台wap详情页的评论
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  try to take over the world!
+// @description  用手机页面下载评论，直接手动拖动到评论底部，出现验证码要把开发工具关掉变成电脑页面再去滑动验证，要不然不会成功
 // @author       You
 // @match        https://h5.m.taobao.com/app/rate/www/rate-list*
 // @require      https://stuk.github.io/jszip/dist/jszip.js
@@ -19,7 +19,7 @@
    // let next_btn;
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度
-    const is_save_photo = true; // 是否保存评论
+    window.is_save_photo = true; // 是否保存图片
     //const sleep_time = 3000; //延迟多久开始下一页拉去
     window.is_comment_download_now = false; // 是否立即触发下载
     let Counter = 0; // 下载图片的进度
