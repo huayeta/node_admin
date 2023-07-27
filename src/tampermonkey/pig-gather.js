@@ -15,7 +15,7 @@
     // {
     //     phone：[
     //         {pig_phone,ww_exec,is_del?:'1'} 做单旺旺号
-    //         {pig_phone,pig_qq?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
+    //         {pig_phone,pig_qq?,wx?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
     //         {pig_phone,wx} 添加不同的wx
@@ -53,6 +53,10 @@
             text: '小韵-4',
             color: 'fuchsia'
         },
+        'a847457846': {
+            text:'微信-note',
+            color:'#004cff'
+        }
     }
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
@@ -349,13 +353,14 @@
             }
         },
         // 找到所有的联系方式
-        findContactsByDatas:(datas,key,excludeValue,is_complete=false)=>{
+        findContactsByDatas:(datas,key,excludeValue)=>{
             const arr = [];
             datas.forEach(data => {
                 if (data[key] && data[key] != excludeValue && !arr.includes(data[key])) {
-                    arr.push(is_complete?data:data[key]);
+                    arr.push(data[key]);
                 }
             })
+            // console.log(arr);
             return arr;
         },
         // 添加wx
@@ -367,8 +372,8 @@
         //     Tools.delContact(pig_phone,'wx',wx);
         // },
         // 找到所有的wxs
-        findWxsByDatas:(datas,excludeValue,is_complete)=>{
-            return Tools.findContactsByDatas(datas,'wx',excludeValue,is_complete);
+        findWxsByDatas:(datas,excludeValue)=>{
+            return Tools.findContactsByDatas(datas,'wx',excludeValue);
         },
         // 找到phone数据里面的note数据obj
         findNotesByDatas: (datas, pig_type='TB') => {
@@ -755,8 +760,6 @@
         const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到注册时间
         let register_time = Tools.findRegisterTimeByDatas(records);
-        // 找到所有的wxs
-        const wxs = Tools.findWxsByDatas(datas,'',true);
         function formateDatasByPigType(datas, pig_type) {
             const records = Tools.getDatasByPigType(datas, pig_type);
             // 备注数据
@@ -788,6 +791,8 @@
         }
         // 找到旺旺账号obj
         const wws = Tools.findWwsByDatas(datas, true);
+        // 找到所有的wxs
+        const wxs = Tools.findWxsByDatas(datas,'');
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
             real_names:real_name_arr,
@@ -1094,7 +1099,7 @@
                 return a + `<p class="j-copyText">${b}</p>`;
             }, '')}
                 ${humanData.wxs.length>0?`<p style="margin-top:15px; color:red;">全部wx号：</p>${humanData.wxs.reduce((a,b)=>{
-                    return a + `<p class="j-copyText">${b.wx}</p>`;
+                    return a + `<p class="j-copyText">${b}</p>`;
                 },'')}`:''}
                 </td>
                 <td style="color:red;">
@@ -2012,8 +2017,20 @@
             const qq_exec_pre = $qqExecPre.value;
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const come_type = $comeType.value;
-            const record = { pig_phone: phone, pig_qq: qq, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type, come_type };
-            if (Tools.alertFuc({ shop_label, phone, qq, qq_exec_pre, pig_type, come_type })) return;
+            const wx = $wx.value;
+            const record = { pig_phone: phone, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type, come_type };
+            // if(wx)record.wx = wx;
+            // if(qq)record.pig_qq = qq;
+            // if(!wx && !qq)return alert('wx|qq最少填写一个联系方式');
+            // if(['a847457846'].includes(qq_exec_pre) && !wx)return alert('wx必须填写')
+            if(!['a847457846'].includes(qq_exec_pre)){
+                if(qq)record.pig_qq = qq;
+                if(Tools.alertFuc({qq}))return;
+            }else{
+                if(wx)record.wx = wx;
+                if(Tools.alertFuc({wx}))return;
+            }
+            if (Tools.alertFuc({ shop_label, phone, qq_exec_pre, pig_type, come_type })) return;
             // console.log(record);
             // return;
             if (!DATA[phone]) {
