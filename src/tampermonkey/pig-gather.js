@@ -452,29 +452,45 @@
             }
             return false;
         },
-        // 找到注册时间
-        findRegisterTimeByDatas:(datas)=>{
-            let register_time = '';
-            for (let i = 0; i < datas.length; i++) {
-                if (datas[i].pig_register_time) {
-                    register_time = datas[i].pig_register_time;
+        // 找到最后一个字段
+        findLastKeyValuesByDatas:(datas,keys=[])=>{
+            let obj ={};
+            for(let data of datas){
+                keys.forEach(key=>{
+                    if(data[key] && !obj[key]){
+                        obj[key]=data[key];
+                    }
+                })
+                if(Object.keys(obj).length == keys.length){
                     break;
                 }
             }
-            return register_time;
+            return obj;
+        },
+        // 找到注册时间
+        findRegisterTimeByDatas:(datas)=>{
+            return Tools.findLastKeyValuesByDatas(datas,['pig_register_time']).pig_register_time;
+            // let register_time = '';
+            // for (let i = 0; i < datas.length; i++) {
+            //     if (datas[i].pig_register_time) {
+            //         register_time = datas[i].pig_register_time;
+            //         break;
+            //     }
+            // }
+            // return register_time;
         },
         // 获取注册时间
         findRegisterTimeByTr:(tr)=>{
-            let register_time = '';
-            if(!tr)return register_time;
-            const result = tr.match(/!--\s+?<td>(.+?)<\/td>/);
-            if(result){
-                const time = trim(result[1]);
-                if(Tools.isDateValid(time)){
-                    register_time = time;
-                } 
-            }
-            return register_time;
+            // let register_time = '';
+            // if(!tr)return register_time;
+            // const result = tr.match(/!--\s+?<td>(.+?)<\/td>/);
+            // if(result){
+            //     const time = trim(result[1]);
+            //     if(Tools.isDateValid(time)){
+            //         register_time = time;
+            //     } 
+            // }
+            // return register_time;
         },
         // 判断是否是做单记录
         isRecord: (data) => {
@@ -632,6 +648,14 @@
                 if (come_type.value == value) result = come_type.name;
             })
             return result;
+        },
+        // 找到select的默认数据
+        findDefaultValueBySelect:($select)=>{
+            const $option_default = $select.querySelector('option[selected]');
+            if($option_default){
+                return $option_default.getAttribute('value');
+            }
+            return $select.querySelector('option:nth-child(1)').getAttribute('value');
         }
     }
     // 获得每个tr数据
@@ -982,10 +1006,10 @@
                 Tools.modifyDataToLastRecord(phone,{real_name});
             }
             // 如果没有收录注册时间直接收录
-            if(!Tools.findRegisterTimeByDatas(Datas) && pig_register_time){
-                // console.log(pig_register_time,phone);
-                // Tools.modifyDataToLastRecord(phone,{pig_register_time});
-            }
+            // if(!Tools.findRegisterTimeByDatas(Datas) && pig_register_time){
+            //     console.log(pig_register_time,phone);
+            //     Tools.modifyDataToLastRecord(phone,{pig_register_time});
+            // }
         }
         // 当时已经完成
         if(type == 5){
@@ -1217,7 +1241,7 @@
                     </div>
                     <div>
                         <div style="margin-bottom: 10px;"><input class="search_input j-gnote" placeholder="网页备注/真实姓名" /><button class="search_btn add-gnote">添加网页备注</button><button class="search_btn j-real-name-add-btn" style="background:rebeccapurple;margin-left:15px;">修改真实姓名</button></div>
-                        <div><select class="search_input qq_exec_pre" style="width:190px;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button></div>    
+                        <div><select class="search_input qq_exec_pre" style="width:auto;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button></div>    
                     </div>
                 </div>
                 <div class="search m-search">
@@ -1339,15 +1363,21 @@
         $byQQ.addEventListener('input', e => {
             const qq = $byQQ.value;
             const phones = Tools.almightySearch([qq]);
+            const come_type_default = Tools.findDefaultValueBySelect($comeType);
+            const qq_exec_pre_default = Tools.findDefaultValueBySelect($qqExecPre);
             if(phones.length==0){
                 $phone.value = '';
                 $ww.value = '';
                 $wx.value = '';
+                $comeType.value = come_type_default;
+                $qqExecPre.value = qq_exec_pre_default;
                 return;
             }
             if(phones.length>1){
                 $ww.value = '';
                 $wx.value = '';
+                $comeType.value = come_type_default;
+                $qqExecPre.value = qq_exec_pre_default;
                 return $phone.value = '有多个手机号';
             }
             const phone = phones[0];
@@ -1355,6 +1385,10 @@
             const wws = Tools.findWwsByPhones([phone]);
             $ww.value = wws.join('，');
             $wx.value = Tools.findWxsByDatas(DATA[phone]).join(',');
+            // 得到最后一个记录的come-type,qq_exec_pre
+            const {come_type,qq_exec_pre}=Tools.findLastKeyValuesByDatas(DATA[phone],['come_type','qq_exec_pre']);
+            if(come_type)$comeType.value = come_type;
+            if(qq_exec_pre)$qqExecPre.value = qq_exec_pre;
             // const datas = findDatasByQq(qq);
             // // console.log(datas);
             // if (datas.length > 0) {
