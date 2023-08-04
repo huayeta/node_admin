@@ -66,7 +66,7 @@
         datas: [
             {
                 label: '万阁',
-                options: ['痔疮6', '肛裂5', '肛瘘7'],
+                options: ['痔疮6', '肛裂5', '肛瘘8'],
             },
             {
                 label: '广浴隆',
@@ -815,6 +815,9 @@
         }
         // 找到旺旺账号obj
         const wws = Tools.findWwsByDatas(datas, true);
+        const wws_html = wws.reduce((a, b) => {
+            return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
+        }, '');
         // 找到所有的wxs
         const wxs = Tools.findWxsByDatas(datas,'');
         return {
@@ -835,6 +838,7 @@
             diffPhones: diffPhones,
             wwExecs: wws.map(ww=>ww.ww_exec),
             wws: wws,
+            wws_html:wws_html,
             wxs:wxs,
         }
     }
@@ -988,7 +992,7 @@
             const $wwTr = $tr.querySelector('td:nth-child(7)');
             const $wwDiv = document.createElement('div');
             $wwDiv.style = 'color: rgb(16, 0, 255);';
-            $wwDiv.innerHTML = `旺旺号：${humans.wwExecs.join('，')}`;
+            $wwDiv.innerHTML = `旺旺号：${humans.wws_html}`;
             $wwTr.append($wwDiv);
         }
 
@@ -1127,9 +1131,7 @@
                 },'')}`:''}
                 </td>
                 <td style="color:red;">
-                    ${humanData.wws.reduce((a, b) => {
-                return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
-            }, '')}
+                    ${humanData.wws_html}
                 </td>
                 <td>${humanData.real_names.reduceRight((a,real_name)=>a+`<p class="j-copyText">${real_name}</p>`,'')}</td>
                 <td>

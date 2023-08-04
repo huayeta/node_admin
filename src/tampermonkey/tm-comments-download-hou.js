@@ -21,6 +21,7 @@
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度
     const is_save_photo = true; // 是否保存评论
+    const Time = 6000;
     const product_id = new URLSearchParams(window.location.search.slice(1)).get('search');
     const Zip = new JSZip();
     const getIsNext = () => next_btn.getAttribute('disabled') === null;
@@ -97,7 +98,7 @@
         // return console.log(Coments,Photos);
         if (getIsNext()) {
             clickNext();
-            sleep(6000).then(() => {
+            sleep(Time).then(() => {
                 currentPage++;
                 startReadComent(cb);
             })
