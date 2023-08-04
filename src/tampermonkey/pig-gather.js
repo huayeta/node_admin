@@ -984,7 +984,7 @@
                 const $realNameDiv = document.createElement('div');
                 $realNameDiv.style = 'color: rgb(16, 0, 255);';
                 $realNameDiv.innerHTML = `其他真实姓名：${arr.join('，')}`;
-                $realNameTr.append($realNameDiv);
+                $realNameTr.prepend($realNameDiv);
             }
         }
         // 标注旺旺号
@@ -1290,7 +1290,7 @@
                         <!--<button class="search_btn j-findQqs" style="">查询不同的qq</button>-->
                         <button class="search_btn download" style="background:rebeccapurple;">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="">筛选qq1235</button>
-                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">注册时间筛选qq1235</button>
+                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">无损筛选qq1235</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
                         <button class="search_btn j-modifyLastRecord" style="background:rebeccapurple;">修改最后一个记录67</button>
                         <!-- <div class="j-addOtherRecord"></div> -->
@@ -2248,7 +2248,8 @@
             const pig_type = $pigType.value;
             GatherQqs(humanData => {
                 // 注册时间超过1个月 做单时间跟注册时间相隔1个月以上
-                return new Date(humanData.record_time) - 30 * 24 * 60 * 60 * 10000 > new Date(humanData.register_time);
+                // return new Date(humanData.record_time) - 30 * 24 * 60 * 60 * 10000 > new Date(humanData.register_time);
+                return true;
             }, pig_type)
         }, false)
         // 通过店铺找到做单数据
