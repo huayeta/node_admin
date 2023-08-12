@@ -985,6 +985,7 @@
                 $realNameDiv.style = 'color: rgb(16, 0, 255);';
                 $realNameDiv.innerHTML = `其他真实姓名：${arr.join('，')}`;
                 $realNameTr.prepend($realNameDiv);
+                // $realNameTr.insertAdjacentHTML('beforebegin',$realNameDiv);
             }
         }
         // 标注旺旺号
