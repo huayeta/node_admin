@@ -931,6 +931,10 @@
         const Datas = humans.records;
         // console.log(DATA[phone], qq);
         const Qqs = humans.qqs.filter(qq_tmp=>qq_tmp!=qq);
+        const wxs = humans.wxs;
+        // ${humanData.wxs.length>0?`<p style="margin-top:15px; color:red;">全部wx号：</p>${humanData.wxs.reduce((a,b)=>{
+        //     return a + `<p class="j-copyText">${b}</p>`;
+        // },'')}`:''}
         {
             // 当是等待完成列表
             if(type == 2){
@@ -948,6 +952,13 @@
             qqDiv.style = 'color:red;';
             qqDiv.innerHTML = `有不同的qq号：${Qqs.map(qq => `<p>${qq}</p>`).join('')}`;
             $qq.append(qqDiv);
+        }
+        // 如果有微信号
+        if(wxs.length>0){
+            const wxDiv = document.createElement('div');
+            wxDiv.style = 'color:red;';
+            wxDiv.innerHTML = `有不同的wx号：${wxs.map(wx => `<p>${wx}</p>`).join('')}`;
+            $qq.prepend(wxDiv);
         }
         // 标注是否有多个手机号
         if (qq == '1451603208' && type == 2 || true) {
@@ -1038,11 +1049,11 @@
         // 最近做单日期
         const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
         const $lately = document.createElement('div');
-        $lately.style = 'color:rgb(16, 0, 255);';
+        $lately.style = 'color:rgb(16, 0, 255);min-width:150px;';
         let latelyStr = `<p>最近做单日期:${humans.typeDatas[pig_type].record_time}</p>`;
         if (humans.typeDatas[pig_type].record_qq) latelyStr += `<P>最近做单qq：${humans.typeDatas[pig_type].record_qq}</P>`;
-        // if (humans.typeDatas[pig_type].record_come_type) latelyStr += `<p>最后做单渠道:${humans.typeDatas[pig_type].record_come_type}</p>`;
-        // if (humans.typeDatas[pig_type].record_shop_labels) latelyStr += `<p>做单店铺顺序:${humans.typeDatas[pig_type].record_shop_labels}</p>`;
+        if (humans.typeDatas[pig_type].record_come_type) latelyStr += `<p>最后做单渠道:${humans.typeDatas[pig_type].record_come_type}</p>`;
+        if (humans.typeDatas[pig_type].record_shop_labels) latelyStr += `<p>做单店铺顺序:${humans.typeDatas[pig_type].record_shop_labels}</p>`;
         $lately.innerHTML = latelyStr;
         $registrTr.append($lately);
     }
