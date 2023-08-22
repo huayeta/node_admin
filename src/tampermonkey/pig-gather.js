@@ -205,6 +205,35 @@
         isDateValid:(...val)=>{
             return !Number.isNaN(new Date(...val).valueOf());
         },
+        // 添加字段
+        addKeyValue:(pig_phone,key,value,middleFuc=()=>true)=>{
+            if (Tools.alertFuc({ pig_phone, key,value })) return false;
+            // if (!DATA[pig_phone]) return alert('不存在小猪数据');
+            // 中间件函数
+            if(!middleFuc())return false;
+            // 添加key=value数据
+            DATA[pig_phone].push({
+                pig_phone: pig_phone,
+                [key]: value,
+            })
+            storageData();
+            // console.log(DATA[pig_phone]);
+            return true;
+        },
+        // 删除字段
+        delKeyValue:(pig_phone,key,value,middleFuc=()=>true)=>{
+            if (Tools.alertFuc({ pig_phone, key,value })) return false;
+            // 中间件函数
+            if(!middleFuc())return false;
+
+            if (confirm('确定删除吗？')) {
+                const datas = DATA[phone].filter(data => data.pig_id || data[key] != value);
+                // console.log(datas);
+                DATA[phone] = datas;
+                storageData();
+                alert(`${key}=${value}删除成功`);
+            }
+        },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
             if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
@@ -1205,7 +1234,7 @@
                         </tbody>
                     </table>
                 </td>
-                <td>${humanData.register_time}</td>
+                <td>${humanData.register_time || ''}</td>
             </tr>
             `
         })
@@ -2298,7 +2327,7 @@
                 phoneDatas.push(DATA[arr[i].pig_phone]);
             }
             // console.log(phoneDatas);
-            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
+            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除', className: 'j-remindPhone' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
             setCon([dyStr + table]);
         }, false)
         // 标注已评跟默认评价按钮
