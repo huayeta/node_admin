@@ -887,7 +887,8 @@
         const qq = trim($qq.textContent);
         const pig_id = trim($tr.querySelector(`td:nth-child(${type == 3 ? 2 : 1})`).textContent);
         const pig_type = Tools.getPigType(trim($tr.querySelector(`td:nth-child(${type == 3 ? 4 : 3})`).textContent));
-        const real_name = trim($tr.querySelector(`td:nth-child(${type==5? (phone_index+1):(qq_index-1)})`).textContent);
+        const $realName = $tr.querySelector(`td:nth-child(${type==5? (phone_index+1):(qq_index-1)})`);
+        const real_name = trim($realName.textContent);
         // const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
         const $pig_task_content = $tr.querySelector(`td:nth-child(${date_index-1})`);
         const pig_task_content = trim($pig_task_content.textContent);
@@ -1020,21 +1021,21 @@
         if(humans.real_names.length>1){
             const arr = humans.real_names.filter(real_name_tmp=>real_name_tmp!=real_name);
             if(arr.length>0){
-                const $realNameTr = $tr.querySelector('td:nth-child(7)');
+                // const $realNameTr = $tr.querySelector(`td:nth-child(${qq_index-1})`);
                 const $realNameDiv = document.createElement('div');
                 $realNameDiv.style = 'color: rgb(16, 0, 255);';
                 $realNameDiv.innerHTML = `其他真实姓名：${arr.join('，')}`;
-                $realNameTr.prepend($realNameDiv);
+                $realName.prepend($realNameDiv);
                 // $realNameTr.insertAdjacentHTML('beforebegin',$realNameDiv);
             }
         }
         // 标注旺旺号
         if (humans.wwExecs.length > 0 && pig_type == 'TB') {
-            const $wwTr = $tr.querySelector('td:nth-child(7)');
+            // const $wwTr = $tr.querySelector(`td:nth-child(${qq_index-1})`);
             const $wwDiv = document.createElement('div');
             $wwDiv.style = 'color: rgb(16, 0, 255);';
             $wwDiv.innerHTML = `旺旺号：${humans.wws_html}`;
-            $wwTr.append($wwDiv);
+            $realName.append($wwDiv);
         }
 
         // 如果没有记录就返回
@@ -1070,11 +1071,11 @@
         }
 
         // 标注已做单数量
-        const $completeTr = $tr.querySelector('td:nth-child(6)');
+        // const $completeTr = $tr.querySelector('td:nth-child(6)');
         const div = document.createElement('div');
         div.style = 'color:red;';
         div.innerHTML = `已做单:${Datas.length}`;
-        $completeTr.append(div);
+        $phone.append(div);
         // 最近做单日期
         const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
         const $lately = document.createElement('div');
