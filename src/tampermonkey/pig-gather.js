@@ -234,6 +234,32 @@
                 alert(`${key}=${value}删除成功`);
             }
         },
+        // key=value搜索phone
+        searchKeyValue: (key,value)=>{
+            if(Tools.alertFuc({key,value}))return false;
+            // function escapeRegExp(string) {
+            // return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& 表示匹配的内容
+            // }
+            // // 自动转义特殊字符
+            // const escapedValue = escapeRegExp(value);
+            // 创建正则表达式
+            const regexp = new RegExp(value);
+            let phone_arr = [];
+            for(let phone in DATA){
+                const datas = DATA[phone];
+                for(let i = 0; i<datas.length;i++){
+                    const data = datas[i];
+                    const val = data[key];
+                    if(val && regexp.test(val)){
+                        phone_arr.push(phone);
+                        break;
+                    }
+                }
+            }
+             // 去重
+            phone_arr = [...new Set(phone_arr)];
+            return phone_arr;
+        },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
             if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
@@ -669,32 +695,6 @@
             result = [...new Set(result)];
             // console.log(result);
             return result;
-        },
-        // key=value搜索phone
-        keyValueSearch: (key,value)=>{
-            if(Tools.alertFuc({key,value}))return false;
-            // function escapeRegExp(string) {
-            // return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& 表示匹配的内容
-            // }
-            // // 自动转义特殊字符
-            // const escapedValue = escapeRegExp(value);
-            // 创建正则表达式
-            const regexp = new RegExp(value);
-            let phone_arr = [];
-            for(let phone in DATA){
-                const datas = DATA[phone];
-                for(let i = 0; i<datas.length;i++){
-                    const data = datas[i];
-                    const val = data[key];
-                    if(val && regexp.test(val)){
-                        phone_arr.push(phone);
-                        break;
-                    }
-                }
-            }
-             // 去重
-            phone_arr = [...new Set(phone_arr)];
-            return phone_arr;
         },
         //找到做单渠道name
         findNameByComeTypeValue: (value) => {
@@ -2456,7 +2456,7 @@
         // 真实姓名搜索
         addEventListener(qqAdd,'click',e=>{
             const value = $gNote.value;
-            const arr = Tools.keyValueSearch('real_name',value).map(phone => DATA[phone]);
+            const arr = Tools.searchKeyValue('real_name',value).map(phone => DATA[phone]);
             if (arr.length == 0) return setCon(['没找到做单记录']);
             // 判断是否有一个qq多个手机的情况存在
             // console.log(arr);
