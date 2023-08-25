@@ -205,14 +205,32 @@
         isDateValid: (...val) => {
             return !Number.isNaN(new Date(...val).valueOf());
         },
+        // 判断是否可删的key
+        isDelKey: (data, key) => {
+            let result = true;
+            if (!data || !key) return false;
+            const keys = Object.keys(data);
+            // 必须是is里面的字段
+            const is = ['pig_phone', key, 'is_del'];
+            for (let k of keys) {
+                if (is.includes(k)) {
+                    result = true;
+                } else {
+                    result = false;
+                    break;
+                }
+            }
+            // console.log(result,keys);
+            return result;
+        },
         // 添加字段
-        addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} }) => {
+        addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} },spliceIndex = DATA[pig_phone].length) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
             // if (!DATA[pig_phone]) return alert('不存在小猪数据');
             // 中间件函数
             if (!middleFuc()) return false;
-            // 添加key=value数据
-            DATA[pig_phone].push({
+            // 添加key=value数据，默认在最后添加一个元素
+            DATA[pig_phone].splice(spliceIndex,0,{
                 pig_phone: pig_phone,
                 [key]: value,
                 ...otherKeysFuc(),
@@ -236,9 +254,9 @@
                 return true;
             }
         },
-        // key=value搜索phone
-        searchKeyValue: (key, value) => {
-            if (Tools.alertFuc({ key, value })) return false;
+        // 在datas数据中判断是否存在key=value，存在则返回data
+        isKeyValueByDatas:(datas,key,value)=>{
+            if (Tools.alertFuc({ datas,key, value })) return false;
             // function escapeRegExp(string) {
             // return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& 表示匹配的内容
             // }
@@ -246,17 +264,24 @@
             // const escapedValue = escapeRegExp(value);
             // 创建正则表达式
             const regexp = new RegExp(value);
+            let result= false;
+            for (let i = 0; i < datas.length; i++) {
+                const data = datas[i];
+                const val = data[key];
+                if (val && regexp.test(val)) {
+                    result = {data,index:i};
+                    break;
+                }
+            }
+            return result;
+        },
+        // key=value搜索phone
+        searchKeyValue: (key, value) => {
+            if (Tools.alertFuc({ key, value })) return false;
             let phone_arr = [];
             for (let phone in DATA) {
                 const datas = DATA[phone];
-                for (let i = 0; i < datas.length; i++) {
-                    const data = datas[i];
-                    const val = data[key];
-                    if (val && regexp.test(val)) {
-                        phone_arr.push(phone);
-                        break;
-                    }
-                }
+                if(Tools.isKeyValueByDatas(datas,key,value))phone_arr.push(phone);
             }
             // 去重
             phone_arr = [...new Set(phone_arr)];
@@ -264,37 +289,87 @@
         },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
-            if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
-            if (!DATA[pig_phone]) return alert('不存在小猪数据');
-            // 判断是否已经有旺旺
-            const datas = DATA[pig_phone];
-            let tx = false;
-            for (let data of datas) {
-                if (data.ww_exec && data.ww_exec == ww_exec) tx = true;
-            }
-            if (tx == true) return alert('已经添加过旺旺号了');
-            DATA[pig_phone].push({ pig_phone: pig_phone, ww_exec: ww_exec });
-            storageData();
-            return true;
+            // if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
+            // if (!DATA[pig_phone]) return alert('不存在小猪数据');
+            // // 判断是否已经有旺旺
+            // const datas = DATA[pig_phone];
+            // let tx = false;
+            // for (let data of datas) {
+            //     if (data.ww_exec && data.ww_exec == ww_exec) tx = true;
+            // }
+            // if (tx == true) return alert('已经添加过旺旺号了');
+            // DATA[pig_phone].push({ pig_phone: pig_phone, ww_exec: ww_exec });
+            // storageData();
+            // return true;
+            return Tools.addKeyValue(pig_phone,'ww_exec',ww_exec,()=>{
+                // 判断是否有旺旺号了
+                const datas = DATA[pig_phone];
+                if(Tools.isKeyValueByDatas(datas,'ww_exec',ww_exec)){
+                    alert('已经添加过旺旺号了');
+                    return false;
+                }
+                return true;
+            });
+        },
+        // 删除旺旺
+        delWW: (pig_phone,ww_exec)=>{
+            // const wwId = $ww.value;
+            // const phone = $phone.value;
+            // if (confirm('确定删除吗？')) {
+            //     if (!DATA[phone]) {
+            //         alert('找不到对应的记录~')
+            //         return;
+            //         // DATA[phone] = [];
+            //     }
+            //     // console.log(wwId);
+            //     const datas = DATA[phone].filter(data => data.pig_id || data.ww_exec != wwId);
+            //     // console.log(datas);
+            //     DATA[phone] = datas;
+            //     storageData();
+            //     alert('旺旺号删除成功');
+            // }
+            return Tools.delKeyValue(pig_phone,'ww_exec',ww_exec,()=>{
+                const datas = DATA[pig_phone];
+                const {data} = Tools.isKeyValueByDatas(datas,'ww_exec',ww_exec);
+                if(data && !Tools.isDelKey(data,'ww_exec')){
+                    return false;
+                }
+                return true;
+            });
         },
         // 添加倒数第二个旺旺号
         addWWBackSecond: (pig_phone, ww_exec) => {
-            if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
-            if (!DATA[pig_phone]) return alert('不存在小猪数据');
-            // 判断是否已经有旺旺
+            // if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
+            // if (!DATA[pig_phone]) return alert('不存在小猪数据');
+            // // 判断是否已经有旺旺
+            // const datas = DATA[pig_phone];
+            // let tx = false;
+            // let second;
+            // for (let index in datas) {
+            //     const data = datas[index];
+            //     if (data.ww_exec && data.ww_exec == ww_exec) tx = true;
+            //     if (data.ww_exec) second = index;
+            // }
+            // if (tx == true) return alert('已经添加过旺旺号了');
+            // if (!second) return alert('没有添加过旺旺号');
+            // DATA[pig_phone].splice(second, 0, { pig_phone: pig_phone, ww_exec: ww_exec });
+            // storageData();
+            // return true;
             const datas = DATA[pig_phone];
-            let tx = false;
             let second;
-            for (let index in datas) {
+            for(let index in datas){
                 const data = datas[index];
-                if (data.ww_exec && data.ww_exec == ww_exec) tx = true;
-                if (data.ww_exec) second = index;
+                if(data.ww_exec)second = index;
             }
-            if (tx == true) return alert('已经添加过旺旺号了');
-            if (!second) return alert('没有添加过旺旺号');
-            DATA[pig_phone].splice(second, 0, { pig_phone: pig_phone, ww_exec: ww_exec });
-            storageData();
-            return true;
+            return Tools.addKeyValue(pig_phone,'ww_exec',ww_exec,()=>{
+                // 判断是否有旺旺号了
+                const result = Tools.isKeyValueByDatas(datas,'ww_exec',ww_exec);
+                if(result){
+                    alert('已经添加过旺旺号了');
+                    return false;
+                }
+                return true;
+            },undefined,second);
         },
         // 通过旺旺找到phones
         findPhonesByWW: (ww_exec) => {
@@ -2040,19 +2115,21 @@
         qqAdd.querySelector('.j-order-search .ww-del').addEventListener('click', e => {
             const wwId = $ww.value;
             const phone = $phone.value;
-            if (confirm('确定删除吗？')) {
-                if (!DATA[phone]) {
-                    alert('找不到对应的记录~')
-                    return;
-                    // DATA[phone] = [];
-                }
-                // console.log(wwId);
-                const datas = DATA[phone].filter(data => data.pig_id || data.ww_exec != wwId);
-                // console.log(datas);
-                DATA[phone] = datas;
-                storageData();
-                alert('旺旺号删除成功');
-            }
+            // if (confirm('确定删除吗？')) {
+            //     if (!DATA[phone]) {
+            //         alert('找不到对应的记录~')
+            //         return;
+            //         // DATA[phone] = [];
+            //     }
+            //     // console.log(wwId);
+            //     const datas = DATA[phone].filter(data => data.pig_id || data.ww_exec != wwId);
+            //     // console.log(datas);
+            //     DATA[phone] = datas;
+            //     storageData();
+            //     alert('旺旺号删除成功');
+            // }
+            const result = Tools.delWW(phone,wwId);
+            if(result)alert(`旺旺号${wwId}删除成功`);
         }, false)
         // 添加倒数旺旺号
         qqAdd.querySelector('.j-order-search .ww-add-back-second').addEventListener('click', e => {
