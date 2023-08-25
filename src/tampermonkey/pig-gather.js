@@ -670,6 +670,32 @@
             // console.log(result);
             return result;
         },
+        // key=value搜索phone
+        keyValueSearch: (key,value)=>{
+            if(Tools.alertFuc({key,value}))return false;
+            // function escapeRegExp(string) {
+            // return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& 表示匹配的内容
+            // }
+            // // 自动转义特殊字符
+            // const escapedValue = escapeRegExp(value);
+            // 创建正则表达式
+            const regexp = new RegExp(value);
+            let phone_arr = [];
+            for(let phone in DATA){
+                const datas = DATA[phone];
+                for(let i = 0; i<datas.length;i++){
+                    const data = datas[i];
+                    const val = data[key];
+                    if(val && regexp.test(val)){
+                        phone_arr.push(phone);
+                        break;
+                    }
+                }
+            }
+             // 去重
+            phone_arr = [...new Set(phone_arr)];
+            return phone_arr;
+        },
         //找到做单渠道name
         findNameByComeTypeValue: (value) => {
             let result = value;
@@ -1289,7 +1315,10 @@
                     </div>
                 </div>
                 <div class="search m-search">
-                        <input class="search_input j-contact-input" type="text" data-key="wx" placeholder="wx号" /><button class="search_btn j-contact-add" data-key="wx" style="margin-left:10px">添加wx</button><button class="search_btn j-contact-del" data-key="wx" style="background:red;margin-left:10px;">删除wx</button>
+                        <input class="search_input j-contact-input" type="text" data-key="wx" placeholder="wx号" />
+                        <button class="search_btn j-contact-add" data-key="wx" style="margin-left:10px">添加wx</button>
+                        <button class="search_btn j-contact-del" data-key="wx" style="background:red;margin-left:10px;">删除wx</button>
+                        <button class="search_btn j-realName-search" style="background:rebeccapurple; margin-left:10px;">真实姓名搜索</button>
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
@@ -2424,6 +2453,26 @@
             }
             // alert(JSON.stringify(arr));
         }, '.j-almightySearch')
+        // 真实姓名搜索
+        addEventListener(qqAdd,'click',e=>{
+            const value = $gNote.value;
+            const arr = Tools.keyValueSearch('real_name',value).map(phone => DATA[phone]);
+            if (arr.length == 0) return setCon(['没找到做单记录']);
+            // 判断是否有一个qq多个手机的情况存在
+            // console.log(arr);
+            if (arr.length === 1) {
+                // 单手机
+                let datas = arr[0];
+                let table = getDataTable([datas])
+                setCon([table, getCon(datas, 3)]);
+                // setCon(arr[0]);
+            } else {
+                // 多手机号
+                let str = getCon(arr);
+                let table = getDataTable(arr);
+                setCon([table + str]);
+            }
+        },'.j-realName-search')
     }
     AddQQDiv();
     
