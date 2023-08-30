@@ -138,22 +138,38 @@
     SHOPDATAS.getDatas();
     //提醒phone数据
     const RDATA = {
-        // {phone:time}[]
+        // {phone:{order_reminder:time,comment_reminder:time}}[]
         datas: {},
         setDatas: (datas) => {
             RDATA.datas = datas;
             RDATA.storageData();
         },
-        addData: (phone) => {
-            RDATA.datas[phone] = new Date().toLocaleString();
+        addOrderReminder:(phone)=>{
+            const time = RDATA.datas[phone] || {};
+           const reminder = {...time,...{order_reminder:new Date().toLocaleString()}};
+           RDATA.addData(phone,reminder);
+        },
+        addCommentReminder:(phone)=>{
+            const time = RDATA.datas[phone] || {};
+           const reminder = {...time,...{comment_reminder:new Date().toLocaleString()}};
+           RDATA.addData(phone,reminder);
+        },
+        addData: (phone,reminder) => {
+            RDATA.datas[phone] = reminder;
             RDATA.storageData();
         },
-        isExist: (phone) => {
-            // 查询是否暂时不再提醒
+        isExist: (phone,reminder='order_reminder') => {
+            // 查询是否暂时不再提醒 -1:不再提醒
             if (DATA[phone] && DATA[phone][0].is_remind == '-1') return true;
             // 查询是否记录多少天不再提醒
-            if (RDATA.datas[phone]) return true;
+            if (RDATA.datas[phone] && RDATA.datas[phone][reminder]) return true;
             return false;
+        },
+        isExpireTime:(time)=>{
+            if (new Date(time) > new Date(new Date().getTime() - 14 * 24 * 60 * 60 * 1000)) {
+                return false;
+            }
+            return true;
         },
         getDatas: () => {
             let datas = localStorage.getItem('remindDatas') ? JSON.parse(localStorage.getItem('remindDatas')) : {};
@@ -161,9 +177,14 @@
             const phones = Object.keys(datas);
             if (phones.length > 0) {
                 phones.forEach(phone => {
-                    const time = datas[phone];
-                    if (new Date(time) > new Date(new Date().getTime() - 14 * 24 * 60 * 60 * 1000)) {
-                        results[phone] = time;
+                    const {order_reminder,comment_reminder} = datas[phone];
+                    if (!RDATA.isExpireTime(order_reminder)) {
+                        if(!results[phone])results[phone] = {};
+                        results[phone].order_reminder = order_reminder;
+                    }
+                    if(!RDATA.isExpireTime(comment_reminder)){
+                        if(!results[phone])results[phone] = {};
+                        results[phone].comment_reminder = comment_reminder;
                     }
                 })
             }
@@ -2332,10 +2353,21 @@
             const $parent = $btn.parentNode;
             const qq = $btn.getAttribute('data-qq');
             const phone = $btn.getAttribute('data-phone');
+            const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
             $btn.textContent = '已去除';
             $btn.style.color = 'gray';
             copyToClipboard(qq);
-            RDATA.addData(phone);
+            switch (datas.type) {
+                case 'order_reminder':
+                    RDATA.addOrderReminder(phone);
+                    break;
+                case 'comment_reminder':
+                    RDATA.addCommentReminder(phone);
+                    break;
+                default:
+                    RDATA.addOrderReminder(phone);
+                    break;
+            }
         }, '.j-remindPhone')
         //不再提醒
         addEventListener($con, 'click', e => {
@@ -2399,7 +2431,7 @@
                     (notes.indexOf('满月') == -1 || true)
                     && notes.indexOf('删订单') == -1
                     && (diffPhones.length == 0 || true)
-                    && !RDATA.isExist(record.pig_phone)
+                    && !RDATA.isExist(record.pig_phone,'order_reminder')
                     && cb(humanData)
                 ) {
                     if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
@@ -2415,7 +2447,7 @@
                     return -screen_time;
                 }
             })
-            const table = getDataTable(DateRecords.slice(0, 5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
+            const table = getDataTable(DateRecords.slice(0, 5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone',type:'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
@@ -2466,7 +2498,7 @@
                 phoneDatas.push(DATA[arr[i].pig_phone]);
             }
             // console.log(phoneDatas);
-            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除', className: 'j-remindPhone' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
+            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone',type:'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
             setCon([dyStr + table]);
         }, false)
         // 标注已评跟默认评价按钮
