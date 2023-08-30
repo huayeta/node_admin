@@ -2475,7 +2475,7 @@
                 const datas = DATA[phone];
                 if (trim(datas[0].shop_label) == trim(shop_label) && !datas[0].is_remind) {
                     if ((comment_sel === '' && !datas[0].is_comment) || (comment_sel && comment_sel == datas[0].is_comment)) {
-                        arr.push(datas[0]);
+                        if(!RDATA.isExist(phone,'comment_reminder'))arr.push(datas[0]);
                     }
                 }
             }
