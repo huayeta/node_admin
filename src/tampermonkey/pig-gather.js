@@ -144,29 +144,31 @@
             RDATA.datas = datas;
             RDATA.storageData();
         },
-        addOrderReminder:(phone)=>{
+        addOrderReminder: (phone) => {
             const time = RDATA.datas[phone] || {};
-           const reminder = {...time,...{order_reminder:new Date().toLocaleString()}};
-           RDATA.addData(phone,reminder);
+            const reminder = { ...time, ...{ order_reminder: new Date().toLocaleString() } };
+            RDATA.addData(phone, reminder);
         },
-        addCommentReminder:(phone)=>{
+        addCommentReminder: (phone) => {
             const time = RDATA.datas[phone] || {};
-           const reminder = {...time,...{comment_reminder:new Date().toLocaleString()}};
-           RDATA.addData(phone,reminder);
+            const reminder = { ...time, ...{ comment_reminder: new Date().toLocaleString() } };
+            RDATA.addData(phone, reminder);
         },
-        addData: (phone,reminder) => {
+        addData: (phone, reminder) => {
             RDATA.datas[phone] = reminder;
             RDATA.storageData();
         },
-        isExist: (phone,reminder='order_reminder') => {
+        isExist: (phone, reminder = 'order_reminder') => {
             // 查询是否暂时不再提醒 -1:不再提醒
             if (DATA[phone] && DATA[phone][0].is_remind == '-1') return true;
             // 查询是否记录多少天不再提醒
             if (RDATA.datas[phone] && RDATA.datas[phone][reminder]) return true;
             return false;
         },
-        isExpireTime:(time)=>{
-            if (new Date(time) > new Date(new Date().getTime() - 14 * 24 * 60 * 60 * 1000)) {
+        isExpireTime: (time, reminder = 'order_reminder') => {
+            if(!time)return false;
+            // order_reminder 14天过期，comment_reminder 5天过期
+            if (new Date(time) > new Date(new Date().getTime() - (reminder === 'order_reminder' ? 14 : 5) * 24 * 60 * 60 * 1000)) {
                 return false;
             }
             return true;
@@ -177,13 +179,13 @@
             const phones = Object.keys(datas);
             if (phones.length > 0) {
                 phones.forEach(phone => {
-                    const {order_reminder,comment_reminder} = datas[phone];
-                    if (!RDATA.isExpireTime(order_reminder)) {
-                        if(!results[phone])results[phone] = {};
+                    const { order_reminder, comment_reminder } = datas[phone];
+                    if (order_reminder && !RDATA.isExpireTime(order_reminder, 'order_reminder')) {
+                        if (!results[phone]) results[phone] = {};
                         results[phone].order_reminder = order_reminder;
                     }
-                    if(!RDATA.isExpireTime(comment_reminder)){
-                        if(!results[phone])results[phone] = {};
+                    if (comment_reminder && !RDATA.isExpireTime(comment_reminder, 'comment_reminder')) {
+                        if (!results[phone]) results[phone] = {};
                         results[phone].comment_reminder = comment_reminder;
                     }
                 })
@@ -245,13 +247,13 @@
             return result;
         },
         // 添加字段
-        addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} },spliceIndex = DATA[pig_phone].length) => {
+        addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} }, spliceIndex = DATA[pig_phone].length) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
             // if (!DATA[pig_phone]) return alert('不存在小猪数据');
             // 中间件函数
             if (!middleFuc()) return false;
             // 添加key=value数据，默认在最后添加一个元素
-            DATA[pig_phone].splice(spliceIndex,0,{
+            DATA[pig_phone].splice(spliceIndex, 0, {
                 pig_phone: pig_phone,
                 [key]: value,
                 ...otherKeysFuc(),
@@ -261,7 +263,7 @@
             return true;
         },
         // 删除字段
-        delKeyValue: (pig_phone, key, value, middleFuc = () => true,otherKeysFuc = ()=> false) => {
+        delKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => false) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
             // 中间件函数
             if (!middleFuc()) return false;
@@ -276,8 +278,8 @@
             }
         },
         // 在datas数据中判断是否存在key=value，存在则返回data
-        isKeyValueByDatas:(datas,key,value)=>{
-            if (Tools.alertFuc({ datas,key, value })) return false;
+        isKeyValueByDatas: (datas, key, value) => {
+            if (Tools.alertFuc({ datas, key, value })) return false;
             // function escapeRegExp(string) {
             // return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& 表示匹配的内容
             // }
@@ -285,12 +287,12 @@
             // const escapedValue = escapeRegExp(value);
             // 创建正则表达式
             const regexp = new RegExp(value);
-            let result= false;
+            let result = false;
             for (let i = 0; i < datas.length; i++) {
                 const data = datas[i];
                 const val = data[key];
                 if (val && regexp.test(val)) {
-                    result = {data,index:i};
+                    result = { data, index: i };
                     break;
                 }
             }
@@ -302,7 +304,7 @@
             let phone_arr = [];
             for (let phone in DATA) {
                 const datas = DATA[phone];
-                if(Tools.isKeyValueByDatas(datas,key,value))phone_arr.push(phone);
+                if (Tools.isKeyValueByDatas(datas, key, value)) phone_arr.push(phone);
             }
             // 去重
             phone_arr = [...new Set(phone_arr)];
@@ -322,10 +324,10 @@
             // DATA[pig_phone].push({ pig_phone: pig_phone, ww_exec: ww_exec });
             // storageData();
             // return true;
-            return Tools.addKeyValue(pig_phone,'ww_exec',ww_exec,()=>{
+            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec, () => {
                 // 判断是否有旺旺号了
                 const datas = DATA[pig_phone];
-                if(Tools.isKeyValueByDatas(datas,'ww_exec',ww_exec)){
+                if (Tools.isKeyValueByDatas(datas, 'ww_exec', ww_exec)) {
                     alert('已经添加过旺旺号了');
                     return false;
                 }
@@ -333,7 +335,7 @@
             });
         },
         // 删除旺旺
-        delWW: (pig_phone,ww_exec)=>{
+        delWW: (pig_phone, ww_exec) => {
             // const wwId = $ww.value;
             // const phone = $phone.value;
             // if (confirm('确定删除吗？')) {
@@ -349,10 +351,10 @@
             //     storageData();
             //     alert('旺旺号删除成功');
             // }
-            return Tools.delKeyValue(pig_phone,'ww_exec',ww_exec,()=>{
+            return Tools.delKeyValue(pig_phone, 'ww_exec', ww_exec, () => {
                 const datas = DATA[pig_phone];
-                const {data} = Tools.isKeyValueByDatas(datas,'ww_exec',ww_exec);
-                if(data && !Tools.isDelKey(data,'ww_exec')){
+                const { data } = Tools.isKeyValueByDatas(datas, 'ww_exec', ww_exec);
+                if (data && !Tools.isDelKey(data, 'ww_exec')) {
                     return false;
                 }
                 return true;
@@ -378,19 +380,19 @@
             // return true;
             const datas = DATA[pig_phone];
             let second;
-            for(let index in datas){
+            for (let index in datas) {
                 const data = datas[index];
-                if(data.ww_exec)second = index;
+                if (data.ww_exec) second = index;
             }
-            return Tools.addKeyValue(pig_phone,'ww_exec',ww_exec,()=>{
+            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec, () => {
                 // 判断是否有旺旺号了
-                const result = Tools.isKeyValueByDatas(datas,'ww_exec',ww_exec);
-                if(result){
+                const result = Tools.isKeyValueByDatas(datas, 'ww_exec', ww_exec);
+                if (result) {
                     alert('已经添加过旺旺号了');
                     return false;
                 }
                 return true;
-            },undefined,second);
+            }, undefined, second);
         },
         // 通过旺旺找到phones
         findPhonesByWW: (ww_exec) => {
@@ -537,7 +539,7 @@
         // 添加备注
         addNote: (pig_phone, pig_note, pig_type) => {
             if (Tools.alertFuc({ pig_type })) return false;
-            return Tools.addKeyValue(pig_phone, 'pig_note', pig_note, undefined , () => {
+            return Tools.addKeyValue(pig_phone, 'pig_note', pig_note, undefined, () => {
                 return {
                     pig_type,
                     create_time: new Date().toLocaleString(),
@@ -545,10 +547,10 @@
             });
         },
         // 删除备注
-        delNote:(pig_phone,pig_note,pig_type)=>{
+        delNote: (pig_phone, pig_note, pig_type) => {
             if (Tools.alertFuc({ pig_type })) return false;
-            return Tools.delKeyValue(pig_phone,'pig_note',pig_note,undefined,(data)=>{
-                if(data['pig_note'] == pig_note && data['pig_type']!=pig_type)return true;
+            return Tools.delKeyValue(pig_phone, 'pig_note', pig_note, undefined, (data) => {
+                if (data['pig_note'] == pig_note && data['pig_type'] != pig_type) return true;
                 return false;
             })
         },
@@ -2149,8 +2151,8 @@
             //     storageData();
             //     alert('旺旺号删除成功');
             // }
-            const result = Tools.delWW(phone,wwId);
-            if(result)alert(`旺旺号${wwId}删除成功`);
+            const result = Tools.delWW(phone, wwId);
+            if (result) alert(`旺旺号${wwId}删除成功`);
         }, false)
         // 添加倒数旺旺号
         qqAdd.querySelector('.j-order-search .ww-add-back-second').addEventListener('click', e => {
@@ -2233,8 +2235,8 @@
             //     storageData();
             //     alert('备注删除成功');
             // }
-            const result = Tools.delNote(phone,note,pig_type);
-            if(result) alert(`${note}备注删除成功`);
+            const result = Tools.delNote(phone, note, pig_type);
+            if (result) alert(`${note}备注删除成功`);
         }, false)
         // 添加网页备注
         qqAdd.querySelector('.add-gnote').addEventListener('click', (e) => {
@@ -2431,7 +2433,7 @@
                     (notes.indexOf('满月') == -1 || true)
                     && notes.indexOf('删订单') == -1
                     && (diffPhones.length == 0 || true)
-                    && !RDATA.isExist(record.pig_phone,'order_reminder')
+                    && !RDATA.isExist(record.pig_phone, 'order_reminder')
                     && cb(humanData)
                 ) {
                     if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
@@ -2447,7 +2449,7 @@
                     return -screen_time;
                 }
             })
-            const table = getDataTable(DateRecords.slice(0, 5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone',type:'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
+            const table = getDataTable(DateRecords.slice(0, 5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
@@ -2475,7 +2477,7 @@
                 const datas = DATA[phone];
                 if (trim(datas[0].shop_label) == trim(shop_label) && !datas[0].is_remind) {
                     if ((comment_sel === '' && !datas[0].is_comment) || (comment_sel && comment_sel == datas[0].is_comment)) {
-                        if(!RDATA.isExist(phone,'comment_reminder'))arr.push(datas[0]);
+                        if (!RDATA.isExist(phone, 'comment_reminder')) arr.push(datas[0]);
                     }
                 }
             }
@@ -2498,7 +2500,7 @@
                 phoneDatas.push(DATA[arr[i].pig_phone]);
             }
             // console.log(phoneDatas);
-            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone',type:'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
+            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
             setCon([dyStr + table]);
         }, false)
         // 标注已评跟默认评价按钮
