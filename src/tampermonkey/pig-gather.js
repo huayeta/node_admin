@@ -166,7 +166,7 @@
             return false;
         },
         isExpireTime: (time, reminder = 'order_reminder') => {
-            if(!time)return false;
+            if (!time) return false;
             // order_reminder 14天过期，comment_reminder 5天过期
             if (new Date(time) > new Date(new Date().getTime() - (reminder === 'order_reminder' ? 14 : 5) * 24 * 60 * 60 * 1000)) {
                 return false;
@@ -246,10 +246,18 @@
             // console.log(result,keys);
             return result;
         },
-        // 添加字段
-        addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} }, spliceIndex = DATA[pig_phone].length) => {
+        // 添加字段 isRepeat:false 不能重复添加
+        addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} }, spliceIndex = DATA[pig_phone].length, isRepeat = false) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
             // if (!DATA[pig_phone]) return alert('不存在小猪数据');
+            if(!isRepeat){
+                const result = Tools.isKeyValueByDatas(DATA[pig_phone], key, value, true);
+                // console.log(result,DATA[pig_phone]);
+                if (result) {
+                    alert(`不能重复添加${key}=${value}`);
+                    return false;
+                }
+            }
             // 中间件函数
             if (!middleFuc()) return false;
             // 添加key=value数据，默认在最后添加一个元素
@@ -263,8 +271,19 @@
             return true;
         },
         // 删除字段
-        delKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => false) => {
+        delKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => false,isJudgmentDel = true) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
+
+            if(isJudgmentDel){
+                // 判断是否可删
+                const datas = DATA[pig_phone];
+                const { data } = Tools.isKeyValueByDatas(datas, key, value);
+                if (data && !Tools.isDelKey(data, key)) {
+                    alert(`不可删除字段${data}`);
+                    return false;
+                }
+            }
+
             // 中间件函数
             if (!middleFuc()) return false;
 
@@ -278,7 +297,7 @@
             }
         },
         // 在datas数据中判断是否存在key=value，存在则返回data
-        isKeyValueByDatas: (datas, key, value) => {
+        isKeyValueByDatas: (datas, key, value, isEqual = false) => {
             if (Tools.alertFuc({ datas, key, value })) return false;
             // function escapeRegExp(string) {
             // return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& 表示匹配的内容
@@ -291,7 +310,7 @@
             for (let i = 0; i < datas.length; i++) {
                 const data = datas[i];
                 const val = data[key];
-                if (val && regexp.test(val)) {
+                if (val && isEqual ? val == value : regexp.test(val)) {
                     result = { data, index: i };
                     break;
                 }
@@ -324,15 +343,7 @@
             // DATA[pig_phone].push({ pig_phone: pig_phone, ww_exec: ww_exec });
             // storageData();
             // return true;
-            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec, () => {
-                // 判断是否有旺旺号了
-                const datas = DATA[pig_phone];
-                if (Tools.isKeyValueByDatas(datas, 'ww_exec', ww_exec)) {
-                    alert('已经添加过旺旺号了');
-                    return false;
-                }
-                return true;
-            });
+            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec);
         },
         // 删除旺旺
         delWW: (pig_phone, ww_exec) => {
@@ -351,14 +362,7 @@
             //     storageData();
             //     alert('旺旺号删除成功');
             // }
-            return Tools.delKeyValue(pig_phone, 'ww_exec', ww_exec, () => {
-                const datas = DATA[pig_phone];
-                const { data } = Tools.isKeyValueByDatas(datas, 'ww_exec', ww_exec);
-                if (data && !Tools.isDelKey(data, 'ww_exec')) {
-                    return false;
-                }
-                return true;
-            });
+            return Tools.delKeyValue(pig_phone, 'ww_exec', ww_exec);
         },
         // 添加倒数第二个旺旺号
         addWWBackSecond: (pig_phone, ww_exec) => {
@@ -384,15 +388,7 @@
                 const data = datas[index];
                 if (data.ww_exec) second = index;
             }
-            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec, () => {
-                // 判断是否有旺旺号了
-                const result = Tools.isKeyValueByDatas(datas, 'ww_exec', ww_exec);
-                if (result) {
-                    alert('已经添加过旺旺号了');
-                    return false;
-                }
-                return true;
-            }, undefined, second);
+            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec, undefined, undefined, second);
         },
         // 通过旺旺找到phones
         findPhonesByWW: (ww_exec) => {
@@ -467,52 +463,56 @@
             return arr;
         },
         // 判断是否可删的联系方式
-        isDelContact: (data, key) => {
-            let result = false;
-            if (!data || !key) return false;
-            const keys = Object.keys(data);
-            // 必须是is里面的字段
-            const is = ['pig_phone', key, 'is_del'];
-            for (let k of keys) {
-                if (is.includes(k)) {
-                    result = true;
-                } else {
-                    result = false;
-                    break;
-                }
-            }
-            // console.log(result,keys);
-            return result;
-        },
+        // isDelContact: (data, key) => {
+        //     let result = false;
+        //     if (!data || !key) return false;
+        //     const keys = Object.keys(data);
+        //     // 必须是is里面的字段
+        //     const is = ['pig_phone', key, 'is_del'];
+        //     for (let k of keys) {
+        //         if (is.includes(k)) {
+        //             result = true;
+        //         } else {
+        //             result = false;
+        //             break;
+        //         }
+        //     }
+        //     // console.log(result,keys);
+        //     return result;
+        // },
         // 添加联系方式
-        addContact: (pig_phone, key, value) => {
-            if (Tools.alertFuc({ pig_phone, key, value })) return false;
-            if (!DATA[pig_phone]) return alert('不存在小猪数据');
-            DATA[pig_phone].push({
-                pig_phone: pig_phone,
-                [key]: value,
-            })
-            storageData();
-            // console.log(DATA[pig_phone]);
-            return true;
-        },
+        // addContact: (pig_phone, key, value) => {
+        //     // if (Tools.alertFuc({ pig_phone, key, value })) return false;
+        //     // if (!DATA[pig_phone]) return alert('不存在小猪数据');
+        //     // // 判断是否重复添加
+        //     // DATA[pig_phone].push({
+        //     //     pig_phone: pig_phone,
+        //     //     [key]: value,
+        //     // })
+        //     // storageData();
+        //     // console.log(DATA[pig_phone]);
+        //     // return true;
+
+        //     return Tools.addKeyValue(pig_phone, key, value);
+        // },
         // 删除联系方式
-        delContact: (pig_phone, key, value) => {
-            if (Tools.alertFuc({ pig_phone, key, value })) return false;
-            if (!DATA[pig_phone]) return alert('不存在小猪数据');
-            if (confirm('确定删除吗？')) {
-                const datas = DATA[pig_phone].filter(data => {
-                    if (data[key] == value && Tools.isDelContact(data, key)) return false;
-                    return true;
-                });
-                // console.log(datas);
-                DATA[pig_phone] = datas;
-                storageData();
-                // console.log(DATA[pig_phone]);
-                // alert(`${key}=${value}删除成功`);
-                return true;
-            }
-        },
+        // delContact: (pig_phone, key, value) => {
+        //     // if (Tools.alertFuc({ pig_phone, key, value })) return false;
+        //     // if (!DATA[pig_phone]) return alert('不存在小猪数据');
+        //     // if (confirm('确定删除吗？')) {
+        //     //     const datas = DATA[pig_phone].filter(data => {
+        //     //         if (data[key] == value && Tools.isDelContact(data, key)) return false;
+        //     //         return true;
+        //     //     });
+        //     //     // console.log(datas);
+        //     //     DATA[pig_phone] = datas;
+        //     //     storageData();
+        //     //     // console.log(DATA[pig_phone]);
+        //     //     // alert(`${key}=${value}删除成功`);
+        //     //     return true;
+        //     // }
+        //     return Tools.delKeyValue(pig_phone,key,value)
+        // },
         // 找到所有的联系方式
         findContactsByDatas: (datas, key, excludeValue) => {
             const arr = [];
@@ -1608,7 +1608,7 @@
             if (wwExec) {
                 const phoneArr = Tools.almightySearch([wwExec]);
                 // console.log(phoneArr);
-                if (phoneArr.length > 0) {
+                if (phoneArr.length > 0 && !$phone.value) {
                     $phone.value = phoneArr.join(',');
                     // setCon(['']);
                 } else {
@@ -2290,7 +2290,7 @@
             const key = $addBtn.getAttribute('data-key');
             const $input = qqAdd.querySelector(`.j-contact-input[data-key="${key}"]`);
             const value = $input.value;
-            if (Tools.addContact(pig_phone, key, value)) {
+            if (Tools.addKeyValue(pig_phone, key, value)) {
                 alert('添加成功');
             }
         }, '.j-contact-add');
@@ -2300,7 +2300,7 @@
             const key = $addBtn.getAttribute('data-key');
             const $input = qqAdd.querySelector(`.j-contact-input[data-key="${key}"]`);
             const value = $input.value;
-            if (Tools.delContact(pig_phone, key, value)) {
+            if (Tools.delKeyValue(pig_phone, key, value)) {
                 alert('删除成功');
             }
         }, '.j-contact-del')
