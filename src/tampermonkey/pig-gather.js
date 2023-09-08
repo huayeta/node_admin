@@ -225,6 +225,30 @@
         copyObj: (obj) => {
             return JSON.parse(JSON.stringify(obj));
         },
+        // 节流函数
+        throttle: (fn, delay) => {
+            let timer = null;
+            let lastTime = 0;
+
+            return function () {
+                const currentTime = new Date().getTime();
+                const remainingTime = delay - (currentTime - lastTime);
+                const context = this;
+                const args = arguments;
+
+                clearTimeout(timer);
+
+                if (remainingTime <= 0) {
+                    fn.apply(context, args);
+                    lastTime = currentTime;
+                } else {
+                    timer = setTimeout(() => {
+                        fn.apply(context, args);
+                        lastTime = new Date().getTime();
+                    }, remainingTime);
+                }
+            };
+        },
         // 判断是否是一个日期字符串
         isDateValid: (...val) => {
             return !Number.isNaN(new Date(...val).valueOf());
@@ -251,7 +275,7 @@
         addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} }, spliceIndex = DATA[pig_phone].length, isRepeat = false) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
             // if (!DATA[pig_phone]) return alert('不存在小猪数据');
-            if(!isRepeat){
+            if (!isRepeat) {
                 const result = Tools.isKeyValueByDatas(DATA[pig_phone], key, value, true);
                 // console.log(result,DATA[pig_phone]);
                 if (result) {
@@ -272,10 +296,10 @@
             return true;
         },
         // 删除字段
-        delKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => false,isJudgeDel = true) => {
+        delKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => false, isJudgeDel = true) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
 
-            if(isJudgeDel){
+            if (isJudgeDel) {
                 // 判断是否可删
                 const datas = DATA[pig_phone];
                 const { data } = Tools.isKeyValueByDatas(datas, key, value);
@@ -331,7 +355,7 @@
             return phone_arr;
         },
         // 通过datas找到所有的keys=data[] | string[]
-        findKeysByDatas:(datas,key,otherJudge=()=>true,is_complete=false)=>{
+        findKeysByDatas: (datas, key, otherJudge = () => true, is_complete = false) => {
             let arr = [];
             datas.forEach(data => {
                 if (data[key] && otherJudge(data)) {
@@ -342,12 +366,12 @@
             return arr = [...new Set(arr)];
         },
         // 添加真实姓名
-        addRealName:(pig_phone,real_name)=>{
-            if(Tools.alertFuc({pig_phone,real_name}))return false;
+        addRealName: (pig_phone, real_name) => {
+            if (Tools.alertFuc({ pig_phone, real_name })) return false;
             return Tools.modifyDataToLastRecord(phone, { real_name });
         },
         // 找到真实姓名
-        findRealNamesByDatas: (datas,otherJudge,is_complete) => {
+        findRealNamesByDatas: (datas, otherJudge, is_complete) => {
             // let real_name_arr = [];
             // for (let data of datas) {
             //     if (data.real_name) {
@@ -356,26 +380,26 @@
             // }
             // // 去重
             // return real_name_arr = [...new Set(real_name_arr)];
-            return Tools.findKeysByDatas(datas,'real_name',otherJudge,is_complete);
+            return Tools.findKeysByDatas(datas, 'real_name', otherJudge, is_complete);
         },
         // 添加真实姓名对应的微信名字
-        addWxName:(pig_phone,wx_name,real_name)=>{
-            if(Tools.alertFuc({pig_phone,wx_name,real_name}))return false;
-            return Tools.addKeyValue(pig_phone,'wx_name',wx_name,undefined,()=>{
-                return {real_name};
+        addWxName: (pig_phone, wx_name, real_name) => {
+            if (Tools.alertFuc({ pig_phone, wx_name, real_name })) return false;
+            return Tools.addKeyValue(pig_phone, 'wx_name', wx_name, undefined, () => {
+                return { real_name };
             })
         },
         // 删除真实姓名对应的微信名字
-        delWxName:(pig_phone,wx_name)=>{
-            if(Tools.alertFuc({pig_phone,wx_name}))return false;
-            return Tools.delKeyValue(pig_phone,'wx_name',wx_name,undefined,undefined,false);
+        delWxName: (pig_phone, wx_name) => {
+            if (Tools.alertFuc({ pig_phone, wx_name })) return false;
+            return Tools.delKeyValue(pig_phone, 'wx_name', wx_name, undefined, undefined, false);
         },
         // 找到所有的微信姓名return {real_name:wx_name}
-        findWxNamesByDatas:(datas)=>{
+        findWxNamesByDatas: (datas) => {
             const result = {};
-            const wxNames = Tools.findKeysByDatas(datas,'wx_name',(data)=>data.real_name,true);
-            wxNames.forEach(data=>{
-                result[data.real_name]=data.wx_name;
+            const wxNames = Tools.findKeysByDatas(datas, 'wx_name', (data) => data.real_name, true);
+            wxNames.forEach(data => {
+                result[data.real_name] = data.wx_name;
             })
             return result;
         },
@@ -1062,7 +1086,7 @@
             wws: wws,
             wws_html: wws_html,
             wxs: wxs,
-            wx_names:wx_names,
+            wx_names: wx_names,
         }
     }
 
@@ -1369,7 +1393,7 @@
                 <td style="color:red;">
                     ${humanData.wws_html}
                 </td>
-                <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name]?`（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）`:''}</p>`, '')}</td>
+                <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>
                 <td>
                     <table style="width:100%;">
                         <tbody>
@@ -1605,7 +1629,7 @@
             }
         }, false)
         // qq改变后填充phone和旺旺和wx和真实姓名
-        $byQQ.addEventListener('input', e => {
+        $byQQ.addEventListener('input', Tools.throttle(e => {
             const qq = $byQQ.value;
             const phones = Tools.almightySearch([qq]);
             const come_type_default = Tools.findDefaultValueBySelect($comeType);
@@ -1652,7 +1676,7 @@
             //     $phone.value = '';
             // }
 
-        })
+        },1000))
         // 旺旺号变化之后的反应
         $ww.addEventListener('input', e => {
             const wwExec = e.target.value;
@@ -2608,22 +2632,22 @@
             const phone = $phone.value;
             // if (Tools.alertFuc({ real_name, phone })) return;
             // Tools.modifyDataToLastRecord(phone, { real_name });
-            const result = Tools.addRealName(phone,real_name);
-            if(result)alert('修改真实姓名成功');
+            const result = Tools.addRealName(phone, real_name);
+            if (result) alert('修改真实姓名成功');
         }, '.j-real-name-add-btn')
         // 添加wx名字
-        qqAdd.querySelector('.j-wxName-add').addEventListener('click',()=>{
+        qqAdd.querySelector('.j-wxName-add').addEventListener('click', () => {
             const pig_phone = $phone.value;
             const wx_name = $wxName.value;
             const real_name = $gNote.value;
-            const result = Tools.addWxName(pig_phone,wx_name,real_name);
-            if(result)alert(`添加真实姓名（${real_name}）对应微信姓名（${wx_name}）成功`);
+            const result = Tools.addWxName(pig_phone, wx_name, real_name);
+            if (result) alert(`添加真实姓名（${real_name}）对应微信姓名（${wx_name}）成功`);
         })
-        qqAdd.querySelector('.j-wxName-del').addEventListener('click',()=>{
+        qqAdd.querySelector('.j-wxName-del').addEventListener('click', () => {
             const pig_phone = $phone.value;
             const wx_name = $wxName.value;
-            const result = Tools.delWxName(pig_phone,wx_name);
-            if(result)alert(`删除微信姓名￥（${wx_name}）成功`);
+            const result = Tools.delWxName(pig_phone, wx_name);
+            if (result) alert(`删除微信姓名（${wx_name}）成功`);
         })
         // 创建新纪录并添加qq和旺旺
         addEventListener(qqAdd, 'click', e => {
