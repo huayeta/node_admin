@@ -810,19 +810,20 @@
         },
         // 通过keyword找到phone搜索范围qq,phone,note,ww
         findPhonesByKeyword: (keyword) => {
+            // console.log(keyword);
             const results = [];
             if (!keyword) return results;
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (data.pig_qq == keyword || data.pig_phone == keyword || data.ww_exec == keyword || data.wx == keyword || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                    if (data.pig_qq == keyword || data.pig_phone == keyword || data.ww_exec == keyword || data.wx == keyword || data.wx_name == keyword || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
                         if (!results.includes(phone)) results.push(phone);
                     }
                 })
             }
             return [...new Set(results)];
         },
-        // 通过keyword找到所有keyword返回qq,phone,ww数组
+        // 通过keyword找到所有keyword返回qq,phone,ww,wx_name数组
         findAllKeywordByKeyword: (keyword) => {
             const phones = Tools.findPhonesByKeyword(keyword);
             // console.log(phones);
@@ -834,6 +835,7 @@
                     if (data.pig_phone || !arr.includes(data.pig_phone)) arr.push(data.pig_phone);
                     if (data.ww_exec || !arr.includes(data.ww_exec)) arr.push(data.ww_exec);
                     if (data.wx || !arr.includes(data.wx)) arr.push(data.wx);
+                    if (data.wx_name || !arr.includes(data.wx_name)) arr.push(data.wx_name);
                 })
             })
             // console.log(arr);
