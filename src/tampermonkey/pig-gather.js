@@ -389,7 +389,7 @@
             let wx_name_tmp = wx_name;
             let real_name_tmp = real_name;
             const reg = /(.+?)\((.+?)\)/;
-            const result_reg = reg.exec(wx_name);
+            const result_reg = reg.exec(wx_name.replace(/\*+/g,'.+?'));
             if(result_reg){
                 wx_name_tmp = result_reg[1];
                 real_name_tmp = result_reg[2];
@@ -1263,13 +1263,21 @@
         }
         // 标注真实姓名
         // 在这写微信名字备注
+        if(humans.wx_names[real_name]){
+            const $div = document.createElement('div');
+            $div.innerHTML = `<span style="color:gray;font-size:12px;">（${humans.wx_names[real_name]}）</span>`;
+            $realName.append($div);
+        }
         if (humans.real_names.length > 1) {
             const arr = humans.real_names.filter(real_name_tmp => real_name_tmp != real_name);
             if (arr.length > 0) {
                 // const $realNameTr = $tr.querySelector(`td:nth-child(${qq_index-1})`);
                 const $realNameDiv = document.createElement('div');
                 $realNameDiv.style = 'color: rgb(16, 0, 255);';
-                $realNameDiv.innerHTML = `其他真实姓名：${arr.join('，')}`;
+                $realNameDiv.innerHTML = `其他真实姓名：${arr.map(real_name=>{
+                    if(humans.wx_names[real_name])return `${real_name}<span style="color:gray;font-size:12px;">（${humans.wx_names[real_name]}）</span>`;
+                    return real_name;
+                }).join('，')}`;
                 $realName.prepend($realNameDiv);
                 // $realNameTr.insertAdjacentHTML('beforebegin',$realNameDiv);
             }
