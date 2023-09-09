@@ -368,7 +368,7 @@
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
             if (Tools.alertFuc({ pig_phone, real_name })) return false;
-            return Tools.modifyDataToLastRecord(phone, { real_name });
+            return Tools.modifyDataToLastRecord(pig_phone, { real_name });
         },
         // 找到真实姓名
         findRealNamesByDatas: (datas, otherJudge, is_complete) => {
@@ -826,6 +826,7 @@
         modifyDataToLastRecord: (phone, obj = {}) => {
             Object.assign(DATA[phone][0], obj);
             storageData();
+            return true;
         },
         // 不再提醒
         noRemind: (phone) => {
@@ -1236,6 +1237,7 @@
             $qq.append(Div);
         }
         // 标注真实姓名
+        // 在这写微信名字备注
         if (humans.real_names.length > 1) {
             const arr = humans.real_names.filter(real_name_tmp => real_name_tmp != real_name);
             if (arr.length > 0) {
@@ -1678,7 +1680,7 @@
 
         },1000))
         // 旺旺号变化之后的反应
-        $ww.addEventListener('input', e => {
+        $ww.addEventListener('input',Tools.throttle( e => {
             const wwExec = e.target.value;
             if (wwExec) {
                 const phoneArr = Tools.almightySearch([wwExec]);
@@ -1690,7 +1692,7 @@
                     // setCon(['没有找到phone']);
                 }
             }
-        }, false)
+        },1000), false)
         // wx变化之后的反应
         // $wx.addEventListener('input', e => {
         //     const wx = e.target.value;
