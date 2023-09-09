@@ -384,9 +384,34 @@
         },
         // 添加真实姓名对应的微信名字
         addWxName: (pig_phone, wx_name, real_name) => {
-            if (Tools.alertFuc({ pig_phone, wx_name, real_name })) return false;
-            return Tools.addKeyValue(pig_phone, 'wx_name', wx_name, undefined, () => {
-                return { real_name };
+            if (Tools.alertFuc({ pig_phone, wx_name })) return false;
+            // 匹配出来真实的微信姓名跟真实姓名，"微信名字(真实姓名)"的格式
+            let wx_name_tmp = wx_name;
+            let real_name_tmp = real_name;
+            const reg = /(.+?)\((.+?)\)/;
+            const result_reg = reg.exec(wx_name);
+            if(result_reg){
+                wx_name_tmp = result_reg[1];
+                real_name_tmp = result_reg[2];
+                // console.log(result_reg);
+                // 找到真实的姓名
+                let real = Tools.findKeysByDatas(DATA[pig_phone],'real_name',(data)=>{
+                    // 把多个**替换下
+                    let tmp = real_name_tmp.replace(/\*+/g,'.+?');
+                    // console.log(tmp);
+                    return new RegExp(tmp).exec(data.real_name);
+                },false);
+                // console.log(real);
+                if(real.length>0){
+                    real_name_tmp = real[0];
+                }else{
+                    alert('没有找到真实姓名');
+                    return false;
+                }
+
+            }
+            return Tools.addKeyValue(pig_phone, 'wx_name', wx_name_tmp, undefined, () => {
+                return { real_name:real_name_tmp };
             })
         },
         // 删除真实姓名对应的微信名字
@@ -1513,7 +1538,7 @@
                         <button class="search_btn j-contact-add" data-key="wx" style="margin-left:10px">添加wx</button>
                         <button class="search_btn j-contact-del" data-key="wx" style="background:red;margin-left:10px;">删除wx</button>
                         <button class="search_btn j-realName-search" style="background:rebeccapurple; margin-left:10px;">真实姓名搜索</button>
-                        <input class="search_input j-wxName" type="text" placeholder="wx姓名" style="marin-left:10px;" />
+                        <input class="search_input j-wxName" type="text" placeholder="wx名字(真实姓名)|wx姓名" style="margin-left:10px;width:165px;" />
                         <button class="search_btn j-wxName-add" style="margin-left:10px">添加wx姓名</button>
                         <button class="search_btn j-wxName-del" style="background:red;margin-left:10px;">删除wx姓名</button>
                 </div>
