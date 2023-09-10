@@ -253,6 +253,17 @@
         isDateValid: (...val) => {
             return !Number.isNaN(new Date(...val).valueOf());
         },
+        // 删除DATA的整个记录data
+        deleteData:(pig_phone)=>{
+            if(Tools.alertFuc({pig_phone}))return false;
+            if (confirm(`确定删除(${pig_phone})吗？`)) {
+                delete DATA[pig_phone];
+                storageData();
+                return true;
+            }else{
+                return false;
+            }
+        },
         // 判断是否可删的key
         isDelKey: (data, key) => {
             let result = true;
@@ -1537,8 +1548,8 @@
                         <div><input class="search_input note" placeholder="用户备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
                     </div>
                     <div>
-                        <div style="margin-bottom: 10px;"><input class="search_input j-gnote" placeholder="网页备注/真实姓名" /><button class="search_btn add-gnote">添加网页备注</button><button class="search_btn j-real-name-add-btn" style="background:rebeccapurple;margin-left:15px;">修改真实姓名</button></div>
-                        <div><select class="search_input qq_exec_pre" style="width:auto;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button></div>    
+                        <div style="margin-bottom: 10px;"><input class="search_input j-gnote" placeholder="网页备注/真实姓名" /><button class="search_btn add-gnote">添加网页备注</button><button class="search_btn j-real-name-add-btn" style="background:rebeccapurple;margin-left:10px;">修改真实姓名</button></div>
+                        <div><select class="search_input qq_exec_pre" style="width:auto;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button><button class="search_btn j-del-data" style="background:rebeccapurple;margin-left:5px;">删除做单记录</button></div>    
                     </div>
                 </div>
                 <div class="search m-search">
@@ -2393,6 +2404,12 @@
             alert('添加做单记录成功');
             location.reload();
         }, false)
+        // 删除整个记录
+        qqAdd.querySelector('.j-del-data').addEventListener('click',e=>{
+            const pig_phone = $phone.value;
+            const result = Tools.deleteData(pig_phone);
+            if(result)alert('删除成功');
+        },false)
         // 添加联系方式
         addEventListener(qqAdd, 'click', (e) => {
             const pig_phone = $phone.value;
