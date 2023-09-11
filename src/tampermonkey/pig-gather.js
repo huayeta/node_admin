@@ -18,7 +18,7 @@
     //         {pig_phone,pig_qq?,wx?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
-    //         {pig_phone,wx} 添加不同的wx
+    //         {pig_phone,wx,wx_name?} 添加不同的wx
     //         {pig_phone,real_name,wx_name} 收款码
     //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
@@ -315,7 +315,7 @@
                 const datas = DATA[pig_phone];
                 const { data } = Tools.isKeyValueByDatas(datas, key, value);
                 if (data && !Tools.isDelKey(data, key)) {
-                    alert(`不可删除字段${data}`);
+                    alert(`不可删除字段${JSON.stringify(data)}`);
                     return false;
                 }
             }
@@ -331,6 +331,18 @@
                 // alert(`${key}=${value}删除成功`);
                 return true;
             }
+        },
+        // 修改data
+        modifyData:(pig_phone,valueObj={},judgeFuc=(data)=>{return false;})=>{
+            if(Tools.alertFuc({pig_phone}))return false;
+            const datas = DATA[pig_phone];
+            datas.forEach((data,index)=>{
+                if(judgeFuc(data,index)){
+                    Object.assign(DATA[pig_phone][index], valueObj);
+                }
+            })
+            storageData();
+            return true;
         },
         // 在datas数据中判断是否存在key=value，存在则返回data
         isKeyValueByDatas: (datas, key, value, isEqual = false) => {
@@ -421,9 +433,20 @@
                 }
 
             }
-            return Tools.addKeyValue(pig_phone, 'wx_name', wx_name_tmp, undefined, () => {
+            return Tools.addKeyValue(pig_phone, 'wx_name', wx_name_tmp, ()=>{
+                // 判断不能重复添加
+                let result = true;
+                for(let data of DATA[pig_phone]){
+                    if(data.wx_name && data.real_name == real_name_tmp){
+                        alert('一个真实姓名对应一个wx名字');
+                        result = false;
+                        break;
+                    }
+                }
+                return result;
+            }, () => {
                 return { real_name:real_name_tmp };
-            })
+            },undefined,true)
         },
         // 删除真实姓名对应的微信名字
         delWxName: (pig_phone, wx_name) => {
@@ -624,27 +647,39 @@
         //     return Tools.delKeyValue(pig_phone,key,value)
         // },
         // 找到所有的联系方式
-        findContactsByDatas: (datas, key, excludeValue) => {
-            const arr = [];
-            datas.forEach(data => {
-                if (data[key] && data[key] != excludeValue && !arr.includes(data[key])) {
-                    arr.push(data[key]);
-                }
-            })
-            // console.log(arr);
-            return arr;
-        },
+        // findContactsByDatas: (datas, key, excludeValue) => {
+        //     const arr = [];
+        //     datas.forEach(data => {
+        //         if (data[key] && data[key] != excludeValue && !arr.includes(data[key])) {
+        //             arr.push(data[key]);
+        //         }
+        //     })
+        //     // console.log(arr);
+        //     return arr;
+        // },
         // 添加wx
-        // addWx:(pig_phone,wx)=>{
-        //     Tools.addContact(pig_phone,'wx',wx);
-        // },
+        addWx:(pig_phone,wx)=>{
+            // Tools.addContact(pig_phone,'wx',wx);
+            return Tools.addKeyValue(pig_phone,'wx',wx);
+        },
         // 删除wx
-        // delWx:(pig_phone,wx)=>{
-        //     Tools.delContact(pig_phone,'wx',wx);
-        // },
+        delWx:(pig_phone,wx)=>{
+            return Tools.delKeyValue(pig_phone,'wx',wx,undefined,undefined,false);
+        },
+        // 给wx添加wx_name
+        addWxNameByWx:(pig_phone,wx,wx_name)=>{
+            return Tools.modifyData(pig_phone,{wx_name},(data,index)=>{
+                return data.wx == wx;
+            })
+        },
         // 找到所有的wxs
-        findWxsByDatas: (datas, excludeValue) => {
-            return Tools.findContactsByDatas(datas, 'wx', excludeValue);
+        findWxsByDatas: (datas) => {
+            return Tools.findKeysByDatas(datas,'wx',undefined,true).map(data=>{
+                if(data.wx_name){
+                    return `${data.wx}<span style="color:gray;font-size:12px;">（${data.wx_name}）</span>`
+                }
+                return data.wx;
+            });
         },
         // 添加备注
         addNote: (pig_phone, pig_note, pig_type) => {
@@ -1102,7 +1137,7 @@
             return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
         }, '');
         // 找到所有的wxs
-        const wxs = Tools.findWxsByDatas(datas, '');
+        const wxs = Tools.findWxsByDatas(datas);
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
             real_names: real_name_arr,
@@ -1556,10 +1591,11 @@
                         <input class="search_input j-contact-input" type="text" data-key="wx" placeholder="wx号" />
                         <button class="search_btn j-contact-add" data-key="wx" style="margin-left:10px">添加wx</button>
                         <button class="search_btn j-contact-del" data-key="wx" style="background:red;margin-left:10px;">删除wx</button>
-                        <button class="search_btn j-realName-search" style="background:rebeccapurple; margin-left:10px;">真实姓名搜索</button>
+                        <button class="search_btn j-add-wxName-by-wx" style="background:rebeccapurple; margin-left:10px;">wx添加wx姓名</button>
                         <input class="search_input j-wxName" type="text" placeholder="wx名字(真实姓名)|wx姓名" style="margin-left:10px;width:165px;" />
                         <button class="search_btn j-wxName-add" style="margin-left:10px">添加wx姓名</button>
                         <button class="search_btn j-wxName-del" style="background:red;margin-left:10px;">删除wx姓名</button>
+                        <button class="search_btn j-realName-search" style="background:rebeccapurple; margin-left:10px;">真实姓名搜索</button>
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
@@ -2413,21 +2449,21 @@
         // 添加联系方式
         addEventListener(qqAdd, 'click', (e) => {
             const pig_phone = $phone.value;
-            const $addBtn = e.target;
-            const key = $addBtn.getAttribute('data-key');
-            const $input = qqAdd.querySelector(`.j-contact-input[data-key="${key}"]`);
+            // const $addBtn = e.target;
+            // const key = $addBtn.getAttribute('data-key');
+            const $input = qqAdd.querySelector(`.j-contact-input[data-key="wx"]`);
             const value = $input.value;
-            if (Tools.addKeyValue(pig_phone, key, value)) {
+            if (Tools.addWx(pig_phone, value)) {
                 alert('添加成功');
             }
         }, '.j-contact-add');
         addEventListener(qqAdd, 'click', e => {
             const pig_phone = $phone.value;
-            const $addBtn = e.target;
-            const key = $addBtn.getAttribute('data-key');
-            const $input = qqAdd.querySelector(`.j-contact-input[data-key="${key}"]`);
+            // const $addBtn = e.target;
+            // const key = $addBtn.getAttribute('data-key');
+            const $input = qqAdd.querySelector(`.j-contact-input[data-key="wx"]`);
             const value = $input.value;
-            if (Tools.delKeyValue(pig_phone, key, value)) {
+            if (Tools.delWx(pig_phone, value)) {
                 alert('删除成功');
             }
         }, '.j-contact-del')
@@ -2445,6 +2481,14 @@
                 }
             }
         }, '.j-contact-input')
+        // 添加wxNamebyWx
+        qqAdd.querySelector('.j-add-wxName-by-wx').addEventListener('click',e=>{
+            const pig_phone = $phone.value;
+            const wx_name = $wxName.value;
+            const wx = $wx.value;
+            const result = Tools.addWxNameByWx(pig_phone,wx,wx_name);
+            if(result)alert('添加wx名字成功');
+        })
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
