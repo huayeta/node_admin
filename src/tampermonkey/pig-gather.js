@@ -673,10 +673,10 @@
             })
         },
         // 找到所有的wxs
-        findWxsByDatas: (datas) => {
+        findWxsByDatas: (datas,isHaveWxNameAdd=false) => {
             return Tools.findKeysByDatas(datas,'wx',undefined,true).map(data=>{
                 if(data.wx_name){
-                    return `${data.wx}<span style="color:gray;font-size:12px;">（${data.wx_name}）</span>`
+                    return `${data.wx}${isHaveWxNameAdd?`<span style="color:gray;font-size:12px;">（${data.wx_name}）</span>`:''}`
                 }
                 return data.wx;
             });
@@ -1102,6 +1102,8 @@
         let register_time = Tools.findRegisterTimeByDatas(records);
         // 找到真实姓名对应的微信名字s
         const wx_names = Tools.findWxNamesByDatas(datas) || {};
+        // 是否是骗子
+        const isLiar = JSON.stringify(notes).includes('骗子');
         function formateDatasByPigType(datas, pig_type) {
             const records = Tools.getDatasByPigType(datas, pig_type);
             // 备注数据
@@ -1137,7 +1139,7 @@
             return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
         }, '');
         // 找到所有的wxs
-        const wxs = Tools.findWxsByDatas(datas);
+        const wxs = Tools.findWxsByDatas(datas,true);
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
             real_names: real_name_arr,
@@ -1159,6 +1161,7 @@
             wws_html: wws_html,
             wxs: wxs,
             wx_names: wx_names,
+            isLiar,isLiar,
         }
     }
 
@@ -1460,7 +1463,7 @@
             trs += `
             <tr>
                 <td>
-                    <p><span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
+                    <p>${humanData.isLiar?`<span style="display:block;color:red;font-size:60px;">骗子</span>`:''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
@@ -1737,7 +1740,7 @@
             $phone.value = phone;
             const wws = Tools.findWwsByPhones([phone]);
             $ww.value = wws.join('，');
-            $wx.value = Tools.findWxsByDatas(DATA[phone]).join(',');
+            $wx.value = Tools.findWxsByDatas(DATA[phone],false).join(',');
             $gNote.value = Tools.findRealNamesByDatas(DATA[phone]).join(',');
             // 得到最后一个记录的come-type,qq_exec_pre
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[phone], ['come_type', 'qq_exec_pre']);
@@ -2765,7 +2768,11 @@
             // console.log(Tools.findPhonesByKeyword(qq));
             // return;
             const arr = Tools.almightySearch(keywords).map(phone => DATA[phone]);
-            if (arr.length == 0) return setCon(['没找到做单记录']);
+            if (arr.length == 0){
+                setCon([`没找到做单记录<span style="margin:15px;display:inline-block;width:auto;height:auto;" class="j-add-record-btn search"></span>`]);
+                Tools.addRecordBtn(phone,qqAdd.querySelector('.j-add-record-btn'));
+                return;
+            }
             // 判断是否有一个qq多个手机的情况存在
             // console.log(arr);
             if (arr.length === 1) {
