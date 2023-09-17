@@ -697,7 +697,7 @@
             return Tools.delKeyValue(pig_phone, 'pig_note', pig_note, undefined, (data) => {
                 if (data['pig_note'] == pig_note && data['pig_type'] != pig_type) return true;
                 return false;
-            })
+            },false)
         },
         // 找到phone数据里面的note数据obj
         findNotesByDatas: (datas, pig_type = 'TB') => {
@@ -972,6 +972,16 @@
                 return $option_default.getAttribute('value');
             }
             return $select.querySelector('option:nth-child(1)').getAttribute('value');
+        },
+        // 提醒用户出问题
+        remindText:(datas)=>{
+            const remind_text_arr = ['骗子','不给单'];
+            let remind_text = [];
+            let json = JSON.stringify(datas);
+            remind_text_arr.forEach(text=>{
+                if(json.includes(text))remind_text.push(text);
+            })
+            return remind_text;
         }
     }
     // 获得每个tr数据
@@ -1102,8 +1112,8 @@
         let register_time = Tools.findRegisterTimeByDatas(records);
         // 找到真实姓名对应的微信名字s
         const wx_names = Tools.findWxNamesByDatas(datas) || {};
-        // 是否是骗子
-        const isLiar = JSON.stringify(notes).includes('骗子');
+        // 提醒文本
+        const remind_texts = Tools.remindText(datas);
         function formateDatasByPigType(datas, pig_type) {
             const records = Tools.getDatasByPigType(datas, pig_type);
             // 备注数据
@@ -1161,7 +1171,7 @@
             wws_html: wws_html,
             wxs: wxs,
             wx_names: wx_names,
-            isLiar,isLiar,
+            remind_texts,remind_texts,
         }
     }
 
@@ -1339,6 +1349,13 @@
             $wwDiv.innerHTML = `旺旺号：${humans.wws_html}`;
             $realName.append($wwDiv);
         }
+        // 标注提醒
+        if(humans.remind_texts.length>0){
+            const $remindDiv = document.createElement('div');
+            $remindDiv.style='color:red;font-size:60px;';
+            $remindDiv.innerHTML = `${humans.remind_texts.join('，')}`;
+            $phone.prepend($remindDiv);
+        }
 
         // 如果没有记录就返回
         if (Datas.length == 0) {
@@ -1463,7 +1480,7 @@
             trs += `
             <tr>
                 <td>
-                    <p>${humanData.isLiar?`<span style="display:block;color:red;font-size:60px;">骗子</span>`:''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
+                    <p>${humanData.remind_texts.length>0?`<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>`:''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
