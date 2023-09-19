@@ -35,23 +35,23 @@
     ];
     const QQS = {
         '31': {
-            text: '小艾-1',
+            text: 'QQ-小艾-1',
             color: 'blueviolet',
         },
         '30': {
-            text: '小欣-2',
+            text: 'QQ-小欣-2',
             color: 'red',
         },
         '21': {
-            text: '小菜-5',
+            text: 'QQ-小菜-5',
             color: 'black',
         },
         '20': {
-            text: '小云-3',
+            text: 'QQ-小云-3',
             color: 'rebeccapurple',
         },
         '54': {
-            text: '小韵-4',
+            text: 'QQ-小韵-4',
             color: 'fuchsia'
         },
         'a847457846': {
@@ -1305,7 +1305,7 @@
                     if (Datas.length == 0) {
                         return a + `<p>${b}，<br/>已做单：${Datas.length}`;
                     }
-                    return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单qq：${QQS[Datas[0].qq_exec_pre] ? QQS[Datas[0].qq_exec_pre].text : Datas[0].qq_exec_pre}</p>`
+                    return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单渠道号：${QQS[Datas[0].qq_exec_pre] ? QQS[Datas[0].qq_exec_pre].text : Datas[0].qq_exec_pre}</p>`
                 }, '')
                 Div.innerHTML = `有不同的手机号：${str}`;
                 $phone.append(Div);
@@ -1400,7 +1400,7 @@
         const $lately = document.createElement('div');
         $lately.style = 'color:rgb(16, 0, 255);min-width:150px;';
         let latelyStr = `<p>最近做单日期:${humans.typeDatas[pig_type].record_time}</p>`;
-        if (humans.typeDatas[pig_type].record_qq) latelyStr += `<P>最近做单qq：${humans.typeDatas[pig_type].record_qq}</P>`;
+        if (humans.typeDatas[pig_type].record_qq) latelyStr += `<P>最近做单渠道号：${humans.typeDatas[pig_type].record_qq}</P>`;
         if (humans.typeDatas[pig_type].record_come_type) latelyStr += `<p>最后做单渠道:${humans.typeDatas[pig_type].record_come_type}</p>`;
         if (humans.typeDatas[pig_type].record_shop_labels) latelyStr += `<p>做单店铺顺序:${humans.typeDatas[pig_type].record_shop_labels}</p>`;
         $lately.innerHTML = latelyStr;
@@ -1509,7 +1509,7 @@
                                 <td style="color:gray;">${Tools.findNameByComeTypeValue(humanData.typeDatas.JD.record_come_type)}</td>
                             </tr>
                             <tr>
-                                <td>最近做单qq号</td>
+                                <td>最近做单渠道号</td>
                                 <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_qq}</td>
                                 <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_qq}</td>
                             </tr>
@@ -1682,7 +1682,7 @@
                                     <th>已做单数量</th>
                                     <th>备注</th>
                                     <th>最近做单日期</th>
-                                    <th>最近做单qq号</th>
+                                    <th>最近做单渠道号</th>
                                 </tr>
                                 <tr>
                                     <td>
