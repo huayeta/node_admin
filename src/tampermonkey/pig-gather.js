@@ -449,12 +449,12 @@
             },undefined,true)
         },
         // 删除真实姓名对应的微信名字
-        delWxName: (pig_phone, wx_name) => {
+        delRealNameWxName: (pig_phone, wx_name) => {
             if (Tools.alertFuc({ pig_phone, wx_name })) return false;
-            return Tools.delKeyValue(pig_phone, 'wx_name', wx_name, undefined, undefined, false);
+            return Tools.delKeyValue(pig_phone, 'wx_name', wx_name, undefined, (data)=>!data.real_name, false);
         },
         // 找到所有的微信姓名return {real_name:wx_name}
-        findWxNamesByDatas: (datas) => {
+        findRealNameWxNamesByDatas: (datas) => {
             const result = {};
             const wxNames = Tools.findKeysByDatas(datas, 'wx_name', (data) => data.real_name, true);
             wxNames.forEach(data => {
@@ -672,14 +672,26 @@
                 return data.wx == wx;
             })
         },
+        // 找到所有的wx对应的微信名字
+        findWxWxNamesByDatas:(datas)=>{
+            const wxs_arr = Tools.findKeysByDatas(datas,'wx',undefined,true);
+            const results = {};
+            wxs_arr.forEach(wx_obj=>{
+                if(wx_obj.wx){
+                    results[wx_obj.wx]=wx_obj.wx_name;
+                }
+            })
+            return results;
+        },
         // 找到所有的wxs
         findWxsByDatas: (datas,isHaveWxNameAdd=false) => {
-            return Tools.findKeysByDatas(datas,'wx',undefined,true).map(data=>{
-                if(data.wx_name){
-                    return `${data.wx}${isHaveWxNameAdd?`<span style="color:gray;font-size:12px;">（${data.wx_name}）</span>`:''}`
+            const wx_wx_names = Tools.findWxWxNamesByDatas(datas);
+            return Object.keys(wx_wx_names).map(wx=>{
+                if(wx_wx_names[wx] && isHaveWxNameAdd){
+                    return `${wx}${isHaveWxNameAdd?`<span style="color:gray;font-size:12px;">（${wx_wx_names[wx]}）</span>`:''}`;
                 }
-                return data.wx;
-            });
+                return wx;
+            })
         },
         // 添加备注
         addNote: (pig_phone, pig_note, pig_type) => {
@@ -1111,7 +1123,7 @@
         // 找到注册时间
         let register_time = Tools.findRegisterTimeByDatas(records);
         // 找到真实姓名对应的微信名字s
-        const wx_names = Tools.findWxNamesByDatas(datas) || {};
+        const wx_names = Tools.findRealNameWxNamesByDatas(datas) || {};
         // 提醒文本
         const remind_texts = Tools.remindText(datas);
         function formateDatasByPigType(datas, pig_type) {
@@ -2762,7 +2774,7 @@
         qqAdd.querySelector('.j-wxName-del').addEventListener('click', () => {
             const pig_phone = $phone.value;
             const wx_name = $wxName.value;
-            const result = Tools.delWxName(pig_phone, wx_name);
+            const result = Tools.delRealNameWxName(pig_phone, wx_name);
             if (result) alert(`删除微信姓名（${wx_name}）成功`);
         })
         // 创建新纪录并添加qq和旺旺
