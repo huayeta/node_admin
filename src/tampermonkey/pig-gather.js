@@ -707,7 +707,7 @@
         delNote: (pig_phone, pig_note, pig_type) => {
             if (Tools.alertFuc({ pig_type })) return false;
             return Tools.delKeyValue(pig_phone, 'pig_note', pig_note, undefined, (data) => {
-                if (data['pig_note'] == pig_note && data['pig_type'] != pig_type) return true;
+                if ((data['pig_note'] == pig_note || (!data['pig_note'] && pig_note=='TB')) && data['pig_type'] != pig_type) return true;
                 return false;
             },false)
         },
@@ -939,11 +939,11 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (data.pig_qq || !arr.includes(data.pig_qq)) arr.push(data.pig_qq);
-                    if (data.pig_phone || !arr.includes(data.pig_phone)) arr.push(data.pig_phone);
-                    if (data.ww_exec || !arr.includes(data.ww_exec)) arr.push(data.ww_exec);
-                    if (data.wx || !arr.includes(data.wx)) arr.push(data.wx);
-                    if (data.wx_name || !arr.includes(data.wx_name)) arr.push(data.wx_name);
+                    if (data.pig_qq && !arr.includes(data.pig_qq)) arr.push(data.pig_qq);
+                    if (data.pig_phone && !arr.includes(data.pig_phone)) arr.push(data.pig_phone);
+                    if (data.ww_exec && !arr.includes(data.ww_exec)) arr.push(data.ww_exec);
+                    if (data.wx && !arr.includes(data.wx)) arr.push(data.wx);
+                    if (data.wx_name && data.wx_name.length>=2 && !arr.includes(data.wx_name)) arr.push(data.wx_name);
                 })
             })
             // console.log(arr);
@@ -987,7 +987,7 @@
         },
         // 提醒用户出问题
         remindText:(datas)=>{
-            const remind_text_arr = ['骗子','不给单'];
+            const remind_text_arr = ['骗子','不给单','不再给单','拉黑','可疑','黑名单'];
             let remind_text = [];
             let json = JSON.stringify(datas);
             remind_text_arr.forEach(text=>{
@@ -1364,7 +1364,7 @@
         // 标注提醒
         if(humans.remind_texts.length>0){
             const $remindDiv = document.createElement('div');
-            $remindDiv.style='color:red;font-size:60px;';
+            $remindDiv.style='color:red;font-size:40px;';
             $remindDiv.innerHTML = `${humans.remind_texts.join('，')}`;
             $phone.prepend($remindDiv);
         }
@@ -1410,7 +1410,7 @@
         // 最近做单日期
         const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
         const $lately = document.createElement('div');
-        $lately.style = 'color:rgb(16, 0, 255);min-width:150px;';
+        $lately.style = 'color:rgb(16, 0, 255);min-width:120px;';
         let latelyStr = `<p>最近做单日期:${humans.typeDatas[pig_type].record_time}</p>`;
         if (humans.typeDatas[pig_type].record_qq) latelyStr += `<P>最近做单渠道号：${humans.typeDatas[pig_type].record_qq}</P>`;
         if (humans.typeDatas[pig_type].record_come_type) latelyStr += `<p>最后做单渠道:${humans.typeDatas[pig_type].record_come_type}</p>`;
@@ -2505,7 +2505,7 @@
             if (value) {
                 const phoneArr = Tools.almightySearch([value]);
                 // console.log(phoneArr);
-                if (phoneArr.length > 0) {
+                if (phoneArr.length > 0 && !$phone.value) {
                     $phone.value = phoneArr.join(',');
                     // setCon(['']);
                 } else {
