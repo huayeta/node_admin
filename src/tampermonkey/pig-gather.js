@@ -707,7 +707,7 @@
         delNote: (pig_phone, pig_note, pig_type) => {
             if (Tools.alertFuc({ pig_type })) return false;
             return Tools.delKeyValue(pig_phone, 'pig_note', pig_note, undefined, (data) => {
-                if ((data['pig_note'] == pig_note || (!data['pig_note'] && pig_note=='TB')) && data['pig_type'] != pig_type) return true;
+                if ((!data['pig_note'] && pig_note!='TB') && data['pig_type'] != pig_type) return true;
                 return false;
             },false)
         },
