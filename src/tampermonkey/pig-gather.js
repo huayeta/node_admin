@@ -754,13 +754,14 @@
             return true;
         },
         // 添加做单记录按钮
-        addRecordBtn: (phone, parentNode, text) => {
+        addRecordBtn: (phone, parentNode, text,qq) => {
             const button = document.createElement('button');
             button.className = 'search_btn';
             button.innerHTML = text || "添加记录";
             button.addEventListener('click', () => {
                 if (typeof phone == 'function') phone = phone();
                 const result = Tools.addRecord(phone);
+                if(qq) Tools.addQq(phone,qq);
                 if (result) alert('添加记录成功~');
             }, false)
             if (parentNode) {
@@ -943,7 +944,7 @@
                     if (data.pig_phone && !arr.includes(data.pig_phone)) arr.push(data.pig_phone);
                     if (data.ww_exec && !arr.includes(data.ww_exec)) arr.push(data.ww_exec);
                     if (data.wx && !arr.includes(data.wx)) arr.push(data.wx);
-                    if (data.wx_name && data.wx_name.length>=2 && !arr.includes(data.wx_name)) arr.push(data.wx_name);
+                    if (data.wx_name && !arr.includes(data.wx_name)) arr.push(data.wx_name);
                 })
             })
             // console.log(arr);
@@ -987,7 +988,7 @@
         },
         // 提醒用户出问题
         remindText:(datas)=>{
-            const remind_text_arr = ['骗子','不给单','不再给单','拉黑','可疑','黑名单'];
+            const remind_text_arr = ['骗子','不给单','不再给单','拉黑','可疑','黑名单','注意'];
             let remind_text = [];
             let json = JSON.stringify(datas);
             remind_text_arr.forEach(text=>{
@@ -1266,7 +1267,7 @@
                 const Div = document.createElement('div');
                 Div.className = 'search';
                 Div.style = 'margin-top: 10px;';
-                Tools.addRecordBtn(phone, Div);
+                Tools.addRecordBtn(phone, Div,undefined,qq);
                 $phone.append(Div);
             }
 
@@ -1665,7 +1666,7 @@
                     <div class="m-findData search">
                     <!-- <button class="search_btn j-findPhoneBtn" style="">查询phone做单数据</button>
                         <button class="search_btn j-findQqBtn" style="background:rebeccapurple;">查询qq做单数据</button>-->
-                        <button class="search_btn j-almightySearch" style="">QQ手机旺旺全能搜索</button>
+                        <button class="search_btn j-almightySearch" style="">qq|phone|ww|wx全能搜索</button>
                         <!-- <button class="search_btn j-searchNote" style="background:rebeccapurple;">模糊搜索用户备注</button>-->
                         <!--<button class="search_btn j-findQqs" style="">查询不同的qq</button>-->
                         <button class="search_btn download" style="background:rebeccapurple;">下载数据</button>
@@ -2799,7 +2800,7 @@
             const arr = Tools.almightySearch(keywords).map(phone => DATA[phone]);
             if (arr.length == 0){
                 setCon([`没找到做单记录<span style="margin:15px;display:inline-block;width:auto;height:auto;" class="j-add-record-btn search"></span>`]);
-                Tools.addRecordBtn(phone,qqAdd.querySelector('.j-add-record-btn'));
+                Tools.addRecordBtn(phone,qqAdd.querySelector('.j-add-record-btn'),undefined,qq);
                 return;
             }
             // 判断是否有一个qq多个手机的情况存在
