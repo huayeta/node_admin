@@ -3,9 +3,13 @@ const path = require('path');
 const officegen = require('officegen');
 
 const DATA = [];
-const SUM = 2;//每天看几本
-
 let LISTS = [];//需要记忆的书
+// 学习计划名称
+const TITLE = 'RAZ C 学习计划';
+// 文件目录路径
+const directoryPath = 'E:\\绘本\\其他资源绘本\\RAZ\\C级别PDF';
+// 学习进度
+const SUM = 2;
 
 // 模拟list 0-100
 // for (let i = 1; i <= 100; i++) {
@@ -43,10 +47,6 @@ function flatten(arr, delimiter) {
     }, []).join(delimiter);
 }
 
-
-// 文件目录路径
-const directoryPath = 'E:\\绘本\\其他资源绘本\\RAZ\\C级别PDF';
-
 // 塞入每天的艾宾浩斯法的路线
 const AddPlan = (content, order) => {
     // 0包括了初次记忆，7天一循环，去除15天
@@ -71,9 +71,17 @@ const downloadDocx = () => {
 
     // 创建 Word 文档对象
     const docx = officegen('docx');
+    // 添加标题
+    docx.createP().addText(TITLE, {
+        bold: true,
+        font_size: 18,
+        align: 'center'
+    })
+    docx.getFooter().createP(TITLE);
 
     DATA.forEach((data, index) => {
-        // 添加标题
+
+        // 添加每天
         const title = `第${index + 1}天`;
         const titleStyle = {
             font_face: 'Arial',
@@ -84,13 +92,13 @@ const downloadDocx = () => {
         titleP.addText(title, titleStyle);
 
         // 添加正文内容
-        const content = `${flatten(data,'，')}`;
+        const content = `${flatten(data, '，')}`;
         const contentP = docx.createP();
         contentP.addText(content);
     })
 
     // 保存文档为文件
-    const filePath = 'document.docx';
+    const filePath = `\planflod\\${TITLE}.docx`;
     const outputStream = fs.createWriteStream(filePath);
     docx.generate(outputStream);
 
