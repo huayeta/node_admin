@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const officegen = require('officegen');
 
 const DATA = [];
 const SUM = 2;//每天看几本
@@ -28,6 +29,21 @@ function removeFileExtension(filename) {
     return path.parse(filename).name;
 }
 
+// 展开数组用指定分隔符
+function flatten(arr, delimiter) {
+    return arr.reduce((acc, val) => {
+        if (Array.isArray(val)) {
+            // 递归处理嵌套数组
+            const nested = flatten(val, delimiter);
+            return acc.concat(nested);
+        } else {
+            acc.push(val);
+            return acc;
+        }
+    }, []).join(delimiter);
+}
+
+
 // 文件目录路径
 const directoryPath = 'E:\\绘本\\其他资源绘本\\RAZ\\C级别PDF';
 
@@ -51,6 +67,43 @@ function groupByLists(arr, sum = 1) {
     return result;
 }
 
+const downloadDocx = () => {
+
+    // 创建 Word 文档对象
+    const docx = officegen('docx');
+
+    DATA.forEach((data, index) => {
+        // 添加标题
+        const title = `第${index + 1}天`;
+        const titleStyle = {
+            font_face: 'Arial',
+            bold: true,
+            font_size: 16
+        };
+        const titleP = docx.createP();
+        titleP.addText(title, titleStyle);
+
+        // 添加正文内容
+        const content = `${flatten(data,'，')}`;
+        const contentP = docx.createP();
+        contentP.addText(content);
+    })
+
+    // 保存文档为文件
+    const filePath = 'document.docx';
+    const outputStream = fs.createWriteStream(filePath);
+    docx.generate(outputStream);
+
+    outputStream.on('close', () => {
+        console.log('Word 文档已生成');
+    });
+
+    outputStream.on('error', err => {
+        console.error(err);
+    });
+
+}
+
 // 调用函数读取目录
 readDirectoryAsync(directoryPath)
     .then(files => {
@@ -62,12 +115,14 @@ readDirectoryAsync(directoryPath)
             AddPlan(list, index);
         })
         // 输出函数
-        const printLists = () => {
-            DATA.forEach((data, index) => {
-                console.log(`第${index + 1}天：${data}`);
-            })
-        }
-        printLists();
+        // const printLists = () => {
+        //     DATA.forEach((data, index) => {
+        //         console.log(`第${index + 1}天：${data}`);
+        //     })
+        // }
+        // printLists();
+        // console.log(DATA);
+        downloadDocx();
     })
     .catch(error => {
         console.error('Error reading directory:', error);
