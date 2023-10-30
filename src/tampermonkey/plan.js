@@ -66,9 +66,9 @@ const downloadDocx = (TITLE, type = 1, Data = { day: 30 }) => {
                 // 添加正文内容
                 if (!(Data.day && Data.day < index + 1)) {
                     docx.createP().addText(`学习内容：${data[0]}`);
-                    if (data.length > 1) docx.createP().addText(`复习计划：${flatten(data.slice(1), '，')}；`)
+                    if (data.length > 1) docx.createP().addText(`复习计划：${flatten(data.slice(1).reverse(), '，')}`)
                 } else {
-                    docx.createP().addText(`复习计划：${flatten(data, '，')}；`)
+                    docx.createP().addText(`复习内容：${flatten(data.reverse(), '，')}`)
                 }
                 break;
             case 2:
@@ -81,18 +81,18 @@ const downloadDocx = (TITLE, type = 1, Data = { day: 30 }) => {
                     docp2.addText(`学习内容：____________________________________________；`, {
                         font_size: 14
                     });
-                    docx.createP().addText(`${index + 1 >= 10 ? ' ' : ''}               复习计划：${flatten(data, '，')}；`, {
+                    docx.createP().addText(`${index + 1 >= 10 ? ' ' : ''}               复习计划：${flatten(data.reverse(), '，')}；`, {
                         font_size: 14
                     });
                 } else {
-                    docx.createP().addText(`第${index + 1}天：复习计划：${flatten(data, '，')}；`, {
+                    docx.createP().addText(`第${index + 1}天：复习内容：${flatten(data.reverse(), '，')}；`, {
                         font_size: 14
                     })
                 }
                 break;
             default:
                 // 添加正文内容
-                docx.createP().addText(`${flatten(data, '，')}`)
+                docx.createP().addText(`${flatten(data.reverse(), '，')}`)
                 break;
         }
     })
@@ -159,7 +159,7 @@ const printDirLists = () => {
             console.error('Error reading directory:', error);
         });
 }
-printDirLists()
+// printDirLists()
 // 模拟学习课本学习计划打印1 -- 学习数据格式 第一本（16页）。。。
 // 打开之后 添加页码1/2居中 添加页眉居中标题颜色灰色
 const printLists1 = () => {
@@ -167,31 +167,30 @@ const printLists1 = () => {
     const TITLE = '直映识字-学习计划';
     // 学习进度
     const SUM = 3;
+    const lists = [];
     // 学习数据格式 第一本（16页）。。。
     // const sum = 16 + 20 + 32 + 34 + 30 + 34;
     [16, 20, 32, 34, 30, 34].forEach((page, index) => {
         // 第几本书
         const order = index + 1;
         for (let i = 1; i <= page; i++) {
-            LISTS.push(`第${order}本（${i}）`)
+            lists.push(`第${order}本（${i}）`)
         }
     })
     // 模拟list 0-100
     // for (let i = 1; i <= sum; i++) {
     //     LISTS.push(`list ${i}`);
     // }
-    // 首先分组然后塞入计划
-    groupByLists(LISTS, SUM).forEach((list, index) => {
+    // 进行分组后添加到计划里面
+    LISTS = groupByLists(lists, SUM);
+    LISTS.forEach((list, index) => {
         AddPlan(list, index);
     })
-    // 打印计划
-    // DATA.forEach((data, index) => {
-    //     console.log(`第${index + 1}天：${data}`);
-    // })
+    console.log(DATA);
     // 保存计划
-    downloadDocx(TITLE);
+    downloadDocx(TITLE, 1, { day: LISTS.length });
 }
-// printLists1();
+printLists1();
 // 模拟天数学习计划打印2 -- 第一天学习序号1
 // 打开之后调整页面间距适中 添加页码1/2居中 添加页眉居中标题颜色灰色 段落1.05
 const printLists2 = () => {
