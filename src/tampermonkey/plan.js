@@ -66,7 +66,7 @@ const downloadDocx = (TITLE, type = 1, Data = { day: 30 }) => {
                 // 添加正文内容
                 if (!(Data.day && Data.day < index + 1)) {
                     docx.createP().addText(`学习内容：${data[0]}`);
-                    if (data.length > 1) docx.createP().addText(`复习计划：${flatten(data.slice(1).reverse(), '，')}`)
+                    if (data.length > 1) docx.createP().addText(`复习内容：${flatten(data.slice(1).reverse(), '，')}`)
                 } else {
                     docx.createP().addText(`复习内容：${flatten(data.reverse(), '，')}`)
                 }
@@ -81,7 +81,7 @@ const downloadDocx = (TITLE, type = 1, Data = { day: 30 }) => {
                     docp2.addText(`学习内容：____________________________________________；`, {
                         font_size: 14
                     });
-                    docx.createP().addText(`${index + 1 >= 10 ? ' ' : ''}               复习计划：${flatten(data.reverse(), '，')}；`, {
+                    if (data.length > 1) docx.createP().addText(`${index + 1 >= 10 ? ' ' : ''}                 复习内容：${flatten(data.slice(1).reverse(), '，')}；`, {
                         font_size: 14
                     });
                 } else {
@@ -136,7 +136,7 @@ const printDirLists = () => {
     function removeFileExtension(filename) {
         return path.parse(filename).name;
     }
-    // 去除后缀 C007_Going Away_Password_Removed
+    // 去除开头跟后缀 C007_Going Away_Password_Removed
     function removeOtherStr(str) {
         return str.replace(/_Password_Removed$/, "").replace(/^C\d+?_/,'');
     }
@@ -190,7 +190,7 @@ const printLists1 = () => {
     // 保存计划
     downloadDocx(TITLE, 1, { day: LISTS.length });
 }
-printLists1();
+// printLists1();
 // 模拟天数学习计划打印2 -- 第一天学习序号1
 // 打开之后调整页面间距适中 添加页码1/2居中 添加页眉居中标题颜色灰色 段落1.05
 const printLists2 = () => {
@@ -209,10 +209,8 @@ const printLists2 = () => {
         AddPlan(list, index);
     })
     // 打印计划
-    DATA.forEach((data, index) => {
-        console.log(`第${index + 1}天：${data}`);
-    })
+    console.log(DATA);
     // 保存计划
     downloadDocx(TITLE, 2, { day: DAY });
 }
-// printLists2();
+printLists2();
