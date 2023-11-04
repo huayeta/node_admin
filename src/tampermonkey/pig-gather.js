@@ -25,6 +25,8 @@
     // }
     // 获取已完成小猪数据
     const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
+    // 是否自定义
+    const is_custom = true;
     const COMETYPE = [
         { name: 'pig', fix: '', value: 'pig' },
         { name: 'A97-欢乐购秒杀1群', fix: 'QQ', value: '626195966' },
@@ -1048,7 +1050,12 @@
         Tools.formateWwFromData();
         storageData();
     }
-    getData();
+    if(!is_custom){
+        getData();
+    }else{
+        Tools.formateWwFromData();
+        storageData();
+    }
 
     // const DATA = getData();
     // const DATA = {
@@ -1431,7 +1438,7 @@
         })
         // formatPendingTr($PendingTrs[0]);
     }
-    startFormatPendingCon();
+    if(!is_custom)startFormatPendingCon();
     // 等待审核格式化tr
     const startFormatAuditingCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(3)');
@@ -1443,7 +1450,7 @@
             formatTr($tr, 6, 9, 14, 3);
         })
     }
-    startFormatAuditingCon();
+    if(!is_custom)startFormatAuditingCon();
     // 已完成格式化前100tr
     const startFormatCompleteCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(5)');
@@ -1455,7 +1462,7 @@
             if (false || index < 20) formatTr($tr, 5, 9, 14, 5);
         })
     }
-    startFormatCompleteCon();
+    if(!is_custom)startFormatCompleteCon();
     // 已取消格式化前100tr
     const startFormatCancelCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(6)');
@@ -1467,7 +1474,7 @@
             if (index < 20) formatTr($tr, 5, 7, 12);
         })
     }
-    startFormatCancelCon();
+    if(!is_custom)startFormatCancelCon();
     // 得到做单的trs
     function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }], record_length = records.length) {
         // console.log(record_length);
