@@ -302,6 +302,7 @@
             DATA[pig_phone].splice(spliceIndex, 0, {
                 pig_phone: pig_phone,
                 [key]: value,
+                create_time: new Date().toLocaleString(),
                 ...otherKeysFuc(),
             })
             storageData();
@@ -701,7 +702,6 @@
             return Tools.addKeyValue(pig_phone, 'pig_note', pig_note, undefined, () => {
                 return {
                     pig_type,
-                    create_time: new Date().toLocaleString(),
                 }
             });
         },
