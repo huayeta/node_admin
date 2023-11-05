@@ -394,7 +394,9 @@
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
             if (Tools.alertFuc({ pig_phone, real_name })) return false;
-            return Tools.modifyDataToLastRecord(pig_phone, { real_name });
+            const result = Tools.modifyDataToLastRecord(pig_phone, { real_name });
+            alert('仔细核对以前的旺旺跟姓名，防止被骗！！！！！！！！！！！！！！！')
+            return result;
         },
         // 找到真实姓名
         findRealNamesByDatas: (datas, otherJudge, is_complete) => {
@@ -479,7 +481,9 @@
             // DATA[pig_phone].push({ pig_phone: pig_phone, ww_exec: ww_exec });
             // storageData();
             // return true;
-            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec);
+            const result = Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec);
+            alert('仔细核对以前的旺旺跟姓名，防止被骗！！！！！！！！！！！！！！！')
+            return result;
         },
         // 删除旺旺
         delWW: (pig_phone, ww_exec) => {
