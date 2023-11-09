@@ -994,7 +994,7 @@
         },
         // 提醒用户出问题
         remindText:(datas)=>{
-            const remind_text_arr = ['骗子','不给单','不再给单','拉黑','可疑','黑名单','注意'];
+            const remind_text_arr = ['骗子','不给单','不放单','不再给单','拉黑','可疑','黑名单','注意'];
             let remind_text = [];
             let json = JSON.stringify(datas);
             remind_text_arr.forEach(text=>{
@@ -1623,29 +1623,29 @@
                         <div><input class="search_input byqq" placeholder="通过会员qq" /></div>
                     </div>
                     <div style="margin-left:10px; margin-right:20px;">
-                        <div style="margin-bottom:10px;"><input class="search_input qq" placeholder="qq号" /><button class="search_btn add">添加不同qq</button><button class="search_btn del" style="background:red;margin-left:15px;">删除qq</button></div>
-                        <div><input class="search_input note" placeholder="用户备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn del-note" style="background:red;margin-left:15px;">删除备注</button></div>
+                        <div style="margin-bottom:10px;"><input class="search_input qq" placeholder="qq号" /><button class="search_btn add">添加不同qq</button><button class="search_btn red del" style="margin-left:15px;">删除qq</button></div>
+                        <div><input class="search_input note" placeholder="用户备注" /><button class="search_btn add-note">添加备注</button><button class="search_btn red del-note" style="margin-left:15px;">删除备注</button></div>
                     </div>
                     <div>
-                        <div style="margin-bottom: 10px;"><input class="search_input j-gnote" placeholder="网页备注/真实姓名" /><button class="search_btn add-gnote">添加网页备注</button><button class="search_btn j-real-name-add-btn" style="background:rebeccapurple;margin-left:10px;">修改真实姓名</button></div>
-                        <div><select class="search_input qq_exec_pre" style="width:auto;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button><button class="search_btn j-del-data" style="background:rebeccapurple;margin-left:5px;">删除做单记录</button></div>    
+                        <div style="margin-bottom: 10px;"><input class="search_input j-gnote" placeholder="网页备注/真实姓名" /><button class="search_btn add-gnote">添加网页备注</button><button class="search_btn reb j-real-name-add-btn" style="margin-left:10px;">修改真实姓名</button></div>
+                        <div><select class="search_input qq_exec_pre" style="width:auto;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button><button class="search_btn reb j-del-data" style="margin-left:5px;">删除做单记录</button></div>    
                     </div>
                 </div>
                 <div class="search m-search">
                         <input class="search_input j-contact-input" type="text" data-key="wx" placeholder="wx号" />
                         <button class="search_btn j-contact-add" data-key="wx" style="margin-left:10px">添加wx</button>
-                        <button class="search_btn j-contact-del" data-key="wx" style="background:red;margin-left:10px;">删除wx</button>
-                        <button class="search_btn j-add-wxName-by-wx" style="background:rebeccapurple; margin-left:10px;">wx添加wx姓名</button>
+                        <button class="search_btn red j-contact-del" data-key="wx" style="margin-left:10px;">删除wx</button>
+                        <button class="search_btn reb j-add-wxName-by-wx" style="margin-left:10px;">wx添加wx姓名</button>
                         <input class="search_input j-wxName" type="text" placeholder="wx名字(真实姓名)|wx姓名" style="margin-left:10px;width:165px;" />
                         <button class="search_btn j-wxName-add" style="margin-left:10px">添加wx姓名</button>
-                        <button class="search_btn j-wxName-del" style="background:red;margin-left:10px;">删除wx姓名</button>
-                        <button class="search_btn j-realName-search" style="background:rebeccapurple; margin-left:10px;">真实姓名搜索</button>
+                        <button class="search_btn red j-wxName-del" style="margin-left:10px;">删除wx姓名</button>
+                        <button class="search_btn reb j-realName-search" style="margin-left:10px;">真实姓名搜索</button>
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
                     <input class="search_input j-ww-exec" placeholder="旺旺号" /> <button class="search_btn ww-add
-                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn ww-del" style="background:red;">删除旺旺号</button>
+                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red ww-del">删除旺旺号</button>
                     <button class="search_btn ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
                 </div>
                 <div class="btns">
@@ -1676,15 +1676,15 @@
                     <!-- <div style="color:darkmagenta; ">${JSON.stringify(qqs_obj)}</div> -->
                     <div class="m-findData search">
                     <!-- <button class="search_btn j-findPhoneBtn" style="">查询phone做单数据</button>
-                        <button class="search_btn j-findQqBtn" style="background:rebeccapurple;">查询qq做单数据</button>-->
+                        <button class="search_btn reb j-findQqBtn" style="">查询qq做单数据</button>-->
                         <button class="search_btn j-almightySearch" style="">qq|phone|ww|wx全能搜索</button>
-                        <!-- <button class="search_btn j-searchNote" style="background:rebeccapurple;">模糊搜索用户备注</button>-->
+                        <!-- <button class="search_btn reb j-searchNote" style="">模糊搜索用户备注</button>-->
                         <!--<button class="search_btn j-findQqs" style="">查询不同的qq</button>-->
-                        <button class="search_btn download" style="background:rebeccapurple;">下载数据</button>
+                        <button class="search_btn reb download" style="">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="">筛选qq1235</button>
-                        <button class="search_btn j-gatherRegisterQqs" style="background:rebeccapurple;">无损筛选qq1235</button>
+                        <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq1235</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
-                        <button class="search_btn j-modifyLastRecord" style="background:rebeccapurple;">修改最后一个记录67</button>
+                        <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
                         <!-- <div class="j-addOtherRecord"></div> -->
                         <button class="search_btn j-addRecordQqWw">创建新纪录并添加qq和旺旺</button>
                     </div>
