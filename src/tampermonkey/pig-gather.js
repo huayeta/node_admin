@@ -2633,6 +2633,7 @@
             // 筛选符合的记录
             const filterDateRecord = (record) => {
                 let datas = DATA[record.pig_phone];
+                // 优化符合数据，关闭找不同手机
                 const humanData = humanDatas(datas,undefined,undefined,false);
                 const notes = humanData.notes.join('');
                 const diffPhones = humanData.diffPhones;
