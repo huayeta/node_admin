@@ -256,13 +256,13 @@
             return !Number.isNaN(new Date(...val).valueOf());
         },
         // 删除DATA的整个记录data
-        deleteData:(pig_phone)=>{
-            if(Tools.alertFuc({pig_phone}))return false;
+        deleteData: (pig_phone) => {
+            if (Tools.alertFuc({ pig_phone })) return false;
             if (confirm(`确定删除(${pig_phone})吗？`)) {
                 delete DATA[pig_phone];
                 storageData();
                 return true;
-            }else{
+            } else {
                 return false;
             }
         },
@@ -336,11 +336,11 @@
             }
         },
         // 修改data
-        modifyData:(pig_phone,valueObj={},judgeFuc=(data)=>{return false;})=>{
-            if(Tools.alertFuc({pig_phone}))return false;
+        modifyData: (pig_phone, valueObj = {}, judgeFuc = (data) => { return false; }) => {
+            if (Tools.alertFuc({ pig_phone })) return false;
             const datas = DATA[pig_phone];
-            datas.forEach((data,index)=>{
-                if(judgeFuc(data,index)){
+            datas.forEach((data, index) => {
+                if (judgeFuc(data, index)) {
                     Object.assign(DATA[pig_phone][index], valueObj);
                 }
             })
@@ -417,32 +417,32 @@
             let wx_name_tmp = wx_name;
             let real_name_tmp = real_name;
             const reg = /(.+?)\((.+?)\)/;
-            const result_reg = reg.exec(wx_name.replace(/\*+/g,'.+?'));
-            if(result_reg){
+            const result_reg = reg.exec(wx_name.replace(/\*+/g, '.+?'));
+            if (result_reg) {
                 wx_name_tmp = result_reg[1];
                 real_name_tmp = result_reg[2];
                 // console.log(result_reg);
                 // 找到真实的姓名
-                let real = Tools.findKeysByDatas(DATA[pig_phone],'real_name',(data)=>{
+                let real = Tools.findKeysByDatas(DATA[pig_phone], 'real_name', (data) => {
                     // 把多个**替换下
-                    let tmp = real_name_tmp.replace(/\*+/g,'.+?');
+                    let tmp = real_name_tmp.replace(/\*+/g, '.+?');
                     // console.log(tmp);
                     return new RegExp(tmp).exec(data.real_name);
-                },false);
+                }, false);
                 // console.log(real);
-                if(real.length>0){
+                if (real.length > 0) {
                     real_name_tmp = real[0];
-                }else{
+                } else {
                     alert('没有找到真实姓名');
                     return false;
                 }
 
             }
-            return Tools.addKeyValue(pig_phone, 'wx_name', wx_name_tmp, ()=>{
+            return Tools.addKeyValue(pig_phone, 'wx_name', wx_name_tmp, () => {
                 // 判断不能重复添加
                 let result = true;
-                for(let data of DATA[pig_phone]){
-                    if(data.wx_name && data.real_name == real_name_tmp){
+                for (let data of DATA[pig_phone]) {
+                    if (data.wx_name && data.real_name == real_name_tmp) {
                         alert('一个真实姓名对应一个wx名字');
                         result = false;
                         break;
@@ -450,13 +450,13 @@
                 }
                 return result;
             }, () => {
-                return { real_name:real_name_tmp };
-            },undefined,true)
+                return { real_name: real_name_tmp };
+            }, undefined, true)
         },
         // 删除真实姓名对应的微信名字
         delRealNameWxName: (pig_phone, wx_name) => {
             if (Tools.alertFuc({ pig_phone, wx_name })) return false;
-            return Tools.delKeyValue(pig_phone, 'wx_name', wx_name, undefined, (data)=>!data.real_name, false);
+            return Tools.delKeyValue(pig_phone, 'wx_name', wx_name, undefined, (data) => !data.real_name, false);
         },
         // 找到所有的微信姓名return {real_name:wx_name}
         findRealNameWxNamesByDatas: (datas) => {
@@ -665,37 +665,37 @@
         //     return arr;
         // },
         // 添加wx
-        addWx:(pig_phone,wx)=>{
+        addWx: (pig_phone, wx) => {
             // Tools.addContact(pig_phone,'wx',wx);
-            return Tools.addKeyValue(pig_phone,'wx',wx);
+            return Tools.addKeyValue(pig_phone, 'wx', wx);
         },
         // 删除wx
-        delWx:(pig_phone,wx)=>{
-            return Tools.delKeyValue(pig_phone,'wx',wx,undefined,undefined,false);
+        delWx: (pig_phone, wx) => {
+            return Tools.delKeyValue(pig_phone, 'wx', wx, undefined, undefined, false);
         },
         // 给wx添加wx_name
-        addWxNameByWx:(pig_phone,wx,wx_name)=>{
-            return Tools.modifyData(pig_phone,{wx_name},(data,index)=>{
+        addWxNameByWx: (pig_phone, wx, wx_name) => {
+            return Tools.modifyData(pig_phone, { wx_name }, (data, index) => {
                 return data.wx == wx;
             })
         },
         // 找到所有的wx对应的微信名字
-        findWxWxNamesByDatas:(datas)=>{
-            const wxs_arr = Tools.findKeysByDatas(datas,'wx',undefined,true);
+        findWxWxNamesByDatas: (datas) => {
+            const wxs_arr = Tools.findKeysByDatas(datas, 'wx', undefined, true);
             const results = {};
-            wxs_arr.forEach(wx_obj=>{
-                if(wx_obj.wx){
-                    results[wx_obj.wx]=wx_obj.wx_name;
+            wxs_arr.forEach(wx_obj => {
+                if (wx_obj.wx) {
+                    results[wx_obj.wx] = wx_obj.wx_name;
                 }
             })
             return results;
         },
         // 找到所有的wxs
-        findWxsByDatas: (datas,isHaveWxNameAdd=false) => {
+        findWxsByDatas: (datas, isHaveWxNameAdd = false) => {
             const wx_wx_names = Tools.findWxWxNamesByDatas(datas);
-            return Object.keys(wx_wx_names).map(wx=>{
-                if(wx_wx_names[wx] && isHaveWxNameAdd){
-                    return `${wx}${isHaveWxNameAdd?`<span style="color:gray;font-size:12px;">（${wx_wx_names[wx]}）</span>`:''}`;
+            return Object.keys(wx_wx_names).map(wx => {
+                if (wx_wx_names[wx] && isHaveWxNameAdd) {
+                    return `${wx}${isHaveWxNameAdd ? `<span style="color:gray;font-size:12px;">（${wx_wx_names[wx]}）</span>` : ''}`;
                 }
                 return wx;
             })
@@ -713,9 +713,9 @@
         delNote: (pig_phone, pig_note, pig_type) => {
             if (Tools.alertFuc({ pig_type })) return false;
             return Tools.delKeyValue(pig_phone, 'pig_note', pig_note, undefined, (data) => {
-                if ((!data['pig_note'] && pig_note!='TB') && data['pig_type'] != pig_type) return true;
+                if ((!data['pig_note'] && pig_note != 'TB') && data['pig_type'] != pig_type) return true;
                 return false;
-            },false)
+            }, false)
         },
         // 找到phone数据里面的note数据obj
         findNotesByDatas: (datas, pig_type = 'TB') => {
@@ -760,14 +760,14 @@
             return true;
         },
         // 添加做单记录按钮
-        addRecordBtn: (phone, parentNode, text,qq) => {
+        addRecordBtn: (phone, parentNode, text, qq) => {
             const button = document.createElement('button');
             button.className = 'search_btn';
             button.innerHTML = text || "添加记录";
             button.addEventListener('click', () => {
                 if (typeof phone == 'function') phone = phone();
                 const result = Tools.addRecord(phone);
-                if(qq) Tools.addQq(phone,qq);
+                if (qq) Tools.addQq(phone, qq);
                 if (result) alert('添加记录成功~');
             }, false)
             if (parentNode) {
@@ -993,12 +993,12 @@
             return $select.querySelector('option:nth-child(1)').getAttribute('value');
         },
         // 提醒用户出问题
-        remindText:(datas)=>{
-            const remind_text_arr = ['骗子','不给单','不放单','不再给单','拉黑','可疑','黑名单','注意'];
+        remindText: (datas) => {
+            const remind_text_arr = ['骗子', '不给单', '不放单', '不再给单', '拉黑', '可疑', '黑名单', '注意'];
             let remind_text = [];
             let json = JSON.stringify(datas);
-            remind_text_arr.forEach(text=>{
-                if(json.includes(text))remind_text.push(text);
+            remind_text_arr.forEach(text => {
+                if (json.includes(text)) remind_text.push(text);
             })
             return remind_text;
         }
@@ -1054,9 +1054,9 @@
         Tools.formateWwFromData();
         storageData();
     }
-    if(!is_custom){
+    if (!is_custom) {
         getData();
-    }else{
+    } else {
         Tools.formateWwFromData();
         storageData();
     }
@@ -1119,7 +1119,7 @@
     }
 
     // 人性化的做单记录数据
-    const humanDatas = (datas, qq = "1", pig_type = 'TB') => {
+    const humanDatas = (datas, qq = "1", pig_type = 'TB',is_almighty= true) => {
         const pig_phone = datas.length > 0 && datas[0].pig_phone;
         // 备注数据
         let notes = Tools.findNotesByDatas(datas, pig_type);
@@ -1129,7 +1129,7 @@
         let qqs = Tools.findQqsByDatas(datas, qq);
         // 找到不同的手机号
         // let diffPhones = findDiffPhonesByDatas(datas);
-        let diffPhones = Tools.almightySearch([pig_phone]).filter(phone => phone != pig_phone);
+        let diffPhones = is_almighty?Tools.almightySearch([pig_phone]).filter(phone => phone != pig_phone):[];
         // 找到真实姓名
         const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到注册时间
@@ -1173,7 +1173,7 @@
             return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
         }, '');
         // 找到所有的wxs
-        const wxs = Tools.findWxsByDatas(datas,true);
+        const wxs = Tools.findWxsByDatas(datas, true);
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
             real_names: real_name_arr,
@@ -1195,7 +1195,7 @@
             wws_html: wws_html,
             wxs: wxs,
             wx_names: wx_names,
-            remind_texts,remind_texts,
+            remind_texts, remind_texts,
         }
     }
 
@@ -1278,7 +1278,7 @@
                 const Div = document.createElement('div');
                 Div.className = 'search';
                 Div.style = 'margin-top: 10px;';
-                Tools.addRecordBtn(phone, Div,undefined,qq);
+                Tools.addRecordBtn(phone, Div, undefined, qq);
                 $phone.append(Div);
             }
 
@@ -1346,7 +1346,7 @@
         }
         // 标注真实姓名
         // 在这写微信名字备注
-        if(humans.wx_names[real_name]){
+        if (humans.wx_names[real_name]) {
             const $div = document.createElement('div');
             $div.innerHTML = `<span style="color:gray;font-size:12px;">（${humans.wx_names[real_name]}）</span>`;
             $realName.append($div);
@@ -1357,8 +1357,8 @@
                 // const $realNameTr = $tr.querySelector(`td:nth-child(${qq_index-1})`);
                 const $realNameDiv = document.createElement('div');
                 $realNameDiv.style = 'color: rgb(16, 0, 255);';
-                $realNameDiv.innerHTML = `其他真实姓名：${arr.map(real_name=>{
-                    if(humans.wx_names[real_name])return `${real_name}<span style="color:gray;font-size:12px;">（${humans.wx_names[real_name]}）</span>`;
+                $realNameDiv.innerHTML = `其他真实姓名：${arr.map(real_name => {
+                    if (humans.wx_names[real_name]) return `${real_name}<span style="color:gray;font-size:12px;">（${humans.wx_names[real_name]}）</span>`;
                     return real_name;
                 }).join('，')}`;
                 $realName.prepend($realNameDiv);
@@ -1374,9 +1374,9 @@
             $realName.append($wwDiv);
         }
         // 标注提醒
-        if(humans.remind_texts.length>0){
+        if (humans.remind_texts.length > 0) {
             const $remindDiv = document.createElement('div');
-            $remindDiv.style='color:red;font-size:40px;';
+            $remindDiv.style = 'color:red;font-size:40px;';
             $remindDiv.innerHTML = `${humans.remind_texts.join('，')}`;
             $phone.prepend($remindDiv);
         }
@@ -1442,7 +1442,7 @@
         })
         // formatPendingTr($PendingTrs[0]);
     }
-    if(!is_custom)startFormatPendingCon();
+    if (!is_custom) startFormatPendingCon();
     // 等待审核格式化tr
     const startFormatAuditingCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(3)');
@@ -1454,7 +1454,7 @@
             formatTr($tr, 6, 9, 14, 3);
         })
     }
-    if(!is_custom)startFormatAuditingCon();
+    if (!is_custom) startFormatAuditingCon();
     // 已完成格式化前100tr
     const startFormatCompleteCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(5)');
@@ -1466,7 +1466,7 @@
             if (false || index < 20) formatTr($tr, 5, 9, 14, 5);
         })
     }
-    if(!is_custom)startFormatCompleteCon();
+    if (!is_custom) startFormatCompleteCon();
     // 已取消格式化前100tr
     const startFormatCancelCon = () => {
         const $Con = document.querySelector('.release_content .content_inner:nth-child(6)');
@@ -1478,7 +1478,7 @@
             if (index < 20) formatTr($tr, 5, 7, 12);
         })
     }
-    if(!is_custom)startFormatCancelCon();
+    if (!is_custom) startFormatCancelCon();
     // 得到做单的trs
     function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }], record_length = records.length) {
         // console.log(record_length);
@@ -1504,7 +1504,7 @@
             trs += `
             <tr>
                 <td>
-                    <p>${humanData.remind_texts.length>0?`<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>`:''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
+                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
@@ -1781,7 +1781,7 @@
             $phone.value = phone;
             const wws = Tools.findWwsByPhones([phone]);
             $ww.value = wws.join('，');
-            $wx.value = Tools.findWxsByDatas(DATA[phone],false).join(',');
+            $wx.value = Tools.findWxsByDatas(DATA[phone], false).join(',');
             $gNote.value = Tools.findRealNamesByDatas(DATA[phone]).join(',');
             // 得到最后一个记录的come-type,qq_exec_pre
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[phone], ['come_type', 'qq_exec_pre']);
@@ -1802,9 +1802,9 @@
             //     $phone.value = '';
             // }
 
-        },1000))
+        }, 1000))
         // 旺旺号变化之后的反应
-        $ww.addEventListener('input',Tools.throttle( e => {
+        $ww.addEventListener('input', Tools.throttle(e => {
             const wwExec = e.target.value;
             if (wwExec) {
                 const phoneArr = Tools.almightySearch([wwExec]);
@@ -1816,7 +1816,7 @@
                     // setCon(['没有找到phone']);
                 }
             }
-        },1000), false)
+        }, 1000), false)
         // wx变化之后的反应
         // $wx.addEventListener('input', e => {
         //     const wx = e.target.value;
@@ -2485,11 +2485,11 @@
             location.reload();
         }, false)
         // 删除整个记录
-        qqAdd.querySelector('.j-del-data').addEventListener('click',e=>{
+        qqAdd.querySelector('.j-del-data').addEventListener('click', e => {
             const pig_phone = $phone.value;
             const result = Tools.deleteData(pig_phone);
-            if(result)alert('删除成功');
-        },false)
+            if (result) alert('删除成功');
+        }, false)
         // 添加联系方式
         addEventListener(qqAdd, 'click', (e) => {
             const pig_phone = $phone.value;
@@ -2526,12 +2526,12 @@
             }
         }, '.j-contact-input')
         // 添加wxNamebyWx
-        qqAdd.querySelector('.j-add-wxName-by-wx').addEventListener('click',e=>{
+        qqAdd.querySelector('.j-add-wxName-by-wx').addEventListener('click', e => {
             const pig_phone = $phone.value;
             const wx_name = $wxName.value;
             const wx = $wx.value;
-            const result = Tools.addWxNameByWx(pig_phone,wx,wx_name);
-            if(result)alert('添加wx名字成功');
+            const result = Tools.addWxNameByWx(pig_phone, wx, wx_name);
+            if (result) alert('添加wx名字成功');
         })
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
@@ -2630,18 +2630,10 @@
                 }
                 return result;
             }
-            for (let phone of DatePhones) {
-                const datas = DATA[phone];
-                if (datas.length == 0) continue;
-                let data = getLastTypeData(datas, pig_type);
-                if (data && new Date(data.pig_over_time) > startTime && new Date(data.pig_over_time) < endTime) {
-                    DateRecords.push(data)
-                }
-            }
             // 筛选符合的记录
-            DateRecords = DateRecords.filter(record => {
+            const filterDateRecord = (record) => {
                 let datas = DATA[record.pig_phone];
-                const humanData = humanDatas(datas);
+                const humanData = humanDatas(datas,undefined,undefined,false);
                 const notes = humanData.notes.join('');
                 const diffPhones = humanData.diffPhones;
                 if (
@@ -2655,7 +2647,34 @@
                         return true;
                     }
                 }
-            })
+                return false;
+            }
+            for (let phone of DatePhones) {
+                const datas = DATA[phone];
+                if (datas.length == 0) continue;
+                let data = getLastTypeData(datas, pig_type);
+                if (data && new Date(data.pig_over_time) > startTime && new Date(data.pig_over_time) < endTime) {
+                    if(filterDateRecord(data))DateRecords.push(data)
+                }
+            }
+            // 筛选符合的记录
+            // DateRecords = DateRecords.filter(record => {
+            //     let datas = DATA[record.pig_phone];
+            //     const humanData = humanDatas(datas);
+            //     const notes = humanData.notes.join('');
+            //     const diffPhones = humanData.diffPhones;
+            //     if (
+            //         (notes.indexOf('满月') == -1 || true)
+            //         && notes.indexOf('删订单') == -1
+            //         && (diffPhones.length == 0 || true)
+            //         && !RDATA.isExist(record.pig_phone, 'order_reminder')
+            //         && cb(humanData)
+            //     ) {
+            //         if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
+            //             return true;
+            //         }
+            //     }
+            // })
             // 排序
             DateRecords.sort((a, b) => {
                 if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
@@ -2809,9 +2828,9 @@
             // console.log(Tools.findPhonesByKeyword(qq));
             // return;
             const arr = Tools.almightySearch(keywords).map(phone => DATA[phone]);
-            if (arr.length == 0){
+            if (arr.length == 0) {
                 setCon([`没找到做单记录<span style="margin:15px;display:inline-block;width:auto;height:auto;" class="j-add-record-btn search"></span>`]);
-                Tools.addRecordBtn(phone,qqAdd.querySelector('.j-add-record-btn'),undefined,qq);
+                Tools.addRecordBtn(phone, qqAdd.querySelector('.j-add-record-btn'), undefined, qq);
                 return;
             }
             // 判断是否有一个qq多个手机的情况存在
