@@ -272,7 +272,7 @@
             if (!data || !key) return false;
             const keys = Object.keys(data);
             // 必须是is里面的字段
-            const is = ['pig_phone', key, 'is_del'];
+            const is = ['pig_phone', key, 'is_del','create_time'];
             for (let k of keys) {
                 if (is.includes(k)) {
                     result = true;
@@ -312,7 +312,6 @@
         // 删除字段
         delKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => false, isJudgeDel = true) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
-
             if (isJudgeDel) {
                 // 判断是否可删
                 const datas = DATA[pig_phone];
@@ -2538,7 +2537,7 @@
         const $con = $btns.querySelector('.u-con');
         const getCon = (arr, len) => {
             let str = '';
-            const datas = Tools.getShortDatas(arr, len);
+            const datas = arr || Tools.getShortDatas(arr, len);
             datas.forEach(data => {
                 str += `<div>${typeof data === 'string' ? data : JSON.stringify(data)}</div>`;
             })
