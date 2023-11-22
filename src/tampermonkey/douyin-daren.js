@@ -78,9 +78,9 @@
         // 成交人数
         const deal_num = convertNum($tr.querySelector('td.auxo-table-cell:nth-child(4) .num').textContent, $tr.querySelector('td.auxo-table-cell:nth-child(4) .sign').textContent);
         // 穿透率
-        const penetration = convertToPercentage(view_num / exposure_num);
+        const penetration = convertToPercentage(view_num / exposure_num,2);
         // 转化率
-        const rate = convertToPercentage(deal_num / view_num);
+        const rate = convertToPercentage(deal_num / view_num,2);
         console.log(exposure_num, view_num, deal_num, penetration, rate);
         const $span = document.createElement('span');
         $span.style = 'color:red;vertical-align:super;';

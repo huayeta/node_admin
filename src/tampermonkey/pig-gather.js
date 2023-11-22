@@ -272,7 +272,7 @@
             if (!data || !key) return false;
             const keys = Object.keys(data);
             // 必须是is里面的字段
-            const is = ['pig_phone', key, 'is_del','create_time'];
+            const is = ['pig_phone', key, 'is_del', 'create_time'];
             for (let k of keys) {
                 if (is.includes(k)) {
                     result = true;
@@ -1002,63 +1002,9 @@
             return remind_text;
         }
     }
-    // 获得每个tr数据
-    const getTrData = ($tr) => {
-        // console.log($tr);
-        const pig_id = $tr.querySelector('td:nth-child(1)').textContent;
-        const pig_title = $tr.querySelector('td:nth-child(2)').textContent;
-        const pig_phone = trim($tr.querySelector('td:nth-child(5)').textContent);
-        const pig_qq = trim($tr.querySelector('td:nth-child(9)').textContent);
-        const pig_register_time = trim($tr.querySelector('td:nth-child(10)').textContent);
-        // const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
-        const pig_over_time = $tr.querySelector('td:nth-child(14)').textContent;
-        const pig_type = Tools.getPigType($tr.querySelector('td:nth-child(3)').textContent);
-        const real_name = trim($tr.querySelector('td:nth-child(6)').textContent);
-
-
-        let result = { pig_id, pig_phone, pig_qq, pig_over_time, pig_register_time, pig_type, real_name };
-        let arr = /^.&?.?，(\d+?)\：/.exec(pig_title);
-        if (arr) {
-            result.qq_exec_pre = arr[1];
-        }
-        return result;
-    }
-    const getData = () => {
-        const $con = document.querySelector('.release_content .content_inner:nth-child(5)');
-        const $trs = $con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
-        // console.log($trs);
-        // console.log(getTrData($trs[0]))
-        if (!$trs) true;
-        //如果DATA是一个空对象就全部循环了
-        const length = JSON.stringify(DATA).length == 2 ? $trs.length - 1 : 100;
-        for (let i = length; i--; i >= 0) {
-            const $tr = $trs[i];
-            const trData = getTrData($tr);
-            const shop_label = SHOPDATAS.getData(trData.pig_id);
-            if (shop_label) {
-                trData.shop_label = shop_label;
-            }
-            // DATA.push(getTrData($tr));
-            if (!DATA[trData.pig_phone]) {
-                DATA[trData.pig_phone] = [trData];
-            } else {
-                const index = DATA[trData.pig_phone].findIndex(data => data.pig_id == trData.pig_id)
-                if (index != -1) {
-                    if (!DATA[trData.pig_phone][index].qq_exec_pre && trData.qq_exec_pre) DATA[trData.pig_phone][index].qq_exec_pre = trData.qq_exec_pre;
-                    continue;
-                }
-                DATA[trData.pig_phone].unshift(trData);
-            }
-        }
-        Tools.formateWwFromData();
-        storageData();
-    }
-    if (!is_custom) {
-        getData();
-    } else {
-        Tools.formateWwFromData();
-        storageData();
-    }
+    // 初始化数据
+    Tools.formateWwFromData();
+    storageData();
 
     // const DATA = getData();
     // const DATA = {
@@ -1118,7 +1064,7 @@
     }
 
     // 人性化的做单记录数据
-    const humanDatas = (datas, qq = "1", pig_type = 'TB',is_almighty= true) => {
+    const humanDatas = (datas, qq = "1", pig_type = 'TB', is_almighty = true) => {
         const pig_phone = datas.length > 0 && datas[0].pig_phone;
         // 备注数据
         let notes = Tools.findNotesByDatas(datas, pig_type);
@@ -1128,7 +1074,7 @@
         let qqs = Tools.findQqsByDatas(datas, qq);
         // 找到不同的手机号
         // let diffPhones = findDiffPhonesByDatas(datas);
-        let diffPhones = is_almighty?Tools.almightySearch([pig_phone]).filter(phone => phone != pig_phone):[];
+        let diffPhones = is_almighty ? Tools.almightySearch([pig_phone]).filter(phone => phone != pig_phone) : [];
         // 找到真实姓名
         const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到注册时间
@@ -1205,279 +1151,6 @@
         str = str.trim();
         return str;
     }
-    const formatTr = ($tr, phone_index = 5, qq_index = 8, date_index = 13, type) => {
-        // console.log($tr);
-        const $phone = $tr.querySelector(`td:nth-child(${phone_index})`);
-        const phone = trim($phone.textContent);
-        const $qq = $tr.querySelector(`td:nth-child(${qq_index})`);
-        const qq = trim($qq.textContent);
-        const pig_id = trim($tr.querySelector(`td:nth-child(${type == 3 ? 2 : 1})`).textContent);
-        const pig_type = Tools.getPigType(trim($tr.querySelector(`td:nth-child(${type == 3 ? 4 : 3})`).textContent));
-        const $realName = $tr.querySelector(`td:nth-child(${type == 5 ? (phone_index + 1) : (qq_index - 1)})`);
-        const real_name = trim($realName.textContent);
-        // const pig_register_time = Tools.findRegisterTimeByTr($tr.innerHTML);
-        const $pig_task_content = $tr.querySelector(`td:nth-child(${date_index - 1})`);
-        const pig_task_content = trim($pig_task_content.textContent);
-        const $pig_task_title = $tr.querySelector(`td:nth-child(${type == 3 ? 3 : 2})`);
-        const pig_task_title = trim($pig_task_title.textContent);
-        // console.log(pig_type)
-        // console.log(phone, qq);
-        // console.log(Datas);
-        // 标注店铺
-        {
-            // const $shop = document.createElement('select');
-            // $shop.innerHTML = `<option value="">没有选择</option>`+LABELS.map(shop=>{
-            //     return `<optgroup label='${shop.label}'>${shop.options.map(option=>`<option value='${shop.label}-${option}'>${shop.label}-${option}</option>`).reduce((a,b)=>a+b,'')}</optgroup>`;
-            // }).reduce((a,b)=>a+b,'');
-            // $shop.style = 'width:auto;';
-            const $shop = LABELS.getShopElement(pig_type);
-            $shop.addEventListener('change', e => {
-                const value = e.target.value;
-                // console.log(value);
-                if (type != 5) {
-                    SHOPDATAS.addData(pig_id, value);
-                } else {
-                    // 如果是已完成列表
-                    SHOPDATAS.appendShopLable(phone, pig_id, value);
-                }
-            }, false)
-            if (type != 5) {
-                if (SHOPDATAS.getData(pig_id)) {
-                    $shop.value = SHOPDATAS.getData(pig_id);
-                }
-            } else {
-                // 已完成列表
-                DATA[phone] && DATA[phone].length > 0 && DATA[phone].forEach(data => {
-                    if (data.pig_id == pig_id && data.shop_label) {
-                        $shop.value = data.shop_label;
-                    }
-                })
-            }
-            const $lastTd = $tr.querySelector('td:last-child');
-            $lastTd.prepend($shop);
-            // 注册时间显示
-            // const register_time_p = document.createElement('p');
-            // register_time_p.innerHTML = `<p style="color:red;">注册时间：${pig_register_time}</p>`;
-            // if(pig_register_time)$tr.querySelector(`td:nth-child(${qq_index+2})`).append(register_time_p);
-            // 任务内容缩短
-            if (pig_task_content.length > 100) {
-                // 容错判断字数多的就是任务内容
-                $pig_task_content.innerHTML = `<p title="${pig_task_content}">${pig_task_content.slice(0, 7)}任务内容...</p>`;
-            }
-            if (pig_task_title.length > 25) {
-                // 容差判断字数多的就是任务标题
-                $pig_task_title.innerHTML = `<p title="${pig_task_title}">${pig_task_title.slice(0, 7)}任务标题...</p>`;
-            }
-        }
-        // 如果不存在就返回
-        if (!DATA[phone]) {
-
-            // 如果type==2，等待完成列表
-            if (type == 2 || true) {
-                const Div = document.createElement('div');
-                Div.className = 'search';
-                Div.style = 'margin-top: 10px;';
-                Tools.addRecordBtn(phone, Div, undefined, qq);
-                $phone.append(Div);
-            }
-
-            return;
-        }
-        const humans = humanDatas(DATA[phone], '1', pig_type);
-        const Datas = humans.records;
-        // console.log(DATA[phone], qq);
-        const Qqs = humans.qqs.filter(qq_tmp => qq_tmp != qq);
-        const wxs = humans.wxs;
-        // ${humanData.wxs.length>0?`<p style="margin-top:15px; color:red;">全部wx号：</p>${humanData.wxs.reduce((a,b)=>{
-        //     return a + `<p class="j-copyText">${b}</p>`;
-        // },'')}`:''}
-        {
-            // 当是等待完成列表
-            if (type == 2) {
-                // 如果存在没收录的qq直接收录
-                if (!humans.qqs.includes(qq)) {
-                    Tools.addQq(phone, qq);
-                }
-            }
-        }
-        // console.log(Qqs);
-        // console.log(arr);
-        // 如果有不一样的qq号
-        if (Qqs.length > 0) {
-            const qqDiv = document.createElement('div');
-            qqDiv.style = 'color:red;';
-            qqDiv.innerHTML = `有不同的qq号：${Qqs.map(qq => `<p>${qq}</p>`).join('')}`;
-            $qq.append(qqDiv);
-        }
-        // 如果有微信号
-        if (wxs.length > 0) {
-            const wxDiv = document.createElement('div');
-            wxDiv.style = 'color:red;';
-            wxDiv.innerHTML = `有不同的wx号：${wxs.map(wx => `<p>${wx}</p>`).join('')}`;
-            $qq.prepend(wxDiv);
-        }
-        // 标注是否有多个手机号
-        if (qq == '1451603208' && type == 2 || true) {
-            const phones_arr = humans.diffPhones;
-            if (phones_arr.length > 0) {
-                // console.log(`插入${JSON.stringify(phones_arr)}`)
-                const Div = document.createElement('div');
-                Div.style = 'color:blueviolet;';
-                let str = phones_arr.reduce((a, b) => {
-                    let Datas = Tools.getDatasByPigType(DATA[b], pig_type);
-                    if (Datas.length == 0) {
-                        return a + `<p>${b}，<br/>已做单：${Datas.length}`;
-                    }
-                    return a + `<p>${b}，<br/>已做单：${Datas.length}，<br/>最近做单日期：${Datas[0].pig_over_time}，<br/>最近做单渠道号：${QQS[Datas[0].qq_exec_pre] ? QQS[Datas[0].qq_exec_pre].text : Datas[0].qq_exec_pre}</p>`
-                }, '')
-                Div.innerHTML = `有不同的手机号：${str}`;
-                $phone.append(Div);
-            }
-        }
-
-        // 标注备注信息
-        const Notes = humans.notes;
-        if (Notes.length > 0) {
-            const Div = document.createElement('div');
-            Div.style = 'color:#1000ff;max-width: 100px;margin:0 auto;';
-            Div.innerHTML = `备注：${Notes.join('，')}`;
-            $qq.append(Div);
-        }
-        // 标注真实姓名
-        // 在这写微信名字备注
-        if (humans.wx_names[real_name]) {
-            const $div = document.createElement('div');
-            $div.innerHTML = `<span style="color:gray;font-size:12px;">（${humans.wx_names[real_name]}）</span>`;
-            $realName.append($div);
-        }
-        if (humans.real_names.length > 1) {
-            const arr = humans.real_names.filter(real_name_tmp => real_name_tmp != real_name);
-            if (arr.length > 0) {
-                // const $realNameTr = $tr.querySelector(`td:nth-child(${qq_index-1})`);
-                const $realNameDiv = document.createElement('div');
-                $realNameDiv.style = 'color: rgb(16, 0, 255);';
-                $realNameDiv.innerHTML = `其他真实姓名：${arr.map(real_name => {
-                    if (humans.wx_names[real_name]) return `${real_name}<span style="color:gray;font-size:12px;">（${humans.wx_names[real_name]}）</span>`;
-                    return real_name;
-                }).join('，')}`;
-                $realName.prepend($realNameDiv);
-                // $realNameTr.insertAdjacentHTML('beforebegin',$realNameDiv);
-            }
-        }
-        // 标注旺旺号
-        if (humans.wwExecs.length > 0 && pig_type == 'TB') {
-            // const $wwTr = $tr.querySelector(`td:nth-child(${qq_index-1})`);
-            const $wwDiv = document.createElement('div');
-            $wwDiv.style = 'color: rgb(16, 0, 255);';
-            $wwDiv.innerHTML = `旺旺号：${humans.wws_html}`;
-            $realName.append($wwDiv);
-        }
-        // 标注提醒
-        if (humans.remind_texts.length > 0) {
-            const $remindDiv = document.createElement('div');
-            $remindDiv.style = 'color:red;font-size:40px;';
-            $remindDiv.innerHTML = `${humans.remind_texts.join('，')}`;
-            $phone.prepend($remindDiv);
-        }
-
-        // 如果没有记录就返回
-        if (Datas.length == 0) {
-
-            // 格式化注册时间到现在多久了
-
-            return;
-        }
-        // 当是等待完成或已经完成
-        if (type == 2 || type == 5) {
-            // 如果存在没收录的真实姓名直接收录
-            if (!Datas[0].real_name && real_name) {
-                Tools.modifyDataToLastRecord(phone, { real_name });
-            }
-            // 如果没有收录注册时间直接收录
-            // if(!Tools.findRegisterTimeByDatas(Datas) && pig_register_time){
-            //     console.log(pig_register_time,phone);
-            //     Tools.modifyDataToLastRecord(phone,{pig_register_time});
-            // }
-        }
-        // 当时已经完成
-        if (type == 5) {
-            // 判断完成时间是否是date的bug
-            // if(!Tools.isDateValid(humans.typeDatas[pig_type].pig_over_time)){
-            //     const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
-            //     const pig_over_time = trim($registrTr.textContent);
-            //     // console.log(humans.pig_over_time, phone,qq,pig_over_time);
-            //     if(Tools.isDateValid(pig_over_time)){
-            //         Tools.modifyDataToLastRecord(phone,{pig_over_time});
-            //     }
-            // }
-        }
-
-        // 标注已做单数量
-        // const $completeTr = $tr.querySelector('td:nth-child(6)');
-        const div = document.createElement('div');
-        div.style = 'color:red;';
-        div.innerHTML = `已做单:${Datas.length}`;
-        $phone.append(div);
-        // 最近做单日期
-        const $registrTr = $tr.querySelector(`td:nth-child(${date_index})`);
-        const $lately = document.createElement('div');
-        $lately.style = 'color:rgb(16, 0, 255);min-width:120px;';
-        let latelyStr = `<p>最近做单日期:${humans.typeDatas[pig_type].record_time}</p>`;
-        if (humans.typeDatas[pig_type].record_qq) latelyStr += `<P>最近做单渠道号：${humans.typeDatas[pig_type].record_qq}</P>`;
-        if (humans.typeDatas[pig_type].record_come_type) latelyStr += `<p>最后做单渠道:${humans.typeDatas[pig_type].record_come_type}</p>`;
-        if (humans.typeDatas[pig_type].record_shop_labels) latelyStr += `<p>做单店铺顺序:${humans.typeDatas[pig_type].record_shop_labels}</p>`;
-        $lately.innerHTML = latelyStr;
-        $registrTr.append($lately);
-    }
-    // 等待完成格式化tr
-    const startFormatPendingCon = () => {
-        const $PendingCon = document.querySelector('.release_content .content_inner:nth-child(2)');
-        const $PendingTrs = $PendingCon.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
-
-        if (!$PendingTrs) return;
-        // console.log(DATA);
-        Array.prototype.forEach.call($PendingTrs, ($tr, index) => {
-            formatTr($tr, 5, 8, 14, 2);
-        })
-        // formatPendingTr($PendingTrs[0]);
-    }
-    if (!is_custom) startFormatPendingCon();
-    // 等待审核格式化tr
-    const startFormatAuditingCon = () => {
-        const $Con = document.querySelector('.release_content .content_inner:nth-child(3)');
-        const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
-
-        if (!$Trs) return;
-        // console.log($Trs);
-        Array.prototype.forEach.call($Trs, ($tr, index) => {
-            formatTr($tr, 6, 9, 14, 3);
-        })
-    }
-    if (!is_custom) startFormatAuditingCon();
-    // 已完成格式化前100tr
-    const startFormatCompleteCon = () => {
-        const $Con = document.querySelector('.release_content .content_inner:nth-child(5)');
-        const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
-
-        if (!$Trs) return;
-        // console.log(DATA);
-        Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (false || index < 20) formatTr($tr, 5, 9, 14, 5);
-        })
-    }
-    if (!is_custom) startFormatCompleteCon();
-    // 已取消格式化前100tr
-    const startFormatCancelCon = () => {
-        const $Con = document.querySelector('.release_content .content_inner:nth-child(6)');
-        const $Trs = $Con.querySelectorAll('.common_table tbody tr:not(:nth-child(1))');
-
-        if (!$Trs) return;
-        // console.log(DATA);
-        Array.prototype.forEach.call($Trs, ($tr, index) => {
-            if (index < 20) formatTr($tr, 5, 7, 12);
-        })
-    }
-    if (!is_custom) startFormatCancelCon();
     // 得到做单的trs
     function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }], record_length = records.length) {
         // console.log(record_length);
@@ -2633,7 +2306,7 @@
             const filterDateRecord = (record) => {
                 let datas = DATA[record.pig_phone];
                 // 优化符合数据，关闭找不同手机
-                const humanData = humanDatas(datas,undefined,undefined,false);
+                const humanData = humanDatas(datas, undefined, undefined, false);
                 const notes = humanData.notes.join('');
                 const diffPhones = humanData.diffPhones;
                 if (
@@ -2654,7 +2327,7 @@
                 if (datas.length == 0) continue;
                 let data = getLastTypeData(datas, pig_type);
                 if (data && new Date(data.pig_over_time) > startTime && new Date(data.pig_over_time) < endTime) {
-                    if(filterDateRecord(data))DateRecords.push(data)
+                    if (filterDateRecord(data)) DateRecords.push(data)
                 }
             }
             // 筛选符合的记录
