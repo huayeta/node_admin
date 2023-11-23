@@ -1319,6 +1319,7 @@
                     <input class="search_input j-ww-exec" placeholder="旺旺号" /> <button class="search_btn ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red ww-del">删除旺旺号</button>
                     <button class="search_btn ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
+                    <input type="text" class="search_input j-modify-code-ipt" /><button class="search_btn j-modify-code-btn-get">获取源码</button><button class="search_btn reb j-modify-code-btn" style="margin-left:10px;">修改源码</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -1413,6 +1414,7 @@
         const $gNote = qqAdd.querySelector('.j-gnote');
         const $wx = qqAdd.querySelector('.j-contact-input[data-key="wx"]');
         const $wxName = qqAdd.querySelector('.j-wxName');
+        const $modifyCodeIpt = qqAdd.querySelector('.j-modify-code-ipt');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -2542,6 +2544,28 @@
                 setCon([table + str]);
             }
         }, '.j-realName-search')
+        // 获取源码
+        addEventListener(qqAdd,'click',()=>{
+            const phone = $phone.value;
+            if (Tools.alertFuc({ pig_phone:phone })) return;
+            const data = DATA[phone];
+            $modifyCodeIpt.value = JSON.stringify(data);
+        },'.j-modify-code-btn-get')
+        addEventListener(qqAdd,'click',()=>{
+            const phone = $phone.value;
+            const code = $modifyCodeIpt.value;
+            if(Tools.alertFuc({phone,code}))return;
+            try {
+                const json = JSON.parse(code);
+                if (confirm('确定修改吗？')) {
+                    DATA[phone]=json;
+                    storageData();
+                    alert('修改成功')
+                }
+            } catch (error) {
+                alert('json数据格式不对')
+            }
+        },'.j-modify-code-btn')
     }
     AddQQDiv();
 
@@ -2567,7 +2591,7 @@
                 .m-note{
                     display:flex;
                     margin-top: 15px;
-                    margin-bottom: -45px;
+                    margin-bottom: -15px;
                     flex-wrap: wrap;
                 }
                 .m-note>div{
@@ -2625,30 +2649,21 @@
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
     AddNote();
-    // // 评论相关的脚本
-    // const AddComment = ()=>{
-    //     const Div = document.createElement('div');
-    //     Div.innerHTML = `
+    // // 源码修改相关的脚本
+    // const ModifyRecordCode = () => {
+    //     const RecordCodeDiv = document.createElement('div');
+    //     RecordCodeDiv.innerHTML = `
     //         <style>
-    //             .m-pig-comment>.comment-header{
-    //                 margin-bottom: 10px;
-    //             }
-    //             .m-pig-comment>.comment-header>span{
-    //                 display:inline-block;
-    //                 padding: 5px 10px;
-    //                 border-right: 1px solid gray;
-    //             }
+                
     //         </style>
-    //         <div class="m-pig-comment j-pig-comment">
-    //             <div class="comment-header">
-    //                 <span>肛瘘-1</span><span>肛瘘-2</span><span>痔疮-1</span><span>痔疮-2</span>
-    //             </div>
+    //         <div class="m-search">
+    //             <input type="text" class="search_input" /><button class="search_btn">修改源码</button>
     //         </div>
     //     `;
-    //     const $pigComment = Div.querySelector('.j-pig-comment');
-    //     document.querySelector('.release').prepend(Div);
+    //     const $pigComment = RecordCodeDiv.querySelector('.j-pig-comment');
+    //     document.querySelector('.release_tab').after(RecordCodeDiv);
     // }
-    // AddComment();
+    // ModifyRecordCode();
     const cshLocal = (obj) => {
         Object.keys(obj).forEach(key => {
             localStorage.setItem(key, JSON.stringify(obj[key]));
