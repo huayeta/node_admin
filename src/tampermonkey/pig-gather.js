@@ -437,6 +437,7 @@
                 }
 
             }
+            if (Tools.alertFuc({ wx_name_tmp, real_name_tmp })) return false;
             return Tools.addKeyValue(pig_phone, 'wx_name', wx_name_tmp, () => {
                 // 判断不能重复添加
                 let result = true;
