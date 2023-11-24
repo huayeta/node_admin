@@ -2519,7 +2519,9 @@
                 // setCon(arr[0]);
             } else {
                 // 多手机号
-                let str = getCon(arr);
+                let str = arr.reduce((a,data,index)=>{
+                    return a+getCon(data)+(index<=arr.length-2?'<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>':'');
+                },'');
                 let table = getDataTable(arr);
                 setCon([table + str]);
             }
