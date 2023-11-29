@@ -2,7 +2,7 @@
 // @name         生意参谋参数转化
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  生意参谋参数转化
+// @description  生意参谋参数转化，配合小旺神
 // @author       You
 // @match        https://sycm.taobao.com/mc/mq/search_analyze?*
 // @grant        none
@@ -11,12 +11,12 @@
 (function () {
     'use strict';
     // Your code here...
-    const myFetch = (number,cb) => {
+    const myFetch = (number, cb) => {
         const url = 'https://www.diantoushi.com/switch/v2/change';
-        const data = { 
-            "categoryId": "", 
-            "changeType": "2", 
-            "indexTrans": "[{\"num\":1,\"tradeIndex\":\"" + number + "\"}]" 
+        const data = {
+            "categoryId": "",
+            "changeType": "2",
+            "indexTrans": "[{\"num\":1,\"tradeIndex\":\"" + number + "\"}]"
         };
 
         fetch(url, {
@@ -63,20 +63,42 @@
     const $liveMenu = $menu.querySelector('.live');
     $liveMenu.addEventListener('click', () => {
         const $trs = document.querySelectorAll('.el-table__row');
-        $trs.forEach(($tr,index)=>{
+        $trs.forEach(($tr, index) => {
+            // 搜索的人
+            const ss = $tr.querySelector('td:nth-child(3)');
+            // 点击人数
             const rq = $tr.querySelector('td:nth-child(6)');
+            // 交易金额
             const jy = $tr.querySelector('td:nth-child(8)');
-            myFetch(rq.textContent,res=>{
+            // 支付转化率
+            const zh = $tr.querySelector('td:nth-child(9)');
+            // 在线商品数
+            const zxsp = $tr.querySelector('td:nth-child(10)').textContent.replace(/,/g, '');
+            // 转换搜索人数指数
+            myFetch(ss.textContent, ssrs => {
                 const $span = document.createElement('span');
                 $span.style = 'color:red;';
-                $span.textContent = `-${res}`;
-                rq.querySelector('.cell span').appendChild($span);
-            })
-            myFetch(jy.textContent,res=>{
-                const $span = document.createElement('span');
-                $span.style = 'color:red;';
-                $span.textContent = `-${res}`;
-                jy.querySelector('.cell span').appendChild($span);
+                $span.textContent = `-搜索人数：${ssrs}`;
+                ss.querySelector('.cell span').appendChild($span);
+                // 转换点击人数指数
+                myFetch(rq.textContent, rs => {
+                    const $span = document.createElement('span');
+                    $span.style = 'color:red;';
+                    $span.textContent = `-点进来人：${rs}`;
+                    rq.querySelector('.cell span').appendChild($span);
+                    // 转换交易金额指数
+                    myFetch(jy.textContent, res => {
+                        // 计算出具体的支付人数
+                        const num = (parseFloat(rs) * parseFloat(zh.textContent.replace("%", "")) / 100).toFixed(0);
+                        // 计算商品竞争度
+                        const jzd = (zxsp/ssrs*100).toFixed(2);
+
+                        const $span = document.createElement('span');
+                        $span.style = 'color:red;';
+                        $span.textContent = `-交易金额：${res}，支付人数：${num}，商品竞争度：${jzd}`;
+                        jy.querySelector('.cell span').appendChild($span);
+                    })
+                })
             })
         })
     }, false)
