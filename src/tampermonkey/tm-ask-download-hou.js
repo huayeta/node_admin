@@ -41,7 +41,13 @@
         // console.log(tr);
         // 获取问题
         const title = tr.querySelector('td:nth-child(1)');
-        const question = title.querySelector('.question').textContent;// 问题标题
+        const $question = title.querySelector('.question');
+        if(!$question){
+            // 如果问大家已经被投诉成功这个时候找不到问题所在就直接返回
+            cb();
+            return;
+        }
+        const question = $question.textContent;// 问题标题
         // 获取答案
         const btn = tr.querySelector('td:nth-child(4) .next-btn-helper');
         const ev = new Event('click',{"bubbles":true, "cancelable":false});
