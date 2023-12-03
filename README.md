@@ -61,5 +61,6 @@ pdd_end = *
 
 ## cnpm
 ```
-https://www.npmmirror.com/
+cnpm的安装方法：https://www.npmmirror.com/
+sqlite的可视化工具：https://www.zzxworld.com/posts/10-gui-clients-for-sqlite-db，推荐Antares
 ```
