@@ -58,3 +58,8 @@ pdd_end = *
 #复制tm-comments-download-hou.js到浏览器，然后打开后台的评价管理页面，搜索{product_id}
 #控制台调度函数：startReadComent();会下载{product_id}.zip
 ```
+
+## cnpm
+```
+https://www.npmmirror.com/
+```
