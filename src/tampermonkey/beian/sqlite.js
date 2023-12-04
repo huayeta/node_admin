@@ -54,12 +54,13 @@ DB.SqliteDB.prototype.queryData = function (sql, callback) {
     })
 }
 
-DB.SqliteDB.prototype.executeSql = function (sql) {
+DB.SqliteDB.prototype.executeSql = function (sql,callback=()=>{}) {
     DB.db.run(sql, function (err) {
         if (err != null) {
             DB.prientErrorInfo(err);
             return;
         }
+        callback();
     })
 }
 DB.SqliteDB.prototype.close = function () {
