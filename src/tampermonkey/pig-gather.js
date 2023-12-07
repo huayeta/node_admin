@@ -29,11 +29,12 @@
     const is_custom = true;
     const COMETYPE = [
         { name: 'pig', fix: '', value: 'pig' },
-        { name: 'A97-欢乐购秒杀1群', fix: 'QQ', value: '626195966' },
+        { name: 'A97-欢乐购秒杀1群-有新人', fix: 'QQ', value: '626195966' },
         { name: 'A97-欢乐购秒杀2群', fix: 'QQ', value: '244917614' },
         { name: 'A97-欢乐购秒杀11群', fix: 'QQ', value: '1074927054' },
         { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
+        { name: 'A97-欢乐购火箭🚀④群-新人', fix: 'QQ', value: '532849108' },
     ];
     const QQS = {
         '31': {
@@ -73,7 +74,7 @@
             },
             {
                 label: '广浴隆',
-                options: ['肛瘘9', '肛裂5','痔疮7'],
+                options: ['肛瘘9', '肛裂5', '痔疮7'],
             },
             {
                 label: '艾跃',
@@ -1355,7 +1356,7 @@
                         <!-- <button class="search_btn reb j-searchNote" style="">模糊搜索用户备注</button>-->
                         <!--<button class="search_btn j-findQqs" style="">查询不同的qq</button>-->
                         <button class="search_btn reb download" style="">下载数据</button>
-                        <button class="search_btn j-gatherQqs" style="">筛选qq1235</button>
+                        <button class="search_btn j-gatherQqs" style="">倒序筛选qq1235</button>
                         <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq1235</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
                         <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
@@ -2285,7 +2286,7 @@
             }
             $text.setAttribute('data-copyed', '1');
         }, '.j-copyText')
-        function GatherQqs(cb = () => true, pig_type = 'TB') {
+        function GatherQqs(cb = () => true, pig_type = 'TB', is_back_filter = false) {
             let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
             // let startTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
             let startTime = new Date($searchTime.value);
@@ -2320,6 +2321,7 @@
                     && cb(humanData)
                 ) {
                     if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
+                        // console.log(humanData);
                         return true;
                     }
                 }
@@ -2329,44 +2331,43 @@
                 const datas = DATA[phone];
                 if (datas.length == 0) continue;
                 let data = getLastTypeData(datas, pig_type);
-                if (data && new Date(data.pig_over_time) > startTime && new Date(data.pig_over_time) < endTime) {
-                    if (filterDateRecord(data)) DateRecords.push(data)
+                if (!is_back_filter) {
+                    // 如果不是倒序
+                    if (data && new Date(data.pig_over_time) > startTime && new Date(data.pig_over_time) < endTime) {
+                        if (filterDateRecord(data)) DateRecords.push(Tools.copyObj(data))
+                    }
+                } else {
+                    // 如果倒序
+                    if (data && new Date(data.pig_over_time) <= startTime) {
+                        // console.log(data);
+                        if (filterDateRecord(data)) {
+                            // console.log(Tools.copyObj(data));
+                            // console.log('11111111')
+                            DateRecords.push(Tools.copyObj(data))
+                        }
+                    }
                 }
             }
-            // 筛选符合的记录
-            // DateRecords = DateRecords.filter(record => {
-            //     let datas = DATA[record.pig_phone];
-            //     const humanData = humanDatas(datas);
-            //     const notes = humanData.notes.join('');
-            //     const diffPhones = humanData.diffPhones;
-            //     if (
-            //         (notes.indexOf('满月') == -1 || true)
-            //         && notes.indexOf('删订单') == -1
-            //         && (diffPhones.length == 0 || true)
-            //         && !RDATA.isExist(record.pig_phone, 'order_reminder')
-            //         && cb(humanData)
-            //     ) {
-            //         if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
-            //             return true;
-            //         }
-            //     }
-            // })
+            // console.log(DateRecords);
+            
             // 排序
             DateRecords.sort((a, b) => {
                 if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
-                    return screen_time;
+                    return is_back_filter ? -screen_time : screen_time;
                 } else {
-                    return -screen_time;
+                    return is_back_filter ? screen_time : -screen_time;
                 }
             })
+            // console.log(DateRecords);
             const table = getDataTable(DateRecords.slice(0, 5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
             const pig_type = $pigType.value;
             GatherQqs(humanData => {
-                return humanData.record_num >= 2;
-            }, pig_type)
+                // return humanData.record_num >= 2;
+                return true;
+            }, pig_type, true)
         }, false)
         qqAdd.querySelector('.j-gatherRegisterQqs').addEventListener('click', () => {
             const pig_type = $pigType.value;
@@ -2519,9 +2520,9 @@
                 // setCon(arr[0]);
             } else {
                 // 多手机号
-                let str = arr.reduce((a,data,index)=>{
-                    return a+getCon(data)+(index<=arr.length-2?'<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>':'');
-                },'');
+                let str = arr.reduce((a, data, index) => {
+                    return a + getCon(data) + (index <= arr.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
+                }, '');
                 let table = getDataTable(arr);
                 setCon([table + str]);
             }
@@ -2542,35 +2543,35 @@
                 // setCon(arr[0]);
             } else {
                 // 多手机号
-                let str = arr.reduce((a,data,index)=>{
-                    return a+getCon(data)+(index<=arr.length-2?'<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>':'');
-                },'');
+                let str = arr.reduce((a, data, index) => {
+                    return a + getCon(data) + (index <= arr.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
+                }, '');
                 let table = getDataTable(arr);
                 setCon([table + str]);
             }
         }, '.j-realName-search')
         // 获取源码
-        addEventListener(qqAdd,'click',()=>{
+        addEventListener(qqAdd, 'click', () => {
             const phone = $phone.value;
-            if (Tools.alertFuc({ pig_phone:phone })) return;
+            if (Tools.alertFuc({ pig_phone: phone })) return;
             const data = DATA[phone];
             $modifyCodeIpt.value = JSON.stringify(data);
-        },'.j-modify-code-btn-get')
-        addEventListener(qqAdd,'click',()=>{
+        }, '.j-modify-code-btn-get')
+        addEventListener(qqAdd, 'click', () => {
             const phone = $phone.value;
             const code = $modifyCodeIpt.value;
-            if(Tools.alertFuc({phone,code}))return;
+            if (Tools.alertFuc({ phone, code })) return;
             try {
                 const json = JSON.parse(code);
                 if (confirm('确定修改吗？')) {
-                    DATA[phone]=json;
+                    DATA[phone] = json;
                     storageData();
                     alert('修改成功')
                 }
             } catch (error) {
                 alert('json数据格式不对')
             }
-        },'.j-modify-code-btn')
+        }, '.j-modify-code-btn')
     }
     AddQQDiv();
 
@@ -2659,7 +2660,7 @@
     //     const RecordCodeDiv = document.createElement('div');
     //     RecordCodeDiv.innerHTML = `
     //         <style>
-                
+
     //         </style>
     //         <div class="m-search">
     //             <input type="text" class="search_input" /><button class="search_btn">修改源码</button>
