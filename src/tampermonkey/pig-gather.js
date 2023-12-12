@@ -1304,6 +1304,9 @@
                         <div style="margin-bottom: 10px;"><input class="search_input j-gnote" placeholder="网页备注/真实姓名" /><button class="search_btn add-gnote">添加网页备注</button><button class="search_btn reb j-real-name-add-btn" style="margin-left:10px;">修改真实姓名</button></div>
                         <div><select class="search_input qq_exec_pre" style="width:auto;">${option_strs}</select><button class="search_btn add-record">添加做单记录</button><button class="search_btn reb j-del-data" style="margin-left:5px;">删除做单记录</button></div>    
                     </div>
+                    <div style="margin-left:10px;">
+                        <div><textarea style="height:61px;" class="search_input j-analysis-textarea"></textarea><button class="search_btn j-analysis-btn" style="vertical-align:top;width:40px;height:68px; margin-left:5px;">解析数据</button></div>
+                    </div>
                 </div>
                 <div class="search m-search">
                         <input class="search_input j-contact-input" type="text" data-key="wx" placeholder="wx号" />
@@ -1314,10 +1317,11 @@
                         <button class="search_btn j-wxName-add" style="margin-left:10px">添加wx姓名</button>
                         <button class="search_btn red j-wxName-del" style="margin-left:10px;">删除wx姓名</button>
                         <button class="search_btn reb j-realName-search" style="margin-left:10px;">真实姓名搜索</button>
+                        <input class="search_input j-register-time" type="text" placeholder="注册时间" style="margin-left:10px;" />
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
-                    " style="margin: 0 10px;">查询</button><div class="orderCon" style="color:gray;"></div>
+                    " style="margin: 0 10px;">查询</button>
                     <input class="search_input j-ww-exec" placeholder="旺旺号" /> <button class="search_btn ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red ww-del">删除旺旺号</button>
                     <button class="search_btn ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
@@ -1417,6 +1421,9 @@
         const $wx = qqAdd.querySelector('.j-contact-input[data-key="wx"]');
         const $wxName = qqAdd.querySelector('.j-wxName');
         const $modifyCodeIpt = qqAdd.querySelector('.j-modify-code-ipt');
+        const $registerTime = qqAdd.querySelector('.j-register-time');
+        const $analysisTextarea = qqAdd.querySelector('.j-analysis-textarea');
+        // const $analysisBtn = qqAdd.querySelector('.j-analysis-btn');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -1510,7 +1517,6 @@
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click', e => {
             const orderId = qqAdd.querySelector('.j-order-search .order-id').value;
-            const orderCon = qqAdd.querySelector('.j-order-search .orderCon');
             if (!orderId) return alert('orderId不能为空');
             const orderConArr = [];
             const ordersA = `1815460827279566990
@@ -2002,7 +2008,8 @@
             } else {
                 orderConArr.push('没查询到;');
             }
-            orderCon.innerHTML = orderConArr.join('，');
+            // orderCon.innerHTML = orderConArr.join('，');
+            setCon(orderConArr);
         }, false)
         // 添加旺旺号
         qqAdd.querySelector('.j-order-search .ww-add').addEventListener('click', e => {
@@ -2134,7 +2141,9 @@
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const come_type = $comeType.value;
             const wx = $wx.value;
+            const pig_register_time = $registerTime.value;
             const record = { pig_phone: phone, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type, come_type };
+            if(pig_register_time)record.pig_register_time = pig_register_time;
             // if(wx)record.wx = wx;
             // if(qq)record.pig_qq = qq;
             // if(!wx && !qq)return alert('wx|qq最少填写一个联系方式');
@@ -2166,6 +2175,20 @@
             const result = Tools.deleteData(pig_phone);
             if (result) alert('删除成功');
         }, false)
+        // 解析数据
+        addEventListener(qqAdd,'click',e=>{
+            const text = $analysisTextarea.value;
+            // console.log(text);
+            // 提取注册时间
+            const regTime = text.match(/注册时间：(.+?\s.+?)\s/);
+            if(regTime)$registerTime.value = regTime[1];
+            // 提取真实姓名
+            const real_name = text.match(/实名：(.+?)\s/);
+            if(real_name)$gNote.value = real_name[1];
+            // 提取手机号
+            const phone = text.match(/手机号：([0-9]+)/);
+            if(phone)$phone.value = phone[1];
+        },'.j-analysis-btn')
         // 添加联系方式
         addEventListener(qqAdd, 'click', (e) => {
             const pig_phone = $phone.value;
@@ -2261,6 +2284,14 @@
                     RDATA.addOrderReminder(phone);
                     break;
             }
+            // 填写qq
+            $byQQ.value = qq;
+            // 触发更新
+            var event = new Event('input', {
+                bubbles: true,
+                cancelable: true,
+              });
+              $byQQ.dispatchEvent(event);
         }, '.j-remindPhone')
         //不再提醒
         addEventListener($con, 'click', e => {
@@ -2359,7 +2390,7 @@
                 }
             })
             // console.log(DateRecords);
-            const table = getDataTable(DateRecords.slice(0, 5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
+            const table = getDataTable(DateRecords.slice(0, is_back_filter?2:5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
@@ -2607,7 +2638,6 @@
                     background: #e1e0e0;
                     padding:0 0 0 15px;
                     margin-bottom: 15px;
-                    user-select: none;
                 }
                 .m-note>div:hover{
                     background: #efefef;
