@@ -327,7 +327,7 @@
             if (!middleFuc()) return false;
 
             if (confirm('确定删除吗？')) {
-                const datas = DATA[pig_phone].filter(data => data.pig_id || data[key] != value || otherKeysFuc(data));
+                const datas = DATA[pig_phone].filter(data => data.pig_over_time || data[key] != value || otherKeysFuc(data));
                 // console.log(datas);
                 DATA[pig_phone] = datas;
                 storageData();
@@ -929,10 +929,18 @@
             // console.log(keyword);
             const results = [];
             if (!keyword) return results;
+            const emptyStr = function(str,key){
+                if(str){
+                    str = str.trim();
+                    return str == key.trim();
+                }else{
+                    return false;
+                }
+            }
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (data.pig_qq == keyword || data.pig_phone == keyword || data.ww_exec == keyword || data.wx == keyword || data.wx_name == keyword || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                    if (emptyStr(data.pig_qq,keyword) || emptyStr(data.pig_phone,keyword) || emptyStr(data.ww_exec,keyword) || emptyStr(data.wx,keyword) || emptyStr(data.wx_name,keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
                         if (!results.includes(phone)) results.push(phone);
                     }
                 })
@@ -944,14 +952,26 @@
             const phones = Tools.findPhonesByKeyword(keyword);
             // console.log(phones);
             const arr = [];
+            const pushData = function(str){
+                if(str){
+                    str = str.trim();
+                    if(!arr.includes(str)){
+                        arr.push(str);
+                    }
+                }
+            }
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (data.pig_qq && !arr.includes(data.pig_qq)) arr.push(data.pig_qq);
-                    if (data.pig_phone && !arr.includes(data.pig_phone)) arr.push(data.pig_phone);
-                    if (data.ww_exec && !arr.includes(data.ww_exec)) arr.push(data.ww_exec);
-                    if (data.wx && !arr.includes(data.wx)) arr.push(data.wx);
-                    if (data.wx_name && !arr.includes(data.wx_name)) arr.push(data.wx_name);
+                    [data.pig_qq,data.pig_phone,data.ww_exec,data.wx,data.wx_name].forEach(str=>{
+                        // console.log(str+'1111');
+                        pushData(str);
+                    })
+                    // if (data.pig_qq && !arr.includes(data.pig_qq)) arr.push(data.pig_qq);
+                    // if (data.pig_phone && !arr.includes(data.pig_phone)) arr.push(data.pig_phone);
+                    // if (data.ww_exec && !arr.includes(data.ww_exec)) arr.push(data.ww_exec);
+                    // if (data.wx && !arr.includes(data.wx)) arr.push(data.wx);
+                    // if (data.wx_name && !arr.includes(data.wx_name)) arr.push(data.wx_name);
                 })
             })
             // console.log(arr);
@@ -961,6 +981,7 @@
         almightySearch: (keywords = []) => {
             let result = [];
             if (keywords.length == 0) return result;
+            console.log(keywords);
             //所有的关键字
             let arr = [];
             keywords.forEach(keyword => {
