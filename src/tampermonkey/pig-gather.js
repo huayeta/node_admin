@@ -760,7 +760,7 @@
             return true;
         },
         // 添加做单记录按钮
-        addRecordBtn: (phone, parentNode, text, qq) => {
+        addRecordBtn: (phone, parentNode, text, qq, mobile) => {
             const button = document.createElement('button');
             button.className = 'search_btn';
             button.innerHTML = text || "添加记录";
@@ -768,6 +768,7 @@
                 if (typeof phone == 'function') phone = phone();
                 const result = Tools.addRecord(phone);
                 if (qq) Tools.addQq(phone, qq);
+                if (mobile) Tools.addMobile(phone, mobile);
                 if (result) alert('添加记录成功~');
             }, false)
             if (parentNode) {
@@ -2487,6 +2488,7 @@
             const phone = $phone.value;
             const ww = $ww.value;
             const wx = $wx.value;
+            const mobile = $mobileIpt.value;
             const keywords = [qq, phone, ww, wx].filter(keyword => keyword);
             if (keywords.length == 0) return alert('请填写关键字qq||phone|ww|wx!');
             // console.log(keywords);
@@ -2495,7 +2497,7 @@
             const arr = Tools.almightySearch(keywords).map(phone => DATA[phone]);
             if (arr.length == 0) {
                 setCon([`没找到做单记录<span style="margin:15px;display:inline-block;width:auto;height:auto;" class="j-add-record-btn search"></span>`]);
-                Tools.addRecordBtn(phone, qqAdd.querySelector('.j-add-record-btn'), undefined, qq);
+                Tools.addRecordBtn(phone, qqAdd.querySelector('.j-add-record-btn'), undefined, qq, mobile);
                 return;
             }
             // 判断是否有一个qq多个账号的情况存在
