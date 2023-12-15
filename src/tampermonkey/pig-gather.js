@@ -13,13 +13,14 @@
     'use strict';
     // Your code here...
     // {
-    //     phone手机或者唐人账号：[
-    //         {pig_phone,ww_exec,is_del?:'1'} 做单旺旺号
+    //     phone账号或者唐人账号：[
+    //         {pig_phone,ww_exec,is_del?:'1'} 添加做单旺旺号
     //         {pig_phone唐人账号,pig_qq?,wx?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
+    //         {pig_phone,mobile} 添加不同的手机号
     //         {pig_phone,wx,wx_name?} 添加不同的wx
-    //         {pig_phone,real_name,wx_name} 收款码
+    //         {pig_phone,real_name,wx_name} 收款信息
     //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -477,6 +478,25 @@
             })
             return result;
         },
+        // 找到所有mobiles
+        findMobilesByDatas: (datas, mobile='1') => {
+            const arr = [];
+            datas.forEach(data => {
+                if (data.mobile && data.mobile != mobile && !arr.includes(data.mobile)) {
+                    arr.push(data.mobile);
+                }
+            })
+            return arr;
+        },
+        // 添加手机号
+        addMobile:(account,mobile)=>{
+            const result = Tools.addKeyValue(account,'mobile',mobile);
+            return result;
+        },
+        // 删除手机号
+        delMobile:(account,mobile)=>{
+            return Tools.delKeyValue(account, 'mobile', mobile);
+        },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
             // if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
@@ -715,7 +735,7 @@
             }
             return pig_type;
         },
-        // 通过手机给最后一个记录添加评论或者默认评论或者直接评论
+        // 通过账号给最后一个记录添加评论或者默认评论或者直接评论
         lastAddCommentByPhone: (phone, is_comment = '1') => {
             if (Tools.alertFuc({ phone, is_comment })) return false;
             if (!DATA[phone]) {
@@ -909,7 +929,7 @@
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (emptyStr(data.pig_qq,keyword) || emptyStr(data.pig_phone,keyword) || emptyStr(data.ww_exec,keyword) || emptyStr(data.wx,keyword) || emptyStr(data.wx_name,keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                    if (emptyStr(data.pig_qq,keyword) || emptyStr(data.pig_phone,keyword) || emptyStr(data.ww_exec,keyword) || emptyStr(data.wx,keyword) || emptyStr(data.wx_name,keyword) || emptyStr(data.mobile,keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
                         if (!results.includes(phone)) results.push(phone);
                     }
                 })
@@ -932,7 +952,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq,data.pig_phone,data.ww_exec,data.wx,data.wx_name].forEach(str=>{
+                    [data.pig_qq,data.pig_phone,data.ww_exec,data.wx,data.wx_name,data.mobile].forEach(str=>{
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -950,7 +970,7 @@
         almightySearch: (keywords = []) => {
             let result = [];
             if (keywords.length == 0) return result;
-            console.log(keywords);
+            // console.log(keywords);
             //所有的关键字
             let arr = [];
             keywords.forEach(keyword => {
@@ -1064,7 +1084,9 @@
         let records = Tools.getDatasByPigType(datas, pig_type);
         // 找到所有的qq号
         let qqs = Tools.findQqsByDatas(datas, qq);
-        // 找到不同的手机号
+        // 找到所有的手机号
+        let mobiles = Tools.findMobilesByDatas(datas,pig_phone);
+        // 找到不同的账号
         // let diffPhones = findDiffPhonesByDatas(datas);
         let diffPhones = is_almighty ? Tools.almightySearch([pig_phone]).filter(phone => phone != pig_phone) : [];
         // 找到真实姓名
@@ -1127,6 +1149,7 @@
             record_color: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].color || ''),
             record_num: records.length,
             diffPhones: diffPhones,
+            mobiles:mobiles,
             wwExecs: wws.map(ww => ww.ww_exec),
             wws: wws,
             wws_html: wws_html,
@@ -1169,7 +1192,7 @@
             <tr>
                 <td>
                     <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
-                    ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的手机号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
+                    ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
@@ -1178,6 +1201,9 @@
                 ${humanData.wxs.length > 0 ? `<p style="margin-top:15px; color:red;">全部wx号：</p>${humanData.wxs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${b}</p>`;
             }, '')}` : ''}
+                ${humanData.mobiles.length > 0 ? `<p style="margin-top:15px; color:red;">全部mobiles号：</p>${humanData.mobiles.reduce((a, b) => {
+                    return a + `<p class="j-copyText">${b}</p>`;
+                }, '')}` : ''}
                 </td>
                 <td style="color:red;">
                     ${humanData.wws_html}
@@ -1251,7 +1277,7 @@
         <table class="common_table" style="margin-top:10px; margin-bottom:10px;">
             <tbody>
                 <tr>
-                    <th>手机号</th>
+                    <th>账号</th>
                     <th>qq号和wx号</th>
                     <th>旺旺号</th>
                     <th>真实姓名（微信名字）</th>
@@ -1283,8 +1309,8 @@
                         .m-search .search_input{width:150px;}
                     </style>
                     <div>
-                        <div style="margin-bottom:10px;"><input class="search_input phone" placeholder="通过会员手机号" /></div>
-                        <div><input class="search_input byqq" placeholder="通过会员qq" /></div>
+                        <div style="margin-bottom:10px;"><input class="search_input phone" placeholder="会员账号" /></div>
+                        <div><input class="search_input byqq" placeholder="会员qq" /></div>
                     </div>
                     <div style="margin-left:10px; margin-right:20px;">
                         <div style="margin-bottom:10px;"><input class="search_input qq" placeholder="qq号" /><button class="search_btn add">添加不同qq</button><button class="search_btn red del" style="margin-left:15px;">删除qq</button></div>
@@ -1308,12 +1334,17 @@
                         <button class="search_btn red j-wxName-del" style="margin-left:10px;">删除wx姓名</button>
                         <input class="search_input j-register-time" type="text" placeholder="注册时间" style="margin-left:10px;" />
                 </div>
+                <div class="search m-search">
+                    <input class="search_input j-mobile-input" type="text" placeholder="不同mobile" />
+                    <button class="search_btn j-mobile-add" data-key="wx" style="margin-left:10px">添加mobile</button>
+                    <button class="search_btn red j-mobile-del" data-key="wx" style="margin-left:10px;">删除mobile</button>
+                    <input class="search_input j-ww-exec" placeholder="旺旺号" style="margin-left:10px;" /> <button class="search_btn j-ww-add
+                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red j-ww-del">删除旺旺号</button>
+                    <button class="search_btn j-ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button> 
+                </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button>
-                    <input class="search_input j-ww-exec" placeholder="旺旺号" /> <button class="search_btn ww-add
-                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red ww-del">删除旺旺号</button>
-                    <button class="search_btn ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
                     <input type="text" class="search_input j-modify-code-ipt" /><button class="search_btn j-modify-code-btn-get">获取源码</button><button class="search_btn reb j-modify-code-btn" style="margin-left:10px;">修改源码</button>
                 </div>
                 <div class="btns">
@@ -1364,7 +1395,7 @@
                         <!-- <table class="common_table">
                             <tbody>
                                 <tr>
-                                    <th>手机号</th>
+                                    <th>账号</th>
                                     <th>全部qq号</th>
                                     <th>已做单数量</th>
                                     <th>备注</th>
@@ -1374,7 +1405,7 @@
                                 <tr>
                                     <td>
                                         <p>18711111111</p>
-                                        <p>有多个手机号</p>
+                                        <p>有多个账号</p>
                                     </td>
                                     <td style="color: blueviolet;">
                                         <p>8282828282</p>
@@ -1407,6 +1438,7 @@
         const $modifyCodeIpt = qqAdd.querySelector('.j-modify-code-ipt');
         const $registerTime = qqAdd.querySelector('.j-register-time');
         const $analysisTextarea = qqAdd.querySelector('.j-analysis-textarea');
+        const $mobileIpt = qqAdd.querySelector('.j-mobile-input');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -1441,7 +1473,7 @@
                 $gNote.value = '';
                 $comeType.value = come_type_default;
                 $qqExecPre.value = qq_exec_pre_default;
-                return $phone.value = '有多个手机号';
+                return $phone.value = '有多个账号';
             }
             const phone = phones[0];
             $phone.value = phone;
@@ -1462,7 +1494,7 @@
             //         const wwExecs = findWWExecs(DATA[phone]);
             //         $ww.value = wwExecs.join('，');
             //     } else {
-            //         $phone.value = '有多个手机号';
+            //         $phone.value = '有多个账号';
             //     }
             // } else {
             //     $phone.value = '';
@@ -1483,20 +1515,6 @@
                 }
             }
         }, 1000), false)
-        // wx变化之后的反应
-        // $wx.addEventListener('input', e => {
-        //     const wx = e.target.value;
-        //     if (wx) {
-        //         const phoneArr = Tools.almightySearch([wx]);
-        //         // console.log(phoneArr);
-        //         if (phoneArr.length > 0) {
-        //             $phone.value = phoneArr.join(',');
-        //             // setCon(['']);
-        //         } else {
-        //             // setCon(['没有找到phone']);
-        //         }
-        //     }
-        // }, false)
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click', e => {
             const orderId = qqAdd.querySelector('.j-order-search .order-id').value;
@@ -1994,22 +2012,35 @@
             // orderCon.innerHTML = orderConArr.join('，');
             setCon(orderConArr);
         }, false)
+        // 添加手机号
+        addEventListener(qqAdd,'click',e=>{
+            const mobile = $mobileIpt.value;
+            const account = $phone.value;
+            const result = Tools.addMobile(account,mobile);
+            if (result) alert('添加手机成功');
+        },'.j-mobile-add');
+        addEventListener(qqAdd,'click',e=>{
+            const mobile = $mobileIpt.value;
+            const account = $phone.value;
+            const result = Tools.delMobile(account,mobile);
+            if (result) alert(`手机（${mobile}）删除成功`);
+        },'.j-mobile-del')
         // 添加旺旺号
-        qqAdd.querySelector('.j-order-search .ww-add').addEventListener('click', e => {
+        qqAdd.querySelector('.j-ww-add').addEventListener('click', e => {
             const wwId = $ww.value;
             const phone = $phone.value;
             const result = Tools.addWW(phone, wwId);
             if (result) alert('添加旺旺成功');
         }, false)
         // 删除旺旺号
-        qqAdd.querySelector('.j-order-search .ww-del').addEventListener('click', e => {
+        qqAdd.querySelector('.j-ww-del').addEventListener('click', e => {
             const wwId = $ww.value;
             const phone = $phone.value;
             const result = Tools.delWW(phone, wwId);
             if (result) alert(`旺旺号${wwId}删除成功`);
         }, false)
         // 添加倒数旺旺号
-        qqAdd.querySelector('.j-order-search .ww-add-back-second').addEventListener('click', e => {
+        qqAdd.querySelector('.j-ww-add-back-second').addEventListener('click', e => {
             const wwId = $ww.value;
             const phone = $phone.value;
             const result = Tools.addWWBackSecond(phone, wwId);
@@ -2144,8 +2175,8 @@
             const real_name = text.match(/实名：(.+?)\s/);
             if(real_name)$gNote.value = real_name[1];
             // 提取手机号
-            const phone = text.match(/手机号：([0-9]+)/);
-            if(phone)$phone.value = phone[1];
+            const mobile = text.match(/手机号：([0-9]+)/);
+            if(mobile)$mobileIpt.value = mobile[1];
         },'.j-analysis-btn')
         // 添加联系方式
         addEventListener(qqAdd, 'click', (e) => {
@@ -2298,7 +2329,7 @@
             // 筛选符合的记录
             const filterDateRecord = (record) => {
                 let datas = DATA[record.pig_phone];
-                // 优化符合数据，关闭找不同手机
+                // 优化符合数据，关闭找不同账号
                 const humanData = humanDatas(datas, undefined, undefined, false);
                 const notes = humanData.notes.join('');
                 const diffPhones = humanData.diffPhones;
@@ -2466,16 +2497,16 @@
                 Tools.addRecordBtn(phone, qqAdd.querySelector('.j-add-record-btn'), undefined, qq);
                 return;
             }
-            // 判断是否有一个qq多个手机的情况存在
+            // 判断是否有一个qq多个账号的情况存在
             // console.log(arr);
             if (arr.length === 1) {
-                // 单手机
+                // 单账号
                 let datas = arr[0];
                 let table = getDataTable([datas])
                 setCon([table, getCon(datas, 3)]);
                 // setCon(arr[0]);
             } else {
-                // 多手机号
+                // 多账号
                 let str = arr.reduce((a, data, index) => {
                     return a + getCon(data) + (index <= arr.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
                 }, '');
@@ -2490,16 +2521,16 @@
             const ww = $ww.value;
             const arr = Tools.searchKeyValues([['ww_exec',ww],['real_name',real_name]]).map(phone => DATA[phone]);
             if (arr.length == 0) return setCon(['没找到做单记录']);
-            // 判断是否有一个qq多个手机的情况存在
+            // 判断是否有一个qq多个账号的情况存在
             // console.log(arr);
             if (arr.length === 1) {
-                // 单手机
+                // 单账号
                 let datas = arr[0];
                 let table = getDataTable([datas])
                 setCon([table, getCon(datas, 3)]);
                 // setCon(arr[0]);
             } else {
-                // 多手机号
+                // 多账号
                 let str = arr.reduce((a, data, index) => {
                     return a + getCon(data) + (index <= arr.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
                 }, '');
