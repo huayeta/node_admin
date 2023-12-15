@@ -13,14 +13,14 @@
     'use strict';
     // Your code here...
     // {
-    //     phone：[
+    //     phone手机或者唐人账号：[
     //         {pig_phone,ww_exec,is_del?:'1'} 做单旺旺号
-    //         {pig_phone,pig_qq?,wx?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
+    //         {pig_phone唐人账号,pig_qq?,wx?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
     //         {pig_phone,wx,wx_name?} 添加不同的wx
     //         {pig_phone,real_name,wx_name} 收款码
-    //         { pig_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
+    //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
@@ -102,7 +102,7 @@
     }
     // 店铺缓存数据
     const SHOPDATAS = {
-        // {pig_id:shop_label}
+        // {task_id:shop_label}
         datas: {},
         getDatas: () => {
             let datas = localStorage.getItem('shopDatas') ? JSON.parse(localStorage.getItem('shopDatas')) : {};
@@ -111,32 +111,32 @@
         storageData: () => {
             localStorage.setItem('shopDatas', JSON.stringify(SHOPDATAS.datas));
         },
-        addData: (pig_id, shop_label) => {
-            if (Tools.alertFuc({ pig_id })) return false;
-            SHOPDATAS.datas[pig_id] = shop_label;
-            if (!shop_label) SHOPDATAS.delData(pig_id);
+        addData: (task_id, shop_label) => {
+            if (Tools.alertFuc({ task_id })) return false;
+            SHOPDATAS.datas[task_id] = shop_label;
+            if (!shop_label) SHOPDATAS.delData(task_id);
             SHOPDATAS.storageData();
             return true;
         },
-        delData: (pig_id) => {
-            delete SHOPDATAS.datas[pig_id];
+        delData: (task_id) => {
+            delete SHOPDATAS.datas[task_id];
             SHOPDATAS.storageData();
         },
-        appendShopLable: (pig_phone, pig_id, shop_label) => {
-            if (Tools.alertFuc({ pig_phone, pig_id })) return false;
+        appendShopLable: (pig_phone, task_id, shop_label) => {
+            if (Tools.alertFuc({ pig_phone, task_id })) return false;
             if (!DATA[pig_phone]) return alert('不存在做单数据');
             const datas = DATA[pig_phone];
             for (let i = 0; i < datas.length; i++) {
-                if (datas[i].pig_id == pig_id) {
+                if (datas[i].task_id == task_id) {
                     DATA[pig_phone][i].shop_label = shop_label;
                     if (!shop_label) delete DATA[pig_phone][i].shop_label;
-                    SHOPDATAS.delData(pig_id);
+                    SHOPDATAS.delData(task_id);
                     storageData();
                 }
             }
         },
-        getData: (pig_id) => {
-            return SHOPDATAS.datas[pig_id];
+        getData: (task_id) => {
+            return SHOPDATAS.datas[task_id];
         }
     }
     SHOPDATAS.getDatas();
@@ -488,41 +488,10 @@
         },
         // 删除旺旺
         delWW: (pig_phone, ww_exec) => {
-            // const wwId = $ww.value;
-            // const phone = $phone.value;
-            // if (confirm('确定删除吗？')) {
-            //     if (!DATA[phone]) {
-            //         alert('找不到对应的记录~')
-            //         return;
-            //         // DATA[phone] = [];
-            //     }
-            //     // console.log(wwId);
-            //     const datas = DATA[phone].filter(data => data.pig_id || data.ww_exec != wwId);
-            //     // console.log(datas);
-            //     DATA[phone] = datas;
-            //     storageData();
-            //     alert('旺旺号删除成功');
-            // }
             return Tools.delKeyValue(pig_phone, 'ww_exec', ww_exec);
         },
         // 添加倒数第二个旺旺号
         addWWBackSecond: (pig_phone, ww_exec) => {
-            // if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
-            // if (!DATA[pig_phone]) return alert('不存在小猪数据');
-            // // 判断是否已经有旺旺
-            // const datas = DATA[pig_phone];
-            // let tx = false;
-            // let second;
-            // for (let index in datas) {
-            //     const data = datas[index];
-            //     if (data.ww_exec && data.ww_exec == ww_exec) tx = true;
-            //     if (data.ww_exec) second = index;
-            // }
-            // if (tx == true) return alert('已经添加过旺旺号了');
-            // if (!second) return alert('没有添加过旺旺号');
-            // DATA[pig_phone].splice(second, 0, { pig_phone: pig_phone, ww_exec: ww_exec });
-            // storageData();
-            // return true;
             const datas = DATA[pig_phone];
             let second;
             for (let index in datas) {
@@ -1033,14 +1002,14 @@
     // const DATA = {
     //     '18829904058':[
     //         {
-    //             "pig_id": "4669667",
+    //             "task_id": "4669667",
     //             "pig_phone": "18829904058",
     //             "pig_qq": "1576630003",
     //             "pig_register_time": "2022-02-19 14:22:33",
     //             "pig_over_time": "2022-09-05 13:31:20"
     //         },
     //         {
-    //             "pig_id": "4669667222",
+    //             "task_id": "4669667222",
     //             "pig_phone": "18829904058",
     //             "pig_qq": "223444",
     //             "pig_register_time": "2022-02-14 14:22:33",
@@ -2043,19 +2012,6 @@
         qqAdd.querySelector('.j-order-search .ww-del').addEventListener('click', e => {
             const wwId = $ww.value;
             const phone = $phone.value;
-            // if (confirm('确定删除吗？')) {
-            //     if (!DATA[phone]) {
-            //         alert('找不到对应的记录~')
-            //         return;
-            //         // DATA[phone] = [];
-            //     }
-            //     // console.log(wwId);
-            //     const datas = DATA[phone].filter(data => data.pig_id || data.ww_exec != wwId);
-            //     // console.log(datas);
-            //     DATA[phone] = datas;
-            //     storageData();
-            //     alert('旺旺号删除成功');
-            // }
             const result = Tools.delWW(phone, wwId);
             if (result) alert(`旺旺号${wwId}删除成功`);
         }, false)
@@ -2086,18 +2042,6 @@
         qqAdd.querySelector('.del').addEventListener('click', e => {
             const qq = qqAdd.querySelector('.qq').value;
             const phone = $phone.value;
-            // if (confirm('确定删除吗？')) {
-            //     if (!DATA[phone]) {
-            //         alert('找不到对应的记录~')
-            //         return;
-            //         // DATA[phone] = [];
-            //     }
-            //     const datas = DATA[phone].filter(data => data.pig_id || data.pig_qq != qq);
-            //     // console.log(datas);
-            //     DATA[phone] = datas;
-            //     storageData();
-            //     alert('qq删除成功');
-            // }
             const result = Tools.delQq(phone, qq);
             if (result) alert(`${qq}删除成功`);
         }, false)
