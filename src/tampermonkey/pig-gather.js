@@ -754,15 +754,6 @@
             }
             return button;
         },
-        // 添加新做单记录并添加qq和旺旺
-        addRecordQqWw: (phone, qq, ww_exec) => {
-            if (Tools.alertFuc({ phone, qq, ww_exec })) return false;
-            //添加自定义做单记录
-            if (Tools.addRecord(phone) && Tools.addQq(phone, qq) && Tools.addWW(phone, ww_exec)) {
-                return true;
-            }
-            return false;
-        },
         // 找到最后一个字段
         findLastKeyValuesByDatas: (datas, keys = []) => {
             let obj = {};
@@ -1315,7 +1306,6 @@
                         <input class="search_input j-wxName" type="text" placeholder="wx名字(真实姓名)|wx姓名" style="margin-left:10px;width:165px;" />
                         <button class="search_btn j-wxName-add" style="margin-left:10px">添加wx姓名</button>
                         <button class="search_btn red j-wxName-del" style="margin-left:10px;">删除wx姓名</button>
-                        <button class="search_btn reb j-reg-search" style="margin-left:10px;">正则realname|ww搜索</button>
                         <input class="search_input j-register-time" type="text" placeholder="注册时间" style="margin-left:10px;" />
                 </div>
                 <div class="search m-search j-order-search">
@@ -1353,18 +1343,13 @@
                     </style>
                     <!-- <div style="color:darkmagenta; ">${JSON.stringify(qqs_obj)}</div> -->
                     <div class="m-findData search">
-                    <!-- <button class="search_btn j-findPhoneBtn" style="">查询phone做单数据</button>
-                        <button class="search_btn reb j-findQqBtn" style="">查询qq做单数据</button>-->
                         <button class="search_btn j-almightySearch" style="">qq|phone|ww|wx全能搜索</button>
-                        <!-- <button class="search_btn reb j-searchNote" style="">模糊搜索用户备注</button>-->
-                        <!--<button class="search_btn j-findQqs" style="">查询不同的qq</button>-->
-                        <button class="search_btn reb download" style="">下载数据</button>
+                        <button class="search_btn reb j-reg-search" style="margin-left:10px;">正则realname|ww搜索</button>
+                        <button class="search_btn download" style="">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="">倒序筛选qq1235</button>
                         <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq1235</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
                         <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
-                        <!-- <div class="j-addOtherRecord"></div> -->
-                        <button class="search_btn j-addRecordQqWw">创建新纪录并添加qq和旺旺</button>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <span class="gray">1：</span><select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
@@ -1422,7 +1407,6 @@
         const $modifyCodeIpt = qqAdd.querySelector('.j-modify-code-ipt');
         const $registerTime = qqAdd.querySelector('.j-register-time');
         const $analysisTextarea = qqAdd.querySelector('.j-analysis-textarea');
-        // const $analysisBtn = qqAdd.querySelector('.j-analysis-btn');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -2432,31 +2416,6 @@
             // console.log(qq,phone);
             Tools.lastAddCommentByPhone(phone, datas.val);
         }, '.j-addComment')
-        {
-            // 添加非手机记录
-            // const $addOtherRecordBtn = qqAdd.querySelector('.j-addOtherRecord');
-            // Tools.addRecordBtn(() => {
-            //     return $phone.value;
-            // }, $addOtherRecordBtn, '添加非手机记录');
-        }
-        // 模糊搜索用户备注
-        // addEventListener(qqAdd, 'click', e => {
-        //     const note = qqAdd.querySelector('.note').value;
-        //     if (Tools.alertFuc({ note })) return false;
-        //     const arr = [];
-        //     const phones = Object.keys(DATA);
-        //     for (let phone of phones) {
-        //         const datas = DATA[phone];
-        //         for (let data of datas) {
-        //             if (data.pig_note && data.pig_note.indexOf(note) !== -1) {
-        //                 arr.push(datas);
-        //                 break;
-        //             }
-        //         }
-        //     }
-        //     const table = getDataTable(arr);
-        //     setCon([`<div style="margin-bottom: 10px; color:gray;text-align:center;">....搜索到<span style="color:red;">${arr.length}</span>个结果.....</div>`, table]);
-        // }, '.j-searchNote')
         // 修改最后一个做单记录
         addEventListener(qqAdd, 'click', e => {
             const phone = $phone.value;
@@ -2490,14 +2449,6 @@
             const result = Tools.delRealNameWxName(pig_phone, wx_name);
             if (result) alert(`删除微信姓名（${wx_name}）成功`);
         })
-        // 创建新纪录并添加qq和旺旺
-        addEventListener(qqAdd, 'click', e => {
-            const phone = $phone.value;
-            const qq = $byQQ.value;
-            const ww = $ww.value;
-            const result = Tools.addRecordQqWw(phone, qq, ww);
-            if (result) alert('添加新纪录并添加qq和旺旺成功');
-        }, '.j-addRecordQqWw')
         // 全能搜索
         addEventListener(qqAdd, 'click', e => {
             const qq = $byQQ.value;
