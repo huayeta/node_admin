@@ -30,6 +30,7 @@
     const is_custom = true;
     const COMETYPE = [
         { name: 'pig', fix: '', value: 'pig' },
+        { name: '唐人', fix: '', value: 'tangren' },
         { name: 'A97-欢乐购秒杀1群-有新人', fix: 'QQ', value: '626195966' },
         { name: 'A97-欢乐购秒杀2群', fix: 'QQ', value: '244917614' },
         { name: 'A97-欢乐购秒杀11群', fix: 'QQ', value: '1074927054' },
@@ -352,7 +353,7 @@
         isKeyValueByDatas: (datas, key, value, isEqual = false) => {
             if (Tools.alertFuc({ datas, key, value })) return false;
             function escapeRegExp(string) {
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\$&'); // $& 表示匹配的内容
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\$&'); // $& 表示匹配的内容
             }
             // 自动转义特殊字符
             const escapedValue = escapeRegExp(value);
@@ -371,20 +372,20 @@
             return result;
         },
         // key=value搜索phone[[key,value]]
-        searchKeyValues: (arr=[]) => {
+        searchKeyValues: (arr = []) => {
             if (arr.length == 0) return alert('请输入[[key,value]]');
             // return;
             let phone_arr = [];
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 let is = false;
-                arr.forEach(keyValue=>{
-                    const [key,value]=keyValue;
-                    if (value && Tools.isKeyValueByDatas(datas, key, value)){
-                        is= true;
+                arr.forEach(keyValue => {
+                    const [key, value] = keyValue;
+                    if (value && Tools.isKeyValueByDatas(datas, key, value)) {
+                        is = true;
                     }
                 })
-                if(is) phone_arr.push(phone);
+                if (is) phone_arr.push(phone);
             }
             // 去重
             phone_arr = [...new Set(phone_arr)];
@@ -479,7 +480,7 @@
             return result;
         },
         // 找到所有mobiles
-        findMobilesByDatas: (datas, mobile='1') => {
+        findMobilesByDatas: (datas, mobile = '1') => {
             const arr = [];
             datas.forEach(data => {
                 if (data.mobile && data.mobile != mobile && !arr.includes(data.mobile)) {
@@ -489,12 +490,12 @@
             return arr;
         },
         // 添加手机号
-        addMobile:(account,mobile)=>{
-            const result = Tools.addKeyValue(account,'mobile',mobile);
+        addMobile: (account, mobile) => {
+            const result = Tools.addKeyValue(account, 'mobile', mobile);
             return result;
         },
         // 删除手机号
-        delMobile:(account,mobile)=>{
+        delMobile: (account, mobile) => {
             return Tools.delKeyValue(account, 'mobile', mobile);
         },
         // 添加旺旺号
@@ -918,18 +919,18 @@
             // console.log(keyword);
             const results = [];
             if (!keyword) return results;
-            const emptyStr = function(str,key){
-                if(str){
+            const emptyStr = function (str, key) {
+                if (str) {
                     str = str.trim();
                     return str == key.trim();
-                }else{
+                } else {
                     return false;
                 }
             }
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (emptyStr(data.pig_qq,keyword) || emptyStr(data.pig_phone,keyword) || emptyStr(data.ww_exec,keyword) || emptyStr(data.wx,keyword) || emptyStr(data.wx_name,keyword) || emptyStr(data.mobile,keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                    if (emptyStr(data.pig_qq, keyword) || emptyStr(data.pig_phone, keyword) || emptyStr(data.ww_exec, keyword) || emptyStr(data.wx, keyword) || emptyStr(data.wx_name, keyword) || emptyStr(data.mobile, keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
                         if (!results.includes(phone)) results.push(phone);
                     }
                 })
@@ -941,10 +942,10 @@
             const phones = Tools.findPhonesByKeyword(keyword);
             // console.log(phones);
             const arr = [];
-            const pushData = function(str){
-                if(str){
+            const pushData = function (str) {
+                if (str) {
                     str = str.trim();
-                    if(!arr.includes(str)){
+                    if (!arr.includes(str)) {
                         arr.push(str);
                     }
                 }
@@ -952,7 +953,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq,data.pig_phone,data.ww_exec,data.wx,data.wx_name,data.mobile].forEach(str=>{
+                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile].forEach(str => {
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -1085,7 +1086,7 @@
         // 找到所有的qq号
         let qqs = Tools.findQqsByDatas(datas, qq);
         // 找到所有的手机号
-        let mobiles = Tools.findMobilesByDatas(datas,pig_phone);
+        let mobiles = Tools.findMobilesByDatas(datas, pig_phone);
         // 找到不同的账号
         // let diffPhones = findDiffPhonesByDatas(datas);
         let diffPhones = is_almighty ? Tools.almightySearch([pig_phone]).filter(phone => phone != pig_phone) : [];
@@ -1149,7 +1150,7 @@
             record_color: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].color || ''),
             record_num: records.length,
             diffPhones: diffPhones,
-            mobiles:mobiles,
+            mobiles: mobiles,
             wwExecs: wws.map(ww => ww.ww_exec),
             wws: wws,
             wws_html: wws_html,
@@ -1202,8 +1203,8 @@
                 return a + `<p class="j-copyText">${b}</p>`;
             }, '')}` : ''}
                 ${humanData.mobiles.length > 0 ? `<p style="margin-top:15px; color:red;">全部mobiles号：</p>${humanData.mobiles.reduce((a, b) => {
-                    return a + `<p class="j-copyText">${b}</p>`;
-                }, '')}` : ''}
+                return a + `<p class="j-copyText">${b}</p>`;
+            }, '')}` : ''}
                 </td>
                 <td style="color:red;">
                     ${humanData.wws_html}
@@ -2013,18 +2014,18 @@
             setCon(orderConArr);
         }, false)
         // 添加手机号
-        addEventListener(qqAdd,'click',e=>{
+        addEventListener(qqAdd, 'click', e => {
             const mobile = $mobileIpt.value;
             const account = $phone.value;
-            const result = Tools.addMobile(account,mobile);
+            const result = Tools.addMobile(account, mobile);
             if (result) alert('添加手机成功');
-        },'.j-mobile-add');
-        addEventListener(qqAdd,'click',e=>{
+        }, '.j-mobile-add');
+        addEventListener(qqAdd, 'click', e => {
             const mobile = $mobileIpt.value;
             const account = $phone.value;
-            const result = Tools.delMobile(account,mobile);
+            const result = Tools.delMobile(account, mobile);
             if (result) alert(`手机（${mobile}）删除成功`);
-        },'.j-mobile-del')
+        }, '.j-mobile-del')
         // 添加旺旺号
         qqAdd.querySelector('.j-ww-add').addEventListener('click', e => {
             const wwId = $ww.value;
@@ -2132,7 +2133,7 @@
             const wx = $wx.value;
             const pig_register_time = $registerTime.value;
             const record = { pig_phone: phone, pig_over_time: new Date().toLocaleString(), qq_exec_pre: qq_exec_pre, shop_label, pig_type, come_type };
-            if(pig_register_time)record.pig_register_time = pig_register_time;
+            if (pig_register_time) record.pig_register_time = pig_register_time;
             // if(wx)record.wx = wx;
             // if(qq)record.pig_qq = qq;
             // if(!wx && !qq)return alert('wx|qq最少填写一个联系方式');
@@ -2165,19 +2166,19 @@
             if (result) alert('删除成功');
         }, false)
         // 解析数据
-        addEventListener(qqAdd,'click',e=>{
+        addEventListener(qqAdd, 'click', e => {
             const text = $analysisTextarea.value;
             // console.log(text);
             // 提取注册时间
             const regTime = text.match(/注册时间：(.+?\s.+?)\s/);
-            if(regTime)$registerTime.value = regTime[1];
+            if (regTime) $registerTime.value = regTime[1];
             // 提取真实姓名
             const real_name = text.match(/实名：(.+?)\s/);
-            if(real_name)$gNote.value = real_name[1];
+            if (real_name) $gNote.value = real_name[1];
             // 提取手机号
             const mobile = text.match(/手机号：([0-9]+)/);
-            if(mobile)$mobileIpt.value = mobile[1];
-        },'.j-analysis-btn')
+            if (mobile) $mobileIpt.value = mobile[1];
+        }, '.j-analysis-btn')
         // 添加联系方式
         addEventListener(qqAdd, 'click', (e) => {
             const pig_phone = $phone.value;
@@ -2279,8 +2280,8 @@
             var event = new Event('input', {
                 bubbles: true,
                 cancelable: true,
-              });
-              $byQQ.dispatchEvent(event);
+            });
+            $byQQ.dispatchEvent(event);
         }, '.j-remindPhone')
         //不再提醒
         addEventListener($con, 'click', e => {
@@ -2369,7 +2370,7 @@
                 }
             }
             // console.log(DateRecords);
-            
+
             // 排序
             DateRecords.sort((a, b) => {
                 if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
@@ -2379,7 +2380,7 @@
                 }
             })
             // console.log(DateRecords);
-            const table = getDataTable(DateRecords.slice(0, is_back_filter?2:5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
+            const table = getDataTable(DateRecords.slice(0, is_back_filter ? 2 : 5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
@@ -2519,7 +2520,7 @@
         addEventListener(qqAdd, 'click', e => {
             const real_name = $gNote.value;
             const ww = $ww.value;
-            const arr = Tools.searchKeyValues([['ww_exec',ww],['real_name',real_name]]).map(phone => DATA[phone]);
+            const arr = Tools.searchKeyValues([['ww_exec', ww], ['real_name', real_name]]).map(phone => DATA[phone]);
             if (arr.length == 0) return setCon(['没找到做单记录']);
             // 判断是否有一个qq多个账号的情况存在
             // console.log(arr);
