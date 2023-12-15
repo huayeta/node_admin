@@ -350,13 +350,14 @@
         // 在datas数据中判断是否存在key=value，存在则返回data
         isKeyValueByDatas: (datas, key, value, isEqual = false) => {
             if (Tools.alertFuc({ datas, key, value })) return false;
-            // function escapeRegExp(string) {
-            // return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& 表示匹配的内容
-            // }
-            // // 自动转义特殊字符
-            // const escapedValue = escapeRegExp(value);
+            function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\$&'); // $& 表示匹配的内容
+            }
+            // 自动转义特殊字符
+            const escapedValue = escapeRegExp(value);
             // 创建正则表达式
-            const regexp = new RegExp(value);
+            const regexp = new RegExp(escapedValue);
+            // console.log(regexp,escapedValue);
             let result = false;
             for (let i = 0; i < datas.length; i++) {
                 const data = datas[i];
@@ -368,13 +369,21 @@
             }
             return result;
         },
-        // key=value搜索phone
-        searchKeyValue: (key, value) => {
-            if (Tools.alertFuc({ key, value })) return false;
+        // key=value搜索phone[[key,value]]
+        searchKeyValues: (arr=[]) => {
+            if (arr.length == 0) return alert('请输入[[key,value]]');
+            // return;
             let phone_arr = [];
             for (let phone in DATA) {
                 const datas = DATA[phone];
-                if (Tools.isKeyValueByDatas(datas, key, value)) phone_arr.push(phone);
+                let is = false;
+                arr.forEach(keyValue=>{
+                    const [key,value]=keyValue;
+                    if (value && Tools.isKeyValueByDatas(datas, key, value)){
+                        is= true;
+                    }
+                })
+                if(is) phone_arr.push(phone);
             }
             // 去重
             phone_arr = [...new Set(phone_arr)];
@@ -1306,7 +1315,7 @@
                         <input class="search_input j-wxName" type="text" placeholder="wx名字(真实姓名)|wx姓名" style="margin-left:10px;width:165px;" />
                         <button class="search_btn j-wxName-add" style="margin-left:10px">添加wx姓名</button>
                         <button class="search_btn red j-wxName-del" style="margin-left:10px;">删除wx姓名</button>
-                        <button class="search_btn reb j-realName-search" style="margin-left:10px;">真实姓名搜索</button>
+                        <button class="search_btn reb j-reg-search" style="margin-left:10px;">正则realname|ww搜索</button>
                         <input class="search_input j-register-time" type="text" placeholder="注册时间" style="margin-left:10px;" />
                 </div>
                 <div class="search m-search j-order-search">
@@ -2526,8 +2535,9 @@
         }, '.j-almightySearch')
         // 真实姓名搜索
         addEventListener(qqAdd, 'click', e => {
-            const value = $gNote.value;
-            const arr = Tools.searchKeyValue('real_name', value).map(phone => DATA[phone]);
+            const real_name = $gNote.value;
+            const ww = $ww.value;
+            const arr = Tools.searchKeyValues([['ww_exec',ww],['real_name',real_name]]).map(phone => DATA[phone]);
             if (arr.length == 0) return setCon(['没找到做单记录']);
             // 判断是否有一个qq多个手机的情况存在
             // console.log(arr);
@@ -2545,7 +2555,7 @@
                 let table = getDataTable(arr);
                 setCon([table + str]);
             }
-        }, '.j-realName-search')
+        }, '.j-reg-search')
         // 获取源码
         addEventListener(qqAdd, 'click', () => {
             const phone = $phone.value;
