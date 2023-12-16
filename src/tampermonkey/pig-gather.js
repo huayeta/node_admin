@@ -21,6 +21,7 @@
     //         {pig_phone,mobile} 添加不同的手机号
     //         {pig_phone,wx,wx_name?} 添加不同的wx
     //         {pig_phone,real_name,wx_name} 收款信息
+    //         {pig_phone,tang_register_time} 唐人的注册时间
     //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -479,6 +480,26 @@
             })
             return result;
         },
+        // 添加唐人注册时间
+        addTangRegisterTime: (account, tang_register_time) => {
+            return Tools.addKeyValue(account, 'tang_register_time', tang_register_time);
+        },
+        // 找到唐人注册时间
+        findTangRegisterTime:(datas)=>{
+            let tang_register_time;
+            datas.forEach((data)=>{
+                if(data.tang_register_time)tang_register_time = data.tang_register_time;
+            })
+            return tang_register_time;
+        },
+        // 添加手机号
+        addMobile: (account, mobile) => {
+            return Tools.addKeyValue(account, 'mobile', mobile);
+        },
+        // 删除手机号
+        delMobile: (account, mobile) => {
+            return Tools.delKeyValue(account, 'mobile', mobile);
+        },
         // 找到所有mobiles
         findMobilesByDatas: (datas, mobile = '1') => {
             const arr = [];
@@ -488,15 +509,6 @@
                 }
             })
             return arr;
-        },
-        // 添加手机号
-        addMobile: (account, mobile) => {
-            const result = Tools.addKeyValue(account, 'mobile', mobile);
-            return result;
-        },
-        // 删除手机号
-        delMobile: (account, mobile) => {
-            return Tools.delKeyValue(account, 'mobile', mobile);
         },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
@@ -1095,6 +1107,8 @@
         const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到注册时间
         let register_time = Tools.findRegisterTimeByDatas(records);
+        // 找到唐人注册时间
+        const tang_register_time = Tools.findTangRegisterTime(datas);
         // 找到真实姓名对应的微信名字s
         const wx_names = Tools.findRealNameWxNamesByDatas(datas) || {};
         // 提醒文本
@@ -1146,6 +1160,7 @@
                 'JD': formateDatasByPigType(datas, 'JD'),
             },
             register_time: register_time,
+            tang_register_time:tang_register_time,
             record_time: records.length > 0 && records[0].pig_over_time,
             record_qq: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].text || ''),
             record_color: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].color || ''),
@@ -1270,7 +1285,10 @@
                         </tbody>
                     </table>
                 </td>
-                <td>${humanData.register_time || ''}</td>
+                <td>
+                ${humanData.register_time || ''}
+                ${humanData.tang_register_time?`<p style="margin-top:15px; color:red;">唐人注册时间：</p><p>${humanData.tang_register_time}</p>`:''}
+                </td>
             </tr>
             `
         })
@@ -1335,6 +1353,7 @@
                         <button class="search_btn j-wxName-add" style="margin-left:10px">添加wx姓名</button>
                         <button class="search_btn red j-wxName-del" style="margin-left:10px;">删除wx姓名</button>
                         <input class="search_input j-register-time" type="text" placeholder="注册时间" style="margin-left:10px;" />
+                        <button class="search_btn j-register-time-add-tang" style="margin-left:10px;">添加唐人注册时间</button> 
                 </div>
                 <div class="search m-search">
                     <input class="search_input j-mobile-input" type="text" placeholder="不同mobile" />
@@ -1342,7 +1361,7 @@
                     <button class="search_btn red j-mobile-del" data-key="wx" style="margin-left:10px;">删除mobile</button>
                     <input class="search_input j-ww-exec" placeholder="旺旺号" style="margin-left:10px;" /> <button class="search_btn j-ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red j-ww-del">删除旺旺号</button>
-                    <button class="search_btn j-ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button> 
+                    <button class="search_btn j-ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
@@ -2014,6 +2033,13 @@
             // orderCon.innerHTML = orderConArr.join('，');
             setCon(orderConArr);
         }, false)
+        // 添加唐人注册时间
+        addEventListener(qqAdd,'click',e=>{
+            const tang_register_time = $registerTime.value;
+            const account = $phone.value;
+            const result = Tools.addTangRegisterTime(account,tang_register_time);
+            if(result) alert('唐人注册时间添加成功');
+        },'.j-register-time-add-tang')
         // 添加手机号
         addEventListener(qqAdd, 'click', e => {
             const mobile = $mobileIpt.value;
@@ -2169,9 +2195,9 @@
         // 解析数据
         addEventListener(qqAdd, 'click', e => {
             const text = $analysisTextarea.value;
-            // console.log(text);
+            console.log(text);
             // 提取注册时间
-            const regTime = text.match(/注册时间：(.+?\s.+?)\s/);
+            const regTime = text.match(/注册时间：(.+?\s.+)\s?/);
             if (regTime) $registerTime.value = regTime[1];
             // 提取真实姓名
             const real_name = text.match(/实名：(.+?)\s/);
