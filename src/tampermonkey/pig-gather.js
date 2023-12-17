@@ -795,6 +795,9 @@
                 if (qq) Tools.addQq(phone, qq);
                 if (mobile) Tools.addMobile(phone, mobile);
                 if (result) alert('添加记录成功~');
+                // 如果是8位纯数字直接添加唐人id
+                if(/^\d{8}$/.test(phone))Tools.addTangId(phone,phone);
+                location.reload();
             }, false)
             if (parentNode) {
                 parentNode.append(button);
@@ -1506,6 +1509,10 @@
                 $gNote.value = '';
                 $comeType.value = come_type_default;
                 $qqExecPre.value = qq_exec_pre_default;
+                $mobileIpt.value = '';
+                $tangIdIpt.value = '';
+                $registerTime.value = '';
+                $modifyCodeIpt.value = '';
                 return;
             }
             if (phones.length > 1) {
@@ -1514,6 +1521,10 @@
                 $gNote.value = '';
                 $comeType.value = come_type_default;
                 $qqExecPre.value = qq_exec_pre_default;
+                $mobileIpt.value = '';
+                $tangIdIpt.value = '';
+                $registerTime.value = '';
+                $modifyCodeIpt.value = '';
                 return $phone.value = '有多个账号';
             }
             const phone = phones[0];
