@@ -22,6 +22,7 @@
     //         {pig_phone,wx,wx_name?} 添加不同的wx
     //         {pig_phone,real_name,wx_name} 收款信息
     //         {pig_phone,tang_register_time} 唐人的注册时间
+    //         {pig_phone,tang_id} 唐人的id
     //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -479,6 +480,18 @@
                 result[data.real_name] = data.wx_name;
             })
             return result;
+        },
+        // 添加唐人id
+        addTangId: (account, tang_id) => {
+            return Tools.addKeyValue(account, 'tang_id', tang_id);
+        },
+        // 找到唐人注册时间
+        findTangId:(datas)=>{
+            let tang_id;
+            datas.forEach((data)=>{
+                if(data.tang_id)tang_id = data.tang_id;
+            })
+            return tang_id;
         },
         // 添加唐人注册时间
         addTangRegisterTime: (account, tang_register_time) => {
@@ -1109,6 +1122,8 @@
         let register_time = Tools.findRegisterTimeByDatas(records);
         // 找到唐人注册时间
         const tang_register_time = Tools.findTangRegisterTime(datas);
+        // 找到唐人id
+        const tang_id = Tools.findTangId(datas);
         // 找到真实姓名对应的微信名字s
         const wx_names = Tools.findRealNameWxNamesByDatas(datas) || {};
         // 提醒文本
@@ -1161,6 +1176,7 @@
             },
             register_time: register_time,
             tang_register_time:tang_register_time,
+            tang_id:tang_id,
             record_time: records.length > 0 && records[0].pig_over_time,
             record_qq: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].text || ''),
             record_color: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].color || ''),
@@ -1210,6 +1226,7 @@
                 <td>
                     <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
+                    ${humanData.tang_id>0?`<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>`:''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
@@ -1362,6 +1379,8 @@
                     <input class="search_input j-ww-exec" placeholder="旺旺号" style="margin-left:10px;" /> <button class="search_btn j-ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red j-ww-del">删除旺旺号</button>
                     <button class="search_btn j-ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
+                    <input class="search_input j-tang-id" type="text" placeholder="唐人id" style="margin-left:10px;" />
+                    <button class="search_btn j-tang-id-add" style="margin-left:10px;">添加唐人id</button>
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
@@ -1397,11 +1416,11 @@
                     <div class="m-findData search">
                         <button class="search_btn j-almightySearch" style="">qq|phone|ww|wx全能搜索</button>
                         <button class="search_btn reb j-reg-search" style="margin-left:10px;">正则realname|ww搜索</button>
-                        <button class="search_btn download" style="">下载数据</button>
                         <button class="search_btn j-gatherQqs" style="">倒序筛选qq1235</button>
                         <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq1235</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
                         <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
+                        <button class="search_btn download" style="">下载数据</button>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <span class="gray">1：</span><select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
@@ -1458,6 +1477,7 @@
         const $wxName = qqAdd.querySelector('.j-wxName');
         const $modifyCodeIpt = qqAdd.querySelector('.j-modify-code-ipt');
         const $registerTime = qqAdd.querySelector('.j-register-time');
+        const $tangIdIpt = qqAdd.querySelector('.j-tang-id');
         const $analysisTextarea = qqAdd.querySelector('.j-analysis-textarea');
         const $mobileIpt = qqAdd.querySelector('.j-mobile-input');
         // 当come-type变动的话
@@ -2033,6 +2053,13 @@
             // orderCon.innerHTML = orderConArr.join('，');
             setCon(orderConArr);
         }, false)
+        // 添加唐人id
+        addEventListener(qqAdd,'click',e=>{
+            const tang_id = $tangIdIpt.value;
+            const account = $phone.value;
+            const result = Tools.addTangId(account,tang_id);
+            if(result) alert('唐人id添加成功');
+        },'.j-tang-id-add')
         // 添加唐人注册时间
         addEventListener(qqAdd,'click',e=>{
             const tang_register_time = $registerTime.value;
