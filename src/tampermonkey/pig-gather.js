@@ -31,7 +31,6 @@
     // 是否自定义
     const is_custom = true;
     const COMETYPE = [
-        { name: 'pig', fix: '', value: 'pig' },
         { name: '唐人', fix: '', value: 'tangren' },
         { name: 'A97-欢乐购秒杀1群-有新人', fix: 'QQ', value: '626195966' },
         { name: 'A97-欢乐购秒杀2群', fix: 'QQ', value: '244917614' },
@@ -39,6 +38,7 @@
         { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
         { name: 'A97-欢乐购火箭🚀④群-新人', fix: 'QQ', value: '532849108' },
+        { name: 'pig', fix: '', value: 'pig' },
     ];
     const QQS = {
         '31': {
@@ -817,6 +817,10 @@
                     break;
                 }
             }
+            // 针对come_type的bug
+            if(keys.includes('come_type') && !obj['come_type'] && datas[0].pig_over_time){
+                obj['come_type'] = 'pig';
+            }
             return obj;
         },
         // 找到注册时间
@@ -1533,6 +1537,12 @@
             $ww.value = wws.join('，');
             $wx.value = Tools.findWxsByDatas(DATA[phone], false).join(',');
             $gNote.value = Tools.findRealNamesByDatas(DATA[phone]).join(',');
+            $mobileIpt.value = '';
+            $registerTime.value = '';
+            $tangIdIpt.value = '';
+            $modifyCodeIpt.value = '';
+            $comeType.value = come_type_default;
+            $qqExecPre.value = qq_exec_pre_default;
             // 得到最后一个记录的come-type,qq_exec_pre
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[phone], ['come_type', 'qq_exec_pre']);
             if (come_type) $comeType.value = come_type;
