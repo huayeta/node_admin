@@ -488,7 +488,7 @@
         },
         // 添加佣金
         addCommission: (account, commission) => {
-            return Tools.addKeyValue(account, 'commission', commission);
+            return Tools.addKeyValue(account, 'commission', commission,undefined,undefined,undefined,true);
         },
         // 删除佣金
         delCommission: (account, commission) => {
@@ -510,7 +510,7 @@
         },
         // 添加唐人id
         addTangId: (account, tang_id) => {
-            return Tools.addKeyValue(account, 'tang_id', tang_id);
+            return Tools.addKeyValue(account, 'tang_id', tang_id,undefined,undefined,undefined,true);
         },
         // 找到唐人id
         findTangId: (datas) => {
@@ -524,7 +524,7 @@
         },
         // 添加唐人注册时间
         addTangRegisterTime: (account, tang_register_time) => {
-            return Tools.addKeyValue(account, 'tang_register_time', tang_register_time);
+            return Tools.addKeyValue(account, 'tang_register_time', tang_register_time,undefined,undefined,undefined,true);
         },
         // 找到唐人注册时间
         findTangRegisterTime: (datas) => {
