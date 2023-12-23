@@ -23,6 +23,7 @@
     //         {pig_phone,real_name,wx_name} 收款信息
     //         {pig_phone,tang_register_time} 唐人的注册时间
     //         {pig_phone,tang_id} 唐人的id
+    //         {pig_phone,commission} 佣金多少
     //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -31,7 +32,7 @@
     // 是否自定义
     const is_custom = true;
     const COMETYPE = [
-        { name: '唐人', fix: '', value: 'tangren' },
+        { name: '唐人', fix: '', value: 'tang' },
         { name: 'A97-欢乐购秒杀1群-有新人', fix: 'QQ', value: '626195966' },
         { name: 'A97-欢乐购秒杀2群', fix: 'QQ', value: '244917614' },
         { name: 'A97-欢乐购秒杀11群', fix: 'QQ', value: '1074927054' },
@@ -64,6 +65,10 @@
         'a847457846': {
             text: '微信-note',
             color: '#004cff'
+        },
+        'tang': {
+            text: '唐人app',
+            color: 'brown'
         }
     }
     const storageData = () => {
@@ -481,29 +486,55 @@
             })
             return result;
         },
+        // 添加佣金
+        addCommission: (account, commission) => {
+            return Tools.addKeyValue(account, 'commission', commission);
+        },
+        // 删除佣金
+        delCommission: (account, commission) => {
+            return Tools.delKeyValue(account, 'commission', commission);
+        },
+        // 找到佣金
+        findCommission: (datas) => {
+            const arr = Tools.findKeysByDatas(datas, 'commission');
+            if(arr.length>0)return arr[0];
+            // 判断QQ-开头的是6
+            if(datas.length>0 && datas[0].pig_phone.includes('QQ-')){
+                return 6;
+            }
+            // 如果是唐人id
+            if(datas.length>0 && Tools.isTangId(datas[0].pig_phone)){
+                return 6;
+            }
+            return '';
+        },
         // 添加唐人id
         addTangId: (account, tang_id) => {
             return Tools.addKeyValue(account, 'tang_id', tang_id);
         },
-        // 找到唐人注册时间
-        findTangId:(datas)=>{
-            let tang_id;
-            datas.forEach((data)=>{
-                if(data.tang_id)tang_id = data.tang_id;
-            })
-            return tang_id;
+        // 找到唐人id
+        findTangId: (datas) => {
+            const arr = Tools.findKeysByDatas(datas, 'tang_id');
+            return arr.length > 0 ? arr[0] : '';
+            // let tang_id;
+            // datas.forEach((data)=>{
+            //     if(data.tang_id)tang_id = data.tang_id;
+            // })
+            // return tang_id;
         },
         // 添加唐人注册时间
         addTangRegisterTime: (account, tang_register_time) => {
             return Tools.addKeyValue(account, 'tang_register_time', tang_register_time);
         },
         // 找到唐人注册时间
-        findTangRegisterTime:(datas)=>{
-            let tang_register_time;
-            datas.forEach((data)=>{
-                if(data.tang_register_time)tang_register_time = data.tang_register_time;
-            })
-            return tang_register_time;
+        findTangRegisterTime: (datas) => {
+            const arr = Tools.findKeysByDatas(datas, 'tang_register_time');
+            return arr.length > 0 ? arr[0] : '';
+            // let tang_register_time;
+            // datas.forEach((data)=>{
+            //     if(data.tang_register_time)tang_register_time = data.tang_register_time;
+            // })
+            // return tang_register_time;
         },
         // 添加手机号
         addMobile: (account, mobile) => {
@@ -773,6 +804,11 @@
             storageData();
             return true;
         },
+        isTangId:(account)=>{
+            // 如果是8位纯数字
+            if (/^\d{8}$/.test(account)) return true;
+            return false;
+        },
         // 添加做单记录
         addRecord: (phone) => {
             if (Tools.alertFuc({ phone })) return;
@@ -795,8 +831,8 @@
                 if (qq) Tools.addQq(phone, qq);
                 if (mobile) Tools.addMobile(phone, mobile);
                 if (result) alert('添加记录成功~');
-                // 如果是8位纯数字直接添加唐人id
-                if(/^\d{8}$/.test(phone))Tools.addTangId(phone,phone);
+                // 如果是唐人id
+                if (Tools.isTangId(phone)) Tools.addTangId(phone, phone);
                 location.reload();
             }, false)
             if (parentNode) {
@@ -818,7 +854,7 @@
                 }
             }
             // 针对come_type的bug
-            if(keys.includes('come_type') && !obj['come_type'] && datas[0].pig_over_time){
+            if (keys.includes('come_type') && !obj['come_type'] && datas.length > 0 && datas[0].pig_over_time) {
                 obj['come_type'] = 'pig';
             }
             return obj;
@@ -1131,6 +1167,8 @@
         const tang_register_time = Tools.findTangRegisterTime(datas);
         // 找到唐人id
         const tang_id = Tools.findTangId(datas);
+        // 找到佣金
+        const commission = Tools.findCommission(datas);
         // 找到真实姓名对应的微信名字s
         const wx_names = Tools.findRealNameWxNamesByDatas(datas) || {};
         // 提醒文本
@@ -1182,8 +1220,9 @@
                 'JD': formateDatasByPigType(datas, 'JD'),
             },
             register_time: register_time,
-            tang_register_time:tang_register_time,
-            tang_id:tang_id,
+            tang_register_time: tang_register_time,
+            tang_id: tang_id,
+            commission: commission,
             record_time: records.length > 0 && records[0].pig_over_time,
             record_qq: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].text || ''),
             record_color: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].color || ''),
@@ -1231,9 +1270,10 @@
             trs += `
             <tr>
                 <td>
+                    ${humanData.commission ? `<p style="color:darkturquoise;font-size:25px;">+${humanData.commission}</p>` : ''}
                     <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
-                    ${humanData.tang_id>0?`<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>`:''}
+                    ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
@@ -1311,7 +1351,7 @@
                 </td>
                 <td>
                 ${humanData.register_time || ''}
-                ${humanData.tang_register_time?`<p style="margin-top:15px; color:red;">唐人注册时间：</p><p>${humanData.tang_register_time}</p>`:''}
+                ${humanData.tang_register_time ? `<p style="margin-top:15px; color:red;">唐人注册时间：</p><p>${humanData.tang_register_time}</p>` : ''}
                 </td>
             </tr>
             `
@@ -1392,7 +1432,10 @@
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button>
-                    <input type="text" class="search_input j-modify-code-ipt" /><button class="search_btn j-modify-code-btn-get">获取源码</button><button class="search_btn reb j-modify-code-btn" style="margin-left:10px;">修改源码</button>
+                    <input type="text" class="search_input j-modify-code-ipt" /><button class="search_btn j-modify-code-btn-get">获取源码</button>
+                    <button class="search_btn reb j-modify-code-btn" style="margin-left:10px;">修改源码</button>
+                    <input class="search_input j-commission-ipt" type="text" placeholder="佣金" style="margin-left:10px;" />
+                    <button class="search_btn j-commission-add" style="margin-left:10px;">添加佣金比例</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -1487,6 +1530,7 @@
         const $tangIdIpt = qqAdd.querySelector('.j-tang-id');
         const $analysisTextarea = qqAdd.querySelector('.j-analysis-textarea');
         const $mobileIpt = qqAdd.querySelector('.j-mobile-input');
+        const $commissionIpt = qqAdd.querySelector('.j-commission-ipt');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -2074,20 +2118,27 @@
             // orderCon.innerHTML = orderConArr.join('，');
             setCon(orderConArr);
         }, false)
+        // 添加佣金
+        addEventListener(qqAdd, 'click', e => {
+            const commission = $commissionIpt.value;
+            const account = $phone.value;
+            const result = Tools.addCommission(account, commission);
+            if (result) alert('佣金添加成功');
+        }, '.j-commission-add')
         // 添加唐人id
-        addEventListener(qqAdd,'click',e=>{
+        addEventListener(qqAdd, 'click', e => {
             const tang_id = $tangIdIpt.value;
             const account = $phone.value;
-            const result = Tools.addTangId(account,tang_id);
-            if(result) alert('唐人id添加成功');
-        },'.j-tang-id-add')
+            const result = Tools.addTangId(account, tang_id);
+            if (result) alert('唐人id添加成功');
+        }, '.j-tang-id-add')
         // 添加唐人注册时间
-        addEventListener(qqAdd,'click',e=>{
+        addEventListener(qqAdd, 'click', e => {
             const tang_register_time = $registerTime.value;
             const account = $phone.value;
-            const result = Tools.addTangRegisterTime(account,tang_register_time);
-            if(result) alert('唐人注册时间添加成功');
-        },'.j-register-time-add-tang')
+            const result = Tools.addTangRegisterTime(account, tang_register_time);
+            if (result) alert('唐人注册时间添加成功');
+        }, '.j-register-time-add-tang')
         // 添加手机号
         addEventListener(qqAdd, 'click', e => {
             const mobile = $mobileIpt.value;
