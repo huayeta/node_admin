@@ -506,6 +506,10 @@
             if(datas.length>0 && Tools.isTangId(datas[0].pig_phone)){
                 return 6;
             }
+            // 从做单渠道判断
+            if(datas.length>0 && ['pig'].includes(datas[0].come_type)){
+                return 7;
+            }
             return '';
         },
         // 添加唐人id
@@ -2264,12 +2268,14 @@
             // if(qq)record.pig_qq = qq;
             // if(!wx && !qq)return alert('wx|qq最少填写一个联系方式');
             // if(['a847457846'].includes(qq_exec_pre) && !wx)return alert('wx必须填写')
-            if (!['a847457846'].includes(qq_exec_pre)) {
-                if (qq) record.pig_qq = qq;
-                if (Tools.alertFuc({ qq })) return;
-            } else {
+            if(qq_exec_pre == 'tang'){
+                record.record_qq = '';
+            }else if(qq_exec_pre == 'a847457846'){
                 if (wx) record.wx = wx;
                 if (Tools.alertFuc({ wx })) return;
+            }else{
+                if (qq) record.pig_qq = qq;
+                if (Tools.alertFuc({ qq })) return;
             }
             if (Tools.alertFuc({ shop_label, phone, qq_exec_pre, pig_type, come_type })) return;
             // console.log(record);
