@@ -24,6 +24,7 @@
     //         {pig_phone,tang_register_time} 唐人的注册时间
     //         {pig_phone,tang_id} 唐人的id
     //         {pig_phone,commission} 佣金多少
+    //         {pig_phone,teamer} 属于哪个团队
     //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -71,6 +72,14 @@
             color: 'brown'
         }
     }
+    const TEAMERS = {
+        'a97':{
+            text:'A97团队'
+        },
+        'xt':{
+            text:'肖婷总代'
+        }
+    };
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
     }
@@ -486,6 +495,14 @@
             })
             return result;
         },
+        // 添加团队
+        addTeamer:(account,teamer)=>{
+            return Tools.addKeyValue(account,'teamer',teamer,undefined,undefined,undefined,true);
+        },
+        // 找到团队
+        findTeamersByDatas:(datas)=>{
+            return Tools.findKeysByDatas(datas,'teamer');
+        },
         // 添加佣金
         addCommission: (account, commission) => {
             return Tools.addKeyValue(account, 'commission', commission,undefined,undefined,undefined,true);
@@ -507,8 +524,12 @@
                 return 6;
             }
             // 从做单渠道判断
-            if(datas.length>0 && ['pig'].includes(datas[0].come_type)){
-                return 7;
+            if(datas.length>0){
+                if(['pig'].includes(datas[0].come_type)){
+                    return 7;
+                }else if(['tang'].includes(datas[0].come_type)){
+                    return 6;
+                }
             }
             return '';
         },
@@ -1173,6 +1194,8 @@
         const tang_id = Tools.findTangId(datas);
         // 找到佣金
         const commission = Tools.findCommission(datas);
+        // 找到所有团队
+        const teamers = Tools.findTeamersByDatas(datas);
         // 找到真实姓名对应的微信名字s
         const wx_names = Tools.findRealNameWxNamesByDatas(datas) || {};
         // 提醒文本
@@ -1227,6 +1250,7 @@
             tang_register_time: tang_register_time,
             tang_id: tang_id,
             commission: commission,
+            teamers:teamers,
             record_time: records.length > 0 && records[0].pig_over_time,
             record_qq: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].text || ''),
             record_color: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].color || ''),
@@ -1278,6 +1302,7 @@
                     <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
+                    ${humanData.teamers.length>0?`<p style="margin-top:15px; color:blue;">属于团队：${humanData.teamers.map(teamer=>TEAMERS[teamer].text)}</p>`:''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
@@ -1387,6 +1412,11 @@
             option_strs += `<option value=${num} ${num == '54' ? `selected` : ''}>${num}：${QQS[num].text}</option>`;
             qqs_obj[num] = QQS[num].text;
         })
+        // 团队
+        let teamer_opts = '';
+        Object.keys(TEAMERS).forEach(key=>{
+            teamer_opts+=`<option value="${key}">${TEAMERS[key].text}</option>`;
+        })
         qqAdd.innerHTML = `
             <div class="">
                 <div class="search m-search">
@@ -1438,8 +1468,10 @@
                     " style="margin: 0 10px;">查询</button>
                     <input type="text" class="search_input j-modify-code-ipt" /><button class="search_btn j-modify-code-btn-get">获取源码</button>
                     <button class="search_btn reb j-modify-code-btn" style="margin-left:10px;">修改源码</button>
-                    <input class="search_input j-commission-ipt" type="text" placeholder="佣金" style="margin-left:10px;" />
+                    <input class="search_input j-commission-ipt" type="text" placeholder="佣金" style="margin-left:10px; width:50px;" />
                     <button class="search_btn j-commission-add" style="margin-left:10px;">添加佣金比例</button>
+                    <select class="search_input j-teamer-ipt" style="margin-left:10px; width:160px;"><option>没有团队</option>${teamer_opts}</select>
+                    <button class="search_btn j-teamer-add-btn" style="margin-left:10px;">添加团队</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -1535,6 +1567,7 @@
         const $analysisTextarea = qqAdd.querySelector('.j-analysis-textarea');
         const $mobileIpt = qqAdd.querySelector('.j-mobile-input');
         const $commissionIpt = qqAdd.querySelector('.j-commission-ipt');
+        const $teamerIpt = qqAdd.querySelector('.j-teamer-ipt');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -2122,6 +2155,12 @@
             // orderCon.innerHTML = orderConArr.join('，');
             setCon(orderConArr);
         }, false)
+        addEventListener(qqAdd,'click',e=>{
+            const teamer = $teamerIpt.value;
+            const account = $phone.value;
+            const result = Tools.addTeamer(account,teamer);
+            if(result) alert('团队添加成功');
+        },'.j-teamer-add-btn')
         // 添加佣金
         addEventListener(qqAdd, 'click', e => {
             const commission = $commissionIpt.value;
@@ -2270,12 +2309,13 @@
             // if(['a847457846'].includes(qq_exec_pre) && !wx)return alert('wx必须填写')
             if(qq_exec_pre == 'tang'){
                 record.record_qq = '';
+                delete record.record_qq;
             }else if(qq_exec_pre == 'a847457846'){
-                if (wx) record.wx = wx;
                 if (Tools.alertFuc({ wx })) return;
+                record.wx = wx;
             }else{
-                if (qq) record.pig_qq = qq;
                 if (Tools.alertFuc({ qq })) return;
+                record.pig_qq = qq;
             }
             if (Tools.alertFuc({ shop_label, phone, qq_exec_pre, pig_type, come_type })) return;
             // console.log(record);
