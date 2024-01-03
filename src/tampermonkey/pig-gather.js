@@ -25,6 +25,7 @@
     //         {pig_phone,tang_id} 唐人的id
     //         {pig_phone,commission} 佣金多少
     //         {pig_phone,teamer} 属于哪个团队
+    //         {pig_phone,wait} 等待处理
     //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -73,11 +74,17 @@
         }
     }
     const TEAMERS = {
-        'a97':{
-            text:'A97团队'
+        'a97': {
+            text: 'A97团队'
         },
-        'xt':{
-            text:'肖婷总代'
+        'xt': {
+            text: '肖婷总代'
+        },
+        'yy': {
+            text: '瑶摇总代'
+        },
+        'an': {
+            text: '阿媛'
         }
     };
     const storageData = () => {
@@ -353,6 +360,23 @@
                 return true;
             }
         },
+        // 找到字段对应的account
+        findAccountsBykeyValue: (key, value) => {
+            const results = [];
+            const accounts = Object.keys(DATA);
+            accounts.forEach(account => {
+                const datas = DATA[account];
+                for (let i = 0; i < datas.length; i++) {
+                    const data = datas[i];
+                    if (data[key] == value) {
+                        results.push(account);
+                        continue;
+                    }
+                }
+            })
+            // console.log(results);
+            return results;
+        },
         // 修改data
         modifyData: (pig_phone, valueObj = {}, judgeFuc = (data) => { return false; }) => {
             if (Tools.alertFuc({ pig_phone })) return false;
@@ -495,17 +519,33 @@
             })
             return result;
         },
+        // 添加等待处理
+        addWait: (account) => {
+            return Tools.addKeyValue(account, 'wait', '1', undefined, undefined, undefined, true);
+        },
+        // 删除等待处理
+        delWait: (account) => {
+            return Tools.delKeyValue(account, 'wait', '1', undefined, undefined, false);
+        },
+        // 是否待处理
+        IsWaitByDatas: (datas) => {
+            return Tools.findKeysByDatas(datas, 'wait').length > 0;
+        },
+        // 找到所有的wait的账号
+        findAccountsByWait: () => {
+            return Tools.findAccountsBykeyValue('wait', '1');
+        },
         // 添加团队
-        addTeamer:(account,teamer)=>{
-            return Tools.addKeyValue(account,'teamer',teamer,undefined,undefined,undefined,true);
+        addTeamer: (account, teamer) => {
+            return Tools.addKeyValue(account, 'teamer', teamer, undefined, undefined, undefined, true);
         },
         // 找到团队
-        findTeamersByDatas:(datas)=>{
-            return Tools.findKeysByDatas(datas,'teamer');
+        findTeamersByDatas: (datas) => {
+            return Tools.findKeysByDatas(datas, 'teamer');
         },
         // 添加佣金
         addCommission: (account, commission) => {
-            return Tools.addKeyValue(account, 'commission', commission,undefined,undefined,undefined,true);
+            return Tools.addKeyValue(account, 'commission', commission, undefined, undefined, undefined, true);
         },
         // 删除佣金
         delCommission: (account, commission) => {
@@ -514,20 +554,20 @@
         // 找到佣金
         findCommission: (datas) => {
             const arr = Tools.findKeysByDatas(datas, 'commission');
-            if(arr.length>0)return arr[0];
+            if (arr.length > 0) return arr[0];
             // 判断QQ-开头的是6
-            if(datas.length>0 && datas[0].pig_phone.includes('QQ-')){
+            if (datas.length > 0 && datas[0].pig_phone.includes('QQ-')) {
                 return 6;
             }
             // 如果是唐人id
-            if(datas.length>0 && Tools.isTangId(datas[0].pig_phone)){
+            if (datas.length > 0 && Tools.isTangId(datas[0].pig_phone)) {
                 return 6;
             }
             // 从做单渠道判断
-            if(datas.length>0){
-                if(['pig'].includes(datas[0].come_type)){
+            if (datas.length > 0) {
+                if (['pig'].includes(datas[0].come_type)) {
                     return 7;
-                }else if(['tang'].includes(datas[0].come_type)){
+                } else if (['tang'].includes(datas[0].come_type)) {
                     return 6;
                 }
             }
@@ -535,7 +575,7 @@
         },
         // 添加唐人id
         addTangId: (account, tang_id) => {
-            return Tools.addKeyValue(account, 'tang_id', tang_id,undefined,undefined,undefined,true);
+            return Tools.addKeyValue(account, 'tang_id', tang_id, undefined, undefined, undefined, true);
         },
         // 找到唐人id
         findTangId: (datas) => {
@@ -549,7 +589,7 @@
         },
         // 添加唐人注册时间
         addTangRegisterTime: (account, tang_register_time) => {
-            return Tools.addKeyValue(account, 'tang_register_time', tang_register_time,undefined,undefined,undefined,true);
+            return Tools.addKeyValue(account, 'tang_register_time', tang_register_time, undefined, undefined, undefined, true);
         },
         // 找到唐人注册时间
         findTangRegisterTime: (datas) => {
@@ -829,7 +869,7 @@
             storageData();
             return true;
         },
-        isTangId:(account)=>{
+        isTangId: (account) => {
             // 如果是8位纯数字
             if (/^\d{8}$/.test(account)) return true;
             return false;
@@ -1196,6 +1236,8 @@
         const commission = Tools.findCommission(datas);
         // 找到所有团队
         const teamers = Tools.findTeamersByDatas(datas);
+        // 是否待处理账号
+        const is_wait = Tools.IsWaitByDatas(datas);
         // 找到真实姓名对应的微信名字s
         const wx_names = Tools.findRealNameWxNamesByDatas(datas) || {};
         // 提醒文本
@@ -1250,7 +1292,8 @@
             tang_register_time: tang_register_time,
             tang_id: tang_id,
             commission: commission,
-            teamers:teamers,
+            teamers: teamers,
+            is_wait: is_wait,
             record_time: records.length > 0 && records[0].pig_over_time,
             record_qq: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].text || ''),
             record_color: records.length > 0 && records[0].qq_exec_pre && (QQS[records[0].qq_exec_pre].color || ''),
@@ -1302,7 +1345,8 @@
                     <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
-                    ${humanData.teamers.length>0?`<p style="margin-top:15px; color:blue;">属于团队：${humanData.teamers.map(teamer=>TEAMERS[teamer].text)}</p>`:''}
+                    ${humanData.teamers.length > 0 ? `<p style="margin-top:15px; color:blue;">属于团队：${humanData.teamers.map(teamer => TEAMERS[teamer].text)}</p>` : ''}
+                    ${humanData.is_wait > 0 ? `<p style="margin-top:15px; color:violet; font-size:20px;cursor:pointer;"><span class="j-wait-del" data-account="${humanData.phone}">待处理</span></p>` : ''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
@@ -1414,8 +1458,8 @@
         })
         // 团队
         let teamer_opts = '';
-        Object.keys(TEAMERS).forEach(key=>{
-            teamer_opts+=`<option value="${key}">${TEAMERS[key].text}</option>`;
+        Object.keys(TEAMERS).forEach(key => {
+            teamer_opts += `<option value="${key}">${TEAMERS[key].text}</option>`;
         })
         qqAdd.innerHTML = `
             <div class="">
@@ -1460,8 +1504,9 @@
                     <input class="search_input j-ww-exec" placeholder="旺旺号" style="margin-left:10px;" /> <button class="search_btn j-ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red j-ww-del">删除旺旺号</button>
                     <button class="search_btn j-ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
-                    <input class="search_input j-tang-id" type="text" placeholder="唐人id" style="margin-left:10px;" />
+                    <input class="search_input j-tang-id" type="text" placeholder="唐人id" style="margin-left:10px;width:80px;" />
                     <button class="search_btn j-tang-id-add" style="margin-left:10px;">添加唐人id</button>
+                    <button class="search_btn reb j-wait-add" style="margin-left:10px;">添加待处理</button>
                 </div>
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
@@ -1507,6 +1552,7 @@
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
                         <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
                         <button class="search_btn download" style="">下载数据</button>
+                        <button class="search_btn reb j-wait-search" style="">筛选待处理</button>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <span class="gray">1：</span><select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
@@ -2155,12 +2201,37 @@
             // orderCon.innerHTML = orderConArr.join('，');
             setCon(orderConArr);
         }, false)
-        addEventListener(qqAdd,'click',e=>{
+        // 待处理
+        addEventListener(qqAdd, 'click', e => {
+            const account = $phone.value;
+            const result = Tools.addWait(account);
+            if (result) alert('添加待处理成功');
+        }, '.j-wait-add')
+        addEventListener(qqAdd, 'click', e => {
+            const $waitDel = e.target;
+            // console.log($waitDel);
+            const account = $waitDel.getAttribute('data-account');
+            // console.log(account);
+            const result = Tools.delWait(account);
+            if (result) $waitDel.remove();
+        }, '.j-wait-del')
+        addEventListener(qqAdd, 'click', e => {
+            const datas = Tools.findAccountsByWait().map(account => DATA[account]);
+            // console.log(datas);
+            if (datas.length < 0) {
+                let table = getDataTable(datas)
+                setCon([table]);
+            } else {
+                setCon(['没有找到列表'])
+            }
+        }, '.j-wait-search')
+        // 团队的添加
+        addEventListener(qqAdd, 'click', e => {
             const teamer = $teamerIpt.value;
             const account = $phone.value;
-            const result = Tools.addTeamer(account,teamer);
-            if(result) alert('团队添加成功');
-        },'.j-teamer-add-btn')
+            const result = Tools.addTeamer(account, teamer);
+            if (result) alert('团队添加成功');
+        }, '.j-teamer-add-btn')
         // 添加佣金
         addEventListener(qqAdd, 'click', e => {
             const commission = $commissionIpt.value;
@@ -2307,13 +2378,13 @@
             // if(qq)record.pig_qq = qq;
             // if(!wx && !qq)return alert('wx|qq最少填写一个联系方式');
             // if(['a847457846'].includes(qq_exec_pre) && !wx)return alert('wx必须填写')
-            if(qq_exec_pre == 'tang'){
+            if (qq_exec_pre == 'tang') {
                 record.record_qq = '';
                 delete record.record_qq;
-            }else if(qq_exec_pre == 'a847457846'){
+            } else if (qq_exec_pre == 'a847457846') {
                 if (Tools.alertFuc({ wx })) return;
                 record.wx = wx;
-            }else{
+            } else {
                 if (Tools.alertFuc({ qq })) return;
                 record.pig_qq = qq;
             }
