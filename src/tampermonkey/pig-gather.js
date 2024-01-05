@@ -84,7 +84,16 @@
             text: '瑶摇总代'
         },
         'an': {
-            text: '阿媛'
+            text: '阿媛总监'
+        },
+        'mc': {
+            text: '沐晨总监'
+        },
+        'mm':{
+            text:'沐沐总代'
+        },
+        'jj':{
+            text:'JiaJia总代'
         }
     };
     const storageData = () => {
@@ -1453,7 +1462,7 @@
         let option_strs = '';
         const qqs_obj = {};
         Object.keys(QQS).forEach(num => {
-            option_strs += `<option value=${num} ${num == '54' ? `selected` : ''}>${num}：${QQS[num].text}</option>`;
+            option_strs += `<option value=${num} ${num == 'tang' ? `selected` : ''}>${num}：${QQS[num].text}</option>`;
             qqs_obj[num] = QQS[num].text;
         })
         // 团队
@@ -2383,6 +2392,7 @@
                 delete record.record_qq;
             } else if (qq_exec_pre == 'a847457846') {
                 if (Tools.alertFuc({ wx })) return;
+                if (wx.includes(',')) return alert('有多个微信');
                 record.wx = wx;
             } else {
                 if (Tools.alertFuc({ qq })) return;
