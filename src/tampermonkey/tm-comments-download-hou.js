@@ -134,6 +134,10 @@
 
         const match = url.match(/^(.+?)_\d+x\d+\.\w+$/);
         if (match) url = match[1];
+        // 进一步的去匹配
+        // 比如：*0-rate.jpg_230x10000Q75.jpg_.webp
+        const match2 = url.match(/^(.+?)\.(jpg|jpeg|png|gif)_\w+\.\w+\.\w+$/);
+        if(match2) url = match2[1]+'.'+match2[2];
 
         let min = 'jpg';
         const match_min = url.match(/\/([^\/]+?)\.(\w+?)$/);

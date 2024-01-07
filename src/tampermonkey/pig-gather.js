@@ -89,11 +89,14 @@
         'mc': {
             text: '沐晨总监'
         },
-        'mm':{
-            text:'沐沐总代'
+        'mm': {
+            text: '沐沐总代'
         },
-        'jj':{
-            text:'JiaJia总代'
+        'jj': {
+            text: 'JiaJia总代'
+        },
+        'dd': {
+            text: '滴滴总监'
         }
     };
     const storageData = () => {
@@ -290,6 +293,13 @@
         isDateValid: (...val) => {
             return !Number.isNaN(new Date(...val).valueOf());
         },
+        trim: (str) => {
+            if (!str) return str;
+            // str = str.replace(/\ +/g, '');
+            // str = str.replace(/[\r\n\t]/g, '');
+            str = str.trim();
+            return str;
+        },
         // 删除DATA的整个记录data
         deleteData: (pig_phone) => {
             if (Tools.alertFuc({ pig_phone })) return false;
@@ -370,16 +380,16 @@
             }
         },
         // 找到字段对应的account
-        findAccountsBykeyValue: (key, value) => {
+        findAccountsBykeyValue: (key, value , otherKeysFuc=()=>true) => {
             const results = [];
             const accounts = Object.keys(DATA);
             accounts.forEach(account => {
                 const datas = DATA[account];
                 for (let i = 0; i < datas.length; i++) {
                     const data = datas[i];
-                    if (data[key] == value) {
+                    if (Tools.trim(data[key]) == Tools.trim(value) && otherKeysFuc(data)) {
                         results.push(account);
-                        continue;
+                        break;
                     }
                 }
             })
@@ -2227,7 +2237,7 @@
         addEventListener(qqAdd, 'click', e => {
             const datas = Tools.findAccountsByWait().map(account => DATA[account]);
             // console.log(datas);
-            if (datas.length < 0) {
+            if (datas.length > 0) {
                 let table = getDataTable(datas)
                 setCon([table]);
             } else {
