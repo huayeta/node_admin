@@ -41,7 +41,7 @@
         { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
         { name: 'A97-欢乐购火箭🚀④群-新人', fix: 'QQ', value: '532849108' },
-        { name: 'pig', fix: '', value: 'pig' },
+        { name: 'pig', fix: '', value: 'pig',commission:'7' },
     ];
     const QQS = {
         '31': {
@@ -97,6 +97,9 @@
         },
         'dd': {
             text: '滴滴总监'
+        },
+        'rr':{
+            text: '茹茹总监'
         }
     };
     const storageData = () => {
@@ -330,7 +333,7 @@
             return result;
         },
         // 添加字段 isRepeat:false 不能重复添加
-        addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} }, spliceIndex = DATA[pig_phone].length, isRepeat = false) => {
+        addKeyValue: (pig_phone, key, value, middleFuc = () => true, otherKeysFuc = () => { return {} }, spliceIndex = DATA[pig_phone]?.length, isRepeat = false) => {
             if (Tools.alertFuc({ pig_phone, key, value })) return false;
             // if (!DATA[pig_phone]) return alert('不存在小猪数据');
             if (!isRepeat) {
@@ -380,7 +383,7 @@
             }
         },
         // 找到字段对应的account
-        findAccountsBykeyValue: (key, value , otherKeysFuc=()=>true) => {
+        findAccountsBykeyValue: (key, value, otherKeysFuc = () => true) => {
             const results = [];
             const accounts = Object.keys(DATA);
             accounts.forEach(account => {
@@ -397,7 +400,7 @@
             return results;
         },
         // 修改data
-        modifyData: (pig_phone, valueObj = {}, judgeFuc = (data) => { return false; }) => {
+        updateDataByAccount: (pig_phone, valueObj = {}, judgeFuc = (data) => { return false; }) => {
             if (Tools.alertFuc({ pig_phone })) return false;
             const datas = DATA[pig_phone];
             datas.forEach((data, index) => {
@@ -546,13 +549,33 @@
         delWait: (account) => {
             return Tools.delKeyValue(account, 'wait', '1', undefined, undefined, false);
         },
+        // 更新等待处理
+        updateWait:(account)=>{
+            return Tools.updateDataByAccount(account,{create_time:new Date().toLocaleString()},(data)=>{
+                return data.wait;
+            })
+        },
         // 是否待处理
         IsWaitByDatas: (datas) => {
             return Tools.findKeysByDatas(datas, 'wait').length > 0;
         },
         // 找到所有的wait的账号
         findAccountsByWait: () => {
-            return Tools.findAccountsBykeyValue('wait', '1');
+            let account = Tools.findAccountsBykeyValue('wait', '1');
+            account.sort(function (a, b) {
+                const aData = DATA[a];
+                const bData = DATA[b];
+                const aWait = Tools.findKeysByDatas(aData,'wait', undefined, true);
+                const bWait = Tools.findKeysByDatas(bData, 'wait', undefined, true);
+                // console.log(aWait[0]?.create_time,aWait[0].pig_phone,bWait[0]?.create_time,bWait[0].pig_phone)
+                if(new Date(aWait[0]?.create_time) < new Date(bWait[0]?.create_time)){
+                    return -1;
+                }else{
+                    return 1;
+                }
+            })
+            console.log(account);
+            return account;
         },
         // 添加团队
         addTeamer: (account, teamer) => {
@@ -583,12 +606,15 @@
                 return 6;
             }
             // 从做单渠道判断
-            if (datas.length > 0) {
-                if (['pig'].includes(datas[0].come_type)) {
-                    return 7;
-                } else if (['tang'].includes(datas[0].come_type)) {
-                    return 6;
-                }
+            if (datas.length > 0 && datas[0].come_type) {
+                const commission = Tools.findComeType(datas[0].come_type)?.commission;
+                if(commission) return commission;
+                return 6;
+                // if (['pig'].includes(datas[0].come_type)) {
+                //     return 7;
+                // } else if (['tang'].includes(datas[0].come_type)) {
+                //     return 6;
+                // }
             }
             return '';
         },
@@ -815,7 +841,7 @@
         },
         // 给wx添加wx_name
         addWxNameByWx: (pig_phone, wx, wx_name) => {
-            return Tools.modifyData(pig_phone, { wx_name }, (data, index) => {
+            return Tools.updateDataByAccount(pig_phone, { wx_name }, (data, index) => {
                 return data.wx == wx;
             })
         },
@@ -1141,13 +1167,22 @@
             // console.log(result);
             return result;
         },
-        //找到做单渠道name
-        findNameByComeTypeValue: (value) => {
-            let result = value;
+        //找到来自渠道
+        findComeType:(value)=>{
+            let result;
             COMETYPE.forEach(come_type => {
-                if (come_type.value == value) result = come_type.name;
+                if (come_type.value == value) result = come_type;
             })
             return result;
+        },
+        //找到做单渠道name
+        findNameByComeTypeValue: (value) => {
+            // let result = value;
+            // COMETYPE.forEach(come_type => {
+            //     if (come_type.value == value) result = come_type.name;
+            // })
+            const name = Tools.findComeType(value)?.name;
+            return name?name:'';
         },
         // 找到select的默认数据
         findDefaultValueBySelect: ($select) => {
@@ -1365,7 +1400,6 @@
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
                     ${humanData.teamers.length > 0 ? `<p style="margin-top:15px; color:blue;">属于团队：${humanData.teamers.map(teamer => TEAMERS[teamer].text)}</p>` : ''}
-                    ${humanData.is_wait > 0 ? `<p style="margin-top:15px; color:violet; font-size:20px;cursor:pointer;"><span class="j-wait-del" data-account="${humanData.phone}">待处理</span></p>` : ''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
@@ -1444,6 +1478,7 @@
                 <td>
                 ${humanData.register_time || ''}
                 ${humanData.tang_register_time ? `<p style="margin-top:15px; color:red;">唐人注册时间：</p><p>${humanData.tang_register_time}</p>` : ''}
+                ${humanData.is_wait ? `<p style="margin-top:15px; color:violet; "><span style="cursor:pointer;" class="j-wait-del" data-account="${humanData.phone}">待处理</span><span style="cursor:pointer; margin-left:10px;" class="j-wait-update" data-account="${humanData.phone}">更新处理</span></p>` : ''}
                 </td>
             </tr>
             `
@@ -1534,8 +1569,8 @@
                     <button class="search_btn reb j-modify-code-btn" style="margin-left:10px;">修改源码</button>
                     <input class="search_input j-commission-ipt" type="text" placeholder="佣金" style="margin-left:10px; width:50px;" />
                     <button class="search_btn j-commission-add" style="margin-left:10px;">添加佣金比例</button>
-                    <select class="search_input j-teamer-ipt" style="margin-left:10px; width:160px;"><option>没有团队</option>${teamer_opts}</select>
-                    <button class="search_btn j-teamer-add-btn" style="margin-left:10px;">添加团队</button>
+                    <select class="search_input j-teamer-ipt" style="margin-left:10px; width:160px;"><option value="">没有团队</option>${teamer_opts}</select>
+                    <button class="search_btn reb j-teamer-add-btn" style="margin-left:10px;">添加团队</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -2235,6 +2270,14 @@
             if (result) $waitDel.remove();
         }, '.j-wait-del')
         addEventListener(qqAdd, 'click', e => {
+            const $waitDel = e.target;
+            // console.log($waitDel);
+            const account = $waitDel.getAttribute('data-account');
+            // console.log(account);
+            const result = Tools.updateWait(account);
+            if (result) $waitDel.remove();
+        }, '.j-wait-update')
+        addEventListener(qqAdd, 'click', e => {
             const datas = Tools.findAccountsByWait().map(account => DATA[account]);
             // console.log(datas);
             if (datas.length > 0) {
@@ -2248,6 +2291,7 @@
         addEventListener(qqAdd, 'click', e => {
             const teamer = $teamerIpt.value;
             const account = $phone.value;
+            // console.log(teamer);
             const result = Tools.addTeamer(account, teamer);
             if (result) alert('团队添加成功');
         }, '.j-teamer-add-btn')
