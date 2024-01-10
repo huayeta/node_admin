@@ -100,6 +100,9 @@
         },
         'rr':{
             text: '茹茹总监'
+        },
+        'yy2':{
+            text: '莹莹总监'
         }
     };
     const storageData = () => {
@@ -1615,7 +1618,7 @@
                         <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <span class="gray">5：</span><select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
                         <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
-                        <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`)}</select>
+                        <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`).join('')}</select>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -2267,15 +2270,20 @@
             const account = $waitDel.getAttribute('data-account');
             // console.log(account);
             const result = Tools.delWait(account);
-            if (result) $waitDel.remove();
+            if (result) {
+                qqAdd.querySelector('.j-wait-search').click();
+            }
         }, '.j-wait-del')
         addEventListener(qqAdd, 'click', e => {
-            const $waitDel = e.target;
-            // console.log($waitDel);
-            const account = $waitDel.getAttribute('data-account');
+            const $waitUpdate = e.target;
+            // console.log($waitUpdate);
+            const account = $waitUpdate.getAttribute('data-account');
             // console.log(account);
             const result = Tools.updateWait(account);
-            if (result) $waitDel.remove();
+            if (result) {
+                // console.log('update');
+                qqAdd.querySelector('.j-wait-search').click();
+            }
         }, '.j-wait-update')
         addEventListener(qqAdd, 'click', e => {
             const datas = Tools.findAccountsByWait().map(account => DATA[account]);
