@@ -103,8 +103,15 @@
         },
         'yy2':{
             text: '莹莹总监'
+        },
+        'by':{
+            text:'冰燕总监'
+        },
+        'cbb':{
+            text:'晨宝贝'
         }
     };
+    const ORDERTYPES = ['TB'];
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
     }
@@ -896,15 +903,6 @@
             })
             return arr;
         },
-        getPigType: (str) => {
-            let pig_type = str;
-            if (pig_type.search('TB') !== -1) {
-                pig_type = 'TB';
-            } else if (pig_type.search('JD') !== -1) {
-                pig_type = 'JD';
-            }
-            return pig_type;
-        },
         // 通过账号给最后一个记录添加评论或者默认评论或者直接评论
         lastAddCommentByPhone: (phone, is_comment = '1') => {
             if (Tools.alertFuc({ phone, is_comment })) return false;
@@ -1335,16 +1333,18 @@
         }, '');
         // 找到所有的wxs
         const wxs = Tools.findWxsByDatas(datas, true);
+        // 找到分类做单数据
+        const order_type_datas ={};
+        ORDERTYPES.forEach(type=>{
+            order_type_datas[type]=formateDatasByPigType(datas,type);
+        });
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
             real_names: real_name_arr,
             qqs: qqs,
             notes: notes.map(note => note.pig_note),
             records: records,
-            typeDatas: {
-                'TB': formateDatasByPigType(datas, 'TB'),
-                'JD': formateDatasByPigType(datas, 'JD'),
-            },
+            typeDatas: order_type_datas,
             register_time: register_time,
             tang_register_time: tang_register_time,
             tang_id: tang_id,
@@ -1424,28 +1424,23 @@
                         <tbody>
                             <tr>
                                 <th></th>
-                                <th>TB</th>
-                                <th>JD</th>
+                                ${ORDERTYPES.map(type=>`<th>${type}</th>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单渠道</td>
-                                <td style="color:gray;">${Tools.findNameByComeTypeValue(humanData.typeDatas.TB.record_come_type)}</td>
-                                <td style="color:gray;">${Tools.findNameByComeTypeValue(humanData.typeDatas.JD.record_come_type)}</td>
+                                ${ORDERTYPES.map(type=>`<td style="color:gray;">${Tools.findNameByComeTypeValue(humanData.typeDatas[type].record_come_type)}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单渠道号</td>
-                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_qq}</td>
-                                <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_qq}</td>
+                                ${ORDERTYPES.map(type=>`<td style="color:${humanData.typeDatas[type].record_color}">${humanData.typeDatas[type].record_qq}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单日期</td>
-                                <td style="color:red;">${humanData.typeDatas.TB.record_time}</td>
-                                <td style="color:red;">${humanData.typeDatas.JD.record_time}</td>
+                                ${ORDERTYPES.map(type=>`<td style="color:red;">${humanData.typeDatas[type].record_time}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>已做单数量</td>
-                                <td style="color: rgb(16, 0, 255);">${humanData.typeDatas.TB.record_num}</td>
-                                <td style="color: rgb(16, 0, 255);">${humanData.typeDatas.JD.record_num}</td>
+                                ${ORDERTYPES.map(type=>`<td style="color: rgb(16, 0, 255);">${humanData.typeDatas[type].record_num}</td>`).join('')}
                             </tr>
                             <!-- <tr>
                                 <td>最后做单产品</td>
@@ -1454,25 +1449,19 @@
                             </tr> -->
                             <tr>
                                 <td style="min-width:86px;">做单店铺顺序</td>
-                                <td style="max-width:170px;padding:10px;">${humanData.typeDatas.TB.record_shop_labels || ''}</td>
-                                <td>${humanData.typeDatas.JD.record_shop_labels || ''}</td>
+                                ${ORDERTYPES.map(type=>`<td style="max-width:170px;padding:10px;">${humanData.typeDatas[type].record_shop_labels || ''}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近评论状态</td>
-                                <td>${humanData.typeDatas.TB.record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas.TB.record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas.TB.record_comment || ''}</td>
-                                <td>${humanData.typeDatas.JD.record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas.JD.record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas.JD.record_comment || ''}</td>
+                                ${ORDERTYPES.map(type=>`<td>${humanData.typeDatas[type].record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas[type].record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas[type].record_comment || ''}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>备注</td>
-                                <td style="color:red;">
-                                    ${humanData.typeDatas.TB.notes.reduce((a, b) => {
-                return a + `<p>${b}</p>`;
-            }, '')}
-                                </td>
-                                <td style="color:red;">
-                                    ${humanData.typeDatas.JD.notes.reduce((a, b) => {
-                return a + `<p>${b}</p>`;
-            }, '')}
+                                ${ORDERTYPES.map(type=>`<td style="color:red;">
+                                ${humanData.typeDatas[type].notes.reduce((a, b) => {
+            return a + `<p>${b}</p>`;
+        }, '')}
+                            </td>`).join('')}
                                 </td>
                             </tr>
                         </tbody>
@@ -1616,7 +1605,7 @@
                         <span class="gray">2：</span><select class="search_input j-screen-time"><option value="1" selected>筛选正序</option><option value="-1">筛选逆序</option></select>
                         <span class="gray">3：</span><input class="search_input j-search-time" placeholder="搜索时间" value="2023-04-01" type="date" />
                         <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
-                        <span class="gray">5：</span><select class="search_input j-pig-type"><option value="TB">TB</option><option value="JD">JD</option></select>
+                        <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type=>`<option value="${type}">${type}</option>`)}</select>
                         <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                         <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`).join('')}</select>
                     </div>
