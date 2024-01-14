@@ -396,7 +396,7 @@
             }
         },
         // 找到字段对应的account
-        findAccountsBykeyValue: (key, value, otherKeysFuc = () => true,isBreakFuc=()=>false,isRemind=false) => {
+        findAccountsBykeyValue: (key, value, otherKeysFuc = () => true,isBreakFuc=()=>false,remind=false) => {
             const results = [];
             const accounts = Object.keys(DATA);
             accounts.forEach(account => {
@@ -405,11 +405,11 @@
                     const data = datas[i];
                     // console.log(data[key],value,key,data)
                     if (Tools.trim(data[key]) == Tools.trim(value) && otherKeysFuc(data,i)) {
-                        if(!isRemind){
+                        if(!remind){
                             results.push(account);
                             break;
                         }else{
-                            if(!data.is_remind && !RDATA.isExist(account)){
+                            if(!data.is_remind && !RDATA.isExist(account,remind)){
                                 results.push(account);
                                 break;
                             }
@@ -490,7 +490,7 @@
         displayAccountByKeyValue:(key,value,otherKeysFuc)=>{
             const accounts = Tools.findAccountsBykeyValue(key,value,otherKeysFuc,(data,i)=>{
                 if(i==0)return true;
-            },true);
+            },'comment_reminder');
             // console.log(accounts,come_type);
             // 排序
             accounts.sort((a, b) => {
@@ -510,7 +510,7 @@
             for (let i = 0; i < forLen; i++) {
                 phoneDatas.push(DATA[accounts[i]]);
             }
-            const table = getDataTable(phoneDatas,[{ text: '更新提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }]);
+            const table = getDataTable(phoneDatas,[{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>更新7天提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] );
             return [dyStr + table];
         },
         // 添加真实姓名
@@ -2615,7 +2615,7 @@
                     break;
             }
             // 填写qq
-            $byQQ.value = qq;
+            $byQQ.value = qq?qq:phone;
             // 触发更新
             var event = new Event('input', {
                 bubbles: true,
@@ -2779,7 +2779,10 @@
         addEventListener(qqAdd,'click',e=>{
             const come_type = $comeType.value;
             setCon(Tools.displayAccountByKeyValue('come_type',come_type,(data,i)=>{
-                if(data.qq_exec_pre=='tang')return true;
+                // console.log(data);
+                // 距离现在有20天
+                let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
+                if(data.qq_exec_pre=='tang' && new Date(data.pig_over_time)<= endTime)return true;
             }));
         },'.j-come-type-search')
         // 标注已评跟默认评价按钮
