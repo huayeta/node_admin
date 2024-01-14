@@ -487,10 +487,8 @@
             return arr = [...new Set(arr)];
         },
         // 通过某个条件找到所有的数据并显示
-        displayAccountByKeyValue:(key,value,otherKeysFuc)=>{
-            const accounts = Tools.findAccountsBykeyValue(key,value,otherKeysFuc,(data,i)=>{
-                if(i==0)return true;
-            },'comment_reminder');
+        displayAccountByKeyValue:(key,value,otherKeysFuc,isBreakFuc)=>{
+            const accounts = Tools.findAccountsBykeyValue(key,value,otherKeysFuc,isBreakFuc,'comment_reminder');
             // console.log(accounts,come_type);
             // 排序
             accounts.sort((a, b) => {
@@ -2743,37 +2741,45 @@
             const arr = [];
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const comment_sel = qqAdd.querySelector('.j-comment-sel').value;
-            const phones = Object.keys(DATA);
             if (!shop_label) return;
-            for (let phone of phones) {
-                const datas = DATA[phone];
-                if (trim(datas[0].shop_label) == trim(shop_label) && !datas[0].is_remind) {
-                    if ((comment_sel === '' && !datas[0].is_comment) || (comment_sel && comment_sel == datas[0].is_comment)) {
-                        if (!RDATA.isExist(phone, 'comment_reminder')) arr.push(datas[0]);
-                    }
-                }
-            }
-            arr.sort((a, b) => {
-                if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            })
-            if (arr.length == 0) return setCon(['没有找到做单记录']);
-            let dyStr = '';
-            if (arr.length > 5) {
-                dyStr += `<div style="margin-bottom: 10px; color:gray;text-align: center">....还剩下<span style="color:red;">${arr.length - 5}</span>个.....</div>`
-            }
-            // console.log(arr);
-            const phoneDatas = [];
-            const forLen = arr.length < 5 ? arr.length : 5;
-            for (let i = 0; i < forLen; i++) {
-                phoneDatas.push(DATA[arr[i].pig_phone]);
-            }
-            // console.log(phoneDatas);
-            const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
-            setCon([dyStr + table]);
+            // const phones = Object.keys(DATA);
+            // for (let phone of phones) {
+            //     const datas = DATA[phone];
+            //     if (trim(datas[0].shop_label) == trim(shop_label) && !datas[0].is_remind) {
+            //         if ((comment_sel === '' && !datas[0].is_comment) || (comment_sel && comment_sel == datas[0].is_comment)) {
+            //             if (!RDATA.isExist(phone, 'comment_reminder')) arr.push(datas[0]);
+            //         }
+            //     }
+            // }
+            // arr.sort((a, b) => {
+            //     if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
+            //         return 1;
+            //     } else {
+            //         return -1;
+            //     }
+            // })
+            // if (arr.length == 0) return setCon(['没有找到做单记录']);
+            // let dyStr = '';
+            // if (arr.length > 5) {
+            //     dyStr += `<div style="margin-bottom: 10px; color:gray;text-align: center">....还剩下<span style="color:red;">${arr.length - 5}</span>个.....</div>`
+            // }
+            // // console.log(arr);
+            // const phoneDatas = [];
+            // const forLen = arr.length < 5 ? arr.length : 5;
+            // for (let i = 0; i < forLen; i++) {
+            //     phoneDatas.push(DATA[arr[i].pig_phone]);
+            // }
+            // // console.log(phoneDatas);
+            // const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
+            // setCon([dyStr + table]);
+
+            setCon(Tools.displayAccountByKeyValue('shop_label',shop_label,(data,i)=>{
+                if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
+                    return true;
+                }           
+            },(data,i)=>{
+                if(i==0)return true;
+            }))
         }, false)
         // 通过做单渠道查询做单数据
         addEventListener(qqAdd,'click',e=>{
@@ -2783,6 +2789,8 @@
                 // 距离现在有20天
                 let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
                 if(data.qq_exec_pre=='tang' && new Date(data.pig_over_time)<= endTime)return true;
+            },(data,i)=>{
+                if(i==0)return true;
             }));
         },'.j-come-type-search')
         // 标注已评跟默认评价按钮
