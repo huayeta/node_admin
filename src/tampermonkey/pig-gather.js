@@ -109,6 +109,9 @@
         },
         'cbb':{
             text:'晨宝贝'
+        },
+        'kg':{
+            text:'琨哥总监'
         }
     };
     const ORDERTYPES = ['TB'];
@@ -393,17 +396,26 @@
             }
         },
         // 找到字段对应的account
-        findAccountsBykeyValue: (key, value, otherKeysFuc = () => true) => {
+        findAccountsBykeyValue: (key, value, otherKeysFuc = () => true,isBreakFuc=()=>false,isRemind=false) => {
             const results = [];
             const accounts = Object.keys(DATA);
             accounts.forEach(account => {
                 const datas = DATA[account];
                 for (let i = 0; i < datas.length; i++) {
                     const data = datas[i];
-                    if (Tools.trim(data[key]) == Tools.trim(value) && otherKeysFuc(data)) {
-                        results.push(account);
-                        break;
+                    // console.log(data[key],value,key,data)
+                    if (Tools.trim(data[key]) == Tools.trim(value) && otherKeysFuc(data,i)) {
+                        if(!isRemind){
+                            results.push(account);
+                            break;
+                        }else{
+                            if(!data.is_remind && !RDATA.isExist(account)){
+                                results.push(account);
+                                break;
+                            }
+                        }
                     }
+                    if(isBreakFuc(data,i))break;
                 }
             })
             // console.log(results);
@@ -473,6 +485,33 @@
             })
             // 去重
             return arr = [...new Set(arr)];
+        },
+        // 通过某个条件找到所有的数据并显示
+        displayAccountByKeyValue:(key,value,otherKeysFuc)=>{
+            const accounts = Tools.findAccountsBykeyValue(key,value,otherKeysFuc,(data,i)=>{
+                if(i==0)return true;
+            },true);
+            // console.log(accounts,come_type);
+            // 排序
+            accounts.sort((a, b) => {
+                if (new Date(DATA[a][0].pig_over_time) > new Date(DATA[b][0].pig_over_time)) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            })
+            if (accounts.length == 0) return ['没有找到做单记录'];
+            let dyStr = '';
+            if (accounts.length > 5) {
+                dyStr += `<div style="margin-bottom: 10px; color:gray;text-align: center">....还剩下<span style="color:red;">${accounts.length - 5}</span>个.....</div>`
+            }
+            const phoneDatas = [];
+            const forLen = accounts.length < 5 ? accounts.length : 5;
+            for (let i = 0; i < forLen; i++) {
+                phoneDatas.push(DATA[accounts[i]]);
+            }
+            const table = getDataTable(phoneDatas,[{ text: '更新提醒', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }]);
+            return [dyStr + table];
         },
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
@@ -1386,12 +1425,12 @@
                 btnStr = btn;
             }
             if (Object.prototype.toString.call(btn) == '[object Object]') {
-                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}" data-datas="${JSON.stringify(btn).replaceAll('"', "'")}">${btn.text}</a>`;
+                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]?humanData.qqs[0]:''}" data-phone="${humanData.phone}" data-mobile="${humanData.mobiles[0]}" data-datas="${JSON.stringify(btn).replaceAll('"', "'")}">${btn.text}</a>`;
             }
             if (Object.prototype.toString.call(btn) == '[object Array]') {
                 btnStr += '<div style="margin-top:10px;margin-right:-10px;">';
                 btn.forEach(bt => {
-                    btnStr += `<a style="color:red;margin-right:10px;cursor:pointer;" class="${bt.className}" data-qq="${humanData.qqs[0]}" data-phone="${humanData.phone}" data-datas="${JSON.stringify(bt).replaceAll('"', "'")}">${bt.text}</a>`;
+                    btnStr += `<a style="color:red;margin-right:10px;cursor:pointer;" class="${bt.className}" data-qq="${humanData.qqs[0]?humanData.qqs[0]:''}" data-phone="${humanData.phone}" data-mobile="${humanData.mobiles[0]}" data-datas="${JSON.stringify(bt).replaceAll('"', "'")}">${bt.text}</a>`;
                 })
                 btnStr += '</div>';
             }
@@ -1442,11 +1481,6 @@
                                 <td>已做单数量</td>
                                 ${ORDERTYPES.map(type=>`<td style="color: rgb(16, 0, 255);">${humanData.typeDatas[type].record_num}</td>`).join('')}
                             </tr>
-                            <!-- <tr>
-                                <td>最后做单产品</td>
-                                <td style="color:${humanData.typeDatas.TB.record_color}">${humanData.typeDatas.TB.record_shop_label_last || ''}</td>
-                                <td style="color:${humanData.typeDatas.JD.record_color}">${humanData.typeDatas.JD.record_shop_label_last || ''}</td>
-                            </tr> -->
                             <tr>
                                 <td style="min-width:86px;">做单店铺顺序</td>
                                 ${ORDERTYPES.map(type=>`<td style="max-width:170px;padding:10px;">${humanData.typeDatas[type].record_shop_labels || ''}</td>`).join('')}
@@ -1608,6 +1642,7 @@
                         <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type=>`<option value="${type}">${type}</option>`)}</select>
                         <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                         <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`).join('')}</select>
+                        <button class="search_btn reb j-come-type-search" style="">提醒唐人做单</button>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -2563,10 +2598,11 @@
             const $parent = $btn.parentNode;
             const qq = $btn.getAttribute('data-qq');
             const phone = $btn.getAttribute('data-phone');
+            const mobile = $btn.getAttribute('data-mobile');
             const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
             $btn.textContent = '已去除';
             $btn.style.color = 'gray';
-            copyToClipboard(qq);
+            copyToClipboard(qq?qq:mobile);
             switch (datas.type) {
                 case 'order_reminder':
                     RDATA.addOrderReminder(phone);
@@ -2739,6 +2775,13 @@
             const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
             setCon([dyStr + table]);
         }, false)
+        // 通过做单渠道查询做单数据
+        addEventListener(qqAdd,'click',e=>{
+            const come_type = $comeType.value;
+            setCon(Tools.displayAccountByKeyValue('come_type',come_type,(data,i)=>{
+                if(data.qq_exec_pre=='tang')return true;
+            }));
+        },'.j-come-type-search')
         // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {
             const $btn = e.target;
