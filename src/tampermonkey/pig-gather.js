@@ -510,7 +510,7 @@
             for (let i = 0; i < forLen; i++) {
                 phoneDatas.push(DATA[accounts[i]]);
             }
-            const table = getDataTable(phoneDatas,[{ text: '更新提醒', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }]);
+            const table = getDataTable(phoneDatas,[{ text: '更新提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }]);
             return [dyStr + table];
         },
         // 添加真实姓名
