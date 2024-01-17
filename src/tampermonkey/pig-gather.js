@@ -112,6 +112,12 @@
         },
         'kg':{
             text:'琨哥总监'
+        },
+        'hh':{
+            text:'会慧总监'
+        },
+        'jj2':{
+            text:'佳佳总监'
         }
     };
     const ORDERTYPES = ['TB'];
@@ -488,7 +494,7 @@
         },
         // 通过某个条件找到所有的数据并显示
         displayAccountByKeyValue:(key,value,otherKeysFuc,isBreakFuc)=>{
-            const accounts = Tools.findAccountsBykeyValue(key,value,otherKeysFuc,isBreakFuc,'comment_reminder');
+            const accounts = Tools.findAccountsBykeyValue(key,value,otherKeysFuc,isBreakFuc=(data,i)=>i==0,'comment_reminder');
             // console.log(accounts,come_type);
             // 排序
             accounts.sort((a, b) => {
@@ -2777,20 +2783,16 @@
                 if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
                     return true;
                 }           
-            },(data,i)=>{
-                if(i==0)return true;
             }))
         }, false)
         // 通过做单渠道查询做单数据
         addEventListener(qqAdd,'click',e=>{
-            const come_type = $comeType.value;
-            setCon(Tools.displayAccountByKeyValue('come_type',come_type,(data,i)=>{
+            // const come_type = $comeType.value;
+            setCon(Tools.displayAccountByKeyValue('come_type','tang',(data,i)=>{
                 // console.log(data);
                 // 距离现在有20天
                 let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
                 if(data.qq_exec_pre=='tang' && new Date(data.pig_over_time)<= endTime)return true;
-            },(data,i)=>{
-                if(i==0)return true;
             }));
         },'.j-come-type-search')
         // 标注已评跟默认评价按钮
@@ -2879,7 +2881,19 @@
         addEventListener(qqAdd, 'click', e => {
             const real_name = $gNote.value;
             const ww = $ww.value;
-            const arr = Tools.searchKeyValues([['ww_exec', ww], ['real_name', real_name]]).map(phone => DATA[phone]);
+            const search_arr = [];
+            function zhh(key,value){
+                const arr = [];
+                if(value.includes(',')){
+                    value.split(',').forEach(val=>{
+                        arr.push([key,val]);
+                    })
+                }else{
+                    arr.push([key,value]);
+                }
+                return arr;
+            }
+            const arr = Tools.searchKeyValues([...zhh('ww_exec',ww), ...zhh('real_name',real_name)]).map(phone => DATA[phone]);
             if (arr.length == 0) return setCon(['没找到做单记录']);
             // 判断是否有一个qq多个账号的情况存在
             // console.log(arr);
