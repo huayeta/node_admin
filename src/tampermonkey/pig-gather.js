@@ -118,6 +118,9 @@
         },
         'jj2':{
             text:'佳佳总监'
+        },
+        'ft':{
+            text:'斐婷总监'
         }
     };
     const ORDERTYPES = ['TB'];
@@ -401,46 +404,8 @@
                 return true;
             }
         },
-        // 找到字段对应的account
-        findAccountsBykeyValue: (key, value, otherKeysFuc = () => true,isBreakFuc=()=>false,remind=false) => {
-            const results = [];
-            const accounts = Object.keys(DATA);
-            accounts.forEach(account => {
-                const datas = DATA[account];
-                for (let i = 0; i < datas.length; i++) {
-                    const data = datas[i];
-                    // console.log(data[key],value,key,data)
-                    if (Tools.trim(data[key]) == Tools.trim(value) && otherKeysFuc(data,i)) {
-                        if(!remind){
-                            results.push(account);
-                            break;
-                        }else{
-                            if(!data.is_remind && !RDATA.isExist(account,remind)){
-                                results.push(account);
-                                break;
-                            }
-                        }
-                    }
-                    if(isBreakFuc(data,i))break;
-                }
-            })
-            // console.log(results);
-            return results;
-        },
-        // 修改data
-        updateDataByAccount: (pig_phone, valueObj = {}, judgeFuc = (data) => { return false; }) => {
-            if (Tools.alertFuc({ pig_phone })) return false;
-            const datas = DATA[pig_phone];
-            datas.forEach((data, index) => {
-                if (judgeFuc(data, index)) {
-                    Object.assign(DATA[pig_phone][index], valueObj);
-                }
-            })
-            storageData();
-            return true;
-        },
         // 在datas数据中判断是否存在key=value，存在则返回data
-        isKeyValueByDatas: (datas, key, value, isEqual = false) => {
+        isKeyValueByDatas: (datas, key, value, isEqual = true,isBreakFuc=()=>false,otherKeysFuc = () => true) => {
             if (Tools.alertFuc({ datas, key, value })) return false;
             function escapeRegExp(string) {
                 return string.replace(/[.*+?^${}()|[\]\\]/g, '\$&'); // $& 表示匹配的内容
@@ -454,32 +419,94 @@
             for (let i = 0; i < datas.length; i++) {
                 const data = datas[i];
                 const val = data[key];
-                if (val && isEqual ? val == value : regexp.test(val)) {
+                if (val && isEqual ? Tools.trim(val) == Tools.trim(value) : regexp.test(val) && otherKeysFuc(data,i)) {
                     result = { data, index: i };
                     break;
                 }
+                if(isBreakFuc())break;
             }
             return result;
         },
+        getCon: (arr, len) => {
+            let str = '';
+            const datas = arr || Tools.getShortDatas(arr, len);
+            datas.forEach(data => {
+                str += `<div>${typeof data === 'string' ? data : JSON.stringify(data)}</div>`;
+            })
+            return str;
+        },
         // key=value搜索phone[[key,value]]
-        searchKeyValues: (arr = []) => {
+        // searchAccountsByKeyValues: (arr = []) => {
+            // if (arr.length == 0) return alert('请输入[[key,value]]');
+            // // return;
+            // let phone_arr = [];
+            // for (let phone in DATA) {
+            //     const datas = DATA[phone];
+            //     let is = false;
+            //     arr.forEach(keyValue => {
+            //         const [key, value] = keyValue;
+            //         if (value && Tools.isKeyValueByDatas(datas, key, value)) {
+            //             is = true;
+            //         }
+            //     })
+            //     if (is) phone_arr.push(phone);
+            // }
+            // // 去重
+            // phone_arr = [...new Set(phone_arr)];
+            // return phone_arr;
+        // },
+        // 找到字段对应的account[[key,value]]
+        findAccountsBykeyValue: (arr=[], otherKeysFuc = () => true,isEqual,isBreakFuc) => {
             if (arr.length == 0) return alert('请输入[[key,value]]');
-            // return;
             let phone_arr = [];
             for (let phone in DATA) {
                 const datas = DATA[phone];
-                let is = false;
-                arr.forEach(keyValue => {
-                    const [key, value] = keyValue;
-                    if (value && Tools.isKeyValueByDatas(datas, key, value)) {
-                        is = true;
+                for(let i =0;i<arr.length;i++){
+                    const [key, value] = arr[i];
+                    if (value && Tools.isKeyValueByDatas(datas, key, value,isEqual,isBreakFuc,otherKeysFuc)) {
+                        phone_arr.push(phone);
+                        break;
                     }
-                })
-                if (is) phone_arr.push(phone);
+                }
             }
             // 去重
             phone_arr = [...new Set(phone_arr)];
             return phone_arr;
+            // const results = [];
+            // const accounts = Object.keys(DATA);
+            // accounts.forEach(account => {
+            //     const datas = DATA[account];
+            //     for (let i = 0; i < datas.length; i++) {
+            //         const data = datas[i];
+            //         // console.log(data[key],value,key,data)
+            //         if (Tools.trim(data[key]) == Tools.trim(value) && otherKeysFuc(data,i)) {
+            //             if(!remind){
+            //                 results.push(account);
+            //                 break;
+            //             }else{
+            //                 if(!data.is_remind && !RDATA.isExist(account,remind)){
+            //                     results.push(account);
+            //                     break;
+            //                 }
+            //             }
+            //         }
+            //         if(isBreakFuc(data,i))break;
+            //     }
+            // })
+            // // console.log(results);
+            // return results;
+        },
+        // 修改data
+        updateDataByAccount: (pig_phone, valueObj = {}, judgeFuc = (data) => { return false; }) => {
+            if (Tools.alertFuc({ pig_phone })) return false;
+            const datas = DATA[pig_phone];
+            datas.forEach((data, index) => {
+                if (judgeFuc(data, index)) {
+                    Object.assign(DATA[pig_phone][index], valueObj);
+                }
+            })
+            storageData();
+            return true;
         },
         // 通过datas找到所有的keys=data[] | string[]
         findKeysByDatas: (datas, key, otherJudge = () => true, is_complete = false) => {
@@ -492,13 +519,11 @@
             // 去重
             return arr = [...new Set(arr)];
         },
-        // 通过某个条件找到所有的数据并显示
-        displayAccountByKeyValue:(key,value,otherKeysFuc,isBreakFuc)=>{
-            const accounts = Tools.findAccountsBykeyValue(key,value,otherKeysFuc,isBreakFuc=(data,i)=>i==0,'comment_reminder');
-            // console.log(accounts,come_type);
+        // 展示数据
+        displayAccounts:(accounts,code=false)=>{
             // 排序
             accounts.sort((a, b) => {
-                if (new Date(DATA[a][0].pig_over_time) > new Date(DATA[b][0].pig_over_time)) {
+                if (DATA[a].length>0 && DATA[b].length>0 && new Date(DATA[a][0].pig_over_time) > new Date(DATA[b][0].pig_over_time)) {
                     return 1;
                 } else {
                     return -1;
@@ -515,7 +540,18 @@
                 phoneDatas.push(DATA[accounts[i]]);
             }
             const table = getDataTable(phoneDatas,[{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>更新7天提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] );
-            return [dyStr + table];
+            // 源码
+            let str = phoneDatas.reduce((a, data, index) => {
+                return a + Tools.getCon(data) + (index <= phoneDatas.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
+            }, '');
+            return [dyStr + table,code?str:''];
+        },
+        // 通过某个条件找到所有的数据并显示
+        displayAccountByKeyValue:(arr,otherKeysFuc,isBreakFuc=(data,i)=>i==0)=>{
+            const accounts = Tools.findAccountsBykeyValue(arr,otherKeysFuc,true,isBreakFuc);
+            // console.log(accounts,come_type);
+            
+            return Tools.displayAccounts(accounts);
         },
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
@@ -614,7 +650,7 @@
         },
         // 找到所有的wait的账号
         findAccountsByWait: () => {
-            let account = Tools.findAccountsBykeyValue('wait', '1');
+            let account = Tools.findAccountsBykeyValue([['wait', '1']]);
             account.sort(function (a, b) {
                 const aData = DATA[a];
                 const bData = DATA[b];
@@ -627,7 +663,7 @@
                     return 1;
                 }
             })
-            console.log(account);
+            // console.log(account);
             return account;
         },
         // 添加团队
@@ -1442,7 +1478,7 @@
             <tr>
                 <td>
                     ${humanData.commission ? `<p style="color:darkturquoise;font-size:25px;">+${humanData.commission}</p>` : ''}
-                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:60px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
+                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
                     ${humanData.teamers.length > 0 ? `<p style="margin-top:15px; color:blue;">属于团队：${humanData.teamers.map(teamer => TEAMERS[teamer].text)}</p>` : ''}
@@ -1636,7 +1672,7 @@
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
                         <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
                         <button class="search_btn download" style="">下载数据</button>
-                        <button class="search_btn reb j-wait-search" style="">筛选待处理</button>
+                        <button class="search_btn reb j-wait-search" style="">筛选待处理（<span>0</span>）</button>
                     </div>
                     <div class="m-findData search" style="margin-top:0px;">
                         <span class="gray">1：</span><select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
@@ -1646,7 +1682,7 @@
                         <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type=>`<option value="${type}">${type}</option>`)}</select>
                         <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                         <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`).join('')}</select>
-                        <button class="search_btn reb j-come-type-search" style="">提醒唐人做单</button>
+                        <button class="search_btn reb j-come-type-search" style="">提醒唐人做单（<span>0</span>）</button>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -2300,6 +2336,7 @@
             const result = Tools.delWait(account);
             if (result) {
                 qqAdd.querySelector('.j-wait-search').click();
+                getAccountByWait();
             }
         }, '.j-wait-del')
         addEventListener(qqAdd, 'click', e => {
@@ -2311,17 +2348,26 @@
             if (result) {
                 // console.log('update');
                 qqAdd.querySelector('.j-wait-search').click();
+                getAccountByWait();
             }
         }, '.j-wait-update')
+        // 筛选待处理个数
+        function getAccountByWait(){
+            const accounts = Tools.findAccountsByWait();
+            qqAdd.querySelector('.j-wait-search span').textContent = accounts.length;
+            return accounts;
+        }
+        requestAnimationFrame(getAccountByWait);
         addEventListener(qqAdd, 'click', e => {
-            const datas = Tools.findAccountsByWait().map(account => DATA[account]);
-            // console.log(datas);
-            if (datas.length > 0) {
-                let table = getDataTable(datas)
-                setCon([table]);
-            } else {
-                setCon(['没有找到列表'])
-            }
+            // const datas = Tools.findAccountsByWait().map(account => DATA[account]);
+            // // console.log(datas);
+            // if (datas.length > 0) {
+            //     let table = getDataTable(datas)
+            //     setCon([table]);
+            // } else {
+            //     setCon(['没有找到列表'])
+            // }
+            setCon(Tools.displayAccounts(getAccountByWait()));
         }, '.j-wait-search')
         // 团队的添加
         addEventListener(qqAdd, 'click', e => {
@@ -2779,21 +2825,28 @@
             // const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
             // setCon([dyStr + table]);
 
-            setCon(Tools.displayAccountByKeyValue('shop_label',shop_label,(data,i)=>{
+            setCon(Tools.displayAccountByKeyValue([['shop_label',shop_label]],(data,i)=>{
                 if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
                     return true;
                 }           
-            }))
+            },(data,i)=>i==0))
         }, false)
-        // 通过做单渠道查询做单数据
-        addEventListener(qqAdd,'click',e=>{
-            // const come_type = $comeType.value;
-            setCon(Tools.displayAccountByKeyValue('come_type','tang',(data,i)=>{
+        function getComeTypeByTang(){
+            const accounts = Tools.findAccountsBykeyValue([['qq_exec_pre','tang']],(data,i)=>{
                 // console.log(data);
                 // 距离现在有20天
+                const account = data.pig_phone;
                 let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
-                if(data.qq_exec_pre=='tang' && new Date(data.pig_over_time)<= endTime)return true;
-            }));
+                if(new Date(data.pig_over_time)<= endTime && !RDATA.isExist(account,'comment_reminder'))return true;
+            },true,(data,i)=>i==0);
+            qqAdd.querySelector('.j-come-type-search span').textContent= accounts.length;
+            return accounts;
+        }
+        requestAnimationFrame(getComeTypeByTang);
+        // 提醒唐人做单
+        addEventListener(qqAdd,'click',e=>{
+            // const come_type = $comeType.value;
+            setCon(Tools.displayAccounts(getComeTypeByTang()));
         },'.j-come-type-search')
         // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {
@@ -2853,28 +2906,29 @@
             // console.log(keywords);
             // console.log(Tools.findPhonesByKeyword(qq));
             // return;
-            const arr = Tools.almightySearch(keywords).map(phone => DATA[phone]);
+            const arr = Tools.almightySearch(keywords);
             if (arr.length == 0) {
                 setCon([`没找到做单记录<span style="margin:15px;display:inline-block;width:auto;height:auto;" class="j-add-record-btn search"></span>`]);
                 Tools.addRecordBtn(phone, qqAdd.querySelector('.j-add-record-btn'), undefined, qq, mobile);
                 return;
             }
+            setCon(Tools.displayAccounts(arr,true))
             // 判断是否有一个qq多个账号的情况存在
             // console.log(arr);
-            if (arr.length === 1) {
-                // 单账号
-                let datas = arr[0];
-                let table = getDataTable([datas])
-                setCon([table, getCon(datas, 3)]);
-                // setCon(arr[0]);
-            } else {
-                // 多账号
-                let str = arr.reduce((a, data, index) => {
-                    return a + getCon(data) + (index <= arr.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
-                }, '');
-                let table = getDataTable(arr);
-                setCon([table + str]);
-            }
+            // if (arr.length === 1) {
+            //     // 单账号
+            //     let datas = arr[0];
+            //     let table = getDataTable([datas])
+            //     setCon([table, getCon(datas, 3)]);
+            //     // setCon(arr[0]);
+            // } else {
+            //     // 多账号
+            //     let str = arr.reduce((a, data, index) => {
+            //         return a + getCon(data) + (index <= arr.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
+            //     }, '');
+            //     let table = getDataTable(arr);
+            //     setCon([table + str]);
+            // }
             // alert(JSON.stringify(arr));
         }, '.j-almightySearch')
         // 真实姓名搜索
@@ -2893,24 +2947,25 @@
                 }
                 return arr;
             }
-            const arr = Tools.searchKeyValues([...zhh('ww_exec',ww), ...zhh('real_name',real_name)]).map(phone => DATA[phone]);
-            if (arr.length == 0) return setCon(['没找到做单记录']);
-            // 判断是否有一个qq多个账号的情况存在
-            // console.log(arr);
-            if (arr.length === 1) {
-                // 单账号
-                let datas = arr[0];
-                let table = getDataTable([datas])
-                setCon([table, getCon(datas, 3)]);
-                // setCon(arr[0]);
-            } else {
-                // 多账号
-                let str = arr.reduce((a, data, index) => {
-                    return a + getCon(data) + (index <= arr.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
-                }, '');
-                let table = getDataTable(arr);
-                setCon([table + str]);
-            }
+            const arr = Tools.findAccountsBykeyValue([...zhh('ww_exec',ww), ...zhh('real_name',real_name)],undefined,false);
+            setCon(Tools.displayAccounts(arr,true));
+            // if (arr.length == 0) return setCon(['没找到做单记录']);
+            // // 判断是否有一个qq多个账号的情况存在
+            // // console.log(arr);
+            // if (arr.length === 1) {
+            //     // 单账号
+            //     let datas = arr[0];
+            //     let table = getDataTable([datas])
+            //     setCon([table, getCon(datas, 3)]);
+            //     // setCon(arr[0]);
+            // } else {
+            //     // 多账号
+            //     let str = arr.reduce((a, data, index) => {
+            //         return a + getCon(data) + (index <= arr.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
+            //     }, '');
+            //     let table = getDataTable(arr);
+            //     setCon([table + str]);
+            // }
         }, '.j-reg-search')
         // 获取源码
         addEventListener(qqAdd, 'click', () => {
