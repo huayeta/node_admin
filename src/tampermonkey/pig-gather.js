@@ -41,7 +41,7 @@
         { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
         { name: 'A97-欢乐购火箭🚀④群-新人', fix: 'QQ', value: '532849108' },
-        { name: 'pig', fix: '', value: 'pig',commission:'7' },
+        { name: 'pig', fix: '', value: 'pig', commission: '7' },
     ];
     const QQS = {
         '31': {
@@ -98,29 +98,29 @@
         'dd': {
             text: '滴滴总监'
         },
-        'rr':{
+        'rr': {
             text: '茹茹总监'
         },
-        'yy2':{
+        'yy2': {
             text: '莹莹总监'
         },
-        'by':{
-            text:'冰燕总监'
+        'by': {
+            text: '冰燕总监'
         },
-        'cbb':{
-            text:'晨宝贝'
+        'cbb': {
+            text: '晨宝贝'
         },
-        'kg':{
-            text:'琨哥总监'
+        'kg': {
+            text: '琨哥总监'
         },
-        'hh':{
-            text:'会慧总监'
+        'hh': {
+            text: '会慧总监'
         },
-        'jj2':{
-            text:'佳佳总监'
+        'jj2': {
+            text: '佳佳总监'
         },
-        'ft':{
-            text:'斐婷总监'
+        'ft': {
+            text: '斐婷总监'
         }
     };
     const ORDERTYPES = ['TB'];
@@ -405,7 +405,7 @@
             }
         },
         // 在datas数据中判断是否存在key=value，存在则返回data
-        isKeyValueByDatas: (datas, key, value, isEqual = true,isBreakFuc=()=>false,otherKeysFuc = () => true) => {
+        isKeyValueByDatas: (datas, key, value, isEqual = true, isBreakFuc = () => false, otherKeysFuc = () => true) => {
             if (Tools.alertFuc({ datas, key, value })) return false;
             function escapeRegExp(string) {
                 return string.replace(/[.*+?^${}()|[\]\\]/g, '\$&'); // $& 表示匹配的内容
@@ -419,11 +419,11 @@
             for (let i = 0; i < datas.length; i++) {
                 const data = datas[i];
                 const val = data[key];
-                if (val && isEqual ? Tools.trim(val) == Tools.trim(value) : regexp.test(val) && otherKeysFuc(data,i)) {
+                if (val && (isEqual ? Tools.trim(val) == Tools.trim(value) : regexp.test(val)) && otherKeysFuc(data, i)) {
                     result = { data, index: i };
                     break;
                 }
-                if(isBreakFuc())break;
+                if (isBreakFuc()) break;
             }
             return result;
         },
@@ -437,33 +437,33 @@
         },
         // key=value搜索phone[[key,value]]
         // searchAccountsByKeyValues: (arr = []) => {
-            // if (arr.length == 0) return alert('请输入[[key,value]]');
-            // // return;
-            // let phone_arr = [];
-            // for (let phone in DATA) {
-            //     const datas = DATA[phone];
-            //     let is = false;
-            //     arr.forEach(keyValue => {
-            //         const [key, value] = keyValue;
-            //         if (value && Tools.isKeyValueByDatas(datas, key, value)) {
-            //             is = true;
-            //         }
-            //     })
-            //     if (is) phone_arr.push(phone);
-            // }
-            // // 去重
-            // phone_arr = [...new Set(phone_arr)];
-            // return phone_arr;
+        // if (arr.length == 0) return alert('请输入[[key,value]]');
+        // // return;
+        // let phone_arr = [];
+        // for (let phone in DATA) {
+        //     const datas = DATA[phone];
+        //     let is = false;
+        //     arr.forEach(keyValue => {
+        //         const [key, value] = keyValue;
+        //         if (value && Tools.isKeyValueByDatas(datas, key, value)) {
+        //             is = true;
+        //         }
+        //     })
+        //     if (is) phone_arr.push(phone);
+        // }
+        // // 去重
+        // phone_arr = [...new Set(phone_arr)];
+        // return phone_arr;
         // },
         // 找到字段对应的account[[key,value]]
-        findAccountsBykeyValue: (arr=[], otherKeysFuc = () => true,isEqual,isBreakFuc) => {
+        findAccountsBykeyValue: (arr = [], otherKeysFuc = () => true, isEqual, isBreakFuc) => {
             if (arr.length == 0) return alert('请输入[[key,value]]');
             let phone_arr = [];
             for (let phone in DATA) {
                 const datas = DATA[phone];
-                for(let i =0;i<arr.length;i++){
+                for (let i = 0; i < arr.length; i++) {
                     const [key, value] = arr[i];
-                    if (value && Tools.isKeyValueByDatas(datas, key, value,isEqual,isBreakFuc,otherKeysFuc)) {
+                    if (value && Tools.isKeyValueByDatas(datas, key, value, isEqual, isBreakFuc, otherKeysFuc)) {
                         phone_arr.push(phone);
                         break;
                     }
@@ -520,15 +520,17 @@
             return arr = [...new Set(arr)];
         },
         // 展示数据
-        displayAccounts:(accounts,code=false)=>{
+        displayAccounts: (accounts, code = true,sort=true) => {
             // 排序
-            accounts.sort((a, b) => {
-                if (DATA[a].length>0 && DATA[b].length>0 && new Date(DATA[a][0].pig_over_time) > new Date(DATA[b][0].pig_over_time)) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            })
+            if(sort){
+                accounts.sort((a, b) => {
+                    if (DATA[a].length > 0 && DATA[b].length > 0 && new Date(DATA[a][0].pig_over_time) > new Date(DATA[b][0].pig_over_time)) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                })
+            }
             if (accounts.length == 0) return ['没有找到做单记录'];
             let dyStr = '';
             if (accounts.length > 5) {
@@ -539,18 +541,18 @@
             for (let i = 0; i < forLen; i++) {
                 phoneDatas.push(DATA[accounts[i]]);
             }
-            const table = getDataTable(phoneDatas,[{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>更新7天提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] );
+            const table = getDataTable(phoneDatas, [{ text: '更新7天提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }]);
             // 源码
             let str = phoneDatas.reduce((a, data, index) => {
                 return a + Tools.getCon(data) + (index <= phoneDatas.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
             }, '');
-            return [dyStr + table,code?str:''];
+            return [dyStr + table, code ? str : ''];
         },
         // 通过某个条件找到所有的数据并显示
-        displayAccountByKeyValue:(arr,otherKeysFuc,isBreakFuc=(data,i)=>i==0)=>{
-            const accounts = Tools.findAccountsBykeyValue(arr,otherKeysFuc,true,isBreakFuc);
+        displayAccountByKeyValue: (arr, otherKeysFuc, isBreakFuc = (data, i) => i == 0) => {
+            const accounts = Tools.findAccountsBykeyValue(arr, otherKeysFuc, true, isBreakFuc);
             // console.log(accounts,come_type);
-            
+
             return Tools.displayAccounts(accounts);
         },
         // 添加真实姓名
@@ -639,8 +641,8 @@
             return Tools.delKeyValue(account, 'wait', '1', undefined, undefined, false);
         },
         // 更新等待处理
-        updateWait:(account)=>{
-            return Tools.updateDataByAccount(account,{create_time:new Date().toLocaleString()},(data)=>{
+        updateWait: (account) => {
+            return Tools.updateDataByAccount(account, { create_time: new Date().toLocaleString() }, (data) => {
                 return data.wait;
             })
         },
@@ -654,12 +656,12 @@
             account.sort(function (a, b) {
                 const aData = DATA[a];
                 const bData = DATA[b];
-                const aWait = Tools.findKeysByDatas(aData,'wait', undefined, true);
+                const aWait = Tools.findKeysByDatas(aData, 'wait', undefined, true);
                 const bWait = Tools.findKeysByDatas(bData, 'wait', undefined, true);
                 // console.log(aWait[0]?.create_time,aWait[0].pig_phone,bWait[0]?.create_time,bWait[0].pig_phone)
-                if(new Date(aWait[0]?.create_time) < new Date(bWait[0]?.create_time)){
+                if (new Date(aWait[0]?.create_time) < new Date(bWait[0]?.create_time)) {
                     return -1;
-                }else{
+                } else {
                     return 1;
                 }
             })
@@ -697,7 +699,7 @@
             // 从做单渠道判断
             if (datas.length > 0 && datas[0].come_type) {
                 const commission = Tools.findComeType(datas[0].come_type)?.commission;
-                if(commission) return commission;
+                if (commission) return commission;
                 return 6;
                 // if (['pig'].includes(datas[0].come_type)) {
                 //     return 7;
@@ -849,13 +851,13 @@
         },
         // 找到所有qqs
         findQqsByDatas: (datas, qq) => {
-            const arr = [];
-            datas.forEach(data => {
-                if (data.pig_qq && data.pig_qq != qq && !arr.includes(data.pig_qq)) {
-                    arr.push(data.pig_qq);
-                }
-            })
-            return arr;
+            // const arr = [];
+            // datas.forEach(data => {
+            //     if (data.pig_qq && data.pig_qq != qq && !arr.includes(data.pig_qq)) {
+            //         arr.push(data.pig_qq);
+            //     }
+            // })
+            return Tools.findKeysByDatas(datas,'pig_qq').filter(q=>q!=qq);;
         },
         // 判断是否可删的联系方式
         // isDelContact: (data, key) => {
@@ -974,25 +976,32 @@
         },
         // 找到phone数据里面的note数据obj
         findNotesByDatas: (datas, pig_type = 'TB') => {
-            const arr = [];
-            datas.forEach(data => {
-                const obj = Tools.copyObj(data);
-                if (!obj.pig_type) obj.pig_type = 'TB';
-                if (obj.pig_type == pig_type && obj.pig_note) arr.push(obj);
-            })
-            return arr;
+            // const arr = [];
+            // datas.forEach(data => {
+            //     const obj = Tools.copyObj(data);
+            //     if (!obj.pig_type) obj.pig_type = 'TB';
+            //     if (obj.pig_type == pig_type && obj.pig_note) arr.push(obj);
+            // })
+            return Tools.findKeysByDatas(datas,'pig_note',(data,i)=>{
+                if(!data.pig_type){
+                    if(pig_type == 'TB')return true;
+                }else{
+                    if(data.pig_type == pig_type)return true;
+                }
+            },true);
         },
         // 通过账号给最后一个记录添加评论或者默认评论或者直接评论
-        lastAddCommentByPhone: (phone, is_comment = '1') => {
-            if (Tools.alertFuc({ phone, is_comment })) return false;
-            if (!DATA[phone]) {
-                alert('找不到对应的记录~')
-                return false;
-                // DATA[phone] = [];
-            }
-            DATA[phone][0].is_comment = is_comment;
-            storageData();
-            return true;
+        lastAddCommentByPhone: (account, is_comment = '1') => {
+            return Tools.updateDataByAccount(account,{is_comment},(data,i)=>i==0);
+            // if (Tools.alertFuc({ phone, is_comment })) return false;
+            // if (!DATA[phone]) {
+            //     alert('找不到对应的记录~')
+            //     return false;
+            //     // DATA[phone] = [];
+            // }
+            // DATA[phone][0].is_comment = is_comment;
+            // storageData();
+            // return true;
         },
         isTangId: (account) => {
             // 如果是8位纯数字
@@ -1117,6 +1126,7 @@
                 }
                 return false;
             });
+            // return Tools.findAccountsBykeyValue()
         },
         // 缩短记录
         getShortDatas: (datas, len) => {
@@ -1163,15 +1173,17 @@
             storageData();
         },
         // 修改最后一个记录
-        modifyDataToLastRecord: (phone, obj = {}) => {
-            Object.assign(DATA[phone][0], obj);
-            storageData();
-            return true;
+        modifyDataToLastRecord: (account, obj = {}) => {
+            return Tools.updateDataByAccount(account,obj,(data,i)=>i==0);
+            // Object.assign(DATA[phone][0], obj);
+            // storageData();
+            // return true;
         },
         // 不再提醒
-        noRemind: (phone) => {
-            DATA[phone][0].is_remind = '-1';
-            storageData();
+        noRemind: (account) => {
+            return Tools.updateDataByAccount(account,{is_remind:'-1'},(data,i)=>i==0);
+            // DATA[phone][0].is_remind = '-1';
+            // storageData();
         },
         // 通过keyword找到phone搜索范围qq,phone,note,ww
         findPhonesByKeyword: (keyword) => {
@@ -1248,7 +1260,7 @@
             return result;
         },
         //找到来自渠道
-        findComeType:(value)=>{
+        findComeType: (value) => {
             let result;
             COMETYPE.forEach(come_type => {
                 if (come_type.value == value) result = come_type;
@@ -1262,7 +1274,7 @@
             //     if (come_type.value == value) result = come_type.name;
             // })
             const name = Tools.findComeType(value)?.name;
-            return name?name:'';
+            return name ? name : '';
         },
         // 找到select的默认数据
         findDefaultValueBySelect: ($select) => {
@@ -1413,9 +1425,9 @@
         // 找到所有的wxs
         const wxs = Tools.findWxsByDatas(datas, true);
         // 找到分类做单数据
-        const order_type_datas ={};
-        ORDERTYPES.forEach(type=>{
-            order_type_datas[type]=formateDatasByPigType(datas,type);
+        const order_type_datas = {};
+        ORDERTYPES.forEach(type => {
+            order_type_datas[type] = formateDatasByPigType(datas, type);
         });
         return {
             phone: datas.length > 0 && datas[0].pig_phone,
@@ -1456,6 +1468,7 @@
     function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }], record_length = records.length) {
         // console.log(record_length);
         let trs = '';
+        // const defBtns = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }];
         records.forEach(datas => {
             let humanData = humanDatas(datas);
             console.log(humanData);
@@ -1465,17 +1478,17 @@
                 btnStr = btn;
             }
             if (Object.prototype.toString.call(btn) == '[object Object]') {
-                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0]?humanData.qqs[0]:''}" data-phone="${humanData.phone}" data-mobile="${humanData.mobiles[0]}" data-datas="${JSON.stringify(btn).replaceAll('"', "'")}">${btn.text}</a>`;
+                btnStr = `<a style="color:red;margin-left:10px;cursor:pointer;" class="${btn.className}" data-qq="${humanData.qqs[0] ? humanData.qqs[0] : ''}" data-phone="${humanData.phone}" data-mobile="${humanData.mobiles[0]}" data-datas="${JSON.stringify(btn).replaceAll('"', "'")}">${btn.text}</a>`;
             }
             if (Object.prototype.toString.call(btn) == '[object Array]') {
                 btnStr += '<div style="margin-top:10px;margin-right:-10px;">';
                 btn.forEach(bt => {
-                    btnStr += `<a style="color:red;margin-right:10px;cursor:pointer;" class="${bt.className}" data-qq="${humanData.qqs[0]?humanData.qqs[0]:''}" data-phone="${humanData.phone}" data-mobile="${humanData.mobiles[0]}" data-datas="${JSON.stringify(bt).replaceAll('"', "'")}">${bt.text}</a>`;
+                    btnStr += `<a style="color:red;margin-right:10px;cursor:pointer;" class="${bt.className}" data-qq="${humanData.qqs[0] ? humanData.qqs[0] : ''}" data-phone="${humanData.phone}" data-mobile="${humanData.mobiles[0]}" data-datas="${JSON.stringify(bt).replaceAll('"', "'")}">${bt.text}</a>`;
                 })
                 btnStr += '</div>';
             }
             trs += `
-            <tr>
+            <tr data-account="${humanData.phone}" data-mobile="${humanData.mobiles[0]}">
                 <td>
                     ${humanData.commission ? `<p style="color:darkturquoise;font-size:25px;">+${humanData.commission}</p>` : ''}
                     <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
@@ -1503,38 +1516,38 @@
                         <tbody>
                             <tr>
                                 <th></th>
-                                ${ORDERTYPES.map(type=>`<th>${type}</th>`).join('')}
+                                ${ORDERTYPES.map(type => `<th>${type}</th>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单渠道</td>
-                                ${ORDERTYPES.map(type=>`<td style="color:gray;">${Tools.findNameByComeTypeValue(humanData.typeDatas[type].record_come_type)}</td>`).join('')}
+                                ${ORDERTYPES.map(type => `<td style="color:gray;">${Tools.findNameByComeTypeValue(humanData.typeDatas[type].record_come_type)}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单渠道号</td>
-                                ${ORDERTYPES.map(type=>`<td style="color:${humanData.typeDatas[type].record_color}">${humanData.typeDatas[type].record_qq}</td>`).join('')}
+                                ${ORDERTYPES.map(type => `<td style="color:${humanData.typeDatas[type].record_color}">${humanData.typeDatas[type].record_qq}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单日期</td>
-                                ${ORDERTYPES.map(type=>`<td style="color:red;">${humanData.typeDatas[type].record_time}</td>`).join('')}
+                                ${ORDERTYPES.map(type => `<td style="color:red;">${humanData.typeDatas[type].record_time}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>已做单数量</td>
-                                ${ORDERTYPES.map(type=>`<td style="color: rgb(16, 0, 255);">${humanData.typeDatas[type].record_num}</td>`).join('')}
+                                ${ORDERTYPES.map(type => `<td style="color: rgb(16, 0, 255);">${humanData.typeDatas[type].record_num}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td style="min-width:86px;">做单店铺顺序</td>
-                                ${ORDERTYPES.map(type=>`<td style="max-width:170px;padding:10px;">${humanData.typeDatas[type].record_shop_labels || ''}</td>`).join('')}
+                                ${ORDERTYPES.map(type => `<td style="max-width:170px;padding:10px;">${humanData.typeDatas[type].record_shop_labels || ''}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近评论状态</td>
-                                ${ORDERTYPES.map(type=>`<td>${humanData.typeDatas[type].record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas[type].record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas[type].record_comment || ''}</td>`).join('')}
+                                ${ORDERTYPES.map(type => `<td>${humanData.typeDatas[type].record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas[type].record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas[type].record_comment || ''}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>备注</td>
-                                ${ORDERTYPES.map(type=>`<td style="color:red;">
+                                ${ORDERTYPES.map(type => `<td style="color:red;">
                                 ${humanData.typeDatas[type].notes.reduce((a, b) => {
-            return a + `<p>${b}</p>`;
-        }, '')}
+                return a + `<p>${b}</p>`;
+            }, '')}
                             </td>`).join('')}
                                 </td>
                             </tr>
@@ -1545,6 +1558,10 @@
                 ${humanData.register_time || ''}
                 ${humanData.tang_register_time ? `<p style="margin-top:15px; color:red;">唐人注册时间：</p><p>${humanData.tang_register_time}</p>` : ''}
                 ${humanData.is_wait ? `<p style="margin-top:15px; color:violet; "><span style="cursor:pointer;" class="j-wait-del" data-account="${humanData.phone}">待处理</span><span style="cursor:pointer; margin-left:10px;" class="j-wait-update" data-account="${humanData.phone}">更新处理</span></p>` : ''}
+                    <div style="margin-top:10px;">
+                        <a style="color:red;margin-right:10px;cursor:pointer;" class="j-addComment" data-val="1">标注已评价</a>
+                        <a style="color:red;margin-right:10px;cursor:pointer;" class="j-addComment" data-val="-1">标注默认评价</a>
+                    </div>
                 </td>
             </tr>
             `
@@ -1679,7 +1696,7 @@
                         <span class="gray">2：</span><select class="search_input j-screen-time"><option value="1" selected>筛选正序</option><option value="-1">筛选逆序</option></select>
                         <span class="gray">3：</span><input class="search_input j-search-time" placeholder="搜索时间" value="2023-04-01" type="date" />
                         <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
-                        <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type=>`<option value="${type}">${type}</option>`)}</select>
+                        <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type => `<option value="${type}">${type}</option>`)}</select>
                         <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                         <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`).join('')}</select>
                         <button class="search_btn reb j-come-type-search" style="">提醒唐人做单（<span>0</span>）</button>
@@ -2352,7 +2369,7 @@
             }
         }, '.j-wait-update')
         // 筛选待处理个数
-        function getAccountByWait(){
+        function getAccountByWait() {
             const accounts = Tools.findAccountsByWait();
             qqAdd.querySelector('.j-wait-search span').textContent = accounts.length;
             return accounts;
@@ -2367,7 +2384,7 @@
             // } else {
             //     setCon(['没有找到列表'])
             // }
-            setCon(Tools.displayAccounts(getAccountByWait()));
+            setCon(Tools.displayAccounts(getAccountByWait(),undefined,false));
         }, '.j-wait-search')
         // 团队的添加
         addEventListener(qqAdd, 'click', e => {
@@ -2652,7 +2669,7 @@
             const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
             $btn.textContent = '已去除';
             $btn.style.color = 'gray';
-            copyToClipboard(qq?qq:mobile);
+            copyToClipboard(qq ? qq : mobile);
             switch (datas.type) {
                 case 'order_reminder':
                     RDATA.addOrderReminder(phone);
@@ -2665,7 +2682,7 @@
                     break;
             }
             // 填写qq
-            $byQQ.value = qq?qq:phone;
+            $byQQ.value = qq ? qq : phone;
             // 触发更新
             var event = new Event('input', {
                 bubbles: true,
@@ -2825,41 +2842,40 @@
             // const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
             // setCon([dyStr + table]);
 
-            setCon(Tools.displayAccountByKeyValue([['shop_label',shop_label]],(data,i)=>{
+            setCon(Tools.displayAccountByKeyValue([['shop_label', shop_label]], (data, i) => {
                 if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
                     return true;
-                }           
-            },(data,i)=>i==0))
+                }
+            }, (data, i) => i == 0))
         }, false)
-        function getComeTypeByTang(){
-            const accounts = Tools.findAccountsBykeyValue([['qq_exec_pre','tang']],(data,i)=>{
+        function getComeTypeByTang() {
+            const accounts = Tools.findAccountsBykeyValue([['qq_exec_pre', 'tang']], (data, i) => {
                 // console.log(data);
                 // 距离现在有20天
                 const account = data.pig_phone;
                 let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
-                if(new Date(data.pig_over_time)<= endTime && !RDATA.isExist(account,'comment_reminder'))return true;
-            },true,(data,i)=>i==0);
-            qqAdd.querySelector('.j-come-type-search span').textContent= accounts.length;
+                // console.log(account,!RDATA.isExist(account,'comment_reminder'),new Date(data.pig_over_time)<= endTime)
+                if (new Date(data.pig_over_time) <= endTime && !RDATA.isExist(account, 'comment_reminder')) return true;
+            }, true, (data, i) => i == 0);
+            qqAdd.querySelector('.j-come-type-search span').textContent = accounts.length;
             return accounts;
         }
         requestAnimationFrame(getComeTypeByTang);
         // 提醒唐人做单
-        addEventListener(qqAdd,'click',e=>{
+        addEventListener(qqAdd, 'click', e => {
             // const come_type = $comeType.value;
             setCon(Tools.displayAccounts(getComeTypeByTang()));
-        },'.j-come-type-search')
+        }, '.j-come-type-search')
         // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {
             const $btn = e.target;
-            const $parent = $btn.parentNode;
-            // const qq = $btn.getAttribute('data-qq');
-            // console.log($btn.getAttribute('data-datas'));
-            const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
-            const phone = $btn.getAttribute('data-phone');
-            $btn.textContent = datas.texted;
+            const $tr = $btn.closest('tr');
+            // const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
+            const account = $tr.getAttribute('data-account');
+            const val = $btn.getAttribute('data-val');
+            $btn.textContent = (val=='1'?'已评价':'已默认评价');
             $btn.style.color = 'gray';
-            // console.log(qq,phone);
-            Tools.lastAddCommentByPhone(phone, datas.val);
+            Tools.lastAddCommentByPhone(account, val);
         }, '.j-addComment')
         // 修改最后一个做单记录
         addEventListener(qqAdd, 'click', e => {
@@ -2912,7 +2928,7 @@
                 Tools.addRecordBtn(phone, qqAdd.querySelector('.j-add-record-btn'), undefined, qq, mobile);
                 return;
             }
-            setCon(Tools.displayAccounts(arr,true))
+            setCon(Tools.displayAccounts(arr, true))
             // 判断是否有一个qq多个账号的情况存在
             // console.log(arr);
             // if (arr.length === 1) {
@@ -2936,19 +2952,19 @@
             const real_name = $gNote.value;
             const ww = $ww.value;
             const search_arr = [];
-            function zhh(key,value){
+            function zhh(key, value) {
                 const arr = [];
-                if(value.includes(',')){
-                    value.split(',').forEach(val=>{
-                        arr.push([key,val]);
+                if (value.includes(',')) {
+                    value.split(',').forEach(val => {
+                        arr.push([key, val]);
                     })
-                }else{
-                    arr.push([key,value]);
+                } else {
+                    arr.push([key, value]);
                 }
                 return arr;
             }
-            const arr = Tools.findAccountsBykeyValue([...zhh('ww_exec',ww), ...zhh('real_name',real_name)],undefined,false);
-            setCon(Tools.displayAccounts(arr,true));
+            const arr = Tools.findAccountsBykeyValue([...zhh('ww_exec', ww), ...zhh('real_name', real_name)], undefined, false);
+            setCon(Tools.displayAccounts(arr, true));
             // if (arr.length == 0) return setCon(['没找到做单记录']);
             // // 判断是否有一个qq多个账号的情况存在
             // // console.log(arr);
