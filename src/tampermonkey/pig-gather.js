@@ -503,11 +503,14 @@
         updateDataByAccount: (pig_phone, valueObj = {}, judgeFuc = (data) => { return false; }) => {
             if (Tools.alertFuc({ pig_phone })) return false;
             const datas = DATA[pig_phone];
-            datas.forEach((data, index) => {
-                if (judgeFuc(data, index)) {
-                    Object.assign(DATA[pig_phone][index], valueObj);
+            for(let i = 0;i<datas.length;i++){
+                const data = datas[i];
+                const result = judgeFuc(data, i);
+                if (result) {
+                    Object.assign(DATA[pig_phone][i], valueObj);
                 }
-            })
+                if(result == 'break')break;
+            }
             storageData();
             return true;
         },
@@ -523,7 +526,7 @@
             return arr = [...new Set(arr)];
         },
         // 展示数据
-        displayAccounts: (accounts, code = true,sort=true) => {
+        displayAccounts: (accounts, code = true,sort=true, btns = false) => {
             // 排序
             if(sort){
                 accounts.sort((a, b) => {
@@ -544,7 +547,7 @@
             for (let i = 0; i < forLen; i++) {
                 phoneDatas.push(DATA[accounts[i]]);
             }
-            const table = getDataTable(phoneDatas, [{ text: '更新7天提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }]);
+            const table = getDataTable(phoneDatas, typeof btns == 'boolean'?btns?[{ text: '更新7天提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }]:[]:btns);
             // 源码
             let str = phoneDatas.reduce((a, data, index) => {
                 return a + Tools.getCon(data) + (index <= phoneDatas.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
@@ -556,7 +559,7 @@
             const accounts = Tools.findAccountsBykeyValue(arr, otherKeysFuc, true, isBreakFuc);
             // console.log(accounts,come_type);
 
-            return Tools.displayAccounts(accounts);
+            return Tools.displayAccounts(accounts,undefined,undefined,true);
         },
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
@@ -994,8 +997,12 @@
             },true);
         },
         // 通过账号给最后一个记录添加评论或者默认评论或者直接评论
-        lastAddCommentByPhone: (account, is_comment = '1') => {
-            return Tools.updateDataByAccount(account,{is_comment},(data,i)=>i==0);
+        lastAddCommentByPhone: (account, is_comment = '1',pig_type) => {
+            return Tools.updateDataByAccount(account,{is_comment},(data,i)=>{
+                if(data.pig_type==pig_type){
+                    return 'break';
+                }
+            });
             // if (Tools.alertFuc({ phone, is_comment })) return false;
             // if (!DATA[phone]) {
             //     alert('找不到对应的记录~')
@@ -1543,7 +1550,7 @@
                             </tr>
                             <tr>
                                 <td>最近评论状态</td>
-                                ${ORDERTYPES.map(type => `<td>${humanData.typeDatas[type].record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas[type].record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas[type].record_comment || ''}</td>`).join('')}
+                                ${ORDERTYPES.map(type => `<td>${humanData.typeDatas[type].record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas[type].record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas[type].record_comment || `<a style="color:cadetblue;margin-right:10px;cursor:pointer;" class="j-addComment" data-val="1" data-type="${type}">标注已评价</a><a style="color:cadetblue;cursor:pointer;" class="j-addComment" data-val="-1" data-type="${type}">标注默认评价</a>`}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>备注</td>
@@ -1561,10 +1568,6 @@
                 ${humanData.register_time || ''}
                 ${humanData.tang_register_time ? `<p style="margin-top:15px; color:red;">唐人注册时间：</p><p>${humanData.tang_register_time}</p>` : ''}
                 ${humanData.is_wait ? `<p style="margin-top:15px; color:violet; "><span style="cursor:pointer;" class="j-wait-del" data-account="${humanData.phone}">待处理</span><span style="cursor:pointer; margin-left:10px;" class="j-wait-update" data-account="${humanData.phone}">更新处理</span></p>` : ''}
-                    <div style="margin-top:10px;">
-                        <a style="color:red;margin-right:10px;cursor:pointer;" class="j-addComment" data-val="1">标注已评价</a>
-                        <a style="color:red;margin-right:10px;cursor:pointer;" class="j-addComment" data-val="-1">标注默认评价</a>
-                    </div>
                 </td>
             </tr>
             `
@@ -1771,7 +1774,7 @@
         // qq改变后填充phone和旺旺和wx和真实姓名
         $byQQ.addEventListener('input', Tools.throttle(e => {
             const qq = $byQQ.value;
-            const phones = Tools.almightySearch([qq]);
+            let phones = Tools.almightySearch([qq]);
             const come_type_default = Tools.findDefaultValueBySelect($comeType);
             const qq_exec_pre_default = Tools.findDefaultValueBySelect($qqExecPre);
             if (phones.length == 0) {
@@ -1797,7 +1800,19 @@
                 $tangIdIpt.value = '';
                 $registerTime.value = '';
                 $modifyCodeIpt.value = '';
-                return $phone.value = '有多个账号';
+                // 判断是否有黑名单的出现
+                const accounts = phones.filter(account=>{
+                    const datas = DATA[account];
+                    if(JSON.stringify(datas).includes('黑名单') || JSON.stringify(datas).includes('拉黑')){
+                        return false;
+                    }
+                    return true;
+                })
+                if(accounts.length>1){
+                    return $phone.value = '有多个账号';
+                }else{
+                    phones = accounts;
+                }
             }
             const phone = phones[0];
             $phone.value = phone;
@@ -2867,18 +2882,19 @@
         // 提醒唐人做单
         addEventListener(qqAdd, 'click', e => {
             // const come_type = $comeType.value;
-            setCon(Tools.displayAccounts(getComeTypeByTang()));
+            setCon(Tools.displayAccounts(getComeTypeByTang(),undefined,undefined,true));
         }, '.j-come-type-search')
         // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {
             const $btn = e.target;
-            const $tr = $btn.closest('tr');
+            const $tr = $btn.closest('tr[data-account]');
             // const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
             const account = $tr.getAttribute('data-account');
             const val = $btn.getAttribute('data-val');
+            const pig_type = $btn.getAttribute('data-type');
             $btn.textContent = (val=='1'?'已评价':'已默认评价');
             $btn.style.color = 'gray';
-            Tools.lastAddCommentByPhone(account, val);
+            Tools.lastAddCommentByPhone(account, val,pig_type);
         }, '.j-addComment')
         // 修改最后一个做单记录
         addEventListener(qqAdd, 'click', e => {
