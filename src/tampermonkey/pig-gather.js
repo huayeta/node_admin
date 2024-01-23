@@ -526,7 +526,7 @@
             return arr = [...new Set(arr)];
         },
         // 展示数据
-        displayAccounts: (accounts, code = true,sort=true, btns = false) => {
+        displayAccounts: (accounts, code = true,sort=true, btns = false,max=5) => {
             // 排序
             if(sort){
                 accounts.sort((a, b) => {
@@ -539,11 +539,11 @@
             }
             if (accounts.length == 0) return ['没有找到做单记录'];
             let dyStr = '';
-            if (accounts.length > 5) {
+            if (accounts.length > max) {
                 dyStr += `<div style="margin-bottom: 10px; color:gray;text-align: center">....还剩下<span style="color:red;">${accounts.length - 5}</span>个.....</div>`
             }
             const phoneDatas = [];
-            const forLen = accounts.length < 5 ? accounts.length : 5;
+            const forLen = accounts.length < max ? accounts.length : max;
             for (let i = 0; i < forLen; i++) {
                 phoneDatas.push(DATA[accounts[i]]);
             }
@@ -2947,7 +2947,7 @@
                 Tools.addRecordBtn(phone, qqAdd.querySelector('.j-add-record-btn'), undefined, qq, mobile);
                 return;
             }
-            setCon(Tools.displayAccounts(arr, true))
+            setCon(Tools.displayAccounts(arr, true,undefined,undefined,arr.length))
             // 判断是否有一个qq多个账号的情况存在
             // console.log(arr);
             // if (arr.length === 1) {
@@ -2983,7 +2983,7 @@
                 return arr;
             }
             const arr = Tools.findAccountsBykeyValue([...zhh('ww_exec', ww), ...zhh('real_name', real_name)], undefined, false);
-            setCon(Tools.displayAccounts(arr, true));
+            setCon(Tools.displayAccounts(arr, true,undefined,undefined,arr.length));
             // if (arr.length == 0) return setCon(['没找到做单记录']);
             // // 判断是否有一个qq多个账号的情况存在
             // // console.log(arr);
