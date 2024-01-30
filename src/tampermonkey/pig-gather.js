@@ -122,8 +122,8 @@
         'ft': {
             text: '斐婷总监'
         },
-        'bb':{
-            text:'彬彬'
+        'bb': {
+            text: '彬彬'
         }
     };
     const ORDERTYPES = ['TB'];
@@ -328,6 +328,15 @@
             str = str.trim();
             return str;
         },
+        highLightStr: (string, str) => {
+            if (!str) return string;
+            // console.log(str);
+            const reg = new RegExp(str, 'g');
+            return string.replaceAll(reg, function (match) {
+                // console.log(match);
+                return `<span style="background:yellow;">${match}</span>`;
+            })
+        },
         // 删除DATA的整个记录data
         deleteData: (pig_phone) => {
             if (Tools.alertFuc({ pig_phone })) return false;
@@ -414,7 +423,7 @@
                 return string.replace(/[.*+?^${}()|[\]\\]/g, '\$&'); // $& 表示匹配的内容
             }
             // 自动转义特殊字符
-            const escapedValue = escapeRegExp(value).replaceAll(/\*{1,}/g,'.');
+            const escapedValue = escapeRegExp(value).replaceAll(/\*{1,}/g, '.');
             // 创建正则表达式
             const regexp = new RegExp(escapedValue);
             // console.log(regexp,escapedValue);
@@ -500,16 +509,16 @@
             // return results;
         },
         // 修改data
-        updateDataByAccount: (pig_phone, valueObj = {}, judgeFuc = (data) => { return false; }) => {
+        updateDataByAccount: (pig_phone, valueObj = {}, judgeFuc = () => { return false; }) => {
             if (Tools.alertFuc({ pig_phone })) return false;
             const datas = DATA[pig_phone];
-            for(let i = 0;i<datas.length;i++){
+            for (let i = 0; i < datas.length; i++) {
                 const data = datas[i];
                 const result = judgeFuc(data, i);
                 if (result) {
                     Object.assign(DATA[pig_phone][i], valueObj);
                 }
-                if(result == 'break')break;
+                if (result == 'break') break;
             }
             storageData();
             return true;
@@ -517,18 +526,26 @@
         // 通过datas找到所有的keys=data[] | string[]
         findKeysByDatas: (datas, key, otherJudge = () => true, is_complete = false) => {
             let arr = [];
-            datas.forEach(data => {
-                if (data[key] && otherJudge(data)) {
+            for (let i = 0; i < datas.length; i++) {
+                const data = datas[i];
+                const result = otherJudge(data, i);
+                if (data[key] && result) {
                     arr.push(is_complete ? data : data[key]);
+                    if (result === 'break') break;
                 }
-            })
+            }
+            // datas.forEach((data,index) => {
+            //     if (data[key] && otherJudge(data,index)) {
+            //         arr.push(is_complete ? data : data[key]);
+            //     }
+            // })
             // 去重
             return arr = [...new Set(arr)];
         },
         // 展示数据
-        displayAccounts: (accounts, code = true,sort=true, btns = false,max=5) => {
+        displayAccounts: (accounts, code = true, sort = true, btns = false, max = 5, highLightStr) => {
             // 排序
-            if(sort){
+            if (sort) {
                 accounts.sort((a, b) => {
                     if (DATA[a].length > 0 && DATA[b].length > 0 && new Date(DATA[a][0].pig_over_time) > new Date(DATA[b][0].pig_over_time)) {
                         return 1;
@@ -547,7 +564,7 @@
             for (let i = 0; i < forLen; i++) {
                 phoneDatas.push(DATA[accounts[i]]);
             }
-            const table = getDataTable(phoneDatas, typeof btns == 'boolean'?btns?[{ text: '更新7天提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }]:[]:btns);
+            const table = getDataTable(phoneDatas, typeof btns == 'boolean' ? btns ? [{ text: '更新7天提醒', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : [] : btns, undefined, highLightStr);
             // 源码
             let str = phoneDatas.reduce((a, data, index) => {
                 return a + Tools.getCon(data) + (index <= phoneDatas.length - 2 ? '<div style="border-top:1px dashed #c2b7cd; margin: 10px 0;"></div>' : '');
@@ -559,7 +576,7 @@
             const accounts = Tools.findAccountsBykeyValue(arr, otherKeysFuc, true, isBreakFuc);
             // console.log(accounts,come_type);
 
-            return Tools.displayAccounts(accounts,undefined,undefined,true);
+            return Tools.displayAccounts(accounts, undefined, undefined, true);
         },
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
@@ -783,15 +800,22 @@
         delWW: (pig_phone, ww_exec) => {
             return Tools.delKeyValue(pig_phone, 'ww_exec', ww_exec);
         },
-        // 添加倒数第二个旺旺号
-        addWWBackSecond: (pig_phone, ww_exec) => {
+        // 添加第二个旺旺号
+        addWWBackFirst: (pig_phone, ww_exec) => {
             const datas = DATA[pig_phone];
-            let second;
-            for (let index in datas) {
-                const data = datas[index];
-                if (data.ww_exec) second = index;
+            let first;
+            for (let i = 0; i < datas.length; i++) {
+                const data = datas[i];
+                if (data.ww_exec) {
+                    first = i;
+                    break;
+                }
             }
-            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec, undefined, undefined, second);
+            // for (let index in datas) {
+            //     const data = datas[index];
+            //     if (data.ww_exec) first = index;
+            // }
+            return Tools.addKeyValue(pig_phone, 'ww_exec', ww_exec, undefined, undefined, first);
         },
         // 通过旺旺找到phones
         findPhonesByWW: (ww_exec) => {
@@ -863,7 +887,7 @@
             //         arr.push(data.pig_qq);
             //     }
             // })
-            return Tools.findKeysByDatas(datas,'pig_qq').filter(q=>q!=qq);;
+            return Tools.findKeysByDatas(datas, 'pig_qq').filter(q => q != qq);;
         },
         // 判断是否可删的联系方式
         // isDelContact: (data, key) => {
@@ -988,18 +1012,18 @@
             //     if (!obj.pig_type) obj.pig_type = 'TB';
             //     if (obj.pig_type == pig_type && obj.pig_note) arr.push(obj);
             // })
-            return Tools.findKeysByDatas(datas,'pig_note',(data,i)=>{
-                if(!data.pig_type){
-                    if(pig_type == 'TB')return true;
-                }else{
-                    if(data.pig_type == pig_type)return true;
+            return Tools.findKeysByDatas(datas, 'pig_note', (data, i) => {
+                if (!data.pig_type) {
+                    if (pig_type == 'TB') return true;
+                } else {
+                    if (data.pig_type == pig_type) return true;
                 }
-            },true);
+            }, true);
         },
         // 通过账号给最后一个记录添加评论或者默认评论或者直接评论
-        lastAddCommentByPhone: (account, is_comment = '1',pig_type) => {
-            return Tools.updateDataByAccount(account,{is_comment},(data,i)=>{
-                if(data.pig_type==pig_type){
+        lastAddCommentByPhone: (account, is_comment = '1', pig_type) => {
+            return Tools.updateDataByAccount(account, { is_comment }, (data, i) => {
+                if (data.pig_type == pig_type) {
                     return 'break';
                 }
             });
@@ -1184,14 +1208,14 @@
         },
         // 修改最后一个记录
         modifyDataToLastRecord: (account, obj = {}) => {
-            return Tools.updateDataByAccount(account,obj,(data,i)=>i==0);
+            return Tools.updateDataByAccount(account, obj, (data, i) => i == 0);
             // Object.assign(DATA[phone][0], obj);
             // storageData();
             // return true;
         },
         // 不再提醒
         noRemind: (account) => {
-            return Tools.updateDataByAccount(account,{is_remind:'-1'},(data,i)=>i==0);
+            return Tools.updateDataByAccount(account, { is_remind: '-1' }, (data, i) => i == 0);
             // DATA[phone][0].is_remind = '-1';
             // storageData();
         },
@@ -1429,9 +1453,9 @@
         }
         // 找到旺旺账号obj
         const wws = Tools.findWwsByDatas(datas, true);
-        const wws_html = wws.reduce((a, b) => {
-            return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
-        }, '');
+        // const wws_html = wws.reduce((a, b) => {
+        //     return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${b.ww_exec}</p>`);
+        // }, '');
         // 找到所有的wxs
         const wxs = Tools.findWxsByDatas(datas, true);
         // 找到分类做单数据
@@ -1460,7 +1484,6 @@
             mobiles: mobiles,
             wwExecs: wws.map(ww => ww.ww_exec),
             wws: wws,
-            wws_html: wws_html,
             wxs: wxs,
             wx_names: wx_names,
             remind_texts, remind_texts,
@@ -1475,7 +1498,7 @@
         return str;
     }
     // 得到做单的trs
-    function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }], record_length = records.length) {
+    function getDataTable(records, btn = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }], record_length = records.length, highLightStr = '') {
         // console.log(record_length);
         let trs = '';
         // const defBtns = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }];
@@ -1501,24 +1524,26 @@
             <tr data-account="${humanData.phone}" data-mobile="${humanData.mobiles[0]}">
                 <td>
                     ${humanData.commission ? `<p style="color:darkturquoise;font-size:25px;">+${humanData.commission}</p>` : ''}
-                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${humanData.phone}</span>${btnStr}</p>
+                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${Tools.highLightStr(humanData.phone, highLightStr)}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
                     ${humanData.teamers.length > 0 ? `<p style="margin-top:15px; color:blue;">属于团队：${humanData.teamers.map(teamer => TEAMERS[teamer].text)}</p>` : ''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
-                return a + `<p class="j-copyText">${b}</p>`;
+                return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}
                 ${humanData.wxs.length > 0 ? `<p style="margin-top:15px; color:red;">全部wx号：</p>${humanData.wxs.reduce((a, b) => {
-                return a + `<p class="j-copyText">${b}</p>`;
+                return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}` : ''}
                 ${humanData.mobiles.length > 0 ? `<p style="margin-top:15px; color:red;">全部mobiles号：</p>${humanData.mobiles.reduce((a, b) => {
-                return a + `<p class="j-copyText">${b}</p>`;
+                return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}` : ''}
                 </td>
                 <td style="color:red;">
-                    ${humanData.wws_html}
+                    ${humanData.wws.reduce((a, b) => {
+                return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</p>`);
+            }, '')}
                 </td>
                 <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>
                 <td>
@@ -1556,7 +1581,7 @@
                                 <td>备注</td>
                                 ${ORDERTYPES.map(type => `<td style="color:red;">
                                 ${humanData.typeDatas[type].notes.reduce((a, b) => {
-                return a + `<p>${b}</p>`;
+                return a + `<p>${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}
                             </td>`).join('')}
                                 </td>
@@ -1646,7 +1671,7 @@
                     <button class="search_btn red j-mobile-del" data-key="wx" style="margin-left:10px;">删除mobile</button>
                     <input class="search_input j-ww-exec" placeholder="旺旺号" style="margin-left:10px;" /> <button class="search_btn j-ww-add
                     " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red j-ww-del">删除旺旺号</button>
-                    <button class="search_btn j-ww-add-back-second" style="margin-left:10px;">添加倒数旺旺号</button>
+                    <button class="search_btn j-ww-add-back-second" style="margin-left:10px;">前面添加旺旺号</button>
                     <input class="search_input j-tang-id" type="text" placeholder="唐人id" style="margin-left:10px;width:80px;" />
                     <button class="search_btn j-tang-id-add" style="margin-left:10px;">添加唐人id</button>
                     <button class="search_btn reb j-wait-add" style="margin-left:10px;">添加待处理</button>
@@ -1801,16 +1826,16 @@
                 $registerTime.value = '';
                 $modifyCodeIpt.value = '';
                 // 判断是否有黑名单的出现
-                const accounts = phones.filter(account=>{
+                const accounts = phones.filter(account => {
                     const datas = DATA[account];
-                    if(JSON.stringify(datas).includes('黑名单') || JSON.stringify(datas).includes('拉黑')){
+                    if (JSON.stringify(datas).includes('黑名单') || JSON.stringify(datas).includes('拉黑')) {
                         return false;
                     }
                     return true;
                 })
-                if(accounts.length>1){
+                if (accounts.length > 1) {
                     return $phone.value = '有多个账号';
-                }else{
+                } else {
                     phones = accounts;
                 }
             }
@@ -2402,7 +2427,7 @@
             // } else {
             //     setCon(['没有找到列表'])
             // }
-            setCon(Tools.displayAccounts(getAccountByWait(),undefined,false));
+            setCon(Tools.displayAccounts(getAccountByWait(), undefined, false));
         }, '.j-wait-search')
         // 团队的添加
         addEventListener(qqAdd, 'click', e => {
@@ -2464,7 +2489,7 @@
         qqAdd.querySelector('.j-ww-add-back-second').addEventListener('click', e => {
             const wwId = $ww.value;
             const phone = $phone.value;
-            const result = Tools.addWWBackSecond(phone, wwId);
+            const result = Tools.addWWBackFirst(phone, wwId);
             if (result) alert('添加旺旺成功');
         }, false)
         // 标注评价
@@ -2871,7 +2896,7 @@
                 // console.log(data);
                 // 距离现在有20天
                 const account = data.pig_phone;
-                let endTime = new Date(new Date().getTime() - 20 * 24 * 60 * 60 * 1000);
+                let endTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
                 // console.log(account,!RDATA.isExist(account,'comment_reminder'),new Date(data.pig_over_time)<= endTime)
                 if (new Date(data.pig_over_time) <= endTime && !RDATA.isExist(account, 'comment_reminder')) return true;
             }, true, (data, i) => i == 0);
@@ -2882,7 +2907,7 @@
         // 提醒唐人做单
         addEventListener(qqAdd, 'click', e => {
             // const come_type = $comeType.value;
-            setCon(Tools.displayAccounts(getComeTypeByTang(),undefined,undefined,true));
+            setCon(Tools.displayAccounts(getComeTypeByTang(), undefined, undefined, true));
         }, '.j-come-type-search')
         // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {
@@ -2892,9 +2917,9 @@
             const account = $tr.getAttribute('data-account');
             const val = $btn.getAttribute('data-val');
             const pig_type = $btn.getAttribute('data-type');
-            $btn.textContent = (val=='1'?'已评价':'已默认评价');
+            $btn.textContent = (val == '1' ? '已评价' : '已默认评价');
             $btn.style.color = 'gray';
-            Tools.lastAddCommentByPhone(account, val,pig_type);
+            Tools.lastAddCommentByPhone(account, val, pig_type);
         }, '.j-addComment')
         // 修改最后一个做单记录
         addEventListener(qqAdd, 'click', e => {
@@ -2947,7 +2972,7 @@
                 Tools.addRecordBtn(phone, qqAdd.querySelector('.j-add-record-btn'), undefined, qq, mobile);
                 return;
             }
-            setCon(Tools.displayAccounts(arr, true,undefined,undefined,arr.length))
+            setCon(Tools.displayAccounts(arr, true, undefined, undefined, arr.length, qq))
             // 判断是否有一个qq多个账号的情况存在
             // console.log(arr);
             // if (arr.length === 1) {
@@ -2983,7 +3008,7 @@
                 return arr;
             }
             const arr = Tools.findAccountsBykeyValue([...zhh('ww_exec', ww), ...zhh('real_name', real_name)], undefined, false);
-            setCon(Tools.displayAccounts(arr, true,undefined,undefined,arr.length));
+            setCon(Tools.displayAccounts(arr, true, undefined, undefined, arr.length));
             // if (arr.length == 0) return setCon(['没找到做单记录']);
             // // 判断是否有一个qq多个账号的情况存在
             // // console.log(arr);
