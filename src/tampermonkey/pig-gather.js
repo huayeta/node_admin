@@ -435,7 +435,7 @@
                     result = { data, index: i };
                     break;
                 }
-                if (isBreakFuc()) break;
+                if (isBreakFuc(data,i)) break;
             }
             return result;
         },
@@ -2897,7 +2897,7 @@
                 // 距离现在有20天
                 const account = data.pig_phone;
                 let endTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
-                // console.log(account,!RDATA.isExist(account,'comment_reminder'),new Date(data.pig_over_time)<= endTime)
+                // console.log(account,!RDATA.isExist(account,'comment_reminder'),new Date(data.pig_over_time)<= endTime,data.pig_over_time)
                 if (new Date(data.pig_over_time) <= endTime && !RDATA.isExist(account, 'comment_reminder')) return true;
             }, true, (data, i) => i == 0);
             qqAdd.querySelector('.j-come-type-search span').textContent = accounts.length;
