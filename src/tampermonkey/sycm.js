@@ -67,6 +67,8 @@
         const $trs = document.querySelectorAll('.el-table__row');
         // alert($trs.length);
         $trs.forEach(($tr, index) => {
+            if($tr.getAttribute('get-data'))return;
+            $tr.setAttribute('get-data','1');
             // 搜索的人
             const ss = $tr.querySelector('td:nth-child(5)');
             // 点击人数
