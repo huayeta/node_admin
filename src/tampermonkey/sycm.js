@@ -82,13 +82,13 @@
             // 转换搜索人数指数
             myFetch(ss.textContent, ssrs => {
                 const $span = document.createElement('span');
-                $span.style = 'color:red;display:block;';
+                $span.style = 'color:red;display:block;white-space: nowrap;';
                 $span.textContent = `搜索人数：${ssrs}`;
                 ss.querySelector('.cell').appendChild($span);
                 // 转换点击人数指数
                 myFetch(rq.textContent, rs => {
                     const $span = document.createElement('span');
-                    $span.style = 'color:red;display:block;';
+                    $span.style = 'color:red;display:block;white-space: nowrap;';
                     $span.textContent = `点进来人：${rs}`;
                     rq.querySelector('.cell').appendChild($span);
                     // 转换交易金额指数
@@ -99,7 +99,7 @@
                         const jzd = (zxsp/ssrs*100).toFixed(2);
 
                         const $span = document.createElement('span');
-                        $span.style = 'color:red;display:block;';
+                        $span.style = 'color:red;display:block;white-space: nowrap;';
                         $span.innerHTML = `<p>交易金额：${res}</p><p>支付人数：${num}</p><p>商品竞争度：${jzd}</p>`;
                         jy.style.overflow ='visible';
                         const $jyCell = jy.querySelector('.cell');
