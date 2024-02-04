@@ -77,7 +77,8 @@ const Tools={
             height: 0;
             border: 5px solid transparent;
             position: absolute;
-            left: 7px
+            left: 7px;
+            cursor: pointer;
         }
         
         .el-table .sort-caret.ascending {
@@ -122,6 +123,14 @@ const Tools={
         document.querySelector('.content').innerHTML=context;
     }
 }
+// 初始化
+Tools.getDatas();
+// Tools.fetch('007423,007424').then(res=>{
+//     if(res.code=='200'){
+//         const str = Tools.getTable(res.data);
+//         Tools.setCon(str)
+//     }
+// })
 function addEventListener(el, eventName, eventHandler, selector) {
     if (selector) {
         const wrappedHandler = (e) => {
@@ -136,13 +145,6 @@ function addEventListener(el, eventName, eventHandler, selector) {
         return eventHandler;
     }
 }
-Tools.getDatas();
-// Tools.fetch('007423,007424').then(res=>{
-//     if(res.code=='200'){
-//         const str = Tools.getTable(res.data);
-//         Tools.setCon(str)
-//     }
-// })
 const Div = document.querySelector('.el-table');
 
 // 删除代码
@@ -152,3 +154,30 @@ addEventListener(Div,'click',e=>{
     const code = $tr.getAttribute('data-code');
     Tools.delData(code);
 },'.j-code-del')
+// 排序
+addEventListener(Div,'click',e=>{
+    const target = e.target;
+    const $parent = target.parentNode;
+    if(target.classList.contains('ascending')){
+        // 点击升序
+        if($parent.classList.contains('ascending')){
+            // 取消升序
+            $parent.classList.remove('ascending');
+        }else{
+            // 升序排列
+            $parent.classList.add('ascending');
+            $parent.classList.remove('descending');
+        }
+    }
+    if(target.classList.contains('descending')){
+        // 点击降序
+        if($parent.classList.contains('descending')){
+            // 取消降序
+            $parent.classList.remove('descending');
+        }else{
+            // 降序排列
+            $parent.classList.add('descending');
+            $parent.classList.remove('ascending');
+        }
+    }
+},'.sort-caret')

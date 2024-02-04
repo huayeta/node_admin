@@ -423,9 +423,9 @@
                 return string.replace(/[.*+?^${}()|[\]\\]/g, '\$&'); // $& 表示匹配的内容
             }
             // 自动转义特殊字符
-            const escapedValue = escapeRegExp(value).replaceAll(/\*{1,}/g, '.');
+            const escapedValue = escapeRegExp(value).replaceAll(/\*{1,}/g, '.+');
             // 创建正则表达式
-            const regexp = new RegExp(escapedValue);
+            const regexp = new RegExp(escapedValue+'$');
             // console.log(regexp,escapedValue);
             let result = false;
             for (let i = 0; i < datas.length; i++) {
