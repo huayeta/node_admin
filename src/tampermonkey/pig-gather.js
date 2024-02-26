@@ -3131,6 +3131,62 @@
         // localStorage.setItem('notes', JSON.stringify(['122', 'SSFD']))
     }
     AddNote();
+
+    // 其他一些简单功能
+    const OtherCode = () => {
+        const OtherCodeDiv = document.createElement('div');
+        OtherCodeDiv.innerHTML = `
+            <style>
+
+            </style>
+            <div class="m-search">
+                <input type="text" class="search_input j-trade-ipt" placeholder="输入生意参谋指数" />
+            </div>
+            <div class="u-con" style="margin-top:15px;font-size:14px;"></div>      
+        `;
+        document.querySelector('.release_tab').before(OtherCodeDiv);
+
+        const $con = OtherCodeDiv.querySelector('.u-con');
+        const setCon = (text)=>{
+            $con.innerHTML = text;
+        }
+
+        // 指数转换
+        const tradeChange = (number, cb) => {
+            const url = 'https://www.diantoushi.com/switch/v2/change';
+            const data = {
+                "categoryId": "",
+                "changeType": "2",
+                "indexTrans": "[{\"num\":1,\"tradeIndex\":\"" + number.replace(/,/g, '') + "\"}]"
+            };
+    
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('服务器响应：', data);
+                    const result = data.data[0].tradeIndexChange;
+                    // alert(result);
+                    cb(result);
+                })
+                .catch(error => {
+                    console.error('请求出错：', error);
+                });
+        }
+        const $tradeIpt = document.querySelector('.j-trade-ipt');
+        addEventListener(OtherCodeDiv,'input',Tools.throttle(e=>{
+            const trade = $tradeIpt.value;
+            tradeChange(trade,(s)=>{
+                setCon(`<p>指数转换：${s}</p>`)
+            })
+        }),'.j-trade-ipt')
+    }
+    OtherCode();
     // // 源码修改相关的脚本
     // const ModifyRecordCode = () => {
     //     const RecordCodeDiv = document.createElement('div');
@@ -3140,10 +3196,10 @@
     //         </style>
     //         <div class="m-search">
     //             <input type="text" class="search_input" /><button class="search_btn">修改源码</button>
-    //         </div>
+    //         </div>      
     //     `;
     //     const $pigComment = RecordCodeDiv.querySelector('.j-pig-comment');
-    //     document.querySelector('.release_tab').after(RecordCodeDiv);
+    //     document.querySelector('.release_tab').before(RecordCodeDiv);
     // }
     // ModifyRecordCode();
     const cshLocal = (obj) => {
