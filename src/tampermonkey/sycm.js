@@ -82,9 +82,12 @@
     const $menu = createMenu();
     const $liveMenu = $menu.querySelector('.live');
     $liveMenu.addEventListener('click', () => {
-        document.querySelectorAll('.el-table__body-wrapper').forEach($e=>{
-            $e.style.height='auto';
-        })
+        // document.querySelectorAll('.el-table__body-wrapper').forEach($e=>{
+        //     $e.style.height='auto';
+        // })
+        // document.querySelectorAll('.el-table__virtual-wrapper').forEach($e=>{
+        //     $e.style.height='auto';
+        // })
 
         const $tables = document.querySelectorAll('.el-table');
         $tables.forEach($table=>{
@@ -103,7 +106,8 @@
             if(!$body)return;
             const $trs = $body.querySelectorAll('.el-table__row');
             // alert($trs.length);
-            $trs.forEach(($tr, index) => {
+            if(!$trs || $trs.length==0)return;
+            Array.from($trs).slice(0, 25).forEach(($tr, index) => {
                 if($tr.getAttribute('get-data'))return;
                 $tr.setAttribute('get-data','1');
                 // 交易金额
