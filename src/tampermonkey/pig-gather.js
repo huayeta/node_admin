@@ -1200,6 +1200,8 @@
                 const wws = Tools.findWwsByDatas(datas, true);
                 const notes = Tools.findNotesByDatas(datas);
                 // console.log(wws, notes);
+                // console.log(datas);
+
                 if (wws.length > 0) {
                     wws.forEach(wwObj => {
                         const ww = wwObj.ww_exec;
