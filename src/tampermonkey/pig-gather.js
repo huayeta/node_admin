@@ -26,6 +26,7 @@
     //         {pig_phone,commission} 佣金多少
     //         {pig_phone,teamer} 属于哪个团队
     //         {pig_phone,wait} 等待处理
+    //         {pig_phone,nickname} 昵称
     //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -143,7 +144,7 @@
             },
             {
                 label: '艾跃',
-                options: ['痔疮5', '疱疹2', '白斑2'],
+                options: ['痔疮5', '乳腺1','疱疹2', '白斑2'],
             }
         ],
         jd_datas: [
@@ -746,6 +747,15 @@
             // })
             // return tang_id;
         },
+        // 添加昵称
+        addNickname:(account,nickname)=>{
+            return Tools.addKeyValue(account,'nickname',nickname);
+        },
+        // 找到昵称
+        findNickname:(datas)=>{
+            const arr = Tools.findKeysByDatas(datas, 'nickname');
+            return arr.length > 0 ? arr[0] : '';
+        },
         // 添加唐人注册时间
         addTangRegisterTime: (account, tang_register_time) => {
             return Tools.addKeyValue(account, 'tang_register_time', tang_register_time, undefined, undefined, undefined, true);
@@ -1258,7 +1268,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile].forEach(str => {
+                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile,data.nickname?data.nickname.replace('A97',''):''].forEach(str => {
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -1412,6 +1422,8 @@
         const tang_register_time = Tools.findTangRegisterTime(datas);
         // 找到唐人id
         const tang_id = Tools.findTangId(datas);
+        // 找到昵称
+        const nickname = Tools.findNickname(datas);
         // 找到佣金
         const commission = Tools.findCommission(datas);
         // 找到所有团队
@@ -1474,6 +1486,7 @@
             tang_register_time: tang_register_time,
             tang_id: tang_id,
             commission: commission,
+            nickname:nickname,
             teamers: teamers,
             is_wait: is_wait,
             record_time: records.length > 0 && records[0].pig_over_time,
@@ -1528,6 +1541,7 @@
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
                     ${humanData.teamers.length > 0 ? `<p style="margin-top:15px; color:blue;">属于团队：${humanData.teamers.map(teamer => TEAMERS[teamer].text)}</p>` : ''}
+                    ${humanData.nickname ? `<p style="color:gray;"><span>昵称：</span><span class="j-copyText">${humanData.nickname}</span></p>` : ''}
                 </td>
                 <td style="color: blueviolet;">
                     ${humanData.qqs.reduce((a, b) => {
@@ -1662,7 +1676,8 @@
                         <input class="search_input j-wxName" type="text" placeholder="wx名字(真实姓名)|wx姓名" style="margin-left:10px;width:165px;" />
                         <button class="search_btn j-wxName-add" style="margin-left:10px">添加wx姓名</button>
                         <button class="search_btn red j-wxName-del" style="margin-left:10px;">删除wx姓名</button>
-                        <input class="search_input j-register-time" type="text" placeholder="注册时间" style="margin-left:10px;" />
+                        <button class="search_btn j-nickname-add" style="margin-left:10px;">添加昵称</button>
+                        <input class="search_input j-register-time" type="text" placeholder="注册时间" style="margin-left:10px; width:130px;" />
                         <button class="search_btn j-register-time-add-tang" style="margin-left:10px;">添加唐人注册时间</button> 
                 </div>
                 <div class="search m-search">
@@ -2671,6 +2686,13 @@
             const result = Tools.addWxNameByWx(pig_phone, wx, wx_name);
             if (result) alert('添加wx名字成功');
         })
+        // 添加昵称
+        addEventListener(qqAdd,'click',e=>{
+            const account = $phone.value;
+            const nickname = $wxName.value;
+            const result = Tools.addNickname(account, nickname);
+            if (result) alert('添加昵称成功');
+        },'.j-nickname-add')
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
