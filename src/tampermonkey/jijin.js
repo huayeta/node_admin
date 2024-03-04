@@ -1,4 +1,5 @@
 // https://api.doctorxiong.club/v1/fund?code=007423
+// https://api.doctorxiong.club/v1/fund/detail?code=007423
 
 // code:data
 let DATAS = {};
@@ -6,7 +7,7 @@ let DATAS = {};
 const Tools={
     getDatas:()=>{
         DATAS = localStorage.getItem('jijin.datas') ? JSON.parse(localStorage.getItem('jijin.datas')) : {};
-        Tools.setCon(Tools.getTable(Object.values(DATAS)));
+        Tools.setTable(Tools.getTable(Object.values(DATAS)));
     },
     storageDatas: () => {
         localStorage.setItem('jijin.datas', JSON.stringify(DATAS));
@@ -31,6 +32,13 @@ const Tools={
             Tools.setDatas(datas.data);
         }
         return datas;
+    },
+    addCode:async (code)=>{
+        const res = await Tools.fetch(code);
+        if(res.code=='200'){
+            return res.data;
+        }
+        return false;
     },
     getTable:(datas=[])=>{
         let str = '';
@@ -119,16 +127,39 @@ const Tools={
         </table>
         `
     },
+    setTable:(context)=>{
+        document.querySelector('.g-table').innerHTML=context;
+    },
     setCon:(context)=>{
-        document.querySelector('.content').innerHTML=context;
+        document.querySelector('.g-con').innerHTML=context;
+    },
+    initialization:()=>{
+        const con = `
+            <div class="g-form">
+                <style>
+                    .m-search{
+                        display:flex; align-items:center; height:auto; margin-bottom:15px;
+                    }
+                    .m-search .search_input{width:150px;}
+                </style>
+                <div class="m-search">
+                    <input class="search_input j-code-ipt" type="text" data-key="wx" placeholder="债权代码可以,分割" />
+                    <button class="search_btn j-code-add" data-key="wx" style="margin-left:10px">添加债权</button>
+                </div>
+            </div>
+            <div class="g-table"></div>
+            <div class="g-con"></div>
+        `;
+        document.querySelector('.content').innerHTML=con;
+        Tools.getDatas();
     }
 }
 // 初始化
-Tools.getDatas();
+Tools.initialization();
 // Tools.fetch('007423,007424').then(res=>{
 //     if(res.code=='200'){
 //         const str = Tools.getTable(res.data);
-//         Tools.setCon(str)
+//         Tools.setTable(str)
 //     }
 // })
 function addEventListener(el, eventName, eventHandler, selector) {
@@ -145,17 +176,29 @@ function addEventListener(el, eventName, eventHandler, selector) {
         return eventHandler;
     }
 }
-const Div = document.querySelector('.el-table');
+const $Content = document.querySelector('.content');
+const $form = $Content.querySelector('.g-form');
+const $table = $Content.querySelector('.g-table');
+const $codeIpt = $form.querySelector('.j-code-ipt');
 
+// 添加代码
+addEventListener($form,'click',async e=>{
+    const code = $codeIpt.value;
+    const res = await Tools.addCode(code);
+    if(res){
+        alert('添加成功');
+        Tools.getDatas();
+    }
+},'.j-code-add')
 // 删除代码
-addEventListener(Div,'click',e=>{
+addEventListener($table,'click',e=>{
     const target = e.target;
     const $tr = target.closest('tr');
     const code = $tr.getAttribute('data-code');
     Tools.delData(code);
 },'.j-code-del')
 // 排序
-addEventListener(Div,'click',e=>{
+addEventListener($table,'click',e=>{
     const target = e.target;
     const $parent = target.parentNode;
     if(target.classList.contains('ascending')){

@@ -144,7 +144,7 @@
             },
             {
                 label: '艾跃',
-                options: ['痔疮5', '乳腺1','疱疹2', '白斑2'],
+                options: ['痔疮5', '乳腺1', '疱疹2', '白斑2'],
             }
         ],
         jd_datas: [
@@ -426,7 +426,7 @@
             // 自动转义特殊字符
             const escapedValue = escapeRegExp(value).replaceAll(/\*{1,}/g, '.+');
             // 创建正则表达式
-            const regexp = new RegExp(escapedValue+'$');
+            const regexp = new RegExp(escapedValue + '$');
             // console.log(regexp,escapedValue);
             let result = false;
             for (let i = 0; i < datas.length; i++) {
@@ -436,7 +436,7 @@
                     result = { data, index: i };
                     break;
                 }
-                if (isBreakFuc(data,i)) break;
+                if (isBreakFuc(data, i)) break;
             }
             return result;
         },
@@ -748,11 +748,11 @@
             // return tang_id;
         },
         // 添加昵称
-        addNickname:(account,nickname)=>{
-            return Tools.addKeyValue(account,'nickname',nickname);
+        addNickname: (account, nickname) => {
+            return Tools.addKeyValue(account, 'nickname', nickname);
         },
         // 找到昵称
-        findNickname:(datas)=>{
+        findNickname: (datas) => {
             const arr = Tools.findKeysByDatas(datas, 'nickname');
             return arr.length > 0 ? arr[0] : '';
         },
@@ -1231,7 +1231,7 @@
             // DATA[phone][0].is_remind = '-1';
             // storageData();
         },
-        // 通过keyword找到phone搜索范围qq,phone,note,ww
+        // 通过keyword找到phone搜索范围qq,phone,note,ww,nickname
         findPhonesByKeyword: (keyword) => {
             // console.log(keyword);
             const results = [];
@@ -1247,14 +1247,25 @@
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (emptyStr(data.pig_qq, keyword) || emptyStr(data.pig_phone, keyword) || emptyStr(data.ww_exec, keyword) || emptyStr(data.wx, keyword) || emptyStr(data.wx_name, keyword) || emptyStr(data.mobile, keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                    if (emptyStr(data.pig_qq, keyword) || emptyStr(data.pig_phone, keyword) || emptyStr(data.ww_exec, keyword) || emptyStr(data.wx, keyword) || emptyStr(data.wx_name, keyword) || emptyStr(data.mobile, keyword) || emptyStr(data.nickname ? data.nickname.replace('A97', '') : '', keyword) || emptyStr((data.real_name && data.real_name.includes('*')) ? '' : data.real_name, keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
                         if (!results.includes(phone)) results.push(phone);
                     }
                 })
             }
             return [...new Set(results)];
         },
-        // 通过keyword找到所有keyword返回qq,phone,ww,wx_name数组
+        // 通过keyword_arr找到phone搜索
+        findPhonesByKeywords: (keywords) => {
+            let results = [];
+            if (!keywords || keywords.length == 0) return results;
+            keywords.forEach(keyword => {
+                results = results.concat(Tools.findPhonesByKeyword(keyword));
+            })
+            // 去重
+            results = [...new Set(results)];
+            return results;
+        },
+        // 通过keyword找到所有keyword返回qq,phone,ww,wx_name,nickname,real_name数组
         findAllKeywordByKeyword: (keyword) => {
             const phones = Tools.findPhonesByKeyword(keyword);
             // console.log(phones);
@@ -1270,7 +1281,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile,data.nickname?data.nickname.replace('A97',''):''].forEach(str => {
+                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -1418,6 +1429,8 @@
         let diffPhones = is_almighty ? Tools.almightySearch([pig_phone]).filter(phone => phone != pig_phone) : [];
         // 找到真实姓名
         const real_name_arr = Tools.findRealNamesByDatas(datas);
+        // 通过真实姓名找到不同的phones
+
         // 找到注册时间
         let register_time = Tools.findRegisterTimeByDatas(records);
         // 找到唐人注册时间
@@ -1488,7 +1501,7 @@
             tang_register_time: tang_register_time,
             tang_id: tang_id,
             commission: commission,
-            nickname:nickname,
+            nickname: nickname,
             teamers: teamers,
             is_wait: is_wait,
             record_time: records.length > 0 && records[0].pig_over_time,
@@ -1542,7 +1555,7 @@
                     <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${Tools.highLightStr(humanData.phone, highLightStr)}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
-                    ${humanData.teamers.length > 0 ? `<p style="margin-top:15px; color:blue;">属于团队：${humanData.teamers.map(teamer => TEAMERS[teamer].text)}</p>` : ''}
+                    ${humanData.teamers.length > 0 ? `<p style="color:blue;">属于团队：${humanData.teamers.map(teamer => TEAMERS[teamer].text)}</p>` : ''}
                     ${humanData.nickname ? `<p style="color:gray;"><span>昵称：</span><span class="j-copyText">${humanData.nickname}</span></p>` : ''}
                 </td>
                 <td style="color: blueviolet;">
@@ -2689,12 +2702,12 @@
             if (result) alert('添加wx名字成功');
         })
         // 添加昵称
-        addEventListener(qqAdd,'click',e=>{
+        addEventListener(qqAdd, 'click', e => {
             const account = $phone.value;
             const nickname = $wxName.value;
             const result = Tools.addNickname(account, nickname);
             if (result) alert('添加昵称成功');
-        },'.j-nickname-add')
+        }, '.j-nickname-add')
         // 设置显示内容 
         const $btns = qqAdd.querySelector('.btns');
         const $con = $btns.querySelector('.u-con');
@@ -3171,7 +3184,7 @@
         document.querySelector('.release_tab').before(OtherCodeDiv);
 
         const $con = OtherCodeDiv.querySelector('.u-con');
-        const setCon = (text)=>{
+        const setCon = (text) => {
             $con.innerHTML = text;
         }
 
@@ -3183,7 +3196,7 @@
                 "changeType": "2",
                 "indexTrans": "[{\"num\":1,\"tradeIndex\":\"" + number.replace(/,/g, '') + "\"}]"
             };
-    
+
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -3203,12 +3216,12 @@
                 });
         }
         const $tradeIpt = document.querySelector('.j-trade-ipt');
-        addEventListener(OtherCodeDiv,'input',Tools.throttle(e=>{
+        addEventListener(OtherCodeDiv, 'input', Tools.throttle(e => {
             const trade = $tradeIpt.value;
-            tradeChange(trade,(s)=>{
+            tradeChange(trade, (s) => {
                 setCon(`<p>指数转换：${s}</p>`)
             })
-        }),'.j-trade-ipt')
+        }), '.j-trade-ipt')
     }
     OtherCode();
     // // 源码修改相关的脚本
