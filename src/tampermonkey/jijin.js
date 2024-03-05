@@ -249,10 +249,12 @@ addEventListener($form, 'click', async e => {
 }, '.j-code-updata')
 // 删除代码
 addEventListener($table, 'click', e => {
-    const target = e.target;
-    const $tr = target.closest('tr');
-    const code = $tr.getAttribute('data-code');
-    Tools.delCode(code);
+    if (confirm('确定删除吗？')) {
+        const target = e.target;
+        const $tr = target.closest('tr');
+        const code = $tr.getAttribute('data-code');
+        Tools.delCode(code);
+    }
 }, '.j-code-del')
 // 排序
 addEventListener($table, 'click', e => {
