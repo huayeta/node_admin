@@ -4,46 +4,43 @@
 // code:data
 let DATAS = {};
 
-const Tools={
-    getDatas:()=>{
-        DATAS = localStorage.getItem('jijin.datas') ? JSON.parse(localStorage.getItem('jijin.datas')) : {};
+const Tools = {
+    updateDatasTable: () => {
         Tools.setTable(Tools.getTable(Object.values(DATAS)));
     },
     storageDatas: () => {
         localStorage.setItem('jijin.datas', JSON.stringify(DATAS));
     },
-    setDatas:(datas=[])=>{
-        console.log(datas);
-        datas.forEach(data=>{
-            DATAS[data.code]=data;
-        })
-        Tools.storageDatas();
-    },
-    delData:(code)=>{
-        delete DATAS[code];
-        Tools.storageDatas();
-        Tools.getDatas();
-    },
     // code:基金代码，name:基金名称，dayGrowth：日涨幅，lastWeekGrowth：周涨幅，lastMonthGrowth：月涨幅，lastThreeMonthsGrowth：三月涨幅，lastSixMonthsGrowth：六月涨幅，lastYearGrowth：年涨幅，netWorthDate：净值更新日期，expectWorthDate：净值估算更新日期
-    fetch:async (code)=>{
-        const res = await fetch(`https://api.doctorxiong.club/v1/fund?code=${code}`);
-        const datas =await res.json();
-        if(datas.code=='200'){
-            Tools.setDatas(datas.data);
-        }
+    fetch: async (code) => {
+        const res = await fetch(`https://api.doctorxiong.club/v1/fund/detail?code=${code}`);
+        const datas = await res.json();
         return datas;
     },
-    addCode:async (code)=>{
+    delCode: (code) => {
+        delete DATAS[code];
+        Tools.storageDatas();
+        Tools.updateDatasTable();
+    },
+    setCode: (datas)=>{
+        DATAS[datas.code]=datas;
+        Tools.storageDatas();
+        Tools.updateDatasTable();
+    },
+    addCode: async (code) => {
+        // console.log(code);
         const res = await Tools.fetch(code);
-        if(res.code=='200'){
+        if (res.code == '200') {
+            delete res.data.totalNetWorthData;
+            Tools.setCode(res.data);
             return res.data;
         }
         return false;
     },
-    getTable:(datas=[])=>{
+    getTable: (datas = []) => {
         let str = '';
         datas.forEach(data => {
-            str+= `
+            str += `
                 <tr data-code="${data.code}">
                     <td>${data.code}</td>
                     <td>${data.name}</td>
@@ -127,13 +124,13 @@ const Tools={
         </table>
         `
     },
-    setTable:(context)=>{
-        document.querySelector('.g-table').innerHTML=context;
+    setTable: (context) => {
+        document.querySelector('.g-table').innerHTML = context;
     },
-    setCon:(context)=>{
-        document.querySelector('.g-con').innerHTML=context;
+    setCon: (context) => {
+        document.querySelector('.g-con').innerHTML = context;
     },
-    initialization:()=>{
+    initialization: () => {
         const con = `
             <div class="g-form">
                 <style>
@@ -143,15 +140,17 @@ const Tools={
                     .m-search .search_input{width:150px;}
                 </style>
                 <div class="m-search">
-                    <input class="search_input j-code-ipt" type="text" data-key="wx" placeholder="债权代码可以,分割" />
-                    <button class="search_btn j-code-add" data-key="wx" style="margin-left:10px">添加债权</button>
+                    <input class="search_input j-code-ipt" type="text" data-key="wx" placeholder="债权代码" />
+                    <button class="search_btn reb j-code-add" style="margin-left:10px">添加债权</button>
+                    <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
                 </div>
             </div>
             <div class="g-table"></div>
             <div class="g-con"></div>
         `;
-        document.querySelector('.content').innerHTML=con;
-        Tools.getDatas();
+        document.querySelector('.content').innerHTML = con;
+        DATAS = localStorage.getItem('jijin.datas') ? JSON.parse(localStorage.getItem('jijin.datas')) : {};
+        Tools.updateDatasTable();
     }
 }
 // 初始化
@@ -182,45 +181,73 @@ const $table = $Content.querySelector('.g-table');
 const $codeIpt = $form.querySelector('.j-code-ipt');
 
 // 添加代码
-addEventListener($form,'click',async e=>{
+addEventListener($form, 'click', async e => {
+    const $btn = e.target;
+    if ($btn.ing == 1) return;
+    $btn.ing = 1;
+    $btn.innerHTML = '正在添加';
     const code = $codeIpt.value;
     const res = await Tools.addCode(code);
-    if(res){
-        alert('添加成功');
-        Tools.getDatas();
+    if (res) {
+        // alert('添加成功');
+        Tools.updateDatasTable();
+        $codeIpt.value = '';
+    } else {
+        alert('添加失败');
     }
-},'.j-code-add')
+    $btn.ing = 0;
+    $btn.innerHTML = '添加债权';
+}, '.j-code-add')
+// 更新债权
+addEventListener($form, 'click', async e => {
+    const $btn = e.target;
+    if ($btn.ing == 1) return;
+    $btn.ing = 1;
+    $btn.innerHTML = '正在更新';
+    for (let code in DATAS) {
+        // console.log(code);
+        const datas = DATAS[code];
+        if (`${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
+            // console.log(code);
+            await Tools.addCode(code);
+        }
+    }
+    $btn.ing = 0;
+    $btn.innerHTML = '更新债权';
+    Tools.updateDatasTable();
+    alert('更新成功');
+}, '.j-code-updata')
 // 删除代码
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const target = e.target;
     const $tr = target.closest('tr');
     const code = $tr.getAttribute('data-code');
-    Tools.delData(code);
-},'.j-code-del')
+    Tools.delCode(code);
+}, '.j-code-del')
 // 排序
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const target = e.target;
     const $parent = target.parentNode;
-    if(target.classList.contains('ascending')){
+    if (target.classList.contains('ascending')) {
         // 点击升序
-        if($parent.classList.contains('ascending')){
+        if ($parent.classList.contains('ascending')) {
             // 取消升序
             $parent.classList.remove('ascending');
-        }else{
+        } else {
             // 升序排列
             $parent.classList.add('ascending');
             $parent.classList.remove('descending');
         }
     }
-    if(target.classList.contains('descending')){
+    if (target.classList.contains('descending')) {
         // 点击降序
-        if($parent.classList.contains('descending')){
+        if ($parent.classList.contains('descending')) {
             // 取消降序
             $parent.classList.remove('descending');
-        }else{
+        } else {
             // 降序排列
             $parent.classList.add('descending');
             $parent.classList.remove('ascending');
         }
     }
-},'.sort-caret')
+}, '.sort-caret')
