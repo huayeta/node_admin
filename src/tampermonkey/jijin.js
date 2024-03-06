@@ -4,38 +4,36 @@
 // code:data
 let DATAS = {};
 let SORT = {};
-const total_arr= [['dayGrowth','日涨幅'],['lastWeekGrowth','周涨幅'],['lastMonthGrowth','月涨幅'],['lastThreeMonthsGrowth','3月涨幅'],['lastSixMonthsGrowth','6月涨幅'],['lastYearGrowth','年涨幅']];
+const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['lastWeekGrowth', '周涨幅'],['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'],  ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 
 const Tools = {
     // 1 升序 -1 降序
-    setSort:({day,sort})=>{
-        SORT = {day,sort};
+    setSort: ({ day, sort }) => {
+        SORT = { day, sort };
         localStorage.setItem('jijin.sort', JSON.stringify(SORT));
         console.log(SORT);
         Tools.updateDatasTable();
     },
+    sortCodes:(codes,day,sort)=>{
+        codes.sort((a, b) => {
+            const result = a[day] - b[day];
+            return sort == 1 ? result : -result;
+        })
+        return codes;
+    },
+    sortHtml:(day)=>{
+        let codes = Object.values(DATAS);
+        codes = Tools.sortCodes(codes,day,-1);
+        for (let key in codes) {
+            const code = codes[key].code;
+            // console.log(Number(key)+1);
+            DATAS[code][`${day}_sort`] = `<span style="${key < 5 ? 'color:deepskyblue;' : ''}">${Number(key) + 1}</span>/${codes.length}`;
+        }
+    },
     updateDatasTable: () => {
         let codes = Object.values(DATAS);
-        const max = codes.length;
-        const px = function(day,sort){
-            codes.sort((a,b)=>{
-                const result = a[day]-b[day];
-                return sort==1?result:-result;
-            })
-        }
-        function xh(day){
-            px(day,-1);
-            for(let key in codes){
-                const code = codes[key].code;
-                // console.log(Number(key)+1);
-                DATAS[code][`${day}_sort`]=`<span style="${key<3?'color:deepskyblue;':''}">${Number(key)+1}</span>/${max}`;
-            }
-        }
-        total_arr.forEach(total=>{
-            xh(total[0]);
-        })
-        if(SORT.day && SORT.sort!=0){
-            px(SORT.day,SORT.sort);
+        if (SORT.day && SORT.sort != 0) {
+            codes=Tools.sortCodes(codes,SORT.day, SORT.sort);
         }
         Tools.setTable(Tools.getTable(codes));
     },
@@ -50,11 +48,21 @@ const Tools = {
     },
     delCode: (code) => {
         delete DATAS[code];
+        // 排序
+        total_arr.forEach(total => {
+            Tools.sortHtml(total[0]);
+        })
+        
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
-    setCode: (datas)=>{
-        DATAS[datas.code]=datas;
+    setCode: (datas) => {
+        DATAS[datas.code] = datas;
+        // 排序
+        total_arr.forEach(total => {
+            Tools.sortHtml(total[0]);
+        })
+
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
@@ -62,7 +70,28 @@ const Tools = {
         // console.log(code);
         const res = await Tools.fetch(code);
         if (res.code == '200') {
+            const { netWorthData } = res.data;
+            const maxLength = netWorthData.length;
+            let customLastWeekGrowth = 0;
+            let custom2LastWeekGrowth = 0;
+            let customLastMonthGrowth = 0;
+            // 0,1,2,3   i=3  4-2=2  
+            for (let i = maxLength - 1; i > 0; i--) {
+                if (i >= maxLength - 5) {
+                    customLastWeekGrowth += (+netWorthData[i][2]);
+                }
+                if (i >= maxLength - 5 * 2) {
+                    custom2LastWeekGrowth += (+netWorthData[i][2]);
+                }
+                if (i >= maxLength - 5 * 4) {
+                    customLastMonthGrowth += (+netWorthData[i][2]);
+                }
+            }
+            res.data.customLastWeekGrowth = (customLastWeekGrowth).toFixed(2);
+            res.data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
+            res.data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
             delete res.data.totalNetWorthData;
+            delete res.data.netWorthData;
             Tools.setCode(res.data);
             return res.data;
         }
@@ -75,19 +104,19 @@ const Tools = {
                 <tr data-code="${data.code}">
                     <td>${data.code}</td>
                     <td>${data.name}</td>
-                    ${total_arr.map(total=>{
-                        return `<td>${data[total[0]]}%/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-                    }).join('')}
+                    ${total_arr.map(total => {
+                return `<td><span class="${(+data[total[0]])>0?'red':'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+            }).join('')}
                     <td>${data.netWorthDate}</td>
-                    <td>${data.expectWorthDate}</td>
+                    <!-- <td>${data.expectWorthDate}</td> -->
                     <td><a style="color:red;" class="j-code-del">删除</a></td>
                 </tr>
             `
         });
         // 判断排序class
         let sortClassname = '';
-        if(SORT.sort == 1)sortClassname = 'ascending';
-        if(SORT.sort == -1)sortClassname = 'descending';
+        if (SORT.sort == 1) sortClassname = 'ascending';
+        if (SORT.sort == -1) sortClassname = 'descending';
         return `
         <style>
         .el-table .caret-wrapper {
@@ -140,11 +169,11 @@ const Tools = {
             <thead>
                 <th>基金代码</th>
                 <th>基金名称</th>
-                ${total_arr.map(total=>{
-                    return `<th>${total[1]}<span class="caret-wrapper ${SORT.day==total[0]?sortClassname:''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
-                }).join('')}
+                ${total_arr.map(total => {
+            return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
+        }).join('')}
                 <th>净值更新日期</th>
-                <th>净值估算更新日期</th>
+                <!-- <th>净值估算更新日期</th> -->
                 <th>操作</th>
             </thead>
             <tbody>
@@ -288,5 +317,5 @@ addEventListener($table, 'click', e => {
             sort = -1;
         }
     }
-    Tools.setSort({day,sort});
+    Tools.setSort({ day, sort });
 }, '.sort-caret')
