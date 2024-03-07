@@ -3,15 +3,29 @@
 
 // code:data
 let DATAS = {};
+// {day:total_arr[0],sort:-1|1|0}
 let SORT = {};
-const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['lastWeekGrowth', '周涨幅'],['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'],  ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
+// {code:{checked:1}}
+let CODES = {};
+const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'],['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'],  ['lastMonthGrowth', '月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
+const code_type_arr = ['利率债','信用债','利率债为主']
 
 const Tools = {
+    setCustomCodes:(code,obj)=>{
+        if(!CODES[code])CODES[code]={};
+        Object.assign(CODES[code],obj);
+        localStorage.setItem('jijin.codes', JSON.stringify(CODES));
+        // Tools.updateDatasTable();
+    },
+    delCustomCodes:(code)=>{
+        delete CODES[code];
+        localStorage.setItem('jijin.codes', JSON.stringify(CODES));
+    },
     // 1 升序 -1 降序
     setSort: ({ day, sort }) => {
         SORT = { day, sort };
         localStorage.setItem('jijin.sort', JSON.stringify(SORT));
-        console.log(SORT);
+        // console.log(SORT);
         Tools.updateDatasTable();
     },
     sortCodes:(codes,day,sort)=>{
@@ -62,7 +76,7 @@ const Tools = {
         total_arr.forEach(total => {
             Tools.sortHtml(total[0]);
         })
-
+        Tools.delCustomCodes(datas.code);
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
@@ -102,13 +116,14 @@ const Tools = {
         datas.forEach(data => {
             str += `
                 <tr data-code="${data.code}">
-                    <td>${data.code}</td>
+                    <td><input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked==1)?'checked':''} />${data.code}</td>
                     <td>${data.name}</td>
                     ${total_arr.map(total => {
                 return `<td><span class="${(+data[total[0]])>0?'red':'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
             }).join('')}
                     <td>${data.netWorthDate}</td>
-                    <!-- <td>${data.expectWorthDate}</td> -->
+                    <td style="${data.type=='混合型'?'color:brown;':''}">${data.type}</td>
+                    <td><select class="j-code-type"><option></option>${code_type_arr.map(type=>`<option ${(CODES[data.code] && CODES[data.code].type==type)?'selected':''}>${type}</option>`).join('')}</select></td>
                     <td><a style="color:red;" class="j-code-del">删除</a></td>
                 </tr>
             `
@@ -118,53 +133,6 @@ const Tools = {
         if (SORT.sort == 1) sortClassname = 'ascending';
         if (SORT.sort == -1) sortClassname = 'descending';
         return `
-        <style>
-        .el-table .caret-wrapper {
-            display: -webkit-inline-box;
-            display: -ms-inline-flexbox;
-            display: inline-flex;
-            -webkit-box-orient: vertical;
-            -webkit-box-direction: normal;
-            -ms-flex-direction: column;
-            flex-direction: column;
-            -webkit-box-align: center;
-            -ms-flex-align: center;
-            align-items: center;
-            height: 34px;
-            width: 24px;
-            vertical-align: middle;
-            cursor: pointer;
-            overflow: initial;
-            position: relative
-        }
-        
-        .el-table .sort-caret {
-            width: 0;
-            height: 0;
-            border: 5px solid transparent;
-            position: absolute;
-            left: 7px;
-            cursor: pointer;
-        }
-        
-        .el-table .sort-caret.ascending {
-            border-bottom-color: #c0c4cc;
-            top: 5px
-        }
-        
-        .el-table .sort-caret.descending {
-            border-top-color: #c0c4cc;
-            bottom: 7px
-        }
-        
-        .el-table .ascending .sort-caret.ascending {
-            border-bottom-color: #409eff
-        }
-        
-        .el-table .descending .sort-caret.descending {
-            border-top-color: #409eff
-        }
-        </style>
         <table class="el-table">
             <thead>
                 <th>基金代码</th>
@@ -173,7 +141,8 @@ const Tools = {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
         }).join('')}
                 <th>净值更新日期</th>
-                <!-- <th>净值估算更新日期</th> -->
+                <th>债权类型</th>
+                <th>债权组合</th>
                 <th>操作</th>
             </thead>
             <tbody>
@@ -209,6 +178,7 @@ const Tools = {
         document.querySelector('.content').innerHTML = con;
         DATAS = localStorage.getItem('jijin.datas') ? JSON.parse(localStorage.getItem('jijin.datas')) : {};
         SORT = localStorage.getItem('jijin.sort') ? JSON.parse(localStorage.getItem('jijin.sort')) : {};
+        CODES = localStorage.getItem('jijin.codes') ? JSON.parse(localStorage.getItem('jijin.codes')) : {};
         Tools.updateDatasTable();
     }
 }
@@ -260,22 +230,38 @@ addEventListener($form, 'click', async e => {
 // 更新债权
 addEventListener($form, 'click', async e => {
     const $btn = e.target;
-    if ($btn.ing == 1) return;
+    if ($btn.ing!=undefined) return;
     $btn.ing = 1;
-    $btn.innerHTML = '正在更新';
+    const maxLength = Object.keys(DATAS).length;
     for (let code in DATAS) {
         // console.log(code);
+        $btn.innerHTML = `正在更新${$btn.ing-0}/${maxLength}`;
         const datas = DATAS[code];
         if (`${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
             // console.log(code);
             await Tools.addCode(code);
+            $btn.ing++;
         }
     }
-    $btn.ing = 0;
+    $btn.ing = undefined;
     $btn.innerHTML = '更新债权';
     Tools.updateDatasTable();
     alert('更新成功');
 }, '.j-code-updata')
+// 选择基金代码
+addEventListener($table,'change',e=>{
+    const $checkbox = e.target;
+    const checked = $checkbox.checked;
+    const code = $checkbox.closest('tr').getAttribute('data-code');
+    Tools.setCustomCodes(code,{checked:checked?1:0});
+},'.j-code-checkbox')
+// 选择基本类型
+addEventListener($table,'change',e=>{
+    const $select = e.target;
+    const selected = $select.value;
+    const code = $select.closest('tr').getAttribute('data-code');
+    Tools.setCustomCodes(code,{type:selected});
+},'.j-code-type')
 // 删除代码
 addEventListener($table, 'click', e => {
     if (confirm('确定删除吗？')) {

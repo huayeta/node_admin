@@ -167,45 +167,45 @@
         }
     }
     // 店铺缓存数据
-    const SHOPDATAS = {
-        // {task_id:shop_label}
-        datas: {},
-        getDatas: () => {
-            let datas = localStorage.getItem('shopDatas') ? JSON.parse(localStorage.getItem('shopDatas')) : {};
-            SHOPDATAS.datas = datas;
-        },
-        storageData: () => {
-            localStorage.setItem('shopDatas', JSON.stringify(SHOPDATAS.datas));
-        },
-        addData: (task_id, shop_label) => {
-            if (Tools.alertFuc({ task_id })) return false;
-            SHOPDATAS.datas[task_id] = shop_label;
-            if (!shop_label) SHOPDATAS.delData(task_id);
-            SHOPDATAS.storageData();
-            return true;
-        },
-        delData: (task_id) => {
-            delete SHOPDATAS.datas[task_id];
-            SHOPDATAS.storageData();
-        },
-        appendShopLable: (pig_phone, task_id, shop_label) => {
-            if (Tools.alertFuc({ pig_phone, task_id })) return false;
-            if (!DATA[pig_phone]) return alert('不存在做单数据');
-            const datas = DATA[pig_phone];
-            for (let i = 0; i < datas.length; i++) {
-                if (datas[i].task_id == task_id) {
-                    DATA[pig_phone][i].shop_label = shop_label;
-                    if (!shop_label) delete DATA[pig_phone][i].shop_label;
-                    SHOPDATAS.delData(task_id);
-                    storageData();
-                }
-            }
-        },
-        getData: (task_id) => {
-            return SHOPDATAS.datas[task_id];
-        }
-    }
-    SHOPDATAS.getDatas();
+    // const SHOPDATAS = {
+    //     // {task_id:shop_label}
+    //     datas: {},
+    //     getDatas: () => {
+    //         let datas = localStorage.getItem('shopDatas') ? JSON.parse(localStorage.getItem('shopDatas')) : {};
+    //         SHOPDATAS.datas = datas;
+    //     },
+    //     storageData: () => {
+    //         localStorage.setItem('shopDatas', JSON.stringify(SHOPDATAS.datas));
+    //     },
+    //     addData: (task_id, shop_label) => {
+    //         if (Tools.alertFuc({ task_id })) return false;
+    //         SHOPDATAS.datas[task_id] = shop_label;
+    //         if (!shop_label) SHOPDATAS.delData(task_id);
+    //         SHOPDATAS.storageData();
+    //         return true;
+    //     },
+    //     delData: (task_id) => {
+    //         delete SHOPDATAS.datas[task_id];
+    //         SHOPDATAS.storageData();
+    //     },
+    //     appendShopLable: (pig_phone, task_id, shop_label) => {
+    //         if (Tools.alertFuc({ pig_phone, task_id })) return false;
+    //         if (!DATA[pig_phone]) return alert('不存在做单数据');
+    //         const datas = DATA[pig_phone];
+    //         for (let i = 0; i < datas.length; i++) {
+    //             if (datas[i].task_id == task_id) {
+    //                 DATA[pig_phone][i].shop_label = shop_label;
+    //                 if (!shop_label) delete DATA[pig_phone][i].shop_label;
+    //                 SHOPDATAS.delData(task_id);
+    //                 storageData();
+    //             }
+    //         }
+    //     },
+    //     getData: (task_id) => {
+    //         return SHOPDATAS.datas[task_id];
+    //     }
+    // }
+    // SHOPDATAS.getDatas();
     //提醒phone数据
     const RDATA = {
         // {phone:{order_reminder:time,comment_reminder:time}}[]
