@@ -5,10 +5,10 @@
 let DATAS = {};
 // {day:total_arr[0],sort:-1|1|0}
 let SORT = {};
-// {code:{checked:1}}
+// {code:{checked:1,type:code_type_arr[0]}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'],['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'],  ['lastMonthGrowth', '月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
-const code_type_arr = ['利率债','信用债','利率债为主']
+const code_type_arr = ['利率债','信用债','利率债为主','信用债为主','股基利率债为主']
 
 const Tools = {
     setCustomCodes:(code,obj)=>{
@@ -66,7 +66,7 @@ const Tools = {
         total_arr.forEach(total => {
             Tools.sortHtml(total[0]);
         })
-        
+        Tools.delCustomCodes(code);
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
@@ -76,7 +76,7 @@ const Tools = {
         total_arr.forEach(total => {
             Tools.sortHtml(total[0]);
         })
-        Tools.delCustomCodes(datas.code);
+        // Tools.delCustomCodes(datas.code);
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
@@ -305,3 +305,13 @@ addEventListener($table, 'click', e => {
     }
     Tools.setSort({ day, sort });
 }, '.sort-caret')
+// 对比
+// addEventListener($table,'click',e=>{
+//     const $tr = e.target;
+//     console.log($tr);
+//     if($tr.classList.contains('select')){
+//         $tr.classList.remove('select')
+//     }else{
+//         $tr.classList.add('select');
+//     }
+// },'[data-code]')
