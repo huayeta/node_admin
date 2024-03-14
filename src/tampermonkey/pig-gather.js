@@ -14,7 +14,7 @@
     // Your code here...
     // {
     //     phone账号或者唐人账号：[
-    //         {pig_phone,ww_exec,is_del?:'1'} 添加做单旺旺号
+    //         {pig_phone,ww_exec,is_del?:'1',gender?:男1or女0,note?:备注} 添加做单旺旺号
     //         {pig_phone唐人账号,pig_qq?,wx?,qq_exec_pre,pig_over_time,shop_label?:LABELS店铺类型,pig_type?:TB|JD:小猪做单类型,is_comment?:0没评|1已评|-1默认评,come_type?:COMETYPE来子哪里的单子,is_remind?:'-1'是否提醒,real_name:？真实姓名} 添加做单记录            
     //         {pig_phone,pig_note,create_time?,pig_type?} 添加备注
     //         {pig_phone,pig_qq} 添加不同的qq
@@ -125,6 +125,9 @@
         },
         'bb': {
             text: '彬彬'
+        },
+        'nn': {
+            text: '闹闹总监'
         }
     };
     const ORDERTYPES = ['TB'];
@@ -510,7 +513,7 @@
             // return results;
         },
         // 修改data
-        updateDataByAccount: (pig_phone, valueObj = {}, judgeFuc = () => { return false; }) => {
+        updataDataByAccount: (pig_phone, valueObj = {}, judgeFuc = () => { return false; }) => {
             if (Tools.alertFuc({ pig_phone })) return false;
             const datas = DATA[pig_phone];
             for (let i = 0; i < datas.length; i++) {
@@ -666,7 +669,7 @@
         },
         // 更新等待处理
         updateWait: (account) => {
-            return Tools.updateDataByAccount(account, { create_time: new Date().toLocaleString() }, (data) => {
+            return Tools.updataDataByAccount(account, { create_time: new Date().toLocaleString() }, (data) => {
                 return data.wait;
             })
         },
@@ -961,6 +964,22 @@
         //     // console.log(arr);
         //     return arr;
         // },
+        // 给旺旺添加性别
+        addGenderByAccount: (pig_phone, ww, gender) => {
+            return Tools.updataDataByAccount(pig_phone, { gender }, (data, index) => {
+                if(data.ww_exec == ww){
+                    return 'break';
+                }
+            })
+        },
+        // 给旺旺添加备注
+        addWwNoteByAccount: (pig_phone, ww, note) => {
+            return Tools.updataDataByAccount(pig_phone, { note }, (data, index) => {
+                if(data.ww_exec == ww){
+                    return 'break';
+                }
+            })
+        },
         // 添加wx
         addWx: (pig_phone, wx) => {
             // Tools.addContact(pig_phone,'wx',wx);
@@ -972,7 +991,7 @@
         },
         // 给wx添加wx_name
         addWxNameByWx: (pig_phone, wx, wx_name) => {
-            return Tools.updateDataByAccount(pig_phone, { wx_name }, (data, index) => {
+            return Tools.updataDataByAccount(pig_phone, { wx_name }, (data, index) => {
                 return data.wx == wx;
             })
         },
@@ -1032,7 +1051,7 @@
         },
         // 通过账号给最后一个记录添加评论或者默认评论或者直接评论
         lastAddCommentByPhone: (account, is_comment = '1', pig_type) => {
-            return Tools.updateDataByAccount(account, { is_comment }, (data, i) => {
+            return Tools.updataDataByAccount(account, { is_comment }, (data, i) => {
                 if (data.pig_type == pig_type) {
                     return 'break';
                 }
@@ -1220,14 +1239,14 @@
         },
         // 修改最后一个记录
         modifyDataToLastRecord: (account, obj = {}) => {
-            return Tools.updateDataByAccount(account, obj, (data, i) => i == 0);
+            return Tools.updataDataByAccount(account, obj, (data, i) => i == 0);
             // Object.assign(DATA[phone][0], obj);
             // storageData();
             // return true;
         },
         // 不再提醒
         noRemind: (account) => {
-            return Tools.updateDataByAccount(account, { is_remind: '-1' }, (data, i) => i == 0);
+            return Tools.updataDataByAccount(account, { is_remind: '-1' }, (data, i) => i == 0);
             // DATA[phone][0].is_remind = '-1';
             // storageData();
         },
@@ -1571,7 +1590,7 @@
                 </td>
                 <td style="color:red;">
                     ${humanData.wws.reduce((a, b) => {
-                return a + (b.is_del ? `<del class="j-copyText" style="color:gray;display:block;">${b.ww_exec}</del>` : `<p class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</p>`);
+                return a + `<p class="${b.is_del=='1'?'del':''}"><span class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</span>${b.gender!=undefined?`（<span class="blue">${b.gender==1?'男':'女'}</span>）${b.note?`（<span class="cadetblue j-copyText">${b.note}</span>）`:''}`:''}</p>`;
             }, '')}
                 </td>
                 <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>
@@ -1707,14 +1726,20 @@
                     <button class="search_btn reb j-wait-add" style="margin-left:10px;">添加待处理</button>
                 </div>
                 <div class="search m-search j-order-search">
-                    查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" /> <button class="search_btn order-search
+                    查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" style="width:140px;" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button>
                     <input type="text" class="search_input j-modify-code-ipt" /><button class="search_btn j-modify-code-btn-get">获取源码</button>
                     <button class="search_btn reb j-modify-code-btn" style="margin-left:10px;">修改源码</button>
-                    <input class="search_input j-commission-ipt" type="text" placeholder="佣金" style="margin-left:10px; width:50px;" />
+                    <input class="search_input j-commission-ipt" type="text" placeholder="佣金" style="margin-left:10px; width:70px;" />
                     <button class="search_btn j-commission-add" style="margin-left:10px;">添加佣金比例</button>
-                    <select class="search_input j-teamer-ipt" style="margin-left:10px; width:160px;"><option value="">没有团队</option>${teamer_opts}</select>
+                    <select class="search_input j-teamer-ipt" style="margin-left:10px; "><option value="">没有团队</option>${teamer_opts}</select>
                     <button class="search_btn reb j-teamer-add-btn" style="margin-left:10px;">添加团队</button>
+                </div>
+                <div class="search m-search">
+                    <select class="search_input j-gender-ipt" style=""><option value="">未知</option><option value="1">男</option><option value="0">女</option></select>
+                    <button class="search_btn reb j-gender-add-btn" style="margin-left:10px;">添加男女</button>
+                    <input class="search_input j-ww-note-ipt" type="text" placeholder="旺旺备注" style="margin-left:10px;" />
+                    <button class="search_btn j-ww-note-add" style="margin-left:10px;">添加旺旺备注</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -1813,6 +1838,8 @@
         const $mobileIpt = qqAdd.querySelector('.j-mobile-input');
         const $commissionIpt = qqAdd.querySelector('.j-commission-ipt');
         const $teamerIpt = qqAdd.querySelector('.j-teamer-ipt');
+        const $genderIpt = qqAdd.querySelector('.j-gender-ipt');
+        const $wwNoteIpt = qqAdd.querySelector('.j-ww-note-ipt');
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -2467,6 +2494,26 @@
             const result = Tools.addTeamer(account, teamer);
             if (result) alert('团队添加成功');
         }, '.j-teamer-add-btn')
+        // ww性别的添加
+        addEventListener(qqAdd, 'click', e => {
+            const wws = $ww.value.split('，');
+            const ww = wws[wws.length-1];
+            const account = $phone.value;
+            const gender = $genderIpt.value;
+            // console.log(ww);
+            const result = Tools.addGenderByAccount(account, ww,gender);
+            if (result) alert('性别添加成功');
+        }, '.j-gender-add-btn')
+        // ww备注的添加
+        addEventListener(qqAdd, 'click', e => {
+            const wws = $ww.value.split('，');
+            const ww = wws[wws.length-1];
+            const account = $phone.value;
+            const note = $wwNoteIpt.value;
+            // console.log(ww);
+            const result = Tools.addWwNoteByAccount(account, ww,note);
+            if (result) alert(`${ww}备注添加成功`);
+        }, '.j-ww-note-add')
         // 添加佣金
         addEventListener(qqAdd, 'click', e => {
             const commission = $commissionIpt.value;

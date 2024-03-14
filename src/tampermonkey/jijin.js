@@ -170,6 +170,7 @@ const Tools = {
                     <input class="search_input j-code-ipt" type="text" data-key="wx" placeholder="债权代码" />
                     <button class="search_btn reb j-code-add" style="margin-left:10px">添加债权</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
+                    <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
                 </div>
             </div>
             <div class="g-table"></div>
@@ -315,3 +316,30 @@ addEventListener($table, 'click', e => {
 //         $tr.classList.add('select');
 //     }
 // },'[data-code]')
+//   下载函数
+const MDownload = (data, name) => {
+    const blob = new Blob(data, {
+        type: 'text/plain;charset=utf-8'
+    });
+    const src = window.URL.createObjectURL(blob);
+    if (!src) return;
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    link.href = src;
+    link.setAttribute('download', `${name}${new Date().toLocaleDateString()}.txt`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blob);
+}
+// MDownload([1],'2');
+const Download = () => {
+    const data = {
+        DATAS: JSON.parse(localStorage.getItem('jijin.datas')),
+        SORT: JSON.parse(localStorage.getItem('jijin.sort')),
+        CODES: JSON.parse(localStorage.getItem('jijin.codes')),
+    }
+    MDownload([JSON.stringify(data)], '基金数据');
+    // console.log(JSON.stringify(data));
+}
+addEventListener($form,'click',Download,'.j-code-download')
