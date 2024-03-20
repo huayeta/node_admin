@@ -3,41 +3,51 @@
 
 // code:data
 let DATAS = {};
-// {day:total_arr[0],sort:-1|1|0}
+// {day:total_arr[0][0],sort:-1|1|0,type:code_type_arr[0]}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0]}}
+// {code:{checked:1,type:code_type_arr[0],sale_time:7|30,note}}
 let CODES = {};
-const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'],['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'],  ['lastMonthGrowth', '月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
-const code_type_arr = ['利率债','信用债','利率债为主','信用债为主','股基利率债为主']
+const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
+const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主'];
+const SALETIME = {
+    7: '7天免',
+    30: '30天免'
+};
 
 const Tools = {
-    setCustomCodes:(code,obj)=>{
-        if(!CODES[code])CODES[code]={};
-        Object.assign(CODES[code],obj);
+    setCustomCodes: (code, obj) => {
+        if (!CODES[code]) CODES[code] = {};
+        Object.assign(CODES[code], obj);
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
         // Tools.updateDatasTable();
     },
-    delCustomCodes:(code)=>{
+    delCustomCodes: (code) => {
         delete CODES[code];
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
     },
-    // 1 升序 -1 降序
-    setSort: ({ day, sort }) => {
-        SORT = { day, sort };
+    setCustomSort:(obj)=>{
+        Object.assign(SORT, obj);
         localStorage.setItem('jijin.sort', JSON.stringify(SORT));
-        // console.log(SORT);
         Tools.updateDatasTable();
     },
-    sortCodes:(codes,day,sort)=>{
+    // 1 升序 -1 降序
+    setSort: ({ day, sort }) => {
+        Tools.setCustomSort({day,sort});
+        // SORT = { day, sort };
+        // localStorage.setItem('jijin.sort', JSON.stringify(SORT));
+        // // console.log(SORT);
+        // Tools.updateDatasTable();
+    },
+    sortCodes: (codes, day, sort) => {
         codes.sort((a, b) => {
             const result = a[day] - b[day];
             return sort == 1 ? result : -result;
         })
         return codes;
     },
-    sortHtml:(day)=>{
+    sortHtml: (day) => {
         let codes = Object.values(DATAS);
-        codes = Tools.sortCodes(codes,day,-1);
+        codes = Tools.sortCodes(codes, day, -1);
         for (let key in codes) {
             const code = codes[key].code;
             // console.log(Number(key)+1);
@@ -47,7 +57,7 @@ const Tools = {
     updateDatasTable: () => {
         let codes = Object.values(DATAS);
         if (SORT.day && SORT.sort != 0) {
-            codes=Tools.sortCodes(codes,SORT.day, SORT.sort);
+            codes = Tools.sortCodes(codes, SORT.day, SORT.sort);
         }
         Tools.setTable(Tools.getTable(codes));
     },
@@ -113,20 +123,30 @@ const Tools = {
     },
     getTable: (datas = []) => {
         let str = '';
-        datas.forEach(data => {
-            str += `
-                <tr data-code="${data.code}">
-                    <td><input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked==1)?'checked':''} />${data.code}</td>
-                    <td>${data.name}</td>
-                    ${total_arr.map(total => {
-                return `<td><span class="${(+data[total[0]])>0?'red':'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-            }).join('')}
-                    <td>${data.netWorthDate}</td>
-                    <td style="${data.type=='混合型'?'color:brown;':''}">${data.type}</td>
-                    <td><select class="j-code-type"><option></option>${code_type_arr.map(type=>`<option ${(CODES[data.code] && CODES[data.code].type==type)?'selected':''}>${type}</option>`).join('')}</select></td>
-                    <td><a style="color:red;" class="j-code-del">删除</a></td>
-                </tr>
-            `
+        datas.forEach((data,index) => {
+            // 判断是否更新
+            let is_new = false;
+            if(new Date().getDate()==new Date(data.netWorthDate).getDate()){
+                is_new = true;
+            }
+            // 判断是否有筛选
+            if((SORT.type && CODES[data.code] && CODES[data.code].type==SORT.type) || !SORT.type){
+                str += `
+                    <tr data-code="${data.code}">
+                        <td>${index+1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
+                        <td>${data.name}${is_new?'🔥':''}</td>
+                        ${total_arr.map(total => {
+                    return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                }).join('')}
+                        <td>${data.netWorthDate}</td>
+                        <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
+                        <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
+                        <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
+                        <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].note?CODES[data.code].note:''}</span></td>
+                        <td><a style="color:red;" class="j-code-del">删除</a></td>
+                    </tr>
+                `
+            }
         });
         // 判断排序class
         let sortClassname = '';
@@ -135,15 +155,25 @@ const Tools = {
         return `
         <table class="el-table">
             <thead>
-                <th>基金代码</th>
-                <th>基金名称</th>
-                ${total_arr.map(total => {
+                <tr>
+                    <th>基金代码</th>
+                    <th>基金名称</th>
+                    ${total_arr.map(total => {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
         }).join('')}
-                <th>净值更新日期</th>
-                <th>债权类型</th>
-                <th>债权组合</th>
-                <th>操作</th>
+                    <th>净值更新日期</th>
+                    <th>债权类型</th>
+                    <th>
+                        债权组合<br />
+                        <select class="j-code-type-sel" style="margin-top:3px;">
+                            <option></option>
+                            ${code_type_arr.map(type => `<option ${(SORT.type==type) ? 'selected' : ''}>${type}</option>`).join('')}
+                        </select>
+                    </th>
+                    <th>卖出时间</th>
+                    <th>备注</th>
+                    <th>操作</th>
+                </tr>
             </thead>
             <tbody>
                 ${str}
@@ -167,10 +197,12 @@ const Tools = {
                     .m-search .search_input{width:150px;}
                 </style>
                 <div class="m-search">
-                    <input class="search_input j-code-ipt" type="text" data-key="wx" placeholder="债权代码" />
+                    <input class="search_input j-code-ipt" type="text" placeholder="债权代码" />
                     <button class="search_btn reb j-code-add" style="margin-left:10px">添加债权</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
+                    <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px;" />
+                    <button class="search_btn reb j-code-note-add" style="margin-left:10px">添加备注</button>
                 </div>
             </div>
             <div class="g-table"></div>
@@ -191,25 +223,53 @@ Tools.initialization();
 //         Tools.setTable(str)
 //     }
 // })
+// function addEventListener1(el, eventName, eventHandler, selector) {
+//     if (selector) {
+//         const wrappedHandler = (e) => {
+//             if (e.target && e.target.matches(selector)) {
+//                 eventHandler(e);
+//             }
+//         };
+//         el.addEventListener(eventName, wrappedHandler);
+//         return wrappedHandler;
+//     } else {
+//         el.addEventListener(eventName, eventHandler);
+//         return eventHandler;
+//     }
+// }
 function addEventListener(el, eventName, eventHandler, selector) {
     if (selector) {
         const wrappedHandler = (e) => {
-            if (e.target && e.target.matches(selector)) {
-                eventHandler(e);
+            if (!e.target) return;
+            // console.log(e.target);
+            const el = e.target.closest(selector);
+            if (el) {
+                // console.log(el);
+                eventHandler.call(el, e);
             }
         };
         el.addEventListener(eventName, wrappedHandler);
         return wrappedHandler;
     } else {
-        el.addEventListener(eventName, eventHandler);
-        return eventHandler;
+        const wrappedHandler = (e) => {
+            eventHandler.call(el, e);
+        };
+        el.addEventListener(eventName, wrappedHandler);
+        return wrappedHandler;
     }
 }
 const $Content = document.querySelector('.content');
 const $form = $Content.querySelector('.g-form');
 const $table = $Content.querySelector('.g-table');
 const $codeIpt = $form.querySelector('.j-code-ipt');
+const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
 
+//点击代码填写进入上面的ipt
+addEventListener($table,'click',e=>{
+    const $code = e.target;
+    const code = $code.textContent;
+    $codeIpt.value = code;
+},'.j-code')
 // 添加代码
 addEventListener($form, 'click', async e => {
     const $btn = e.target;
@@ -228,15 +288,24 @@ addEventListener($form, 'click', async e => {
     $btn.ing = 0;
     $btn.innerHTML = '添加债权';
 }, '.j-code-add')
+// 添加备注
+addEventListener($form,'click',e=>{
+    const code = $codeIpt.value;
+    const note = $codeNoteIpt.value;
+    Tools.setCustomCodes(code,{note:note});
+    alert('添加成功');
+    $codeNoteIpt.value = '';
+    Tools.updateDatasTable();
+},'.j-code-note-add')
 // 更新债权
 addEventListener($form, 'click', async e => {
     const $btn = e.target;
-    if ($btn.ing!=undefined) return;
+    if ($btn.ing != undefined) return;
     $btn.ing = 1;
     const maxLength = Object.keys(DATAS).length;
     for (let code in DATAS) {
         // console.log(code);
-        $btn.innerHTML = `正在更新${$btn.ing-0}/${maxLength}`;
+        $btn.innerHTML = `正在更新${$btn.ing - 0}/${maxLength}`;
         const datas = DATAS[code];
         if (`${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
             // console.log(code);
@@ -250,19 +319,32 @@ addEventListener($form, 'click', async e => {
     alert('更新成功');
 }, '.j-code-updata')
 // 选择基金代码
-addEventListener($table,'change',e=>{
+addEventListener($table, 'change', e => {
     const $checkbox = e.target;
     const checked = $checkbox.checked;
     const code = $checkbox.closest('tr').getAttribute('data-code');
-    Tools.setCustomCodes(code,{checked:checked?1:0});
-},'.j-code-checkbox')
+    Tools.setCustomCodes(code, { checked: checked ? 1 : 0 });
+}, '.j-code-checkbox')
 // 选择基本类型
-addEventListener($table,'change',e=>{
+addEventListener($table, 'change', e => {
     const $select = e.target;
     const selected = $select.value;
     const code = $select.closest('tr').getAttribute('data-code');
-    Tools.setCustomCodes(code,{type:selected});
-},'.j-code-type')
+    Tools.setCustomCodes(code, { type: selected });
+}, '.j-code-type')
+// 筛选债权类型
+addEventListener($table,'change',e=>{
+    const $select = e.target;
+    const selected = $select.value;
+    Tools.setCustomSort({type:selected});
+},'.j-code-type-sel')
+// 选择卖出时间
+addEventListener($table, 'change', e => {
+    const $select = e.target;
+    const selected = $select.value;
+    const code = $select.closest('tr').getAttribute('data-code');
+    Tools.setCustomCodes(code, { sale_time: selected });
+}, '.j-sale-time')
 // 删除代码
 addEventListener($table, 'click', e => {
     if (confirm('确定删除吗？')) {
@@ -307,15 +389,14 @@ addEventListener($table, 'click', e => {
     Tools.setSort({ day, sort });
 }, '.sort-caret')
 // 对比
-// addEventListener($table,'click',e=>{
-//     const $tr = e.target;
-//     console.log($tr);
-//     if($tr.classList.contains('select')){
-//         $tr.classList.remove('select')
-//     }else{
-//         $tr.classList.add('select');
-//     }
-// },'[data-code]')
+addEventListener($table,'click',e=>{
+    const $tr = e.target.closest('tr');
+    if($tr.classList.contains('select')){
+        $tr.classList.remove('select')
+    }else{
+        $tr.classList.add('select');
+    }
+},'tr')
 //   下载函数
 const MDownload = (data, name) => {
     const blob = new Blob(data, {
@@ -342,4 +423,31 @@ const Download = () => {
     MDownload([JSON.stringify(data)], '基金数据');
     // console.log(JSON.stringify(data));
 }
-addEventListener($form,'click',Download,'.j-code-download')
+addEventListener($form, 'click', Download, '.j-code-download')
+// 点击copy
+function copyToClipboard(text) {
+    const domIpt = document.createElement('textarea');
+    domIpt.style.position = 'absolute';
+    domIpt.style.left = '-9999px';
+    domIpt.style.top = '-9999px';
+    document.body.appendChild(domIpt);
+    domIpt.value = text;
+    domIpt.select();
+    document.execCommand('copy');
+    document.body.removeChild(domIpt);
+}
+addEventListener($table, 'click', e => {
+    const $text = e.target;
+    const text = $text.textContent;
+    $text.style.cursor = 'pointer';
+    $text.title = '点击复制';
+    copyToClipboard(text);
+    const copyed = $text.getAttribute('data-copyed');
+    if (copyed !== '1') {
+        const $after = document.createElement('span');
+        $after.style = 'color:gray;margin-left:3px;';
+        $after.textContent = '已复制';
+        $text.after($after);
+    }
+    $text.setAttribute('data-copyed', '1');
+}, '.j-copyText')

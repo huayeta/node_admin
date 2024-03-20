@@ -109,7 +109,7 @@
             text: '冰燕总监'
         },
         'cbb': {
-            text: '晨宝贝'
+            text: '晨宝贝-A97'
         },
         'kg': {
             text: '琨哥总监'
@@ -1590,7 +1590,11 @@
                 </td>
                 <td style="color:red;">
                     ${humanData.wws.reduce((a, b) => {
-                return a + `<p class="${b.is_del=='1'?'del':''}"><span class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</span>${b.gender!=undefined?`（<span class="blue">${b.gender==1?'男':'女'}</span>）${b.note?`（<span class="cadetblue j-copyText">${b.note}</span>）`:''}`:''}</p>`;
+                return a + `<p class="${b.is_del=='1'?'del':''}">
+                                <span class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</span>
+                                ${b.gender!=undefined?`（<span class="blue">${b.gender==1?'男':'女'}</span>）`:''}
+                                ${b.note?`（<span class="cadetblue j-copyText">${b.note}</span>）`:''}
+                            </p>`;
             }, '')}
                 </td>
                 <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>
@@ -2971,7 +2975,7 @@
 
             setCon(Tools.displayAccountByKeyValue([['shop_label', shop_label]], (data, i) => {
                 if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
-                    return true;
+                    if (!RDATA.isExist(data.pig_phone, 'comment_reminder')) return true;
                 }
             }, (data, i) => i == 0))
         }, false)
