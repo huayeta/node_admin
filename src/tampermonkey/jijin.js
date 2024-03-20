@@ -3,9 +3,9 @@
 
 // code:data
 let DATAS = {};
-// {day:total_arr[0][0],sort:-1|1|0,type:code_type_arr[0]}
+// {day:total_arr[0][0],sort:-1|1|0,type:code_type_arr[0]债权组合,checked:1|0是否筛选购买的}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0],sale_time:7|30,note}}
+// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主'];
@@ -131,21 +131,23 @@ const Tools = {
             }
             // 判断是否有筛选
             if((SORT.type && CODES[data.code] && CODES[data.code].type==SORT.type) || !SORT.type){
-                str += `
-                    <tr data-code="${data.code}">
-                        <td>${index+1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
-                        <td>${data.name}${is_new?'🔥':''}</td>
-                        ${total_arr.map(total => {
-                    return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-                }).join('')}
-                        <td>${data.netWorthDate}</td>
-                        <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
-                        <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
-                        <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
-                        <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].note?CODES[data.code].note:''}</span></td>
-                        <td><a style="color:red;" class="j-code-del">删除</a></td>
-                    </tr>
-                `
+                if(!SORT.checked || (SORT.checked==1 && CODES[data.code] && CODES[data.code].checked == 1)){
+                    str += `
+                        <tr data-code="${data.code}">
+                            <td>${index+1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
+                            <td>${data.name}${is_new?'🔥':''}</td>
+                            ${total_arr.map(total => {
+                        return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                    }).join('')}
+                            <td>${data.netWorthDate}</td>
+                            <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
+                            <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
+                            <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
+                            <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].note?CODES[data.code].note:''}</span></td>
+                            <td><a style="color:red;" class="j-code-del">删除</a></td>
+                        </tr>
+                    `
+                }
             }
         });
         // 判断排序class
@@ -156,7 +158,7 @@ const Tools = {
         <table class="el-table">
             <thead>
                 <tr>
-                    <th>基金代码</th>
+                    <th><input type="checkbox" class="j-code-checkbox-sel" ${SORT.checked == 1?'checked':''} />基金代码</th>
                     <th>基金名称</th>
                     ${total_arr.map(total => {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
@@ -325,6 +327,12 @@ addEventListener($table, 'change', e => {
     const code = $checkbox.closest('tr').getAttribute('data-code');
     Tools.setCustomCodes(code, { checked: checked ? 1 : 0 });
 }, '.j-code-checkbox')
+// 筛选基金
+addEventListener($table,'change',e=>{
+    const $checkbox = e.target;
+    const checked = $checkbox.checked;
+    Tools.setCustomSort({checked:checked?1:0});
+},'.j-code-checkbox-sel')
 // 选择基本类型
 addEventListener($table, 'change', e => {
     const $select = e.target;
