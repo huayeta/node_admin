@@ -15,6 +15,30 @@ const SALETIME = {
 };
 
 const Tools = {
+    // 节流函数
+    throttle: (fn, delay) => {
+        let timer = null;
+        let lastTime = 0;
+
+        return function () {
+            const currentTime = new Date().getTime();
+            const remainingTime = delay - (currentTime - lastTime);
+            const context = this;
+            const args = arguments;
+
+            clearTimeout(timer);
+
+            if (remainingTime <= 0) {
+                fn.apply(context, args);
+                lastTime = currentTime;
+            } else {
+                timer = setTimeout(() => {
+                    fn.apply(context, args);
+                    lastTime = new Date().getTime();
+                }, remainingTime);
+            }
+        };
+    },
     setCustomCodes: (code, obj) => {
         if (!CODES[code]) CODES[code] = {};
         Object.assign(CODES[code], obj);
@@ -131,7 +155,7 @@ const Tools = {
             }
             // 判断是否有筛选
             // 债券组合筛选
-            if((SORT.type && CODES[data.code] && CODES[data.code].type==SORT.type) || !SORT.type){
+            if((!SORT.type || (CODES[data.code] && CODES[data.code].type && CODES[data.code].type.includes(SORT.type)))){
                 // 基金代码选中筛选
                 if(!SORT.checked || (SORT.checked==1 && CODES[data.code] && CODES[data.code].checked == 1)){
                     // name筛选
@@ -165,8 +189,7 @@ const Tools = {
                 <tr>
                     <th><input type="checkbox" class="j-code-checkbox-sel" ${SORT.checked == 1?'checked':''} />基金代码</th>
                     <th>
-                        基金名称<br/>
-                        <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字" style="margin-top:3px;" value="${SORT.name}" />
+                        基金名称
                     </th>
                     ${total_arr.map(total => {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
@@ -174,11 +197,7 @@ const Tools = {
                     <th>净值更新日期</th>
                     <th>债权类型</th>
                     <th>
-                        债权组合<br />
-                        <select class="j-code-type-sel" style="margin-top:3px;">
-                            <option></option>
-                            ${code_type_arr.map(type => `<option ${(SORT.type==type) ? 'selected' : ''}>${type}</option>`).join('')}
-                        </select>
+                        债权组合
                     </th>
                     <th>卖出时间</th>
                     <th>备注</th>
@@ -198,6 +217,11 @@ const Tools = {
         document.querySelector('.g-con').innerHTML = context;
     },
     initialization: () => {
+
+        DATAS = localStorage.getItem('jijin.datas') ? JSON.parse(localStorage.getItem('jijin.datas')) : {};
+        SORT = localStorage.getItem('jijin.sort') ? JSON.parse(localStorage.getItem('jijin.sort')) : {};
+        CODES = localStorage.getItem('jijin.codes') ? JSON.parse(localStorage.getItem('jijin.codes')) : {};
+
         const con = `
             <div class="g-form">
                 <style>
@@ -213,15 +237,14 @@ const Tools = {
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
                     <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px;" />
                     <button class="search_btn reb j-code-note-add" style="margin-left:10px">添加备注</button>
+                    <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字" style="margin-left:10px;" value="${SORT.name?SORT.name:''}" />
+                    <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type?SORT.type:''}" />
                 </div>
             </div>
             <div class="g-table"></div>
             <div class="g-con"></div>
         `;
         document.querySelector('.content').innerHTML = con;
-        DATAS = localStorage.getItem('jijin.datas') ? JSON.parse(localStorage.getItem('jijin.datas')) : {};
-        SORT = localStorage.getItem('jijin.sort') ? JSON.parse(localStorage.getItem('jijin.sort')) : {};
-        CODES = localStorage.getItem('jijin.codes') ? JSON.parse(localStorage.getItem('jijin.codes')) : {};
         Tools.updateDatasTable();
     }
 }
@@ -349,16 +372,15 @@ addEventListener($table, 'change', e => {
     Tools.setCustomCodes(code, { type: selected });
 }, '.j-code-type')
 // 筛选债权类型
-addEventListener($table,'change',e=>{
-    const $select = e.target;
-    const selected = $select.value;
-    Tools.setCustomSort({type:selected});
-},'.j-code-type-sel')
+addEventListener($form,'input',Tools.throttle(e=>{
+    const type = e.target.value;
+    Tools.setCustomSort({type:type});
+},500),'.j-code-type-ipt')
 // 筛选名字
-addEventListener($table,'change',e=>{
+addEventListener($form,'input',Tools.throttle(e=>{
     const value = e.target.value;
     Tools.setCustomSort({name:value});
-},'.j-code-name-ipt')
+},500),'.j-code-name-ipt')
 // 选择卖出时间
 addEventListener($table, 'change', e => {
     const $select = e.target;
