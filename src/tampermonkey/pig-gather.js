@@ -128,6 +128,12 @@
         },
         'nn': {
             text: '闹闹总监'
+        },
+        'xhm':{
+            text:'小红帽'
+        },
+        'yoyo':{
+            text:'YOYO总代'
         }
     };
     const ORDERTYPES = ['TB'];
