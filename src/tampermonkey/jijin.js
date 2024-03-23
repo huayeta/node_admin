@@ -3,15 +3,18 @@
 
 // code:data
 let DATAS = {};
-// {day:total_arr[0][0],sort:-1|1|0,type:code_type_arr[0]债权组合,checked:1|0是否筛选购买的,name:筛选}
+// {day:total_arr[0][0],sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注}}
+// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主'];
 const SALETIME = {
     7: '7天免',
-    30: '30天免'
+    30: '30天免',
+    90: '90天免',
+    365: '365天免',
+    730: '2年免'
 };
 
 const Tools = {
@@ -39,7 +42,21 @@ const Tools = {
             }
         };
     },
+    alertFuc: obj => {
+        const keys = Object.keys(obj);
+        const values = Object.values(obj);
+        let result = false;
+        for (let i = 0; i < keys.length; i++) {
+            if (!values[i]) {
+                alert(`${keys[i]}不能为空`);
+                result = true;
+                break;
+            }
+        }
+        return result;
+    },
     setCustomCodes: (code, obj) => {
+        if(Tools.alertFuc({code,obj}))return false;
         if (!CODES[code]) CODES[code] = {};
         Object.assign(CODES[code], obj);
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
@@ -49,14 +66,15 @@ const Tools = {
         delete CODES[code];
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
     },
-    setCustomSort:(obj)=>{
+    setCustomSort: (obj) => {
+        if(Tools.alertFuc({obj}))return false;
         Object.assign(SORT, obj);
         localStorage.setItem('jijin.sort', JSON.stringify(SORT));
         Tools.updateDatasTable();
     },
     // 1 升序 -1 降序
     setSort: ({ day, sort }) => {
-        Tools.setCustomSort({day,sort});
+        Tools.setCustomSort({ day, sort });
         // SORT = { day, sort };
         // localStorage.setItem('jijin.sort', JSON.stringify(SORT));
         // // console.log(SORT);
@@ -147,23 +165,23 @@ const Tools = {
     },
     getTable: (datas = []) => {
         let str = '';
-        datas.forEach((data,index) => {
+        datas.forEach((data, index) => {
             // 判断是否更新
             let is_new = false;
-            if(new Date().getDate()==new Date(data.netWorthDate).getDate()){
+            if (new Date().getDate() == new Date(data.netWorthDate).getDate()) {
                 is_new = true;
             }
             // 判断是否有筛选
             // 债券组合筛选
-            if((!SORT.type || (CODES[data.code] && CODES[data.code].type && CODES[data.code].type.includes(SORT.type)))){
+            if ((!SORT.type || (CODES[data.code] && CODES[data.code].type && CODES[data.code].type.includes(SORT.type)))) {
                 // 基金代码选中筛选
-                if(!SORT.checked || (SORT.checked==1 && CODES[data.code] && CODES[data.code].checked == 1)){
+                if (!SORT.checked || (SORT.checked == 1 && CODES[data.code] && CODES[data.code].checked == 1)) {
                     // name筛选
-                    if(!SORT.name || (data.name.includes(SORT.name))){
+                    if (!SORT.name || (data.name.includes(SORT.name))) {
                         str += `
                             <tr data-code="${data.code}">
-                                <td>${index+1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
-                                <td>${data.name}${is_new?'🔥':''}</td>
+                                <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
+                                <td>${data.name}${is_new ? '🔥' : ''}${(CODES[data.code] && CODES[data.code].keynote ==1)?'<span class="j-code-keynote-del" style="margin-left:5px;">❤️</span>':''}</td>
                                 ${total_arr.map(total => {
                             return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                         }).join('')}
@@ -171,7 +189,7 @@ const Tools = {
                                 <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
                                 <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
                                 <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
-                                <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].note?CODES[data.code].note:''}</span></td>
+                                <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span></td>
                                 <td><a style="color:red;" class="j-code-del">删除</a></td>
                             </tr>
                         `
@@ -187,7 +205,7 @@ const Tools = {
         <table class="el-table">
             <thead>
                 <tr>
-                    <th><input type="checkbox" class="j-code-checkbox-sel" ${SORT.checked == 1?'checked':''} />基金代码</th>
+                    <th><input type="checkbox" class="j-code-checkbox-sel" ${SORT.checked == 1 ? 'checked' : ''} />基金代码</th>
                     <th>
                         基金名称
                     </th>
@@ -232,13 +250,15 @@ const Tools = {
                 </style>
                 <div class="m-search">
                     <input class="search_input j-code-ipt" type="text" placeholder="债权代码" />
-                    <button class="search_btn reb j-code-add" style="margin-left:10px">添加债权</button>
+                    <button class="search_btn reb j-code-add" style="margin-left:0px">添加债权</button>
+                    <button class="search_btn j-code-keynote" style="margin-left:10px">添加重点</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
                     <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px;" />
-                    <button class="search_btn reb j-code-note-add" style="margin-left:10px">添加备注</button>
-                    <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字" style="margin-left:10px;" value="${SORT.name?SORT.name:''}" />
-                    <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type?SORT.type:''}" />
+                    <button class="search_btn reb j-code-note-add" style="margin-left:0px">添加备注</button>
+                    <span style="margin-left:10px; color:red;">筛选：</span>
+                    <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
+                    <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type ? SORT.type : ''}" />
                 </div>
             </div>
             <div class="g-table"></div>
@@ -298,11 +318,11 @@ const $codeIpt = $form.querySelector('.j-code-ipt');
 const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
 
 //点击代码填写进入上面的ipt
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const $code = e.target;
     const code = $code.textContent;
     $codeIpt.value = code;
-},'.j-code')
+}, '.j-code')
 // 添加代码
 addEventListener($form, 'click', async e => {
     const $btn = e.target;
@@ -321,15 +341,28 @@ addEventListener($form, 'click', async e => {
     $btn.ing = 0;
     $btn.innerHTML = '添加债权';
 }, '.j-code-add')
-// 添加备注
+// 添加重点
 addEventListener($form,'click',e=>{
     const code = $codeIpt.value;
+    Tools.setCustomCodes(code,{keynote:1});
+    Tools.updateDatasTable();
+},'.j-code-keynote')
+// 删除重点
+addEventListener($table,'click',e=>{
+    const code = e.target.closest('[data-code]').getAttribute('data-code');
+    console.log(code)
+    Tools.setCustomCodes(code,{keynote:0});
+    Tools.updateDatasTable();
+},'.j-code-keynote-del')
+// 添加备注
+addEventListener($form, 'click', e => {
+    const code = $codeIpt.value;
     const note = $codeNoteIpt.value;
-    Tools.setCustomCodes(code,{note:note});
+    Tools.setCustomCodes(code, { note: note });
     alert('添加成功');
     $codeNoteIpt.value = '';
     Tools.updateDatasTable();
-},'.j-code-note-add')
+}, '.j-code-note-add')
 // 更新债权
 addEventListener($form, 'click', async e => {
     const $btn = e.target;
@@ -359,11 +392,11 @@ addEventListener($table, 'change', e => {
     Tools.setCustomCodes(code, { checked: checked ? 1 : 0 });
 }, '.j-code-checkbox')
 // 筛选基金
-addEventListener($table,'change',e=>{
+addEventListener($table, 'change', e => {
     const $checkbox = e.target;
     const checked = $checkbox.checked;
-    Tools.setCustomSort({checked:checked?1:0});
-},'.j-code-checkbox-sel')
+    Tools.setCustomSort({ checked: checked ? 1 : 0 });
+}, '.j-code-checkbox-sel')
 // 选择基本类型
 addEventListener($table, 'change', e => {
     const $select = e.target;
@@ -372,15 +405,15 @@ addEventListener($table, 'change', e => {
     Tools.setCustomCodes(code, { type: selected });
 }, '.j-code-type')
 // 筛选债权类型
-addEventListener($form,'input',Tools.throttle(e=>{
+addEventListener($form, 'input', Tools.throttle(e => {
     const type = e.target.value;
-    Tools.setCustomSort({type:type});
-},500),'.j-code-type-ipt')
+    Tools.setCustomSort({ type: type });
+}, 500), '.j-code-type-ipt')
 // 筛选名字
-addEventListener($form,'input',Tools.throttle(e=>{
+addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
-    Tools.setCustomSort({name:value});
-},500),'.j-code-name-ipt')
+    Tools.setCustomSort({ name: value });
+}, 500), '.j-code-name-ipt')
 // 选择卖出时间
 addEventListener($table, 'change', e => {
     const $select = e.target;
@@ -432,14 +465,14 @@ addEventListener($table, 'click', e => {
     Tools.setSort({ day, sort });
 }, '.sort-caret')
 // 对比
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const $tr = e.target.closest('tr');
-    if($tr.classList.contains('select')){
+    if ($tr.classList.contains('select')) {
         $tr.classList.remove('select')
-    }else{
+    } else {
         $tr.classList.add('select');
     }
-},'tr')
+}, 'tr')
 //   下载函数
 const MDownload = (data, name) => {
     const blob = new Blob(data, {

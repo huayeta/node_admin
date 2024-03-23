@@ -567,7 +567,7 @@
             if (accounts.length == 0) return ['没有找到做单记录'];
             let dyStr = '';
             if (accounts.length > max) {
-                dyStr += `<div style="margin-bottom: 10px; color:gray;text-align: center">....还剩下<span style="color:red;">${accounts.length - 5}</span>个.....</div>`
+                dyStr += `<div style="margin-bottom: 10px; color:gray;text-align: center">....还剩下<span style="color:red;">${accounts.length - max}</span>个.....</div>`
             }
             const phoneDatas = [];
             const forLen = accounts.length < max ? accounts.length : max;
@@ -1577,7 +1577,8 @@
             <tr data-account="${humanData.phone}" data-mobile="${humanData.mobiles[0]}">
                 <td>
                     ${humanData.commission ? `<p style="color:darkturquoise;font-size:25px;">+${humanData.commission}</p>` : ''}
-                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}<span class="j-phone j-copyText">${Tools.highLightStr(humanData.phone, highLightStr)}</span>${btnStr}</p>
+                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}
+                    <span class="j-phone j-copyText">${Tools.highLightStr(humanData.phone, highLightStr)}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
                     ${humanData.teamers.length > 0 ? `<p style="color:blue;">属于团队：${humanData.teamers.map(teamer => TEAMERS[teamer].text)}</p>` : ''}
@@ -1782,7 +1783,7 @@
                         <button class="search_btn reb j-reg-search" style="margin-left:10px;">正则realname|ww搜索</button>
                         <button class="search_btn j-gatherQqs" style="">倒序筛选qq1235</button>
                         <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq1235</button>
-                        <button class="search_btn j-gatherShop" style="">查询店铺做单数据46</button>
+                        <button class="search_btn j-gatherShop" style="">查询店铺做单数据346</button>
                         <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
                         <button class="search_btn download" style="">下载数据</button>
                         <button class="search_btn reb j-wait-search" style="">筛选待处理（<span>0</span>）</button>
@@ -1952,6 +1953,15 @@
                 }
             }
         }, 1000), false)
+        // 当点击手机后填充
+        addEventListener(qqAdd,'click',e=>{
+            const account = e.target.textContent;
+            $phone.value = account;
+            // 得到最后一个记录的come-type,qq_exec_pre
+            const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[account], ['come_type', 'qq_exec_pre']);
+            if (come_type) $comeType.value = come_type;
+            if (qq_exec_pre) $qqExecPre.value = qq_exec_pre;
+        },'.j-phone')
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click', e => {
             const orderId = qqAdd.querySelector('.j-order-search .order-id').value;
@@ -2947,6 +2957,7 @@
             const arr = [];
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const comment_sel = qqAdd.querySelector('.j-comment-sel').value;
+            const search_time = $searchTime.value;
             if (!shop_label) return;
             // const phones = Object.keys(DATA);
             // for (let phone of phones) {
@@ -2981,7 +2992,7 @@
 
             setCon(Tools.displayAccountByKeyValue([['shop_label', shop_label]], (data, i) => {
                 if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
-                    if (!RDATA.isExist(data.pig_phone, 'comment_reminder')) return true;
+                    if (!RDATA.isExist(data.pig_phone, 'comment_reminder') && new Date(data.pig_over_time) > new Date(search_time)) return true;
                 }
             }, (data, i) => i == 0))
         }, false)
