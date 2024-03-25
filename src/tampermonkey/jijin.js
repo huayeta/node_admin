@@ -5,13 +5,14 @@
 let DATAS = {};
 // {day:total_arr[0][0],sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点}}
+// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点,buy_time:买入时间}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主'];
 const SALETIME = {
     7: '7天免',
     30: '30天免',
+    60:'60天免',
     90: '90天免',
     365: '365天免',
     730: '2年免'
@@ -94,6 +95,20 @@ const Tools = {
             const code = codes[key].code;
             // console.log(Number(key)+1);
             DATAS[code][`${day}_sort`] = `<span style="${key < 5 ? 'color:deepskyblue;' : ''}">${Number(key) + 1}</span>/${codes.length}`;
+        }
+    },
+    isSale:(code)=>{
+        if(!code || !CODES[code] || !CODES[code].sale_time || !CODES[code].buy_time)return '';
+        const {sale_time,buy_time} = CODES[code];
+        
+        const today  = new Date();
+        const specificDate = new Date(buy_time);
+        const dayDiff = Math.ceil((today.getTime() - specificDate.getTime()) / (1000 * 3600 * 24));
+        const day = dayDiff - sale_time;
+        if(day >= 0){
+            return '<span>可以售出</span>';
+        }else{
+            return `<span class="red">还差${-day}天售出</span>`
         }
     },
     updateDatasTable: () => {
@@ -181,7 +196,11 @@ const Tools = {
                         str += `
                             <tr data-code="${data.code}">
                                 <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
-                                <td>${data.name}${is_new ? '🔥' : ''}${(CODES[data.code] && CODES[data.code].keynote ==1)?'<span class="j-code-keynote-del" style="margin-left:5px;">❤️</span>':''}</td>
+                                <td>
+                                    ${data.name}
+                                    ${is_new ? '<span title="已经更新">🔥</span>' : ''}
+                                    ${(CODES[data.code] && CODES[data.code].keynote ==1)?'<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>':''}
+                                </td>
                                 ${total_arr.map(total => {
                             return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                         }).join('')}
@@ -190,6 +209,8 @@ const Tools = {
                                 <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
                                 <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
                                 <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span></td>
+                                <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time?CODES[data.code].buy_time:''}" /></td>
+                                <td>${Tools.isSale(data.code)}</td>
                                 <td><a style="color:red;" class="j-code-del">删除</a></td>
                             </tr>
                         `
@@ -219,6 +240,8 @@ const Tools = {
                     </th>
                     <th>卖出时间</th>
                     <th>备注</th>
+                    <th>买入时间</th>
+                    <th>是否售卖</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -322,6 +345,7 @@ addEventListener($table, 'click', e => {
     const $code = e.target;
     const code = $code.textContent;
     $codeIpt.value = code;
+    $codeNoteIpt.value = ((CODES[code] && CODES[code].note)?CODES[code].note:'');
 }, '.j-code')
 // 添加代码
 addEventListener($form, 'click', async e => {
@@ -350,9 +374,11 @@ addEventListener($form,'click',e=>{
 // 删除重点
 addEventListener($table,'click',e=>{
     const code = e.target.closest('[data-code]').getAttribute('data-code');
-    console.log(code)
-    Tools.setCustomCodes(code,{keynote:0});
-    Tools.updateDatasTable();
+    // console.log(code)
+    if(confirm('确定取消重点?')){
+        Tools.setCustomCodes(code,{keynote:0});
+        Tools.updateDatasTable();
+    }
 },'.j-code-keynote-del')
 // 添加备注
 addEventListener($form, 'click', e => {
@@ -376,8 +402,8 @@ addEventListener($form, 'click', async e => {
         if (`${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
             // console.log(code);
             await Tools.addCode(code);
-            $btn.ing++;
         }
+        $btn.ing++;
     }
     $btn.ing = undefined;
     $btn.innerHTML = '更新债权';
@@ -409,6 +435,13 @@ addEventListener($form, 'input', Tools.throttle(e => {
     const type = e.target.value;
     Tools.setCustomSort({ type: type });
 }, 500), '.j-code-type-ipt')
+// 基金买入时间
+addEventListener($table,'change',e=>{
+    const $buyTime = e.target;
+    const buy_time = $buyTime.value;
+    const code = $buyTime.closest('tr').getAttribute('data-code');
+    Tools.setCustomCodes(code,{buy_time});
+},'.j-code-buy-time')
 // 筛选名字
 addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
