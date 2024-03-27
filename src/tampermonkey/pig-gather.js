@@ -85,7 +85,7 @@
             text: '瑶摇总代'
         },
         'an': {
-            text: '阿媛总监'
+            text: '阿媛总监-团队散了'
         },
         'mc': {
             text: '沐晨总监'
@@ -1923,6 +1923,7 @@
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[phone], ['come_type', 'qq_exec_pre']);
             if (come_type) $comeType.value = come_type;
             if (qq_exec_pre) $qqExecPre.value = qq_exec_pre;
+            
             // const datas = findDatasByQq(qq);
             // // console.log(datas);
             // if (datas.length > 0) {
@@ -1939,6 +1940,11 @@
             // }
 
         }, 1000))
+        // $byQQ.addEventListener('blur',e=>{
+        //     // 触发全能搜索
+        //     const event = new Event('click',{bubbles:true});
+        //     qqAdd.querySelector('.j-almightySearch').dispatchEvent(event);
+        // })
         // 旺旺号变化之后的反应
         $ww.addEventListener('input', Tools.throttle(e => {
             const wwExec = e.target.value;
