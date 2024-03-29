@@ -288,6 +288,7 @@ const Tools = {
                     <button class="search_btn j-code-keynote" style="margin-left:10px">添加重点</button>
                     <button class="search_btn j-code-shield" style="margin-left:10px">添加抗跌</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
+                    <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债权</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
                     <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px;" />
                     <button class="search_btn reb j-code-note-add" style="margin-left:0px">添加备注</button>
@@ -360,7 +361,7 @@ class Alert {
         const $con = $alert.querySelector('.con');
         $con.innerHTML = con;
         $alert.style.display = 'block';
-        $alert.querySelector('.con').scrollTo({
+        $con.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
@@ -415,24 +416,43 @@ const $table = $Content.querySelector('.g-table');
 const $codeIpt = $form.querySelector('.j-code-ipt');
 const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
 
+const compareCodes = function(codes){
+    let str = '';
+    str+='<div style="display:flex;">';
+    codes.forEach(code=>{
+        const {name,customNetWorkData} = DATAS[code];
+        if(!customNetWorkData) return;
+        str+=`
+        <div style="margin:0 10px;">
+            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;">${name}</div>
+            <table>
+                <thead>
+                    <tr><th>日期</th><th>日涨幅</th></tr>
+                </thead>
+                <tbody>
+                    ${[...customNetWorkData].reverse().map(data => `<tr><td>${data[0]}</td><td class="${data[2] > 0 ? 'red' : 'green'}" style="text-align:right;">${data[2]}%</td></tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+        `
+    })
+    str+='</div>';
+    myAlert.show(str);
+}
+// 对比债基
+addEventListener($form,'click',e=>{
+    const $trs = $table.querySelectorAll('tr.select');
+    const codes = [];
+    $trs.forEach($tr=>{
+        codes.push($tr.getAttribute('data-code'));
+    })
+    if(codes.length>0)compareCodes(codes);
+},'.j-code-compare')
+
 // 基金名称点击
 addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
-    const { customNetWorkData } = DATAS[code]
-    if (!customNetWorkData) return;
-    const name = e.target.innerHTML;
-    // console.log(DATAS[code].customNetWorkData);
-    myAlert.show(`
-        <div style="text-align:center; margin-bottom:5px; color:gray">${name}</div>
-        <table>
-            <thead>
-                <tr><th>日期</th><th>日涨幅</th></tr>
-            </thead>
-            <tbody>
-                ${customNetWorkData.reverse().map(data => `<tr><td>${data[0]}</td><td class="${data[2] > 0 ? 'red' : 'green'}" style="text-align:right;">${data[2]}%</td></tr>`).join('')}
-            </tbody>
-        </table>
-    `)
+    compareCodes([code]);
 }, '.j-code-name')
 //点击代码填写进入上面的ipt
 addEventListener($table, 'click', e => {
