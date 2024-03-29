@@ -174,7 +174,7 @@ const Tools = {
                     customLastMonthGrowth += (+netWorthData[i][2]);
                 }
             }
-            res.data.customNetWorkData = netWorthData.slice(-6*30);
+            res.data.customNetWorkData = netWorthData.slice(-6 * 30);
             res.data.customLastWeekGrowth = (customLastWeekGrowth).toFixed(2);
             res.data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
             res.data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
@@ -360,6 +360,10 @@ class Alert {
         const $con = $alert.querySelector('.con');
         $con.innerHTML = con;
         $alert.style.display = 'block';
+        $alert.querySelector('.con').scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     }
 }
 const myAlert = new Alert();
@@ -412,10 +416,10 @@ const $codeIpt = $form.querySelector('.j-code-ipt');
 const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
 
 // 基金名称点击
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
-    const {customNetWorkData} = DATAS[code]
-    if(!customNetWorkData)return;
+    const { customNetWorkData } = DATAS[code]
+    if (!customNetWorkData) return;
     const name = e.target.innerHTML;
     // console.log(DATAS[code].customNetWorkData);
     myAlert.show(`
@@ -425,11 +429,11 @@ addEventListener($table,'click',e=>{
                 <tr><th>日期</th><th>日涨幅</th></tr>
             </thead>
             <tbody>
-                ${customNetWorkData.map(data=>`<tr><td>${data[0]}</td><td class="${data[2]>0?'red':'green'}" style="text-align:right;">${data[2]}%</td></tr>`).join('')}
+                ${customNetWorkData.reverse().map(data => `<tr><td>${data[0]}</td><td class="${data[2] > 0 ? 'red' : 'green'}" style="text-align:right;">${data[2]}%</td></tr>`).join('')}
             </tbody>
         </table>
     `)
-},'.j-code-name')
+}, '.j-code-name')
 //点击代码填写进入上面的ipt
 addEventListener($table, 'click', e => {
     const $code = e.target;
