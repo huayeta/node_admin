@@ -3157,6 +3157,7 @@
                     alert('修改成功')
                 }
             } catch (error) {
+                console.log(error);
                 alert('json数据格式不对')
             }
         }, '.j-modify-code-btn')
