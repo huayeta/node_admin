@@ -8,7 +8,7 @@ let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
-const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主'];
+const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主','海外债权','黄金'];
 const SALETIME = {
     7: '7天免',
     30: '30天免',
@@ -206,7 +206,7 @@ const Tools = {
                                 <tr data-code="${data.code}">
                                     <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
                                     <td>
-                                        <span class="j-code-name">${data.name}</span>
+                                        <span class="j-code-name" style="white-space:initial; ">${data.name}</span>
                                         ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                         ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
                                         ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}

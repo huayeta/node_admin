@@ -43,6 +43,7 @@
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
         { name: 'A97-欢乐购火箭🚀④群-新人', fix: 'QQ', value: '532849108' },
         { name: 'pig', fix: '', value: 'pig', commission: '7' },
+        { name: '凤凰', fix: '', value: 'fh' },
     ];
     const QQS = {
         '31': {
@@ -1057,7 +1058,7 @@
         },
         // 通过账号给最后一个记录添加评论或者默认评论或者直接评论
         lastAddCommentByPhone: (account, is_comment = '1', pig_type) => {
-            return Tools.updataDataByAccount(account, { is_comment }, (data, i) => {
+            return Tools.updataDataByAccount(account, { is_comment,comment_time:new Date().toLocaleString() }, (data, i) => {
                 if (data.pig_type == pig_type) {
                     return 'break';
                 }
