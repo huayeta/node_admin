@@ -198,8 +198,8 @@ const Tools = {
             if ((!SORT.type || (CODES[data.code] && CODES[data.code].type && CODES[data.code].type.includes(SORT.type)))) {
                 // 基金代码选中筛选
                 if (!SORT.checked || (SORT.checked == 1 && CODES[data.code] && CODES[data.code].checked == 1)) {
-                    // name筛选
-                    if (!SORT.name || (data.name.includes(SORT.name))) {
+                    // name筛选/code筛选
+                    if (!SORT.name || (data.name.includes(SORT.name) || data.code.includes(SORT.name))) {
                         // emoji筛选
                         if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji]] == 1)) {
                             str += `
@@ -214,13 +214,13 @@ const Tools = {
                                     ${total_arr.map(total => {
                                 return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                             }).join('')}
-                                    <td>${data.netWorthDate}</td>
-                                    <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
                                     <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
                                     <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
+                                    <td>${Tools.isSale(data.code)}</td>
                                     <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span></td>
                                     <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
-                                    <td>${Tools.isSale(data.code)}</td>
+                                    <td>${data.netWorthDate}</td>
+                                    <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
                                     <td><a style="color:red;" class="j-code-del">删除</a></td>
                                 </tr>
                             `
@@ -244,15 +244,15 @@ const Tools = {
                     ${total_arr.map(total => {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
         }).join('')}
-                    <th>净值更新日期</th>
-                    <th>债权类型</th>
                     <th>
                         债权组合
                     </th>
                     <th>卖出时间</th>
+                    <th>是否售出</th>
                     <th>备注</th>
                     <th>买入时间</th>
-                    <th>是否售出</th>
+                    <th>净值更新日期</th>
+                    <th>债权类型</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -293,9 +293,10 @@ const Tools = {
                     <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px;" />
                     <button class="search_btn reb j-code-note-add" style="margin-left:0px">添加备注</button>
                     <span style="margin-left:10px; color:red;">筛选：</span>
-                    <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
+                    <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字/代码" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
                     <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type ? SORT.type : ''}" />
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
+                    <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
                 </div>
             </div>
             <div class="g-table"></div>
@@ -590,7 +591,7 @@ addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
     Tools.setCustomSort({ name: value });
 }, 500), '.j-code-name-ipt')
-// 清楚筛选
+// 清除筛选
 addEventListener($form, 'click', e => {
     delete SORT.type;
     delete SORT.name;
@@ -601,6 +602,10 @@ addEventListener($form, 'click', e => {
     Tools.storageDatas();
     Tools.updateDatasTable();
 }, '.j-code-filter-clear')
+// 清除选择
+addEventListener($form,'click',e=>{
+    Tools.updateDatasTable();
+},'.j-code-select-clear')
 // 选择卖出时间
 addEventListener($table, 'change', e => {
     const $select = e.target;

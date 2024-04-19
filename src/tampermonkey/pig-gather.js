@@ -365,7 +365,7 @@
             if (!data || !key) return false;
             const keys = Object.keys(data);
             // 必须是is里面的字段
-            const is = ['pig_phone', key, 'is_del', 'create_time'];
+            const is = ['pig_phone', key, 'is_del', 'create_time','gender'];
             for (let k of keys) {
                 if (is.includes(k)) {
                     result = true;
@@ -557,8 +557,12 @@
         displayAccounts: (accounts, code = true, sort = true, btns = false, max = 5, highLightStr) => {
             // 排序
             if (sort) {
+                let str = 'pig_over_time';
+                if(typeof sort === 'string'){
+                    str = sort;
+                }
                 accounts.sort((a, b) => {
-                    if (DATA[a].length > 0 && DATA[b].length > 0 && new Date(DATA[a][0].pig_over_time) > new Date(DATA[b][0].pig_over_time)) {
+                    if (DATA[a].length > 0 && DATA[b].length > 0 && (typeof sort=='function'?sort(DATA[a],DATA[b]):(new Date(DATA[a][0]['pig_over_time']) > new Date(DATA[b][0]['pig_over_time'])))) {
                         return 1;
                     } else {
                         return -1;
@@ -583,11 +587,11 @@
             return [dyStr + table, code ? str : ''];
         },
         // 通过某个条件找到所有的数据并显示
-        displayAccountByKeyValue: (arr, otherKeysFuc, isBreakFuc = (data, i) => i == 0) => {
+        displayAccountByKeyValue: (arr, otherKeysFuc, isBreakFuc = (data, i) => i == 0,sort) => {
             const accounts = Tools.findAccountsBykeyValue(arr, otherKeysFuc, true, isBreakFuc);
             // console.log(accounts,come_type);
 
-            return Tools.displayAccounts(accounts, undefined, undefined, true);
+            return Tools.displayAccounts(accounts, undefined, sort, true);
         },
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
@@ -1968,6 +1972,8 @@
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[account], ['come_type', 'qq_exec_pre']);
             if (come_type) $comeType.value = come_type;
             if (qq_exec_pre) $qqExecPre.value = qq_exec_pre;
+            const wws = Tools.findWwsByPhones([account]);
+            $ww.value = wws.join('，');
         },'.j-phone')
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click', e => {
@@ -3001,7 +3007,12 @@
                 if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
                     if (!RDATA.isExist(data.pig_phone, 'comment_reminder') && new Date(data.pig_over_time) > new Date(search_time)) return true;
                 }
-            }, (data, i) => i == 0))
+            }, (data, i) => i == 0),(data1,data2)=>{
+                // 排序
+                let str1 = data1[0].comment_time?data1[0].comment_time:data1[0].pig_over_time;
+                let str2 = data2[0].comment_time?data2[0].comment_time:data2[0].pig_over_time;
+                return new Date(str1)>new Date(str2);
+            })
         }, false)
         function getComeTypeByTang() {
             const accounts = Tools.findAccountsBykeyValue([['qq_exec_pre', 'tang']], (data, i) => {
