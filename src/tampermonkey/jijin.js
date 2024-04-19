@@ -217,7 +217,7 @@ const Tools = {
                                     <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
                                     <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
                                     <td>${Tools.isSale(data.code)}</td>
-                                    <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span></td>
+                                    <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span></td>
                                     <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
                                     <td>${data.netWorthDate}</td>
                                     <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
@@ -297,6 +297,8 @@ const Tools = {
                     <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type ? SORT.type : ''}" />
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
+                    <input class="search_input j-code-credit-ipt" type="text" placeholder="信用占比" style="margin-left:10px;" />
+                    <button class="search_btn reb j-code-credit-add" style="margin-left:0px">添加</button>
                 </div>
             </div>
             <div class="g-table"></div>
@@ -416,6 +418,7 @@ const $form = $Content.querySelector('.g-form');
 const $table = $Content.querySelector('.g-table');
 const $codeIpt = $form.querySelector('.j-code-ipt');
 const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
+const $codeCredit = $form.querySelector('.j-code-credit-ipt');
 
 const compareCodes = function(codes){
     let str = '';
@@ -519,6 +522,15 @@ addEventListener($form, 'click', e => {
     $codeNoteIpt.value = '';
     Tools.updateDatasTable();
 }, '.j-code-note-add')
+// 添加信用占比
+addEventListener($form, 'click', e => {
+    const code = $codeIpt.value;
+    const credit = $codeCredit.value;
+    Tools.setCustomCodes(code, { credit: credit });
+    // alert('添加成功');
+    $codeCredit.value = '';
+    Tools.updateDatasTable();
+}, '.j-code-credit-add')
 // 更新债权
 addEventListener($form, 'click', async e => {
     const $btn = e.target;
