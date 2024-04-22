@@ -283,7 +283,7 @@ const Tools = {
                     <th>
                         基金名称<span class="emoji j-emoji ${SORT.emoji == '❤️' ? 'sel' : ''}">❤️</span><span class="emoji j-emoji ${SORT.emoji == '🛡️' ? 'sel' : ''}">🛡️</span>
                     </th>
-                    <th>购后日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
+                    <th>购后均日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     ${total_arr.map(total => {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
         }).join('')}
