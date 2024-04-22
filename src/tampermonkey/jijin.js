@@ -1,14 +1,14 @@
 // https://api.doctorxiong.club/v1/fund?code=007423
 // https://api.doctorxiong.club/v1/fund/detail?code=007423
 
-// code:data
+// {code:...data}
 let DATAS = {};
-// {day:total_arr[0][0],sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,emoji:keynote|shield}
+// {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,emoji:keynote|shield}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间}}
+// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间,credit:信用值,income:购买后平均收益率}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
-const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主','海外债权','黄金'];
+const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '海外债权', '黄金'];
 const SALETIME = {
     7: '7天免',
     30: '30天免',
@@ -60,10 +60,40 @@ const Tools = {
         }
         return result;
     },
+    upDateIncome:(code)=>{
+        if(!CODES[code])return;
+        const {buy_time} = CODES[code];
+        if(!buy_time)return;
+        // 计算购买后的收益率
+        const {customNetWorkData}= DATAS[code];
+        let income = 0;
+        let index = 0;
+        customNetWorkData.forEach(data=>{
+            if(new Date(buy_time)<=new Date(data[0])){
+                income+=(+data[2]);
+                index++;
+            }
+        })
+        // console.log(code,income,index)
+        if(index>0)income = (income/index).toFixed(2);
+        Tools.setCustomCodes(code,{income,income_day:index});
+        // 设置收入sort
+        let codes = Object.values(DATAS).filter(data=>(CODES[data.code] && CODES[data.code].checked == 1 && CODES[data.code].income));
+        // console.log(Object.keys(CODES))
+        codes = Tools.sortCodes(codes, 'income', -1);
+        for (let key in codes) {
+            const code = codes[key].code;
+            // console.log(Number(key)+1);
+            const income_sort = `<span style="${key < 5 ? 'color:deepskyblue;' : ''}">${Number(key) + 1}</span>/${CODES[code].income_day}/${codes.length}`;
+            Tools.setCustomCodes(code,{income_sort});
+        }
+        // console.log(CODES[code])
+    },
     setCustomCodes: (code, obj) => {
         if (Tools.alertFuc({ code, obj })) return false;
         if (!CODES[code]) CODES[code] = {};
         Object.assign(CODES[code], obj);
+        if(obj.buy_time)Tools.upDateIncome(code);
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
         // Tools.updateDatasTable();
     },
@@ -86,8 +116,17 @@ const Tools = {
         // Tools.updateDatasTable();
     },
     sortCodes: (codes, day, sort) => {
+        // console.log(day,sort);
         codes.sort((a, b) => {
-            const result = a[day] - b[day];
+            let result = 0;
+            if(day=='credit' || day == 'income'){
+                let aa = bb = (sort>0? 1000:0);
+                if(CODES[a.code] && CODES[a.code][day]) aa = CODES[a.code][day];
+                if(CODES[b.code] && CODES[b.code][day]) bb = CODES[b.code][day];
+                result = aa - bb;
+            }else{
+                result = a[day] - b[day];
+            }
             return sort == 1 ? result : -result;
         })
         return codes;
@@ -135,7 +174,7 @@ const Tools = {
     },
     delCode: (code) => {
         delete DATAS[code];
-        // 排序
+        // 排行
         total_arr.forEach(total => {
             Tools.sortHtml(total[0]);
         })
@@ -145,10 +184,11 @@ const Tools = {
     },
     setCode: (datas) => {
         DATAS[datas.code] = datas;
-        // 排序
+        // 排行
         total_arr.forEach(total => {
             Tools.sortHtml(total[0]);
         })
+        Tools.upDateIncome(datas.code);
         // Tools.delCustomCodes(datas.code);
         Tools.storageDatas();
         Tools.updateDatasTable();
@@ -174,6 +214,7 @@ const Tools = {
                     customLastMonthGrowth += (+netWorthData[i][2]);
                 }
             }
+            // 留下来最近6个月的数据
             res.data.customNetWorkData = netWorthData.slice(-6 * 30);
             res.data.customLastWeekGrowth = (customLastWeekGrowth).toFixed(2);
             res.data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
@@ -211,6 +252,7 @@ const Tools = {
                                         ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
                                         ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
                                     </td>
+                                    <td>${(CODES[data.code] && CODES[data.code].income)?`<span class="${+CODES[data.code].income>0?`red`:'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}`:''}</span></td>
                                     ${total_arr.map(total => {
                                 return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                             }).join('')}
@@ -241,6 +283,7 @@ const Tools = {
                     <th>
                         基金名称<span class="emoji j-emoji ${SORT.emoji == '❤️' ? 'sel' : ''}">❤️</span><span class="emoji j-emoji ${SORT.emoji == '🛡️' ? 'sel' : ''}">🛡️</span>
                     </th>
+                    <th>购后日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     ${total_arr.map(total => {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
         }).join('')}
@@ -249,7 +292,7 @@ const Tools = {
                     </th>
                     <th>卖出时间</th>
                     <th>是否售出</th>
-                    <th>备注</th>
+                    <th>备注<span class="caret-wrapper ${SORT.day == 'credit' ? sortClassname : ''}" data-day="credit"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>买入时间</th>
                     <th>净值更新日期</th>
                     <th>债权类型</th>
@@ -280,17 +323,18 @@ const Tools = {
                     .m-search{
                         display:flex; align-items:center; height:auto; margin-bottom:15px;
                     }
-                    .m-search .search_input{width:150px;}
+                    .m-search .search_input{ width: 100px;}
                 </style>
                 <div class="m-search">
                     <input class="search_input j-code-ipt" type="text" placeholder="债权代码" />
+                    <span class="j-code-name gray" style="margin:0 5px;"></span>
                     <button class="search_btn reb j-code-add" style="margin-left:0px">添加债权</button>
                     <button class="search_btn j-code-keynote" style="margin-left:10px">添加重点</button>
                     <button class="search_btn j-code-shield" style="margin-left:10px">添加抗跌</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
                     <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债权</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
-                    <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px;" />
+                    <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px; width:150px;" />
                     <button class="search_btn reb j-code-note-add" style="margin-left:0px">添加备注</button>
                     <span style="margin-left:10px; color:red;">筛选：</span>
                     <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字/代码" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
@@ -305,6 +349,10 @@ const Tools = {
             <div class="g-con"></div>
         `;
         document.querySelector('.content').innerHTML = con;
+        // 初始化收入
+        // Object.keys(DATAS).forEach(code=>{
+        //     Tools.upDateIncome(code);
+        // })
         Tools.updateDatasTable();
     }
 }
@@ -420,13 +468,13 @@ const $codeIpt = $form.querySelector('.j-code-ipt');
 const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
 const $codeCredit = $form.querySelector('.j-code-credit-ipt');
 
-const compareCodes = function(codes){
+const compareCodes = function (codes) {
     let str = '';
-    str+='<div style="display:flex;">';
-    codes.forEach(code=>{
-        const {name,customNetWorkData} = DATAS[code];
-        if(!customNetWorkData) return;
-        str+=`
+    str += '<div style="display:flex;">';
+    codes.forEach(code => {
+        const { name, customNetWorkData } = DATAS[code];
+        if (!customNetWorkData) return;
+        str += `
         <div style="margin:0 10px;">
             <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;">${name}</div>
             <table>
@@ -440,18 +488,18 @@ const compareCodes = function(codes){
         </div>
         `
     })
-    str+='</div>';
+    str += '</div>';
     myAlert.show(str);
 }
 // 对比债基
-addEventListener($form,'click',e=>{
+addEventListener($form, 'click', e => {
     const $trs = $table.querySelectorAll('tr.select');
     const codes = [];
-    $trs.forEach($tr=>{
+    $trs.forEach($tr => {
         codes.push($tr.getAttribute('data-code'));
     })
-    if(codes.length>0)compareCodes(codes);
-},'.j-code-compare')
+    if (codes.length > 0) compareCodes(codes);
+}, '.j-code-compare')
 
 // 基金名称点击
 addEventListener($table, 'click', e => {
@@ -464,6 +512,7 @@ addEventListener($table, 'click', e => {
     const code = $code.textContent;
     $codeIpt.value = code;
     $codeNoteIpt.value = ((CODES[code] && CODES[code].note) ? CODES[code].note : '');
+    document.querySelector('.j-code-name').textContent = (DATAS[code].name);
 }, '.j-code')
 // 添加代码
 addEventListener($form, 'click', async e => {
@@ -615,9 +664,9 @@ addEventListener($form, 'click', e => {
     Tools.updateDatasTable();
 }, '.j-code-filter-clear')
 // 清除选择
-addEventListener($form,'click',e=>{
+addEventListener($form, 'click', e => {
     Tools.updateDatasTable();
-},'.j-code-select-clear')
+}, '.j-code-select-clear')
 // 选择卖出时间
 addEventListener($table, 'change', e => {
     const $select = e.target;
