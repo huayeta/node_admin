@@ -63,7 +63,10 @@ const Tools = {
     upDateIncome:(code)=>{
         if(!CODES[code])return;
         const {buy_time} = CODES[code];
-        if(!buy_time)return;
+        if(!CODES[code].hasOwnProperty('buy_time'))return;
+        if(buy_time == ''){
+            return Tools.setCustomCodes(code,{income_sort:''});
+        }
         // 计算购买后的收益率
         const {customNetWorkData}= DATAS[code];
         let income = 0;
@@ -93,7 +96,15 @@ const Tools = {
         if (Tools.alertFuc({ code, obj })) return false;
         if (!CODES[code]) CODES[code] = {};
         Object.assign(CODES[code], obj);
-        if(obj.buy_time)Tools.upDateIncome(code);
+        // console.log(obj,CODES[code],obj);
+        if(obj.hasOwnProperty('buy_time'))Tools.upDateIncome(code);
+        if(obj.hasOwnProperty('checked') && obj.checked == 0){
+            Tools.setCustomCodes(code,{
+                income: 0,
+                income_day:0,
+                income_sort: '',
+            })
+        }
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
         // Tools.updateDatasTable();
     },
@@ -611,6 +622,7 @@ addEventListener($table, 'change', e => {
         Tools.setCustomCodes(code, { buy_time: '' });
     }
     Tools.setCustomCodes(code, { checked: checked ? 1 : 0 });
+    Tools.updateDatasTable();
 }, '.j-code-checkbox')
 // 筛选基金
 addEventListener($table, 'change', e => {
