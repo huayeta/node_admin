@@ -1,5 +1,7 @@
 // https://api.doctorxiong.club/v1/fund?code=007423
 // https://api.doctorxiong.club/v1/fund/detail?code=007423
+// https://kouchao.github.io/TiantianFundApi/apis/ 所有api信息
+// 更新的话先 cd E:\work\TiantianFundApi-main 然后npm run start
 
 // {code:...data}
 let DATAS = {};
@@ -47,6 +49,9 @@ const Tools = {
             }
         };
     },
+    objectToQueryParams:(params)=>{
+        return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
+    },
     alertFuc: obj => {
         const keys = Object.keys(obj);
         const values = Object.values(obj);
@@ -72,8 +77,8 @@ const Tools = {
         let income = 0;
         let index = 0;
         customNetWorkData.forEach(data=>{
-            if(new Date(buy_time)<=new Date(data[0])){
-                income+=(+data[2]);
+            if(new Date(buy_time)<=new Date(data['FSRQ'])){
+                income+=(+data['JZZZL']);
                 index++;
             }
         })
@@ -178,10 +183,67 @@ const Tools = {
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
     },
     // code:基金代码，name:基金名称，dayGrowth：日涨幅，lastWeekGrowth：周涨幅，lastMonthGrowth：月涨幅，lastThreeMonthsGrowth：三月涨幅，lastSixMonthsGrowth：六月涨幅，lastYearGrowth：年涨幅，netWorthDate：净值更新日期，expectWorthDate：净值估算更新日期
-    fetch: async (code) => {
-        const res = await fetch(`https://api.doctorxiong.club/v1/fund/detail?code=${code}`);
+    fetch: async (action_name,params) => {
+        // console.log(Tools.objectToQueryParams(params));
+        const res = await fetch(`http://127.0.0.1:3000/${action_name}?${Tools.objectToQueryParams(params)}`);
         const datas = await res.json();
         return datas;
+    },
+    getCode: async (code)=>{
+        // 获取基金名字
+        const {SHORTNAME:name,FTYPE:type} = (await Tools.fetch('fundMNDetailInformation',{'FCODE':code})).Datas;
+        // 获取基金涨幅
+        const {Datas,Expansion:{TIME:netWorthDate}} = await Tools.fetch('fundMNPeriodIncrease',{'FCODE':code});
+        const Data = {code,name,type,netWorthDate};
+        Datas.forEach(data=>{
+            switch (data.title) {
+                case 'Z':
+                    Data.lastWeekGrowth = data.syl;
+                    break;
+                case 'Y':
+                    Data.lastMonthGrowth = data.syl;
+                    break;
+                case '3Y':
+                    Data.lastThreeMonthsGrowth = data.syl;
+                    break;
+                case '6Y':
+                    Data.lastSixMonthsGrowth = data.syl;
+                    break;
+                case '1N':
+                    Data.lastYearGrowth = data.syl;
+                    break;
+                default:
+                    break;
+            }
+        })
+        // 获取基金历史精致
+        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList',{'FCODE':code,'pageIndex':1,'pagesize':6*30});
+        let customLastWeekGrowth = 0;
+        let custom2LastWeekGrowth = 0;
+        let customLastMonthGrowth = 0;
+        let dayGrowth = 0;
+        fundMNHisNetList.Datas.forEach((data,i)=>{
+            if(i == 0) dayGrowth = data.JZZZL;
+            // 0,1,2,3   i=3  4-2=2  
+            if (i < 5) {
+                customLastWeekGrowth += (+data.JZZZL);
+            }
+            if (i < 5 * 2) {
+                custom2LastWeekGrowth += (+data.JZZZL);
+            }
+            if (i < 5 * 4) {
+                customLastMonthGrowth += (+data.JZZZL);
+            }
+        })
+        // 留下来最近6个月的数据
+        Data.dayGrowth = dayGrowth;
+        Data.customNetWorkData = fundMNHisNetList.Datas;
+        Data.customLastWeekGrowth = (customLastWeekGrowth).toFixed(2);
+        Data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
+        Data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
+        // console.log(Data);
+        Tools.setCode(Data);
+        return Data;
     },
     delCode: (code) => {
         delete DATAS[code];
@@ -204,39 +266,39 @@ const Tools = {
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
-    addCode: async (code) => {
-        // console.log(code);
-        const res = await Tools.fetch(code);
-        if (res.code == '200') {
-            const { netWorthData } = res.data;
-            const maxLength = netWorthData.length;
-            let customLastWeekGrowth = 0;
-            let custom2LastWeekGrowth = 0;
-            let customLastMonthGrowth = 0;
-            // 0,1,2,3   i=3  4-2=2  
-            for (let i = maxLength - 1; i > 0; i--) {
-                if (i >= maxLength - 5) {
-                    customLastWeekGrowth += (+netWorthData[i][2]);
-                }
-                if (i >= maxLength - 5 * 2) {
-                    custom2LastWeekGrowth += (+netWorthData[i][2]);
-                }
-                if (i >= maxLength - 5 * 4) {
-                    customLastMonthGrowth += (+netWorthData[i][2]);
-                }
-            }
-            // 留下来最近6个月的数据
-            res.data.customNetWorkData = netWorthData.slice(-6 * 30);
-            res.data.customLastWeekGrowth = (customLastWeekGrowth).toFixed(2);
-            res.data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
-            res.data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
-            delete res.data.totalNetWorthData;
-            delete res.data.netWorthData;
-            Tools.setCode(res.data);
-            return res.data;
-        }
-        return false;
-    },
+    // addCode: async (code) => {
+    //     // console.log(code);
+    //     const res = await Tools.fetch(code);
+    //     if (res.code == '200') {
+    //         const { netWorthData } = res.data;
+    //         const maxLength = netWorthData.length;
+    //         let customLastWeekGrowth = 0;
+    //         let custom2LastWeekGrowth = 0;
+    //         let customLastMonthGrowth = 0;
+    //         // 0,1,2,3   i=3  4-2=2  
+    //         for (let i = maxLength - 1; i > 0; i--) {
+    //             if (i >= maxLength - 5) {
+    //                 customLastWeekGrowth += (+netWorthData[i][2]);
+    //             }
+    //             if (i >= maxLength - 5 * 2) {
+    //                 custom2LastWeekGrowth += (+netWorthData[i][2]);
+    //             }
+    //             if (i >= maxLength - 5 * 4) {
+    //                 customLastMonthGrowth += (+netWorthData[i][2]);
+    //             }
+    //         }
+    //         // 留下来最近6个月的数据
+    //         res.data.customNetWorkData = netWorthData.slice(-6 * 30);
+    //         res.data.customLastWeekGrowth = (customLastWeekGrowth).toFixed(2);
+    //         res.data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
+    //         res.data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
+    //         delete res.data.totalNetWorthData;
+    //         delete res.data.netWorthData;
+    //         Tools.setCode(res.data);
+    //         return res.data;
+    //     }
+    //     return false;
+    // },
     getTable: (datas = []) => {
         let str = '';
         datas.forEach((data, index) => {
@@ -493,7 +555,7 @@ const compareCodes = function (codes) {
                     <tr><th>日期</th><th>日涨幅</th></tr>
                 </thead>
                 <tbody>
-                    ${[...customNetWorkData].reverse().map(data => `<tr><td>${data[0]}</td><td class="${data[2] > 0 ? 'red' : 'green'}" style="text-align:right;">${data[2]}%</td></tr>`).join('')}
+                    ${[...customNetWorkData].map(data => `<tr><td>${data['FSRQ']}</td><td class="${data['JZZZL'] > 0 ? 'red' : 'green'}" style="text-align:right;">${data['JZZZL']}%</td></tr>`).join('')}
                 </tbody>
             </table>
         </div>
@@ -532,14 +594,10 @@ addEventListener($form, 'click', async e => {
     $btn.ing = 1;
     $btn.innerHTML = '正在添加';
     const code = $codeIpt.value;
-    const res = await Tools.addCode(code);
-    if (res) {
-        // alert('添加成功');
-        Tools.updateDatasTable();
-        $codeIpt.value = '';
-    } else {
-        alert('添加失败');
-    }
+    await Tools.getCode(code);
+    Tools.updateDatasTable();
+    $codeIpt.value = '';
+    alert('添加成功');
     $btn.ing = 0;
     $btn.innerHTML = '添加债权';
 }, '.j-code-add')
@@ -603,7 +661,7 @@ addEventListener($form, 'click', async e => {
         const datas = DATAS[code];
         if (`${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
             // console.log(code);
-            await Tools.addCode(code);
+            await Tools.getCode(code);
         }
         $btn.ing++;
     }
