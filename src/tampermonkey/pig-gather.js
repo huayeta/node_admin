@@ -328,6 +328,9 @@
                 }
             };
         },
+        getTime:()=>{
+            return new Date().toLocaleString();
+        },
         // 判断是否是一个日期字符串
         isDateValid: (...val) => {
             return !Number.isNaN(new Date(...val).valueOf());
@@ -985,7 +988,7 @@
         },
         // 给旺旺添加备注
         addWwNoteByAccount: (pig_phone, ww, note) => {
-            return Tools.updataDataByAccount(pig_phone, { note }, (data, index) => {
+            return Tools.updataDataByAccount(pig_phone, { note,note_create_time:Tools.getTime() }, (data, index) => {
                 if(data.ww_exec == ww){
                     return 'break';
                 }
