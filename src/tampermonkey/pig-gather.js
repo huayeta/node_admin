@@ -1688,7 +1688,7 @@
         let option_strs = '';
         const qqs_obj = {};
         Object.keys(QQS).forEach(num => {
-            option_strs += `<option value=${num} ${num == 'tang' ? `selected` : ''}>${num}：${QQS[num].text}</option>`;
+            option_strs += `<option value=${num} ${num == '54' ? `selected` : ''}>${num}：${QQS[num].text}</option>`;
             qqs_obj[num] = QQS[num].text;
         })
         // 团队

@@ -5,17 +5,18 @@
 
 // {code:...data}
 let DATAS = {};
-// {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,emoji:keynote|shield,sale_time:SALETIME}
+// {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间,credit:信用值,income:购买后平均收益率}}
+// {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
-const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '海外债权', '黄金'];
+const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主','股基信用债为主', '海外债权', '黄金'];
 const SALETIME = {
     7: '7天免',
     30: '30天免',
     60: '60天免',
     90: '90天免',
+    180:'180天免',
     365: '365天免',
     730: '2年免'
 };
@@ -314,35 +315,41 @@ const Tools = {
                 if (!SORT.checked || (SORT.checked == 1 && CODES[data.code] && CODES[data.code].checked == 1)) {
                     // name筛选/code筛选
                     if (!SORT.name || (data.name.includes(SORT.name) || data.code.includes(SORT.name))) {
-                        // emoji筛选
-                        if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji]] == 1)) {
-                            // 针对卖出时间筛选
-                            if(!SORT.sale_time || (CODES[data.code] && CODES[data.code].sale_time && CODES[data.code].sale_time == SORT.sale_time)){
-                                str += `
-                                    <tr data-code="${data.code}">
-                                        <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
-                                        <td>
-                                            <span class="j-code-name" style="white-space:initial; ">${data.name}</span>
-                                            ${is_new ? '<span title="已经更新">🔥</span>' : ''}
-                                            ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
-                                            ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
-                                        </td>
-                                        <td>${(CODES[data.code] && CODES[data.code].income)?`<span class="${+CODES[data.code].income>0?`red`:'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}`:''}</span></td>
-                                        ${total_arr.map(total => {
-                                    return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-                                }).join('')}
-                                        <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
-                                        <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
-                                        <td>${Tools.isSale(data.code)}</td>
-                                        <td><span class="j-copyText">${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span></td>
-                                        <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
-                                        <td>${data.netWorthDate}</td>
-                                        <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
-                                        <td><a style="color:red;" class="j-code-del">删除</a></td>
-                                    </tr>
-                                `
+                        // note筛选
+                        if(!SORT.note || (CODES[data.code] && CODES[data.code].note && CODES[data.code].note.includes(SORT.note))){
+                            // emoji筛选
+                            if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji]] == 1)) {
+                                // 针对卖出时间筛选
+                                if(!SORT.sale_time || (CODES[data.code] && CODES[data.code].sale_time && CODES[data.code].sale_time == SORT.sale_time)){
+                                    str += `
+                                        <tr data-code="${data.code}">
+                                            <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
+                                            <td>
+                                                <span class="j-code-name ${(CODES[data.code] && CODES[data.code].limit == 1)?'del':''}" style="white-space:initial; ">${data.name}</span>
+                                                ${is_new ? '<span title="已经更新">🔥</span>' : ''}
+                                                ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
+                                                ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
+                                            </td>
+                                            <td>${(CODES[data.code] && CODES[data.code].income)?`<span class="${+CODES[data.code].income>0?`red`:'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}`:''}</span></td>
+                                            ${total_arr.map(total => {
+                                        return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                                    }).join('')}
+                                            <td><select class="j-code-type"><option></option>${code_type_arr.map(type => `<option ${(CODES[data.code] && CODES[data.code].type == type) ? 'selected' : ''}>${type}</option>`).join('')}</select></td>
+                                            <td><select class="j-sale-time"><option></option>${Object.keys(SALETIME).map(time => `<option ${(CODES[data.code] && CODES[data.code].sale_time == time) ? 'selected' : ''} value="${time}">${SALETIME[time]}</option>`).join('')}</select></td>
+                                            <td>${Tools.isSale(data.code)}</td>
+                                            <td>${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}<span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span></td>
+                                            <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
+                                            <td>${data.netWorthDate}</td>
+                                            <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
+                                            <td>
+                                                <a style="color:red;" class="j-code-del">删除</a>
+                                                ${(CODES[data.code] && CODES[data.code].limit == 1)?'<br/><a style="color:red;" class="j-code-limit-del">删除限额</a>':''}
+                                            </td>
+                                        </tr>
+                                    `
+                                }
+                                
                             }
-                            
                         }
                     }
                 }
@@ -401,13 +408,22 @@ const Tools = {
                         display:flex; align-items:center; height:auto; margin-bottom:15px;
                     }
                     .m-search .search_input{ width: 100px;}
+                    .span-a a{
+                        color:red;
+                        margin-right:10px;
+                        cursor: pointer;
+                    }
+                    .span-a a:hover{
+                        opacity: .9;
+                    }
                 </style>
                 <div class="m-search">
                     <input class="search_input j-code-ipt" type="text" placeholder="债权代码" />
                     <span class="j-code-name gray" style="margin:0 5px;"></span>
                     <button class="search_btn reb j-code-add" style="margin-left:0px">添加债权</button>
-                    <button class="search_btn j-code-keynote" style="margin-left:10px">添加重点</button>
-                    <button class="search_btn j-code-shield" style="margin-left:10px">添加抗跌</button>
+                    <button class="search_btn j-code-keynote" style="margin-left:10px">添加重点❤️</button>
+                    <button class="search_btn j-code-shield" style="margin-left:10px">添加抗跌🛡️</button>
+                    <button class="search_btn j-code-limit" style="margin-left:10px">添加限额</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
                     <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债权</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
@@ -416,11 +432,13 @@ const Tools = {
                     <span style="margin-left:10px; color:red;">筛选：</span>
                     <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字/代码" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
                     <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type ? SORT.type : ''}" />
-                    <select class="search_input j-code-sale_time-sel" style="margin-left:10px;width:auto;"><option>选择卖出时间</option>${Object.keys(SALETIME).map(sale_time=>(`<option value="${sale_time}" ${SORT.sale_time ==sale_time?'selected':''}>${SALETIME[sale_time]}</option>`)).join('')}</select>
+                    <input class="search_input j-code-note-sort" type="text" placeholder="搜索备注" style="margin-left:10px;" value="${SORT.note ? SORT.note : ''}" />
+                    <select class="search_input j-code-sale_time-sel" style="margin-left:10px;width:auto;"><option value="">选择卖出时间</option>${Object.keys(SALETIME).map(sale_time=>(`<option value="${sale_time}" ${SORT.sale_time ==sale_time?'selected':''}>${SALETIME[sale_time]}</option>`)).join('')}</select>
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
                     <input class="search_input j-code-credit-ipt" type="text" placeholder="信用占比" style="margin-left:10px;" />
                     <button class="search_btn reb j-code-credit-add" style="margin-left:0px">添加</button>
+                    <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
                 </div>
             </div>
             <div class="g-table"></div>
@@ -636,6 +654,21 @@ addEventListener($table, 'click', e => {
         Tools.updateDatasTable();
     }
 }, '.j-code-shield-del')
+// 添加限额
+addEventListener($form,'click',e=>{
+    const code = $codeIpt.value;
+    Tools.setCustomCodes(code,{limit:1});
+    Tools.updateDatasTable();
+},'.j-code-limit')
+// 删除限额
+addEventListener($table, 'click', e => {
+    const code = e.target.closest('[data-code]').getAttribute('data-code');
+    // console.log(code)
+    if (confirm('确定取消限额基金吗?')) {
+        Tools.setCustomCodes(code, { limit: 0 });
+        Tools.updateDatasTable();
+    }
+}, '.j-code-limit-del')
 // 添加备注
 addEventListener($form, 'click', e => {
     const code = $codeIpt.value;
@@ -732,6 +765,22 @@ addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
     Tools.setCustomSort({ name: value });
 }, 500), '.j-code-name-ipt')
+// 筛选备注
+addEventListener($form, 'input', Tools.throttle(e => {
+    const value = e.target.value;
+    Tools.setCustomSort({ note: value });
+}, 500), '.j-code-note-sort')
+addEventListener($form, 'click', Tools.throttle(e => {
+    const value = e.target.textContent;
+    const $noteSort = document.querySelector('.j-code-note-sort');
+    $noteSort.value = value;
+    const event = new Event('input',{
+        bubbles:true,
+        cancelable: true,
+    });
+    $noteSort.dispatchEvent(event);
+    // Tools.setCustomSort({ note: value });
+}, 500), '.j-code-note-span')
 // 清除筛选
 addEventListener($form, 'click', e => {
     delete SORT.type;
@@ -739,8 +788,10 @@ addEventListener($form, 'click', e => {
     delete SORT.checked;
     delete SORT.emoji;
     delete SORT.sale_time;
+    delete SORT.note;
     $form.querySelector('.j-code-name-ipt').value = '';
     $form.querySelector('.j-code-type-ipt').value = '';
+    $form.querySelector('.j-code-note-sort').value = '';
     $form.querySelector('.j-code-sale_time-sel').value = '';
     Tools.storageDatas();
     Tools.updateDatasTable();
