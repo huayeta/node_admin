@@ -151,6 +151,7 @@
             min
         }
     }
+window.getImgMin = getImgMin;
     function startDownload(params) {
         console.log(`正在打包评论...`)
         Zip.generateAsync({ type: "blob" }).then(function (content) {
@@ -202,5 +203,6 @@
             download();
         });
     }
-    console.log('下载评论函数：startReadComent()')
+    console.log('%c下载评论函数：startReadComent()','color:red;font-size:20px;');
+    console.log('%c每次打开页面要滚动到底，现在图片懒加载了，要不然获取不到真实图片地址','color:red;font-size:20px;')
 })();

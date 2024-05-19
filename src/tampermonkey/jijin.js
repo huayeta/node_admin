@@ -10,13 +10,13 @@ let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
-const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主','股基信用债为主', '海外债权', '黄金'];
+const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金'];
 const SALETIME = {
     7: '7天免',
     30: '30天免',
     60: '60天免',
     90: '90天免',
-    180:'180天免',
+    180: '180天免',
     365: '365天免',
     730: '2年免'
 };
@@ -50,7 +50,7 @@ const Tools = {
             }
         };
     },
-    objectToQueryParams:(params)=>{
+    objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
     },
     alertFuc: obj => {
@@ -66,35 +66,35 @@ const Tools = {
         }
         return result;
     },
-    upDateIncome:(code)=>{
-        if(!CODES[code])return;
-        const {buy_time} = CODES[code];
-        if(!CODES[code].hasOwnProperty('buy_time'))return;
-        if(buy_time == ''){
-            return Tools.setCustomCodes(code,{income_sort:''});
+    upDateIncome: (code) => {
+        if (!CODES[code]) return;
+        const { buy_time } = CODES[code];
+        if (!CODES[code].hasOwnProperty('buy_time')) return;
+        if (buy_time == '') {
+            return Tools.setCustomCodes(code, { income_sort: '' });
         }
         // 计算购买后的收益率
-        const {customNetWorkData}= DATAS[code];
+        const { customNetWorkData } = DATAS[code];
         let income = 0;
         let index = 0;
-        customNetWorkData.forEach(data=>{
-            if(new Date(buy_time)<=new Date(data['FSRQ'])){
-                income+=(+data['JZZZL']);
+        customNetWorkData.forEach(data => {
+            if (new Date(buy_time) <= new Date(data['FSRQ'])) {
+                income += (+data['JZZZL']);
                 index++;
             }
         })
         // console.log(code,income,index)
-        if(index>0)income = (income/index).toFixed(2);
-        Tools.setCustomCodes(code,{income,income_day:index});
+        if (index > 0) income = (income / index).toFixed(2);
+        Tools.setCustomCodes(code, { income, income_day: index });
         // 设置收入sort
-        let codes = Object.values(DATAS).filter(data=>(CODES[data.code] && CODES[data.code].checked == 1 && CODES[data.code].income));
+        let codes = Object.values(DATAS).filter(data => (CODES[data.code] && CODES[data.code].checked == 1 && CODES[data.code].income));
         // console.log(Object.keys(CODES))
         codes = Tools.sortCodes(codes, 'income', -1);
         for (let key in codes) {
             const code = codes[key].code;
             // console.log(Number(key)+1);
             const income_sort = `<span style="${key < 5 ? 'color:deepskyblue;' : ''}">${Number(key) + 1}</span>/${CODES[code].income_day}/${codes.length}`;
-            Tools.setCustomCodes(code,{income_sort});
+            Tools.setCustomCodes(code, { income_sort });
         }
         // console.log(CODES[code])
     },
@@ -103,11 +103,11 @@ const Tools = {
         if (!CODES[code]) CODES[code] = {};
         Object.assign(CODES[code], obj);
         // console.log(obj,CODES[code],obj);
-        if(obj.hasOwnProperty('buy_time'))Tools.upDateIncome(code);
-        if(obj.hasOwnProperty('checked') && obj.checked == 0){
-            Tools.setCustomCodes(code,{
+        if (obj.hasOwnProperty('buy_time')) Tools.upDateIncome(code);
+        if (obj.hasOwnProperty('checked') && obj.checked == 0) {
+            Tools.setCustomCodes(code, {
                 income: 0,
-                income_day:0,
+                income_day: 0,
                 income_sort: '',
             })
         }
@@ -136,12 +136,12 @@ const Tools = {
         // console.log(day,sort);
         codes.sort((a, b) => {
             let result = 0;
-            if(day=='credit' || day == 'income'){
-                let aa = bb = (sort>0? 1000:0);
-                if(CODES[a.code] && CODES[a.code][day]) aa = CODES[a.code][day];
-                if(CODES[b.code] && CODES[b.code][day]) bb = CODES[b.code][day];
+            if (day == 'credit' || day == 'income') {
+                let aa = bb = (sort > 0 ? 1000 : 0);
+                if (CODES[a.code] && CODES[a.code][day]) aa = CODES[a.code][day];
+                if (CODES[b.code] && CODES[b.code][day]) bb = CODES[b.code][day];
                 result = aa - bb;
-            }else{
+            } else {
                 result = a[day] - b[day];
             }
             return sort == 1 ? result : -result;
@@ -184,19 +184,19 @@ const Tools = {
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
     },
     // code:基金代码，name:基金名称，dayGrowth：日涨幅，lastWeekGrowth：周涨幅，lastMonthGrowth：月涨幅，lastThreeMonthsGrowth：三月涨幅，lastSixMonthsGrowth：六月涨幅，lastYearGrowth：年涨幅，netWorthDate：净值更新日期，expectWorthDate：净值估算更新日期
-    fetch: async (action_name,params) => {
+    fetch: async (action_name, params) => {
         // console.log(Tools.objectToQueryParams(params));
         const res = await fetch(`http://127.0.0.1:3000/${action_name}?${Tools.objectToQueryParams(params)}`);
         const datas = await res.json();
         return datas;
     },
-    getCode: async (code)=>{
+    getCode: async (code) => {
         // 获取基金名字
-        const {SHORTNAME:name,FTYPE:type} = (await Tools.fetch('fundMNDetailInformation',{'FCODE':code})).Datas;
+        const { SHORTNAME: name, FTYPE: type } = (await Tools.fetch('fundMNDetailInformation', { 'FCODE': code })).Datas;
         // 获取基金涨幅
-        const {Datas,Expansion:{TIME:netWorthDate}} = await Tools.fetch('fundMNPeriodIncrease',{'FCODE':code});
-        const Data = {code,name,type,netWorthDate};
-        Datas.forEach(data=>{
+        const { Datas, Expansion: { TIME: netWorthDate } } = await Tools.fetch('fundMNPeriodIncrease', { 'FCODE': code });
+        const Data = { code, name, type, netWorthDate };
+        Datas.forEach(data => {
             switch (data.title) {
                 case 'Z':
                     Data.lastWeekGrowth = data.syl;
@@ -217,14 +217,14 @@ const Tools = {
                     break;
             }
         })
-        // 获取基金历史精致
-        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList',{'FCODE':code,'pageIndex':1,'pagesize':6*30});
+        // 获取基金历史涨幅
+        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': 1, 'pagesize': 6 * 30 });
         let customLastWeekGrowth = 0;
         let custom2LastWeekGrowth = 0;
         let customLastMonthGrowth = 0;
         let dayGrowth = 0;
-        fundMNHisNetList.Datas.forEach((data,i)=>{
-            if(i == 0) dayGrowth = data.JZZZL;
+        fundMNHisNetList.Datas.forEach((data, i) => {
+            if (i == 0) dayGrowth = data.JZZZL;
             // 0,1,2,3   i=3  4-2=2  
             if (i < 5) {
                 customLastWeekGrowth += (+data.JZZZL);
@@ -246,6 +246,64 @@ const Tools = {
         Tools.setCode(Data);
         return Data;
     },
+    addCombinationCode: (codes) => {
+        const combination = { code: [], name: [], type: [], netWorthDate: [], dayGrowth: 0, customNetWorkData: [], customLastWeekGrowth: 0, custom2LastWeekGrowth: 0, customLastMonthGrowth: 0,
+            lastWeekGrowth:0,lastMonthGrowth:0,lastThreeMonthsGrowth:0,lastSixMonthsGrowth:0,lastYearGrowth:0,
+        };
+        const customNetWorkData = [];
+        codes.forEach(code => {
+            combination.code.push(code);
+            combination.name.push(DATAS[code].name);
+            combination.type.push(DATAS[code].type);
+            // 净值更新日期
+            combination.netWorthDate.push(DATAS[code].netWorthDate);
+            // 日涨幅
+            combination.dayGrowth += (+DATAS[code].dayGrowth);
+            // 涨幅列表
+            customNetWorkData.push(DATAS[code].customNetWorkData);
+            // 自定义涨幅
+            combination.customLastWeekGrowth += (+DATAS[code].customLastWeekGrowth);
+            combination.custom2LastWeekGrowth += (+DATAS[code].custom2LastWeekGrowth);
+            combination.customLastMonthGrowth += (+DATAS[code].customLastMonthGrowth);
+            // 其他涨幅
+            combination.lastWeekGrowth += (+DATAS[code].lastWeekGrowth);
+            combination.lastMonthGrowth += (+DATAS[code].lastMonthGrowth);
+            combination.lastThreeMonthsGrowth += (+DATAS[code].lastThreeMonthsGrowth);
+            combination.lastSixMonthsGrowth += (+DATAS[code].lastSixMonthsGrowth);
+            combination.lastYearGrowth += (+DATAS[code].lastYearGrowth);
+        })
+        combination.dayGrowth = (combination.dayGrowth/codes.length).toFixed(2);
+        combination.customLastWeekGrowth = (combination.customLastWeekGrowth/codes.length).toFixed(2);
+        combination.custom2LastWeekGrowth = (combination.custom2LastWeekGrowth/codes.length).toFixed(2);
+        combination.customLastMonthGrowth = (combination.customLastMonthGrowth/codes.length).toFixed(2);
+        combination.lastWeekGrowth = (combination.lastWeekGrowth/codes.length).toFixed(2);
+        combination.lastMonthGrowth = (combination.lastMonthGrowth/codes.length).toFixed(2);
+        combination.lastThreeMonthsGrowth = (combination.lastThreeMonthsGrowth/codes.length).toFixed(2);
+        combination.lastSixMonthsGrowth = (combination.lastSixMonthsGrowth/codes.length).toFixed(2);
+        combination.lastYearGrowth = (combination.lastYearGrowth/codes.length).toFixed(2);
+
+        // combination.customLastWeekGrowth = combination.customLastWeekGrowth.toFixed(2);
+        // combination.custom2LastWeekGrowth = (combination.custom2LastWeekGrowth).toFixed(2);
+        // combination.customLastMonthGrowth = (combination.customLastMonthGrowth).toFixed(2);
+        // combination.lastWeekGrowth = (combination.lastWeekGrowth).toFixed(2);
+        // combination.lastMonthGrowth = (combination.lastMonthGrowth).toFixed(2);
+        // combination.lastThreeMonthsGrowth = (combination.lastThreeMonthsGrowth).toFixed(2);
+        // combination.lastSixMonthsGrowth = (combination.lastSixMonthsGrowth).toFixed(2);
+        // combination.lastYearGrowth = (combination.lastYearGrowth).toFixed(2);
+        combination.code = combination.code.join(',');
+        // 涨幅列表
+        customNetWorkData[0].forEach((ssssss,key)=>{
+            let JZZZL = 0;
+            for(let i= 0;i<customNetWorkData.length;i++){
+                JZZZL+= (+(customNetWorkData[i][key]?customNetWorkData[i][key].JZZZL:0));
+            }
+            const FSRQ = customNetWorkData[0][key].FSRQ;
+            combination.customNetWorkData.push({JZZZL:(JZZZL/codes.length).toFixed(2),FSRQ})
+        })
+        Tools.setCode(combination);
+        // console.log(combination);
+
+    },
     delCode: (code) => {
         delete DATAS[code];
         // 排行
@@ -266,6 +324,14 @@ const Tools = {
         // Tools.delCustomCodes(datas.code);
         Tools.storageDatas();
         Tools.updateDatasTable();
+    },
+    getSelCodes:()=>{
+        const $trs = $table.querySelectorAll('tr.select');
+        const codes = [];
+        $trs.forEach($tr => {
+            codes.push($tr.getAttribute('data-code'));
+        })
+        return codes;
     },
     // addCode: async (code) => {
     //     // console.log(code);
@@ -316,21 +382,21 @@ const Tools = {
                     // name筛选/code筛选
                     if (!SORT.name || (data.name.includes(SORT.name) || data.code.includes(SORT.name))) {
                         // note筛选
-                        if(!SORT.note || (CODES[data.code] && CODES[data.code].note && CODES[data.code].note.includes(SORT.note))){
+                        if (!SORT.note || (CODES[data.code] && CODES[data.code].note && CODES[data.code].note.includes(SORT.note))) {
                             // emoji筛选
                             if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji]] == 1)) {
                                 // 针对卖出时间筛选
-                                if(!SORT.sale_time || (CODES[data.code] && CODES[data.code].sale_time && CODES[data.code].sale_time == SORT.sale_time)){
+                                if (!SORT.sale_time || (CODES[data.code] && CODES[data.code].sale_time && CODES[data.code].sale_time == SORT.sale_time)) {
                                     str += `
-                                        <tr data-code="${data.code}">
-                                            <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code}</span></td>
+                                        <tr data-code="${data.code}" style="${data.code.includes(',')?'background: #fff7f3;':''}">
+                                            <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',')?data.code.replaceAll(',','<br />'):data.code}</span></td>
                                             <td>
-                                                <span class="j-code-name ${(CODES[data.code] && CODES[data.code].limit == 1)?'del':''}" style="white-space:initial; ">${data.name}</span>
+                                                <span class="j-code-name ${(CODES[data.code] && CODES[data.code].limit == 1) ? 'del' : ''}" style="white-space:initial; ">${data.name}</span>
                                                 ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                                 ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
                                                 ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
                                             </td>
-                                            <td>${(CODES[data.code] && CODES[data.code].income)?`<span class="${+CODES[data.code].income>0?`red`:'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}`:''}</span></td>
+                                            <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                             ${total_arr.map(total => {
                                         return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                                     }).join('')}
@@ -339,16 +405,16 @@ const Tools = {
                                             <td>${Tools.isSale(data.code)}</td>
                                             <td>${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}<span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span></td>
                                             <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
-                                            <td>${data.netWorthDate}</td>
-                                            <td style="${data.type == '混合型' ? 'color:brown;' : ''}">${data.type}</td>
+                                            <td>${Array.isArray(data.netWorthDate)?data.netWorthDate.join('<br />'):data.netWorthDate}</td>
+                                            <td style="${data.type.includes('混合型') ? 'color:brown;' : ''}">${Array.isArray(data.type)?data.type.join('<br />'):data.type}</td>
                                             <td>
                                                 <a style="color:red;" class="j-code-del">删除</a>
-                                                ${(CODES[data.code] && CODES[data.code].limit == 1)?'<br/><a style="color:red;" class="j-code-limit-del">删除限额</a>':''}
+                                                ${(CODES[data.code] && CODES[data.code].limit == 1) ? '<br/><a style="color:red;" class="j-code-limit-del">删除限额</a>' : ''}
                                             </td>
                                         </tr>
                                     `
                                 }
-                                
+
                             }
                         }
                     }
@@ -421,6 +487,7 @@ const Tools = {
                     <input class="search_input j-code-ipt" type="text" placeholder="债权代码" />
                     <span class="j-code-name gray" style="margin:0 5px;"></span>
                     <button class="search_btn reb j-code-add" style="margin-left:0px">添加债权</button>
+                    <button class="search_btn green j-code-combination-add" style="margin-left:10px">添加组合</button>
                     <button class="search_btn j-code-keynote" style="margin-left:10px">添加重点❤️</button>
                     <button class="search_btn j-code-shield" style="margin-left:10px">添加抗跌🛡️</button>
                     <button class="search_btn j-code-limit" style="margin-left:10px">添加限额</button>
@@ -433,7 +500,7 @@ const Tools = {
                     <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字/代码" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
                     <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type ? SORT.type : ''}" />
                     <input class="search_input j-code-note-sort" type="text" placeholder="搜索备注" style="margin-left:10px;" value="${SORT.note ? SORT.note : ''}" />
-                    <select class="search_input j-code-sale_time-sel" style="margin-left:10px;width:auto;"><option value="">选择卖出时间</option>${Object.keys(SALETIME).map(sale_time=>(`<option value="${sale_time}" ${SORT.sale_time ==sale_time?'selected':''}>${SALETIME[sale_time]}</option>`)).join('')}</select>
+                    <select class="search_input j-code-sale_time-sel" style="margin-left:10px;width:auto;"><option value="">选择卖出时间</option>${Object.keys(SALETIME).map(sale_time => (`<option value="${sale_time}" ${SORT.sale_time == sale_time ? 'selected' : ''}>${SALETIME[sale_time]}</option>`)).join('')}</select>
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
                     <input class="search_input j-code-credit-ipt" type="text" placeholder="信用占比" style="margin-left:10px;" />
@@ -567,12 +634,21 @@ const $codeCredit = $form.querySelector('.j-code-credit-ipt');
 const compareCodes = function (codes) {
     let str = '';
     str += '<div style="display:flex;">';
-    codes.forEach(code => {
+    let arr = [];
+    codes.forEach(code=>{
+        arr.push(code);
+        if(code.includes(',')){
+            arr = arr.concat(code.split(','))
+        }
+    })
+    arr = [...new Set(arr)];
+    // console.log(arr,codes);
+    arr.forEach(code => {
         const { name, customNetWorkData } = DATAS[code];
         if (!customNetWorkData) return;
         str += `
         <div style="margin:0 10px;">
-            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all">${name}</div>
+            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all">${Array.isArray(name)?'组合':name}</div>
             <table>
                 <thead>
                     <tr><th>日期</th><th>日涨幅</th></tr>
@@ -589,11 +665,7 @@ const compareCodes = function (codes) {
 }
 // 对比债基
 addEventListener($form, 'click', e => {
-    const $trs = $table.querySelectorAll('tr.select');
-    const codes = [];
-    $trs.forEach($tr => {
-        codes.push($tr.getAttribute('data-code'));
-    })
+    const codes = Tools.getSelCodes();
     if (codes.length > 0) compareCodes(codes);
 }, '.j-code-compare')
 
@@ -624,6 +696,11 @@ addEventListener($form, 'click', async e => {
     $btn.ing = 0;
     $btn.innerHTML = '添加债权';
 }, '.j-code-add')
+// 添加组合
+addEventListener($form,'click', e=>{
+    const codes = Tools.getSelCodes();
+    if(codes.length>0) Tools.addCombinationCode(codes);
+},'.j-code-combination-add')
 // 添加重点
 addEventListener($form, 'click', e => {
     const code = $codeIpt.value;
@@ -655,11 +732,11 @@ addEventListener($table, 'click', e => {
     }
 }, '.j-code-shield-del')
 // 添加限额
-addEventListener($form,'click',e=>{
+addEventListener($form, 'click', e => {
     const code = $codeIpt.value;
-    Tools.setCustomCodes(code,{limit:1});
+    Tools.setCustomCodes(code, { limit: 1 });
     Tools.updateDatasTable();
-},'.j-code-limit')
+}, '.j-code-limit')
 // 删除限额
 addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
@@ -697,7 +774,7 @@ addEventListener($form, 'click', async e => {
         // console.log(code);
         $btn.innerHTML = `正在更新${$btn.ing - 0}/${maxLength}`;
         const datas = DATAS[code];
-        if (`${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
+        if (!code.includes(',') && `${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
             // console.log(code);
             await Tools.getCode(code);
         }
@@ -748,10 +825,10 @@ addEventListener($form, 'input', Tools.throttle(e => {
     Tools.setCustomSort({ type: type });
 }, 500), '.j-code-type-ipt')
 // 筛选卖出时间
-addEventListener($form,'change',e=>{
+addEventListener($form, 'change', e => {
     const sale_time = e.target.value;
-    Tools.setCustomSort({sale_time});
-},'.j-code-sale_time-sel')
+    Tools.setCustomSort({ sale_time });
+}, '.j-code-sale_time-sel')
 // 基金买入时间
 addEventListener($table, 'change', e => {
     const $buyTime = e.target;
@@ -774,8 +851,8 @@ addEventListener($form, 'click', Tools.throttle(e => {
     const value = e.target.textContent;
     const $noteSort = document.querySelector('.j-code-note-sort');
     $noteSort.value = value;
-    const event = new Event('input',{
-        bubbles:true,
+    const event = new Event('input', {
+        bubbles: true,
         cancelable: true,
     });
     $noteSort.dispatchEvent(event);

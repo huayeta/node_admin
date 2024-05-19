@@ -58,7 +58,7 @@
         sleep(3000).then(()=>{
             // 点击20页
             document.querySelector('.next-pagination-size-selector-filter').lastElementChild.dispatchEvent(ev);
-            return sleep(3000);
+            return sleep(6000);
         }).then(()=>{
             const answers = document.querySelectorAll('.answer-table-table tbody tr')
             const arr = [];
@@ -173,5 +173,5 @@
             download();
         });
     }
-    console.log('下载问大家函数：startReadAsk()')
+    console.log('%c下载问大家函数：startReadAsk()','color:red;font-size:20px;')
 })();
