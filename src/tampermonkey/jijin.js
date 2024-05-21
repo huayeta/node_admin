@@ -10,7 +10,7 @@ let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权类型,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
-const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金'];
+const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金','组合'];
 const SALETIME = {
     7: '7天免',
     30: '30天免',
@@ -49,6 +49,9 @@ const Tools = {
                 }, remainingTime);
             }
         };
+    },
+    getTime:()=>{
+        return new Date().toLocaleString();
     },
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
@@ -195,7 +198,7 @@ const Tools = {
         const { SHORTNAME: name, FTYPE: type } = (await Tools.fetch('fundMNDetailInformation', { 'FCODE': code })).Datas;
         // 获取基金涨幅
         const { Datas, Expansion: { TIME: netWorthDate } } = await Tools.fetch('fundMNPeriodIncrease', { 'FCODE': code });
-        const Data = { code, name, type, netWorthDate };
+        const Data = { code, name, type, netWorthDate,select_time:Tools.getTime() };
         Datas.forEach(data => {
             switch (data.title) {
                 case 'Z':
@@ -272,24 +275,26 @@ const Tools = {
             combination.lastSixMonthsGrowth += (+DATAS[code].lastSixMonthsGrowth);
             combination.lastYearGrowth += (+DATAS[code].lastYearGrowth);
         })
-        combination.dayGrowth = (combination.dayGrowth/codes.length).toFixed(2);
-        combination.customLastWeekGrowth = (combination.customLastWeekGrowth/codes.length).toFixed(2);
-        combination.custom2LastWeekGrowth = (combination.custom2LastWeekGrowth/codes.length).toFixed(2);
-        combination.customLastMonthGrowth = (combination.customLastMonthGrowth/codes.length).toFixed(2);
-        combination.lastWeekGrowth = (combination.lastWeekGrowth/codes.length).toFixed(2);
-        combination.lastMonthGrowth = (combination.lastMonthGrowth/codes.length).toFixed(2);
-        combination.lastThreeMonthsGrowth = (combination.lastThreeMonthsGrowth/codes.length).toFixed(2);
-        combination.lastSixMonthsGrowth = (combination.lastSixMonthsGrowth/codes.length).toFixed(2);
-        combination.lastYearGrowth = (combination.lastYearGrowth/codes.length).toFixed(2);
+        // combination.dayGrowth = (combination.dayGrowth/codes.length).toFixed(2);
+        // combination.customLastWeekGrowth = (combination.customLastWeekGrowth/codes.length).toFixed(2);
+        // combination.custom2LastWeekGrowth = (combination.custom2LastWeekGrowth/codes.length).toFixed(2);
+        // combination.customLastMonthGrowth = (combination.customLastMonthGrowth/codes.length).toFixed(2);
+        // combination.lastWeekGrowth = (combination.lastWeekGrowth/codes.length).toFixed(2);
+        // combination.lastMonthGrowth = (combination.lastMonthGrowth/codes.length).toFixed(2);
+        // combination.lastThreeMonthsGrowth = (combination.lastThreeMonthsGrowth/codes.length).toFixed(2);
+        // combination.lastSixMonthsGrowth = (combination.lastSixMonthsGrowth/codes.length).toFixed(2);
+        // combination.lastYearGrowth = (combination.lastYearGrowth/codes.length).toFixed(2);
 
-        // combination.customLastWeekGrowth = combination.customLastWeekGrowth.toFixed(2);
-        // combination.custom2LastWeekGrowth = (combination.custom2LastWeekGrowth).toFixed(2);
-        // combination.customLastMonthGrowth = (combination.customLastMonthGrowth).toFixed(2);
-        // combination.lastWeekGrowth = (combination.lastWeekGrowth).toFixed(2);
-        // combination.lastMonthGrowth = (combination.lastMonthGrowth).toFixed(2);
-        // combination.lastThreeMonthsGrowth = (combination.lastThreeMonthsGrowth).toFixed(2);
-        // combination.lastSixMonthsGrowth = (combination.lastSixMonthsGrowth).toFixed(2);
-        // combination.lastYearGrowth = (combination.lastYearGrowth).toFixed(2);
+        combination.dayGrowth = (combination.dayGrowth).toFixed(2);
+        combination.customLastWeekGrowth = combination.customLastWeekGrowth.toFixed(2);
+        combination.custom2LastWeekGrowth = (combination.custom2LastWeekGrowth).toFixed(2);
+        combination.customLastMonthGrowth = (combination.customLastMonthGrowth).toFixed(2);
+        combination.lastWeekGrowth = (combination.lastWeekGrowth).toFixed(2);
+        combination.lastMonthGrowth = (combination.lastMonthGrowth).toFixed(2);
+        combination.lastThreeMonthsGrowth = (combination.lastThreeMonthsGrowth).toFixed(2);
+        combination.lastSixMonthsGrowth = (combination.lastSixMonthsGrowth).toFixed(2);
+        combination.lastYearGrowth = (combination.lastYearGrowth).toFixed(2);
+
         combination.code = combination.code.join(',');
         // 涨幅列表
         customNetWorkData[0].forEach((ssssss,key)=>{
@@ -298,7 +303,9 @@ const Tools = {
                 JZZZL+= (+(customNetWorkData[i][key]?customNetWorkData[i][key].JZZZL:0));
             }
             const FSRQ = customNetWorkData[0][key].FSRQ;
-            combination.customNetWorkData.push({JZZZL:(JZZZL/codes.length).toFixed(2),FSRQ})
+            // combination.customNetWorkData.push({JZZZL:(JZZZL/codes.length).toFixed(2),FSRQ})
+
+            combination.customNetWorkData.push({JZZZL:(JZZZL).toFixed(2),FSRQ})
         })
         Tools.setCode(combination);
         // console.log(combination);
@@ -492,20 +499,23 @@ const Tools = {
                     <button class="search_btn j-code-shield" style="margin-left:10px">添加抗跌🛡️</button>
                     <button class="search_btn j-code-limit" style="margin-left:10px">添加限额</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
+                    <button class="search_btn j-code-combination-updata" style="margin-left:10px">更新组合</button>
                     <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债权</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
                     <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px; width:150px;" />
                     <button class="search_btn reb j-code-note-add" style="margin-left:0px">添加备注</button>
+                    <input class="search_input j-code-credit-ipt" type="text" placeholder="信用占比" style="margin-left:10px;" />
+                    <button class="search_btn reb j-code-credit-add" style="margin-left:0px">添加</button>
                     <span style="margin-left:10px; color:red;">筛选：</span>
+                    <button class="search_btn" style="margin-left:10px">股基</button>
+                    <button class="search_btn" style="margin-left:10px">债基</button>
                     <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字/代码" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
                     <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type ? SORT.type : ''}" />
                     <input class="search_input j-code-note-sort" type="text" placeholder="搜索备注" style="margin-left:10px;" value="${SORT.note ? SORT.note : ''}" />
                     <select class="search_input j-code-sale_time-sel" style="margin-left:10px;width:auto;"><option value="">选择卖出时间</option>${Object.keys(SALETIME).map(sale_time => (`<option value="${sale_time}" ${SORT.sale_time == sale_time ? 'selected' : ''}>${SALETIME[sale_time]}</option>`)).join('')}</select>
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
-                    <input class="search_input j-code-credit-ipt" type="text" placeholder="信用占比" style="margin-left:10px;" />
-                    <button class="search_btn reb j-code-credit-add" style="margin-left:0px">添加</button>
-                    <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
+                    <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a><a class="j-code-note-span">可转债</a></span>
                 </div>
             </div>
             <div class="g-table"></div>
@@ -785,6 +795,27 @@ addEventListener($form, 'click', async e => {
     Tools.updateDatasTable();
     alert('更新成功');
 }, '.j-code-updata')
+// 更新组合
+addEventListener($form,'click',e=>{
+    const $btn = e.target;
+    if ($btn.ing != undefined) return;
+    $btn.ing = 1;
+    const maxLength = Object.keys(DATAS).length;
+    $btn.innerHTML = `正在更新`;
+    for (let code in DATAS) {
+        // console.log(code); 
+        const datas = DATAS[code];
+        if (code.includes(',')) {
+            // console.log(code);
+            const codes = code.split(',');
+            Tools.addCombinationCode(codes);
+        }
+    }
+    $btn.ing = undefined;
+    $btn.innerHTML = '更新组合';
+    Tools.updateDatasTable();
+    alert('更新成功');
+},'.j-code-combination-updata')
 // 选择基金代码
 addEventListener($table, 'change', e => {
     const $checkbox = e.target;
