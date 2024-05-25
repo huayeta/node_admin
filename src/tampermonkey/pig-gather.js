@@ -2950,7 +2950,7 @@
                 }
             })
             // console.log(DateRecords);
-            const table = getDataTable(DateRecords.slice(0, is_back_filter ? 2 : 5).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
+            const table = getDataTable(DateRecords.slice(0, is_back_filter ? 2 : 15).map(data => DATA[data.pig_phone]), [{ text: 'copy去除', className: 'j-remindPhone', type: 'order_reminder' }, { text: '不再提醒', className: 'j-no-remind' }], DateRecords.length);
             setCon([table]);
         }
         qqAdd.querySelector('.j-gatherQqs').addEventListener('click', () => {
