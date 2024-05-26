@@ -5,7 +5,7 @@
 
 // {code:...data}
 let DATAS = {};
-// {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME,position:持仓情况}
+// {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME,position:持仓情况,lv:利率债小于等于}
 let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型}}
 let CODES = {};
@@ -506,47 +506,50 @@ const Tools = {
                                     if (!SORT.sale_time || (data.maxSaleTime == SORT.sale_time)) {
                                         // 针对是否是债基筛选
                                         if(!SORT.Ftype || SORT.Ftype == Tools.isDebt(data.code)){
-                                            str += `
-                                                <tr data-code="${data.code}" style="${data.code.includes(',')?'background: #fff7f3;':''}">
-                                                    <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',')?data.code.replaceAll(',','<br />'):data.code}</span></td>
-                                                    <td>
-                                                        <span class="j-code-name ${(+data.maxBuy<100000 || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${data.maxBuy<100000?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
-                                                        ${is_new ? '<span title="已经更新">🔥</span>' : ''}
-                                                        ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
-                                                        ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
-                                                    </td>
-                                                    <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
-                                                    ${total_arr.map(total => {
-                                                return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-                                            }).join('')}
-                                                    <td>${data.customType?data.customType:''}</td>
-                                                    <td>${data.maxSaleTime?`${data.maxSaleTime}天免`:''}</td>
-                                                    <td>${Tools.isSale(data.code)}</td>
-                                                    <td>
-                                                        <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
-                                                        <span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span>
-                                                    </td>
-                                                    <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
-                                                        ${data.asset && +data.asset.jj>0?`基金：${data.asset.jj}%<br/>`:''}
-                                                        ${data.asset && +data.asset.gp>0?`股票：${data.asset.gp}%<br/>`:''}
-                                                        ${data.asset && +data.asset.zq>0?`债权：${data.asset.zq}%<br/>`:''}
-                                                        ${data.asset && +data.asset.xj>0?`现金：${data.asset.xj}%<br/>`:''}
-                                                        ${data.asset && +data.asset.qt>0?`其他：${data.asset.qt}%<br/>`:''}
-                                                    </td>
-                                                    <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
-                                                        ${data.position && +data.position.xx>0?`信用债：${data.position.xx}%<br/>`:''}
-                                                        ${data.position && +data.position.lv>0?`利率债：${data.position.lv}%<br/>`:''}
-                                                        ${data.position && +data.position.kzz>0?`可转债：${data.position.kzz}%<br/>`:''}
-                                                        ${data.position && +data.position.qt>0?`其他：${data.position.qt}%`:''}
-                                                    </td>
-                                                    <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
-                                                    <td>${Array.isArray(data.netWorthDate)?data.netWorthDate.join('<br />'):data.netWorthDate}</td>
-                                                    <td style="${data.Ftype.includes('混合型') ? 'color:brown;' : ''}">${Array.isArray(data.Ftype)?data.Ftype.join('<br />'):data.Ftype}</td>
-                                                    <td>
-                                                        <a style="color:red;" class="j-code-del">删除</a>
-                                                    </td>
-                                                </tr>
-                                            `
+                                            // 筛选利率债<=
+                                            if(!SORT.lv || (data.position && (!data.position.lv || +data.position.lv<=+SORT.lv))){
+                                                str += `
+                                                    <tr data-code="${data.code}" style="${data.code.includes(',')?'background: #fff7f3;':''}">
+                                                        <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',')?data.code.replaceAll(',','<br />'):data.code}</span></td>
+                                                        <td>
+                                                            <span class="j-code-name ${(+data.maxBuy<100000 || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${data.maxBuy<100000?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
+                                                            ${is_new ? '<span title="已经更新">🔥</span>' : ''}
+                                                            ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
+                                                            ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
+                                                        </td>
+                                                        <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
+                                                        ${total_arr.map(total => {
+                                                    return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                                                }).join('')}
+                                                        <td>${data.customType?data.customType:''}</td>
+                                                        <td>${data.maxSaleTime?`${data.maxSaleTime}天免`:''}</td>
+                                                        <td>${Tools.isSale(data.code)}</td>
+                                                        <td>
+                                                            <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
+                                                            <span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span>
+                                                        </td>
+                                                        <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
+                                                            ${data.asset && +data.asset.jj>0?`基金：${data.asset.jj}%<br/>`:''}
+                                                            ${data.asset && +data.asset.gp>0?`股票：${data.asset.gp}%<br/>`:''}
+                                                            ${data.asset && +data.asset.zq>0?`债权：${data.asset.zq}%<br/>`:''}
+                                                            ${data.asset && +data.asset.xj>0?`现金：${data.asset.xj}%<br/>`:''}
+                                                            ${data.asset && +data.asset.qt>0?`其他：${data.asset.qt}%<br/>`:''}
+                                                        </td>
+                                                        <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
+                                                            ${data.position && +data.position.xx>0?`信用债：${data.position.xx}%<br/>`:''}
+                                                            ${data.position && +data.position.lv>0?`利率债：${data.position.lv}%<br/>`:''}
+                                                            ${data.position && +data.position.kzz>0?`<span class="red">可转债：${data.position.kzz}%</span><br/>`:''}
+                                                            ${data.position && +data.position.qt>0?`其他：${data.position.qt}%`:''}
+                                                        </td>
+                                                        <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
+                                                        <td>${Array.isArray(data.netWorthDate)?data.netWorthDate.join('<br />'):data.netWorthDate}</td>
+                                                        <td style="${data.Ftype.includes('混合型') ? 'color:brown;' : ''}">${Array.isArray(data.Ftype)?data.Ftype.join('<br />'):data.Ftype}</td>
+                                                        <td>
+                                                            <a style="color:red;" class="j-code-del">删除</a>
+                                                        </td>
+                                                    </tr>
+                                                `
+                                            }  
                                         }  
                                     }
 
@@ -644,6 +647,7 @@ const Tools = {
                     <input class="search_input j-code-note-sort" type="text" placeholder="搜索备注" style="margin-left:10px;" value="${SORT.note ? SORT.note : ''}" />
                     <select class="search_input j-code-position-sort" style="margin-left:10px;width:auto;"><option value="">持仓情况</option><option value="kzz" ${SORT.position == 'kzz' ? 'selected' : ''}>可转债</option></select>
                     <select class="search_input j-code-sale_time-sel" style="margin-left:10px;width:auto;"><option value="">选择卖出时间</option>${Object.keys(SALETIME).map(sale_time => (`<option value="${sale_time}" ${SORT.sale_time == sale_time ? 'selected' : ''}>${SALETIME[sale_time]}</option>`)).join('')}</select>
+                    <input class="search_input j-code-lv-sort" type="text" placeholder="利率债<=?" style="margin-left:10px;" value="${SORT.lv ? SORT.lv : ''}" />
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
                     <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
@@ -1082,6 +1086,11 @@ addEventListener($form, 'click', Tools.throttle(e => {
     $noteSort.dispatchEvent(event);
     // Tools.setCustomSort({ note: value });
 }, 500), '.j-code-note-span')
+// 筛选利率债
+addEventListener($form, 'input', Tools.throttle(e => {
+    const value = e.target.value;
+    Tools.setCustomSort({ lv: value });
+}, 500), '.j-code-lv-sort')
 // 筛选持仓
 addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
@@ -1096,11 +1105,13 @@ addEventListener($form, 'click', e => {
     delete SORT.sale_time;
     delete SORT.note;
     delete SORT.position;
+    delete SORT.lv;
     $form.querySelector('.j-code-name-ipt').value = '';
     $form.querySelector('.j-code-type-ipt').value = '';
     $form.querySelector('.j-code-note-sort').value = '';
     $form.querySelector('.j-code-sale_time-sel').value = '';
     $form.querySelector('.j-code-position-sort').value = '';
+    $form.querySelector('.j-code-lv-sort').value = '';
     Tools.storageDatas();
     Tools.updateDatasTable();
 }, '.j-code-filter-clear')
