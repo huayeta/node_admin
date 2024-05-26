@@ -306,7 +306,7 @@ const Tools = {
             })
         }
         // 其他基本信息
-        const {data:{rateInfo:{sh,MAXSG,CYCLE}}} = await Tools.fetch('jjxqy1_2',{'fcode':code})
+        const {data:{rateInfo:{sh,MAXSG,CYCLE,SGZT}}} = await Tools.fetch('jjxqy1_2',{'fcode':code})
         // 卖出时间
         {
             const time = (CYCLE?CYCLE:sh[sh.length-1].time).match(/(\d+)(.+)/);
@@ -320,6 +320,8 @@ const Tools = {
         Data.customType = Tools.getCustomType(Data);
         // 是否限额
         Data.maxBuy = MAXSG;
+        // 是否可以申购
+        Data.sgzt = SGZT;
         console.log(Data);
         Tools.setCode(Data);
         return Data;
@@ -508,7 +510,7 @@ const Tools = {
                                                 <tr data-code="${data.code}" style="${data.code.includes(',')?'background: #fff7f3;':''}">
                                                     <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',')?data.code.replaceAll(',','<br />'):data.code}</span></td>
                                                     <td>
-                                                        <span class="j-code-name ${(+data.maxBuy<=100000) ? 'del' : ''}" style="white-space:initial; ">${data.name}${data.maxBuy<=100000?`/${data.maxBuy}`:''}</span>
+                                                        <span class="j-code-name ${(+data.maxBuy<100000 || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${data.maxBuy<100000?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
                                                         ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                                         ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
                                                         ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
@@ -524,14 +526,14 @@ const Tools = {
                                                         <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
                                                         <span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span>
                                                     </td>
-                                                    <td class="j-code-asset-alert">
+                                                    <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
                                                         ${data.asset && +data.asset.jj>0?`基金：${data.asset.jj}%<br/>`:''}
                                                         ${data.asset && +data.asset.gp>0?`股票：${data.asset.gp}%<br/>`:''}
                                                         ${data.asset && +data.asset.zq>0?`债权：${data.asset.zq}%<br/>`:''}
                                                         ${data.asset && +data.asset.xj>0?`现金：${data.asset.xj}%<br/>`:''}
                                                         ${data.asset && +data.asset.qt>0?`其他：${data.asset.qt}%<br/>`:''}
                                                     </td>
-                                                    <td class="j-code-asset-alert">
+                                                    <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
                                                         ${data.position && +data.position.xx>0?`信用债：${data.position.xx}%<br/>`:''}
                                                         ${data.position && +data.position.lv>0?`利率债：${data.position.lv}%<br/>`:''}
                                                         ${data.position && +data.position.kzz>0?`可转债：${data.position.kzz}%<br/>`:''}
@@ -722,57 +724,6 @@ class Alert {
 }
 const myAlert = new Alert();
 // myAlert.show('esdsds');
-class Contextmenu{
-    constructor(){
-        const $div = document.createElement('div');
-        $div.innerHTML=`
-            <style>
-                /* 样式化右键菜单 */
-                .context-menu {
-                    display: none;
-                    position: absolute;
-                    background-color: #f9f9f9;
-                    border: 1px solid #ccc;
-                    padding: 5px 0;
-                }
-
-                .context-menu-item {
-                    padding: 5px 20px;
-                    cursor: pointer;
-                }
-
-                .context-menu-item:hover {
-                    background-color: #ddd;
-                }
-            </style>
-            <!-- 鼠标右键菜单 -->
-            <div class="context-menu" style="displqy:none;">
-                <div class="context-menu-item">Menu Item 1</div>
-                <div class="context-menu-item">Menu Item 2</div>
-                <div class="context-menu-item">Menu Item 3</div>
-            </div>
-        `
-        const $body = document.querySelector('body');
-        $body.append($div);
-        this.$menu = $div.querySelector('.context-menu');
-        Array.from(this.$menu.querySelectorAll('.context-menu-item')).forEach(this.item)
-        // 阻止浏览器默认的右键菜单
-        // window.addEventListener("contextmenu", (event)=> {
-        //     event.preventDefault();
-        //     // 显示右键菜单
-        //     this.$menu.style.display = "block";
-        //     this.$menu.style.left = event.pageX + "px";
-        //     this.$menu.style.top = event.pageY + "px";
-        // });
-    }
-    show(){
-        this.$menu.style.display = 'block';
-    }
-    item($item){
-        
-    }
-}
-const Menu = new Contextmenu();
 // Tools.fetch('007423,007424').then(res=>{
 //     if(res.code=='200'){
 //         const str = Tools.getTable(res.data);
@@ -1290,3 +1241,106 @@ addEventListener($table, 'click', e => {
 //         customMenu.remove();
 //     });
 //   });
+class Contextmenu{
+    constructor(){
+        const $div = document.createElement('div');
+        $div.innerHTML=`
+            <style>
+                /* 样式化右键菜单 */
+                .context-menu {
+                    display: none;
+                    position: absolute;
+                    border: 1px solid #e7dfdf;
+                    padding: 10px 0;
+                    background: #fff;
+                    line-height: 2;
+                    font-size: 14px;
+                    border-radius：10px;
+                    box-shadow:0px 0px 10px rgba(0,0,0,.3);
+                    min-width: 135px;
+                }
+
+                .context-menu .context-menu-item {
+                    padding: 10px 20px;
+                    cursor: pointer;
+                    text-align: center;
+                }
+
+                .context-menu .context-menu-item:hover {
+                    background-color: #ddd;
+                }
+                .context-menu .br{
+                    height:1px;
+                    background: #e7dfdf;
+                }
+            </style>
+            <!-- 鼠标右键菜单 -->
+            <div class="context-menu" style="displqy:none;">
+                <div class="name" style="text-align:center;border-bottom:1px solid #e7dfdf;padding:5px;font-size: 14px; color:gray;"></div>
+                <div class="context-menu-item">添加重点❤️</div>
+                <div class="context-menu-item">添加抗跌🛡️</div>
+                <div class="br"></div>
+                <div class="context-menu-item">对比债权</div>
+                <div style="padding: 10px; font-size:12px;display: flex; justify-content: space-between;"><span style="color:red;cursor: pointer;" class="j-code-filter-clear">清楚筛选</span><span style=" color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span></div>
+            </div>
+        `
+        const $body = document.querySelector('body');
+        $body.append($div);
+        this.$menu = $div.querySelector('.context-menu');
+        this.$name = $div.querySelector('.name');
+        // 阻止浏览器默认的右键菜单
+        addEventListener($table,'contextmenu',event=>{
+            event.preventDefault();
+            const $tr = event.target.closest('tr');
+            const Data = DATAS[$tr.getAttribute('data-code')];
+            this.Data = Data;
+            // 显示右键菜单
+            this.show(event);
+        },'tbody>tr')
+        // 取消弹窗
+        addEventListener($table,'click',e=>{
+            this.hide();
+        })
+        // 点击菜单
+        addEventListener(this.$menu,'click',e=>{
+            this.item(e.target);
+        },'.context-menu-item')
+        this.$menu.querySelector('.j-code-filter-clear').addEventListener('click',e=>{
+            $form.querySelector('.j-code-filter-clear').click();
+            this.hide();
+        })
+        this.$menu.querySelector('.j-code-select-clear').addEventListener('click',e=>{
+            $form.querySelector('.j-code-select-clear').click();
+            this.hide();
+        })
+    }
+    show(event){
+        this.$name.innerHTML = `${this.Data.name}`;
+        this.$menu.style.left = event.pageX + "px";
+        this.$menu.style.top = event.pageY + "px";
+        this.$menu.style.display = 'block';
+    }
+    hide(){
+        this.$menu.style.display = 'none';
+    }
+    item($item){
+        const con = $item.textContent;
+        const Data = this.Data;
+        const code = Data.code;
+        if(con.includes('添加重点')){
+            Tools.setCustomCodes(code, { keynote: 1 });
+            Tools.updateDatasTable();
+            this.hide();
+        }
+        if(con.includes('添加抗跌')){
+            Tools.setCustomCodes(code, { shield: 1 });
+            Tools.updateDatasTable();
+            this.hide();
+        }
+        if(con.includes('对比债权')){
+            $form.querySelector('.j-code-compare').click();
+            this.hide();
+        }
+    }
+}
+const Menu = new Contextmenu();
