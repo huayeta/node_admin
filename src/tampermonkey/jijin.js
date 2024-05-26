@@ -649,6 +649,7 @@ const Tools = {
                     <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
                 </div>
             </div>
+            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<10%，可转债看行情</div>
             <div class="g-table"></div>
             <div class="g-con"></div>
         `;
