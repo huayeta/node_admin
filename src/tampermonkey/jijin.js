@@ -275,6 +275,11 @@ const Tools = {
             }
         }
         Data.assetPosition={
+            // 基金
+            etf:{
+                code:fundInverstPosition.ETFCODE,
+                name:fundInverstPosition.ETFSHORTNAME,
+            },
             // 股票
             fundStocks:fundInverstPosition.fundStocks,
             // 债权
@@ -858,6 +863,25 @@ addEventListener($table,'click',e=>{
     if(!Data.assetPosition)return;
     let str = `<div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all">${Data.name}</div>`;
     str += '<div style="display:flex;">';
+    // 基金情况
+    const etf = Data.assetPosition.etf;
+    if(etf){
+        str+= `
+            <div style="margin:0 10px;">
+                <table>
+                    <thead>
+                        <tr><th>基金名称</th><th>持仓占比</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${etf['name']}</td>
+                            <td>${Data.asset.jj}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `
+    }
     // 股票情况
     const fundStocks = Data.assetPosition.fundStocks;
     const fundStocksDiff = Data.assetPosition.fundStocksDiff;
