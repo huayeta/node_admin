@@ -280,6 +280,36 @@ const Tools = {
             // 债权
             fundboods:fundInverstPosition.fundboods,
         }
+        // 计算出股票的涨跌
+        if(Data.assetPosition.fundStocks && Data.assetPosition.fundStocks.length>0){
+            const secids = [];
+            Data.assetPosition.fundStocks.forEach(fund=>{
+                secids.push(`${fund.NEWTEXCH}.${fund.GPDM}`);
+            })
+            const {data} = await Tools.fetch('ulist',{secids:secids.join(',')});
+            Data.assetPosition.fundStocksDiff = {};
+            if(data && data.diff && data.diff.length>0){
+                data.diff.forEach(item=>{
+                    Data.assetPosition.fundStocksDiff[item['f12']]=item; 
+                })
+            }
+
+        }
+        // 计算出债权的涨跌
+        if(Data.assetPosition.fundboods && Data.assetPosition.fundboods.length>0){
+            const secids = [];
+            Data.assetPosition.fundboods.forEach(fund=>{
+                secids.push(`${fund.NEWTEXCH}.${fund.ZQDM}`);
+            })
+            const {data} = await Tools.fetch('ulist',{secids:secids.join(',')});
+            Data.assetPosition.fundboodsDiff = {};
+            if(data && data.diff && data.diff.length>0){
+                data.diff.forEach(item=>{
+                    Data.assetPosition.fundboodsDiff[item['f12']]=item; 
+                })
+            }
+
+        }
         Data.position={};
         if(fundBondInvestDistri){
             fundBondInvestDistri.forEach(data=>{
@@ -322,6 +352,7 @@ const Tools = {
         Data.maxBuy = MAXSG;
         // 是否可以申购
         Data.sgzt = SGZT;
+
         console.log(Data);
         Tools.setCode(Data);
         return Data;
@@ -512,7 +543,7 @@ const Tools = {
                                                     <tr data-code="${data.code}" style="${data.code.includes(',')?'background: #fff7f3;':''}">
                                                         <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',')?data.code.replaceAll(',','<br />'):data.code}</span></td>
                                                         <td>
-                                                            <span class="j-code-name ${(+data.maxBuy<100000 || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${data.maxBuy<100000?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
+                                                            <span class="j-code-name ${(+data.maxBuy<50000 || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${data.maxBuy<50000?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
                                                             ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                                             ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
                                                             ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
@@ -829,15 +860,22 @@ addEventListener($table,'click',e=>{
     str += '<div style="display:flex;">';
     // 股票情况
     const fundStocks = Data.assetPosition.fundStocks;
+    const fundStocksDiff = Data.assetPosition.fundStocksDiff;
     if(fundStocks){
         str+= `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>股票名称</th><th>持仓占比</th></tr>
+                        <tr><th>股票名称</th><th>价格</th><th>持仓占比</th></tr>
                     </thead>
                     <tbody>
-                        ${fundStocks.map(data => `<tr><td>${data['GPJC']}</td><td>${data['JZBL']}%</td></tr>`).join('')}
+                        ${fundStocks.map(data => `
+                            <tr>
+                                <td>${data['GPJC']}</td>
+                                <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3']>0)?'red':(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3']<0)?'green':''}">${fundStocksDiff[data.GPDM]?`${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%`:''}</td>
+                                <td>${data['JZBL']}%</td>
+                            </tr>
+                        `).join('')}
                     </tbody>
                 </table>
             </div>
@@ -845,15 +883,16 @@ addEventListener($table,'click',e=>{
     }
     // 债权情况
     const fundboods = Data.assetPosition.fundboods;
+    const fundboodsDiff = Data.assetPosition.fundboodsDiff;
     if(fundboods){
         str+= `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>债权名称</th><th>持仓占比</th><th>债权类型</th></tr>
+                        <tr><th>债权名称</th><th>价格</th><th>持仓占比</th><th>债权类型</th></tr>
                     </thead>
                     <tbody>
-                        ${fundboods.map(data => `<tr><td>${data['ZQMC']}</td><td>${data['ZJZBL']}%</td><td>${{'1':'信用债','2':'利率债','3':'可转债','4':'其他','5':'同业存单'}[data.BONDTYPE]}</td></tr>`).join('')}
+                        ${fundboods.map(data => `<tr><td>${data['ZQMC']}</td><td class="${(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']>0)?'red':(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']<0)?'green':''}">${fundboodsDiff[data.ZQDM]?`${fundboodsDiff[data.ZQDM]['f2']}/${fundboodsDiff[data.ZQDM]['f3']}%`:''}</td><td>${data['ZJZBL']}%</td><td>${{'1':'信用债','2':'利率债','3':'可转债','4':'其他','5':'同业存单'}[data.BONDTYPE]}</td></tr>`).join('')}
                     </tbody>
                 </table>
             </div>
