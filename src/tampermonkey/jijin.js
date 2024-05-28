@@ -314,7 +314,7 @@ const Tools = {
             })
         }
         // 其他基本信息
-        const {data:{rateInfo:{sh,MAXSG,CYCLE,SGZT}}} = await Tools.fetch('jjxqy1_2',{'fcode':code})
+        const {data:{rateInfo:{sh,MAXSG,CYCLE,SGZT},uniqueInfo}} = await Tools.fetch('jjxqy1_2',{'fcode':code})
         // 卖出时间
         {
             const time = (CYCLE?CYCLE:sh[sh.length-1].time).match(/(\d+)(.+)/);
@@ -323,6 +323,16 @@ const Tools = {
                 if(time[0].includes('月'))Data.maxSaleTime = time[1]*30;
                 if(time[0].includes('年'))Data.maxSaleTime = time[1]*365;
             }
+        }
+        // 特色数据
+        Data.uniqueInfo = {}
+        if(uniqueInfo && uniqueInfo.length>0){
+            // 最大回撤
+            Data.uniqueInfo.maxretra1 = uniqueInfo[0].MAXRETRA1;
+            // 波动率
+            Data.uniqueInfo.stddev1 = uniqueInfo[0].STDDEV1;
+            // 夏普比率
+            Data.uniqueInfo.sharp1 = uniqueInfo[0].SHARP1;
         }
         // 债权组合
         Data.customType = Tools.getCustomType(Data);
@@ -634,6 +644,11 @@ const Tools = {
                                                             ${data.position && +data.position.kzz>0?`<span class="red">可转债：${data.position.kzz}%</span><br/>`:''}
                                                             ${data.position && +data.position.qt>0?`其他：${data.position.qt}%`:''}
                                                         </td>
+                                                        <td style="font-size:12px; padding:2px 10px;">
+                                                            ${data.uniqueInfo && +data.uniqueInfo.stddev1>0?`最大波动：${data.uniqueInfo.stddev1}%<br/>`:''}
+                                                            ${data.uniqueInfo && +data.uniqueInfo.sharp1>0?`夏普比率：${data.uniqueInfo.sharp1}%<br/>`:''}
+                                                            ${data.uniqueInfo && +data.uniqueInfo.maxretra1>0?`最大回撤：${data.uniqueInfo.maxretra1}%`:''}
+                                                        </td>
                                                         <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
                                                         <td>${Array.isArray(data.netWorthDate)?data.netWorthDate.join('<br />'):data.netWorthDate}</td>
                                                         <td style="${data.Ftype.includes('混合型') ? 'color:brown;' : ''}">${Array.isArray(data.Ftype)?data.Ftype.join('<br />'):data.Ftype}</td>
@@ -680,6 +695,7 @@ const Tools = {
                     <th>备注</th>
                     <th>资产</th>
                     <th>持仓情况<span class="caret-wrapper ${SORT.day == 'credit' ? sortClassname : ''}" data-day="credit"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
+                    <th>特色数据</th>
                     <th>买入时间</th>
                     <th>净值更新日期</th>
                     <th>债权类型</th>
