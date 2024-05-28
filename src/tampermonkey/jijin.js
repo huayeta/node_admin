@@ -7,7 +7,7 @@
 let DATAS = {};
 // {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME,position:持仓情况,lv:利率债小于等于}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型}}
+// {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型}}
 let CODES = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金','组合'];
@@ -23,6 +23,7 @@ const SALETIME = {
 const EMOJIS = {
     '❤️': 'keynote',
     '🛡️': 'shield',
+    '🏋🏿':'heavy',
 }
 
 const Tools = {
@@ -285,36 +286,8 @@ const Tools = {
             // 债权
             fundboods:fundInverstPosition.fundboods,
         }
-        // 计算出股票的涨跌
-        if(Data.assetPosition.fundStocks && Data.assetPosition.fundStocks.length>0){
-            const secids = [];
-            Data.assetPosition.fundStocks.forEach(fund=>{
-                secids.push(`${fund.NEWTEXCH}.${fund.GPDM}`);
-            })
-            const {data} = await Tools.fetch('ulist',{secids:secids.join(',')});
-            Data.assetPosition.fundStocksDiff = {};
-            if(data && data.diff && data.diff.length>0){
-                data.diff.forEach(item=>{
-                    Data.assetPosition.fundStocksDiff[item['f12']]=item; 
-                })
-            }
-
-        }
-        // 计算出债权的涨跌
-        if(Data.assetPosition.fundboods && Data.assetPosition.fundboods.length>0){
-            const secids = [];
-            Data.assetPosition.fundboods.forEach(fund=>{
-                secids.push(`${fund.NEWTEXCH}.${fund.ZQDM}`);
-            })
-            const {data} = await Tools.fetch('ulist',{secids:secids.join(',')});
-            Data.assetPosition.fundboodsDiff = {};
-            if(data && data.diff && data.diff.length>0){
-                data.diff.forEach(item=>{
-                    Data.assetPosition.fundboodsDiff[item['f12']]=item; 
-                })
-            }
-
-        }
+        const fundDiff = await Tools.countDp(Data.assetPosition.fundStocks,Data.assetPosition.fundboods);
+        Object.assign(Data.assetPosition,fundDiff);
         Data.position={};
         if(fundBondInvestDistri){
             fundBondInvestDistri.forEach(data=>{
@@ -361,6 +334,60 @@ const Tools = {
         console.log(Data);
         Tools.setCode(Data);
         return Data;
+    },
+    upDateFundDiff:async (code)=>{
+        if(!code || !DATAS[code] || !DATAS[code].assetPosition)return;
+        const Data = DATAS[code];
+        const diff = await Tools.countDp(Data.assetPosition.fundStocks,Data.assetPosition.fundboods);
+        Object.assign(Data.assetPosition,diff);
+        Tools.storageDatas();
+    },
+    countDp:async (fundStocks,fundboods)=>{
+        // 计算出股票的涨跌
+        const fundStocksDiff = {};
+        if(fundStocks && fundStocks.length>0){
+            const secids = [];
+            fundStocks.forEach(fund=>{
+                secids.push(`${fund.NEWTEXCH}.${fund.GPDM}`);
+            })
+            const {data} = await Tools.fetch('ulist',{secids:secids.join(',')});
+            if(data && data.diff && data.diff.length>0){
+                data.diff.forEach(item=>{
+                    fundStocksDiff[item['f12']]=item; 
+                })
+            }
+
+        }
+        // 计算出债权的涨跌
+        const fundboodsDiff = {};
+        if(fundboods && fundboods.length>0){
+            const secids = [];
+            fundboods.forEach(fund=>{
+                secids.push(`${fund.NEWTEXCH}.${fund.ZQDM}`);
+            })
+            const {data} = await Tools.fetch('ulist',{secids:secids.join(',')});
+            if(data && data.diff && data.diff.length>0){
+                data.diff.forEach(item=>{
+                    fundboodsDiff[item['f12']]=item; 
+                })
+            }
+        }
+        return {
+            fundStocksDiff,fundboodsDiff,updateTime:Tools.getTime()
+        }
+    },
+    judgeDownDp:(code)=>{
+        // 判断当前债权是否有下降的
+        if(!code || !DATAS[code])return;
+        const {assetPosition} = DATAS[code];
+        if(!assetPosition || !assetPosition.fundboodsDiff)return;
+        const {fundboodsDiff} = assetPosition;
+        const codes = Object.keys(fundboodsDiff);
+        if(codes.length>0){
+            return !codes.every(code=>{
+                return +fundboodsDiff[code]['f3']>=0
+            })
+        }
     },
     getCustomType:(Data)=>{
         // 基金组合
@@ -455,6 +482,25 @@ const Tools = {
         // console.log(combination);
 
     },
+    updatasCodes:async ($btn,codes)=>{
+        if ($btn.ing != undefined) return;
+        $btn.ing = 1;
+        const maxLength = codes.length;
+        for (let code of codes) {
+            // console.log(code);
+            $btn.innerHTML = `正在更新${$btn.ing - 0}/${maxLength}`;
+            const datas = DATAS[code];
+            if (!code.includes(',') && `${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
+                // console.log(code);
+                await Tools.getCode(code);
+            }
+            $btn.ing++;
+        }
+        $btn.ing = undefined;
+        $btn.innerHTML = '更新债权';
+        Tools.updateDatasTable();
+        alert('更新成功');
+    },
     delCode: (code) => {
         delete DATAS[code];
         // 排行
@@ -480,7 +526,17 @@ const Tools = {
         const $trs = $table.querySelectorAll('tr.select');
         const codes = [];
         $trs.forEach($tr => {
-            codes.push($tr.getAttribute('data-code'));
+            const code = $tr.getAttribute('data-code');
+            if(code)codes.push(code);
+        })
+        return codes;
+    },
+    getNowCodes:()=>{
+        const $trs = $table.querySelectorAll('tr');
+        const codes = [];
+        $trs.forEach($tr => {
+            const code = $tr.getAttribute('data-code');
+            if(code)codes.push(code);
         })
         return codes;
     },
@@ -552,6 +608,7 @@ const Tools = {
                                                             ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                                             ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
                                                             ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
+                                                            ${(CODES[data.code] && CODES[data.code].heavy == 1) ? '<span class="j-code-heavy-del" style="" title="重仓基金">🏋🏿</span>' : ''}
                                                         </td>
                                                         <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                                         ${total_arr.map(total => {
@@ -571,7 +628,7 @@ const Tools = {
                                                             ${data.asset && +data.asset.xj>0?`现金：${data.asset.xj}%<br/>`:''}
                                                             ${data.asset && +data.asset.qt>0?`其他：${data.asset.qt}%<br/>`:''}
                                                         </td>
-                                                        <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
+                                                        <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;${Tools.judgeDownDp(data.code)?'background:rgba(0,128,0,.1);':''}">
                                                             ${data.position && +data.position.xx>0?`信用债：${data.position.xx}%<br/>`:''}
                                                             ${data.position && +data.position.lv>0?`利率债：${data.position.lv}%<br/>`:''}
                                                             ${data.position && +data.position.kzz>0?`<span class="red">可转债：${data.position.kzz}%</span><br/>`:''}
@@ -606,7 +663,10 @@ const Tools = {
                 <tr>
                     <th><input type="checkbox" class="j-code-checkbox-sel" ${SORT.checked == 1 ? 'checked' : ''} />基金代码</th>
                     <th>
-                        基金名称<span class="emoji j-emoji ${SORT.emoji == '❤️' ? 'sel' : ''}">❤️</span><span class="emoji j-emoji ${SORT.emoji == '🛡️' ? 'sel' : ''}">🛡️</span>
+                        基金名称
+                        <span class="emoji j-emoji ${SORT.emoji == '❤️' ? 'sel' : ''}">❤️</span>
+                        <span class="emoji j-emoji ${SORT.emoji == '🛡️' ? 'sel' : ''}">🛡️</span>
+                        <span class="emoji j-emoji ${SORT.emoji == '🏋🏿' ? 'sel' : ''}">🏋🏿</span>
                     </th>
                     <th>购后均日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     ${total_arr.map(total => {
@@ -665,8 +725,6 @@ const Tools = {
                     <span class="j-code-name gray" style="margin:0 5px;"></span>
                     <button class="search_btn reb j-code-add" style="margin-left:0px">添加债权</button>
                     <button class="search_btn green j-code-combination-add" style="margin-left:10px">添加组合</button>
-                    <button class="search_btn j-code-keynote" style="margin-left:10px">添加重点❤️</button>
-                    <button class="search_btn j-code-shield" style="margin-left:10px">添加抗跌🛡️</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
                     <button class="search_btn j-code-combination-updata" style="margin-left:10px">更新组合</button>
                     <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债权</button>
@@ -689,7 +747,7 @@ const Tools = {
                     <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
                 </div>
             </div>
-            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<10%，可转债看行情</div>
+            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债权</span></div>
             <div class="g-table"></div>
             <div class="g-con"></div>
         `;
@@ -752,7 +810,7 @@ class Alert {
         });
         $body.append($alert);
     }
-    show(con) {
+    show(con,cb) {
         const { $alert } = this;
         const $con = $alert.querySelector('.con');
         $con.innerHTML = con;
@@ -761,6 +819,7 @@ class Alert {
             top: 0,
             behavior: 'smooth'
         });
+        if(cb) cb(this);
     }
 }
 const myAlert = new Alert();
@@ -861,11 +920,11 @@ addEventListener($table,'click',e=>{
     const code = e.target.closest('[data-code]').getAttribute('data-code');
     const Data = DATAS[code];
     if(!Data.assetPosition)return;
-    let str = `<div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all">${Data.name}</div>`;
+    let str = `<div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all">${Data.name}${Data.assetPosition.updateTime?`<p style="font-size:12px;">${Data.assetPosition.updateTime}<span class="red j-fundUpdata" style="margin-left:10px;cursor:pointer;">更新</span></p>`:''}</div>`;
     str += '<div style="display:flex;">';
     // 基金情况
     const etf = Data.assetPosition.etf;
-    if(etf){
+    if(+Data.asset.jj>0){
         str+= `
             <div style="margin:0 10px;">
                 <table>
@@ -923,8 +982,15 @@ addEventListener($table,'click',e=>{
         `
     }
     str += '</div>';
-    myAlert.show(str);
-
+    myAlert.show(str,Alert=>{
+        // console.log(Alert);
+        const $alert = Alert.$alert;
+        $alert.querySelector('.j-fundUpdata').addEventListener('click',event=>{
+            Tools.upDateFundDiff(Data.code).then(res=>{
+                e.target.click();
+            })        
+        })
+    });
 },'.j-code-asset-alert')
 //点击代码填写进入上面的ipt
 addEventListener($table, 'click', e => {
@@ -954,11 +1020,11 @@ addEventListener($form,'click', e=>{
     if(codes.length>0) Tools.addCombinationCode(codes);
 },'.j-code-combination-add')
 // 添加重点
-addEventListener($form, 'click', e => {
-    const code = $codeIpt.value;
-    Tools.setCustomCodes(code, { keynote: 1 });
-    Tools.updateDatasTable();
-}, '.j-code-keynote')
+// addEventListener($form, 'click', e => {
+//     const code = $codeIpt.value;
+//     Tools.setCustomCodes(code, { keynote: 1 });
+//     Tools.updateDatasTable();
+// }, '.j-code-keynote')
 // 删除重点
 addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
@@ -969,11 +1035,11 @@ addEventListener($table, 'click', e => {
     }
 }, '.j-code-keynote-del')
 // 添加抗跌
-addEventListener($form, 'click', e => {
-    const code = $codeIpt.value;
-    Tools.setCustomCodes(code, { shield: 1 });
-    Tools.updateDatasTable();
-}, '.j-code-shield')
+// addEventListener($form, 'click', e => {
+//     const code = $codeIpt.value;
+//     Tools.setCustomCodes(code, { shield: 1 });
+//     Tools.updateDatasTable();
+// }, '.j-code-shield')
 // 删除抗跌
 addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
@@ -983,6 +1049,15 @@ addEventListener($table, 'click', e => {
         Tools.updateDatasTable();
     }
 }, '.j-code-shield-del')
+// 删除重仓
+addEventListener($table, 'click', e => {
+    const code = e.target.closest('[data-code]').getAttribute('data-code');
+    // console.log(code)
+    if (confirm('确定取消重仓基金吗?')) {
+        Tools.setCustomCodes(code, { heavy: 0 });
+        Tools.updateDatasTable();
+    }
+}, '.j-code-heavy-del')
 // 添加限额
 // addEventListener($form, 'click', e => {
 //     const code = $codeIpt.value;
@@ -1019,23 +1094,7 @@ addEventListener($form, 'click', e => {
 // 更新债权
 addEventListener($form, 'click', async e => {
     const $btn = e.target;
-    if ($btn.ing != undefined) return;
-    $btn.ing = 1;
-    const maxLength = Object.keys(DATAS).length;
-    for (let code in DATAS) {
-        // console.log(code);
-        $btn.innerHTML = `正在更新${$btn.ing - 0}/${maxLength}`;
-        const datas = DATAS[code];
-        if (!code.includes(',') && `${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
-            // console.log(code);
-            await Tools.getCode(code);
-        }
-        $btn.ing++;
-    }
-    $btn.ing = undefined;
-    $btn.innerHTML = '更新债权';
-    Tools.updateDatasTable();
-    alert('更新成功');
+    Tools.updatasCodes($btn,Object.keys(DATAS));
 }, '.j-code-updata')
 // 更新组合
 addEventListener($form,'click',e=>{
@@ -1063,9 +1122,10 @@ addEventListener($table, 'change', e => {
     const $checkbox = e.target;
     const checked = $checkbox.checked;
     const code = $checkbox.closest('tr').getAttribute('data-code');
-    // 删掉买入时间
+    // 删掉买入时间，重仓基金
     if (!checked) {
         Tools.setCustomCodes(code, { buy_time: '' });
+        Tools.setCustomCodes(code,{heavy:''})
     }
     Tools.setCustomCodes(code, { checked: checked ? 1 : 0 });
     Tools.updateDatasTable();
@@ -1159,6 +1219,16 @@ addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
     Tools.setCustomSort({ position: value });
 }, 500), '.j-code-position-sort')
+// 自定义筛选债权
+document.querySelector('.j-custom-filter').addEventListener('click',e=>{
+    Tools.setCustomSort({
+        Ftype:2,//债基
+        type:'信用债',//债权类型
+        sale_time:'7',//7天卖出时间
+        lv:'15',//利率债筛选
+    })
+    window.location.reload();
+})
 // 清除筛选
 addEventListener($form, 'click', e => {
     delete SORT.type;
@@ -1297,25 +1367,6 @@ addEventListener($table, 'click', e => {
 }, '.j-copyText')
 
 // 监听右键点击事件
-// $table.addEventListener('contextmenu', function(event) {
-//     // 阻止浏览器默认的右键菜单弹出
-//     event.preventDefault();
-    
-//     // 创建自定义的右键菜单
-//     var customMenu = document.createElement('div');
-//     customMenu.innerHTML = '自定义右键菜单';
-//     customMenu.style.position = 'absolute';
-//     customMenu.style.left = (event.clientX + 'px');
-//     customMenu.style.top = (event.clientY + 'px');
-//     customMenu.style.backgroundColor = '#f2f2f2';
-//     customMenu.style.padding = '10px';
-//     document.body.appendChild(customMenu);
-    
-//     // 点击页面其他位置时关闭自定义菜单
-//     document.addEventListener('click', function() {
-//         customMenu.remove();
-//     });
-//   });
 class Contextmenu{
     constructor(){
         const $div = document.createElement('div');
@@ -1354,8 +1405,13 @@ class Contextmenu{
                 <div class="name" style="text-align:center;border-bottom:1px solid #e7dfdf;padding:5px;font-size: 14px; color:gray;"></div>
                 <div class="context-menu-item">添加重点❤️</div>
                 <div class="context-menu-item">添加抗跌🛡️</div>
+                <div class="context-menu-item">添加重仓🏋🏿</div>
+                <div class="context-menu-item">更新基金🔃</div>
                 <div class="br"></div>
                 <div class="context-menu-item">对比债权</div>
+                <div class="context-menu-item">列表基金🔃</div>
+                <div class="context-menu-item">列表持仓🔃</div>
+                <div class="br"></div>
                 <div style="padding: 10px; font-size:12px;display: flex; justify-content: space-between;"><span style="color:red;cursor: pointer;" class="j-code-filter-clear">清楚筛选</span><span style=" color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span></div>
             </div>
         `
@@ -1369,6 +1425,7 @@ class Contextmenu{
             const $tr = event.target.closest('tr');
             const Data = DATAS[$tr.getAttribute('data-code')];
             this.Data = Data;
+            this.$tr = $tr;
             // 显示右键菜单
             this.show(event);
         },'tbody>tr')
@@ -1398,7 +1455,7 @@ class Contextmenu{
     hide(){
         this.$menu.style.display = 'none';
     }
-    item($item){
+    async item($item){
         const con = $item.textContent;
         const Data = this.Data;
         const code = Data.code;
@@ -1412,8 +1469,37 @@ class Contextmenu{
             Tools.updateDatasTable();
             this.hide();
         }
+        if(con.includes('添加重仓')){
+            Tools.setCustomCodes(code, { heavy: 1 });
+            Tools.updateDatasTable();
+            this.hide();
+        }
+        if(con.includes('更新基金')){
+            this.$tr.querySelector('.j-code').click();
+            document.querySelector('.j-code-add').click();
+            this.hide();
+        }
         if(con.includes('对比债权')){
             $form.querySelector('.j-code-compare').click();
+            this.hide();
+        }
+        if(con.includes('列表基金')){
+            const codes = Tools.getNowCodes();
+            Tools.updatasCodes(document.querySelector('.j-code-updata'),codes);
+            this.hide();
+        }
+        if(con.includes('列表持仓')){
+            const codes = Tools.getNowCodes();
+            const $span = document.createElement('span');
+            $span.style = 'color:gray;'
+            $item.append($span);
+            let index = 0;
+            for(let code of codes){
+                index++;
+                $span.innerHTML=`${index}/${codes.length}`
+                await Tools.upDateFundDiff(code);
+            }
+            $span.remove();
             this.hide();
         }
     }
