@@ -634,7 +634,7 @@ const Tools = {
                                                         <td>${Tools.isSale(data.code)}</td>
                                                         <td>
                                                             <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
-                                                            <p class="owb j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
+                                                            <p class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
                                                         </td>
                                                         <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
                                                             ${data.asset && +data.asset.jj>0?`基金：${data.asset.jj}%<br/>`:''}
@@ -1009,7 +1009,7 @@ addEventListener($table,'click',e=>{
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>债权名称</th><th>价格${price>0?`<p class="fs12 fwn ${price>0?'red':price<0?'green':''}" style="margin-top:-8px;">${price.toFixed(4)}</p>`:''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th></tr>
+                        <tr><th>债权名称</th><th>价格${price!=0?`<p class="fs12 fwn ${price>0?'red':price<0?'green':''}" style="margin-top:-8px;">${price.toFixed(4)}</p>`:''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th></tr>
                     </thead>
                     <tbody>
                         ${fundboods.map(data => `<tr><td>${data['ZQMC']}</td><td class="${(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']>0)?'red':(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']<0)?'green':''}">${fundboodsDiff[data.ZQDM]?`${fundboodsDiff[data.ZQDM]['f2']}/${fundboodsDiff[data.ZQDM]['f3']}%`:''}</td><td>${data['ZJZBL']}%</td><td>${{'1':'信用债','2':'利率债','3':'可转债','4':'其他','5':'同业存单'}[data.BONDTYPE]}</td></tr>`).join('')}
