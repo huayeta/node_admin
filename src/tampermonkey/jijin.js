@@ -57,6 +57,10 @@ const Tools = {
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
     },
+    isNumber:(str)=>{
+        const num = Number(str);
+        return !isNaN(num);
+    },
     alertFuc: obj => {
         const keys = Object.keys(obj);
         const values = Object.values(obj);
@@ -394,8 +398,9 @@ const Tools = {
         const {fundboodsDiff} = assetPosition;
         const codes = Object.keys(fundboodsDiff);
         if(codes.length>0){
-            return !codes.every(code=>{
-                return +fundboodsDiff[code]['f3']>=0
+            return codes.some(code=>{
+                const diff = Number(fundboodsDiff[code]['f3']);
+                return !isNaN(diff) && diff<0
             })
         }
     },
@@ -629,7 +634,7 @@ const Tools = {
                                                         <td>${Tools.isSale(data.code)}</td>
                                                         <td>
                                                             <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
-                                                            <span class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</span>
+                                                            <p class="owb j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
                                                         </td>
                                                         <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
                                                             ${data.asset && +data.asset.jj>0?`基金：${data.asset.jj}%<br/>`:''}
@@ -652,9 +657,6 @@ const Tools = {
                                                         <td><input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" /></td>
                                                         <td>${Array.isArray(data.netWorthDate)?data.netWorthDate.join('<br />'):data.netWorthDate}</td>
                                                         <td style="${data.Ftype.includes('混合型') ? 'color:brown;' : ''}">${Array.isArray(data.Ftype)?data.Ftype.join('<br />'):data.Ftype}</td>
-                                                        <td>
-                                                            <a style="color:red;" class="j-code-del">删除</a>
-                                                        </td>
                                                     </tr>
                                                 `
                                             }  
@@ -699,7 +701,6 @@ const Tools = {
                     <th>买入时间</th>
                     <th>净值更新日期</th>
                     <th>债权类型</th>
-                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
@@ -763,7 +764,7 @@ const Tools = {
                     <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
                 </div>
             </div>
-            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债权</span></div>
+            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债权</span></div>
             <div class="g-table"></div>
             <div class="g-con"></div>
         `;
@@ -960,12 +961,22 @@ addEventListener($table,'click',e=>{
     // 股票情况
     const fundStocks = Data.assetPosition.fundStocks;
     const fundStocksDiff = Data.assetPosition.fundStocksDiff;
+
+    let gprice = 0;
+    let stockce = 0;
+    fundStocks && fundStocks.forEach(data=>{
+        stockce +=Number(data['JZBL']);
+        if(fundStocksDiff[data.GPDM] && Tools.isNumber(fundStocksDiff[data.GPDM]['f2']) && Tools.isNumber(fundStocksDiff[data.GPDM]['f3'])){
+            gprice += ((Number(fundStocksDiff[data.GPDM]['f2']) * Number(fundStocksDiff[data.GPDM]['f3']) * Number(data['JZBL']))/10000)
+        }
+    })
+
     if(fundStocks){
         str+= `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>股票名称</th><th>价格</th><th>持仓占比</th></tr>
+                        <tr><th>股票名称</th><th>价格<p class="fs12 fwn ${gprice>0?'red':gprice<0?'green':''}" style="margin-top:-8px;">${gprice.toFixed(4)}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
                     </thead>
                     <tbody>
                         ${fundStocks.map(data => `
@@ -983,12 +994,22 @@ addEventListener($table,'click',e=>{
     // 债权情况
     const fundboods = Data.assetPosition.fundboods;
     const fundboodsDiff = Data.assetPosition.fundboodsDiff;
+
+    let price = 0;
+    let boodce = 0;
+    fundboods && fundboods.forEach(data=>{
+        boodce += Number(data['ZJZBL']);
+        if(fundboodsDiff[data.ZQDM] && Tools.isNumber(fundboodsDiff[data.ZQDM]['f2']) && Tools.isNumber(fundboodsDiff[data.ZQDM]['f3'])){
+            price += ((Number(fundboodsDiff[data.ZQDM]['f2']) * Number(fundboodsDiff[data.ZQDM]['f3']) * Number(data['ZJZBL']))/10000)
+        }
+    })
+
     if(fundboods){
         str+= `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>债权名称</th><th>价格</th><th>持仓占比</th><th>债权类型</th></tr>
+                        <tr><th>债权名称</th><th>价格${price>0?`<p class="fs12 fwn ${price>0?'red':price<0?'green':''}" style="margin-top:-8px;">${price.toFixed(4)}</p>`:''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th></tr>
                     </thead>
                     <tbody>
                         ${fundboods.map(data => `<tr><td>${data['ZQMC']}</td><td class="${(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']>0)?'red':(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']<0)?'green':''}">${fundboodsDiff[data.ZQDM]?`${fundboodsDiff[data.ZQDM]['f2']}/${fundboodsDiff[data.ZQDM]['f3']}%`:''}</td><td>${data['ZJZBL']}%</td><td>${{'1':'信用债','2':'利率债','3':'可转债','4':'其他','5':'同业存单'}[data.BONDTYPE]}</td></tr>`).join('')}
@@ -1276,14 +1297,14 @@ addEventListener($form, 'click', e => {
 //     Tools.setCustomCodes(code, { sale_time: selected });
 // }, '.j-sale-time')
 // 删除代码
-addEventListener($table, 'click', e => {
-    if (confirm('确定删除吗？')) {
-        const target = e.target;
-        const $tr = target.closest('tr');
-        const code = $tr.getAttribute('data-code');
-        Tools.delCode(code);
-    }
-}, '.j-code-del')
+// addEventListener($table, 'click', e => {
+//     if (confirm('确定删除吗？')) {
+//         const target = e.target;
+//         const $tr = target.closest('tr');
+//         const code = $tr.getAttribute('data-code');
+//         Tools.delCode(code);
+//     }
+// }, '.j-code-del')
 // 排序
 addEventListener($table, 'click', e => {
     const target = e.target;
@@ -1423,8 +1444,9 @@ class Contextmenu{
                 <div class="context-menu-item">添加抗跌🛡️</div>
                 <div class="context-menu-item">添加重仓🏋🏿</div>
                 <div class="context-menu-item">更新基金🔃</div>
+                <div class="context-menu-item">删除基金🔃</div>
                 <div class="br"></div>
-                <div class="context-menu-item">对比债权</div>
+                <div class="context-menu-item">对比债权❇️</div>
                 <div class="context-menu-item">列表基金🔃</div>
                 <div class="context-menu-item">列表持仓🔃</div>
                 <div class="br"></div>
@@ -1464,8 +1486,14 @@ class Contextmenu{
     }
     show(event){
         this.$name.innerHTML = `${this.Data.name}`;
-        this.$menu.style.left = event.pageX + "px";
-        this.$menu.style.top = event.pageY + "px";
+        var x = event.clientX + window.scrollX;
+        var y = event.clientY + window.scrollY;
+        var maxX = window.innerWidth + window.scrollX - this.$menu.offsetWidth-20;
+        var maxY = window.innerHeight + window.scrollY - this.$menu.offsetHeight-20;
+        x = Math.min(x, maxX);
+        y = Math.min(y, maxY);
+        this.$menu.style.left = x + "px";
+        this.$menu.style.top = y + "px";
         this.$menu.style.display = 'block';
     }
     hide(){
@@ -1493,6 +1521,12 @@ class Contextmenu{
         if(con.includes('更新基金')){
             this.$tr.querySelector('.j-code').click();
             document.querySelector('.j-code-add').click();
+            this.hide();
+        }
+        if(con.includes('删除基金')){
+            if (confirm('确定删除吗？')) {
+                Tools.delCode(code);
+            }
             this.hide();
         }
         if(con.includes('对比债权')){
