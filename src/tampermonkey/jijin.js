@@ -370,8 +370,17 @@ const Tools = {
                     fundStocksDiff[item['f12']]=item; 
                 })
             }
-
         }
+        // 计算股票的涨幅跟持仓
+        let gprice = 0;
+        let stockce = 0;
+        fundStocks && fundStocks.forEach(data=>{
+            stockce +=Number(data['JZBL']);
+            if(fundStocksDiff[data.GPDM] && Tools.isNumber(fundStocksDiff[data.GPDM]['f2']) && Tools.isNumber(fundStocksDiff[data.GPDM]['f3'])){
+                gprice += ((Number(fundStocksDiff[data.GPDM]['f2']) * Number(fundStocksDiff[data.GPDM]['f3']) * Number(data['JZBL']))/10000)
+            }
+        })
+
         // 计算出债权的涨跌
         const fundboodsDiff = {};
         if(fundboods && fundboods.length>0){
@@ -386,22 +395,27 @@ const Tools = {
                 })
             }
         }
+        // 计算出债权的涨幅和持仓
+        let price = 0;
+        let boodce = 0;
+        fundboods && fundboods.forEach(data=>{
+            boodce += Number(data['ZJZBL']);
+            if(fundboodsDiff[data.ZQDM] && Tools.isNumber(fundboodsDiff[data.ZQDM]['f2']) && Tools.isNumber(fundboodsDiff[data.ZQDM]['f3'])){
+                price += ((Number(fundboodsDiff[data.ZQDM]['f2']) * Number(fundboodsDiff[data.ZQDM]['f3']) * Number(data['ZJZBL']))/10000)
+            }
+        })
         return {
-            fundStocksDiff,fundboodsDiff,updateTime:Tools.getTime()
-        }
-    },
-    judgeDownDp:(code)=>{
-        // 判断当前债权是否有下降的
-        if(!code || !DATAS[code])return;
-        const {assetPosition} = DATAS[code];
-        if(!assetPosition || !assetPosition.fundboodsDiff)return;
-        const {fundboodsDiff} = assetPosition;
-        const codes = Object.keys(fundboodsDiff);
-        if(codes.length>0){
-            return codes.some(code=>{
-                const diff = Number(fundboodsDiff[code]['f3']);
-                return !isNaN(diff) && diff<0
-            })
+            fundStocksDiff,
+            fundStocksDp:{
+                gprice:gprice.toFixed(4),
+                stockce,
+            },
+            fundboodsDiff,
+            fundboodsDp:{
+                price:price.toFixed(4),
+                boodce
+            },
+            updateTime:Tools.getTime()
         }
     },
     getCustomType:(Data)=>{
@@ -636,14 +650,14 @@ const Tools = {
                                                             <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
                                                             <p class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
                                                         </td>
-                                                        <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;">
+                                                        <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${data.assetPosition && data.assetPosition.fundStocksDp && (data.assetPosition.fundStocksDp.gprice>0?'background:rgba(255,0,12,.1)':data.assetPosition.fundStocksDp.gprice<0?'background:rgba(0,128,0,.1)':'')}">
                                                             ${data.asset && +data.asset.jj>0?`基金：${data.asset.jj}%<br/>`:''}
                                                             ${data.asset && +data.asset.gp>0?`股票：${data.asset.gp}%<br/>`:''}
                                                             ${data.asset && +data.asset.zq>0?`债权：${data.asset.zq}%<br/>`:''}
                                                             ${data.asset && +data.asset.xj>0?`现金：${data.asset.xj}%<br/>`:''}
                                                             ${data.asset && +data.asset.qt>0?`其他：${data.asset.qt}%<br/>`:''}
                                                         </td>
-                                                        <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px;${Tools.judgeDownDp(data.code)?'background:rgba(0,128,0,.1);':''}">
+                                                        <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${data.assetPosition && data.assetPosition.fundboodsDp && (data.assetPosition.fundboodsDp.price>0?'background:rgba(255,0,12,.1)':data.assetPosition.fundboodsDp.price<0?'background:rgba(0,128,0,.1)':'')}">
                                                             ${data.position && +data.position.xx>0?`信用债：${data.position.xx}%<br/>`:''}
                                                             ${data.position && +data.position.lv>0?`利率债：${data.position.lv}%<br/>`:''}
                                                             ${data.position && +data.position.kzz>0?`<span class="red">可转债：${data.position.kzz}%</span><br/>`:''}
@@ -961,22 +975,14 @@ addEventListener($table,'click',e=>{
     // 股票情况
     const fundStocks = Data.assetPosition.fundStocks;
     const fundStocksDiff = Data.assetPosition.fundStocksDiff;
-
-    let gprice = 0;
-    let stockce = 0;
-    fundStocks && fundStocks.forEach(data=>{
-        stockce +=Number(data['JZBL']);
-        if(fundStocksDiff[data.GPDM] && Tools.isNumber(fundStocksDiff[data.GPDM]['f2']) && Tools.isNumber(fundStocksDiff[data.GPDM]['f3'])){
-            gprice += ((Number(fundStocksDiff[data.GPDM]['f2']) * Number(fundStocksDiff[data.GPDM]['f3']) * Number(data['JZBL']))/10000)
-        }
-    })
+    const {gprice,stockce}= Data.assetPosition.fundStocksDp;
 
     if(fundStocks){
         str+= `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>股票名称</th><th>价格<p class="fs12 fwn ${gprice>0?'red':gprice<0?'green':''}" style="margin-top:-8px;">${gprice.toFixed(4)}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
+                        <tr><th>股票名称</th><th>价格<p class="fs12 fwn ${gprice>0?'red':gprice<0?'green':''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
                     </thead>
                     <tbody>
                         ${fundStocks.map(data => `
@@ -994,22 +1000,14 @@ addEventListener($table,'click',e=>{
     // 债权情况
     const fundboods = Data.assetPosition.fundboods;
     const fundboodsDiff = Data.assetPosition.fundboodsDiff;
-
-    let price = 0;
-    let boodce = 0;
-    fundboods && fundboods.forEach(data=>{
-        boodce += Number(data['ZJZBL']);
-        if(fundboodsDiff[data.ZQDM] && Tools.isNumber(fundboodsDiff[data.ZQDM]['f2']) && Tools.isNumber(fundboodsDiff[data.ZQDM]['f3'])){
-            price += ((Number(fundboodsDiff[data.ZQDM]['f2']) * Number(fundboodsDiff[data.ZQDM]['f3']) * Number(data['ZJZBL']))/10000)
-        }
-    })
+    const {price,boodce} = Data.assetPosition.fundboodsDp;
 
     if(fundboods){
         str+= `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>债权名称</th><th>价格${price!=0?`<p class="fs12 fwn ${price>0?'red':price<0?'green':''}" style="margin-top:-8px;">${price.toFixed(4)}</p>`:''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th></tr>
+                        <tr><th>债权名称</th><th>价格${price!=0?`<p class="fs12 fwn ${price>0?'red':price<0?'green':''}" style="margin-top:-8px;">${price}</p>`:''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th></tr>
                     </thead>
                     <tbody>
                         ${fundboods.map(data => `<tr><td>${data['ZQMC']}</td><td class="${(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']>0)?'red':(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']<0)?'green':''}">${fundboodsDiff[data.ZQDM]?`${fundboodsDiff[data.ZQDM]['f2']}/${fundboodsDiff[data.ZQDM]['f3']}%`:''}</td><td>${data['ZJZBL']}%</td><td>${{'1':'信用债','2':'利率债','3':'可转债','4':'其他','5':'同业存单'}[data.BONDTYPE]}</td></tr>`).join('')}
