@@ -633,7 +633,7 @@ const Tools = {
                                                     <tr data-code="${data.code}" style="${data.code.includes(',')?'background: #fff7f3;':''}">
                                                         <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',')?data.code.replaceAll(',','<br />'):data.code}</span></td>
                                                         <td>
-                                                            <span class="j-code-name ${(+data.maxBuy<50000 || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${data.maxBuy<50000?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
+                                                            <span class="j-code-name ${(+data.maxBuy<=50000 || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${data.maxBuy<=50000?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
                                                             ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                                             ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
                                                             ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
@@ -825,6 +825,7 @@ class Alert {
             font-size: 16px;
             max-height: 80%;
             overflow-y: auto;
+            max-width:99%;
         }
     `;
         $head.append($style);
@@ -1549,6 +1550,7 @@ class Contextmenu{
             }
             $span.remove();
             this.hide();
+            Tools.updateDatasTable();
         }
     }
 }
