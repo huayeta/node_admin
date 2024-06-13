@@ -25,6 +25,11 @@ const EMOJIS = {
     '🛡️': 'shield',
     '🏋🏿':'heavy',
 }
+const FTYPES = {
+    '3':'DQII',
+    '1':'股基',
+    '2':'债基',
+}
 
 const Tools = {
     // 节流函数
@@ -50,6 +55,13 @@ const Tools = {
                 }, remainingTime);
             }
         };
+    },
+    dispatchEvent:($ele,type)=>{
+        const event = new Event(type, {
+            bubbles: true,
+            cancelable: true,
+        });
+        $ele.dispatchEvent(event);
     },
     getTime:()=>{
         return new Date().toLocaleString();
@@ -92,7 +104,7 @@ const Tools = {
             }
         })
         // console.log(code,income,index)
-        if (index > 0) income = (income / index).toFixed(2);
+        if (index > 0) income = (income / index).toFixed(3);
         Tools.setCustomCodes(code, { income, income_day: index });
         // 设置收入sort
         let codes = Object.values(DATAS).filter(data => (CODES[data.code] && CODES[data.code].checked == 1 && CODES[data.code].income));
@@ -173,8 +185,10 @@ const Tools = {
     // 是否是债基
     isDebt:(code)=>{
         const data = DATAS[code];
-        let is = 2;//基金
-        if(data.asset && (+data.asset.gp>0 || +data.asset.jj>0)){
+        let is = 2;//债基
+        if(data.Ftype.includes('QDII')){
+            is = 3; //QDII
+        }else if(data.asset && (+data.asset.gp>0 || +data.asset.jj>0)){
             is = 1;
         }
         return is;
@@ -765,8 +779,9 @@ const Tools = {
                     <!-- <input class="search_input j-code-credit-ipt" type="text" placeholder="信用占比" style="margin-left:10px;" />
                     <button class="search_btn reb j-code-credit-add" style="margin-left:0px">添加</button> -->
                     <span style="margin-left:10px; color:red;">筛选：</span>
-                    <button class="search_btn j-code-filter-Ftype ${SORT.Ftype=='1'?'reb':''}" data-ftype="1" style="margin-left:10px">股基</button>
-                    <button class="search_btn j-code-filter-Ftype ${SORT.Ftype=='2'?'reb':''}" data-ftype="2" style="margin-left:10px">债权</button>
+                    ${Object.keys(FTYPES).map(Ftype=>{
+                        return `<button class="search_btn j-code-filter-Ftype ${SORT.Ftype==Ftype?'reb':''}" data-ftype="${Ftype}" style="margin-left:10px">${FTYPES[Ftype]}</button>`
+                    }).join('')}
                     <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字/代码" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
                     <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type ? SORT.type : ''}" />
                     <input class="search_input j-code-note-sort" type="text" placeholder="搜索备注" style="margin-left:10px;" value="${SORT.note ? SORT.note : ''}" />
@@ -1044,11 +1059,17 @@ addEventListener($form, 'click', async e => {
     $btn.innerHTML = '正在添加';
     const code = $codeIpt.value;
     await Tools.getCode(code);
-    Tools.updateDatasTable();
     $codeIpt.value = '';
     alert('添加成功');
     $btn.ing = 0;
     $btn.innerHTML = '添加债权';
+    // 开始筛选
+    // Tools.setCustomSort({ name: code });
+    const $codeNameFilter = document.querySelector('.j-code-name-ipt');
+    $codeNameFilter.value= code;
+    Tools.dispatchEvent($codeNameFilter,'input');
+    // window.location.reload();
+    Tools.updateDatasTable();
 }, '.j-code-add')
 // 添加组合
 addEventListener($form,'click', e=>{
@@ -1238,11 +1259,7 @@ addEventListener($form, 'click', Tools.throttle(e => {
     const value = e.target.textContent;
     const $noteSort = document.querySelector('.j-code-note-sort');
     $noteSort.value = value;
-    const event = new Event('input', {
-        bubbles: true,
-        cancelable: true,
-    });
-    $noteSort.dispatchEvent(event);
+    Tools.dispatchEvent($noteSort,'input');
     // Tools.setCustomSort({ note: value });
 }, 500), '.j-code-note-span')
 // 筛选利率债
@@ -1518,8 +1535,10 @@ class Contextmenu{
             this.hide();
         }
         if(con.includes('更新基金')){
-            this.$tr.querySelector('.j-code').click();
-            document.querySelector('.j-code-add').click();
+            // this.$tr.querySelector('.j-code').click();
+            // document.querySelector('.j-code-add').click();
+            const codes = [code];
+            Tools.updatasCodes(document.querySelector('.j-code-updata'),codes);
             this.hide();
         }
         if(con.includes('删除基金')){
