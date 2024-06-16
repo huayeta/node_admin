@@ -936,7 +936,7 @@ const compareCodes = function (codes) {
         if (!customNetWorkData) return;
         str += `
         <div style="margin:0 10px;">
-            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all">${Array.isArray(name)?'组合':name}</div>
+            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;">${Array.isArray(name)?'组合':name}</div>
             <table>
                 <thead>
                     <tr><th>日期</th><th>日涨幅</th></tr>
