@@ -186,7 +186,7 @@ const Tools = {
     isDebt:(code)=>{
         const data = DATAS[code];
         let is = 2;//债基
-        if(data.Ftype.includes('QDII')){
+        if(data.Ftype.includes('QDII') || data.Ftype.includes('指数型')){
             is = 3; //QDII
         }else if(data.asset && (+data.asset.gp>0 || +data.asset.jj>0)){
             is = 1;
@@ -255,7 +255,7 @@ const Tools = {
             }
         })
         // 获取基金历史涨幅
-        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': 1, 'pagesize': 6 * 30 });
+        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': 1, 'pagesize': 4 * 30 });
         let customLastWeekGrowth = 0;
         let custom2LastWeekGrowth = 0;
         let customLastMonthGrowth = 0;
@@ -1437,6 +1437,7 @@ class Contextmenu{
                     border-radius：10px;
                     box-shadow:0px 0px 10px rgba(0,0,0,.3);
                     min-width: 135px;
+                    max-width: 160px;
                 }
 
                 .context-menu .context-menu-item {
@@ -1455,7 +1456,7 @@ class Contextmenu{
             </style>
             <!-- 鼠标右键菜单 -->
             <div class="context-menu" style="displqy:none;">
-                <div class="name" style="text-align:center;border-bottom:1px solid #e7dfdf;padding:5px;font-size: 14px; color:gray;"></div>
+                <div class="name" style="text-align:center;border-bottom:1px solid #e7dfdf;padding:5px;font-size: 14px; color:gray;line-height:1.4;"></div>
                 <div class="context-menu-item">添加重点❤️</div>
                 <div class="context-menu-item">添加抗跌🛡️</div>
                 <div class="context-menu-item">添加重仓🏋🏿</div>
