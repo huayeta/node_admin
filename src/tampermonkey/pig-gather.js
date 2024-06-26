@@ -146,7 +146,7 @@
         datas: [
             {
                 label: '万阁',
-                options: ['痔疮7', '肛裂5', '肛瘘8'],
+                options: ['痔疮7', '肛裂6', '肛瘘8'],
             },
             {
                 label: '广浴隆',
@@ -154,7 +154,7 @@
             },
             {
                 label: '艾跃',
-                options: ['痔疮5', '乳腺1', '疱疹2', '白斑2'],
+                options: ['痔疮6', '乳腺1', '疱疹2', '白斑2'],
             }
         ],
         jd_datas: [
@@ -1803,7 +1803,7 @@
                         <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type => `<option value="${type}">${type}</option>`)}</select>
                         <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
-                        <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}">${type.name}</option>`).join('')}</select>
+                        <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}" ${type.value == 'pig'?'selected':''}>${type.name}</option>`).join('')}</select>
                         <button class="search_btn reb j-come-type-search" style="">提醒唐人做单（<span>0</span>）</button>
                     </div>
                     <div class="u-con">
@@ -1977,6 +1977,9 @@
             if (qq_exec_pre) $qqExecPre.value = qq_exec_pre;
             const wws = Tools.findWwsByPhones([account]);
             $ww.value = wws.join('，');
+            const wxs = Tools.findWxsByDatas(DATA[account]);
+            // console.log(wxs);
+            $wx.value = wxs.join('，');
         },'.j-phone')
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click', e => {
