@@ -21,9 +21,22 @@ const SALETIME = {
     730: '2年免'
 };
 const EMOJIS = {
-    '❤️': 'keynote',
-    '🛡️': 'shield',
-    '🏋🏿':'heavy',
+    '❤️': {
+        key:'keynote',
+        title:'重点基金'
+    },
+    '🛡️': {
+        key:'shield',
+        title:'抗跌基金'
+    },
+    '🏋🏿': {
+        key:'heavy',
+        title:'重仓基金'
+    },
+    '💸': {
+        key:'dingtou',
+        title:'定投基金'
+    }
 }
 const FTYPES = {
     '3':'DQII',
@@ -713,6 +726,7 @@ const Tools = {
                     return `${(+CODES[data.code].investment[week].dtSly)}`;
                 }).reduce((acc, num) => (+acc) + (+num), 0)/5).toFixed(2);
             }
+            const emoji_keys = Object.keys(EMOJIS).map(emoji=>EMOJIS[emoji].key);
             // 判断是否有筛选
             // 债券组合筛选
             if ((!SORT.type || (data.customType && data.customType.includes(SORT.type)))) {
@@ -725,7 +739,7 @@ const Tools = {
                             // position持仓筛选
                             if(!SORT.position || (data.position && +data.position[SORT.position]>0)){
                                 // emoji筛选
-                                if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji]] == 1)) {
+                                if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji].key] == 1)) {
                                     // 针对卖出时间筛选
                                     if (!SORT.sale_time || (data.maxSaleTime == SORT.sale_time)) {
                                         // 针对是否是债基筛选
@@ -740,9 +754,9 @@ const Tools = {
                                                             <td>
                                                                 <span class="j-code-name ${((data.maxBuy && +data.maxBuy<=50000) || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${(data.maxBuy && data.maxBuy<=50000)?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
                                                                 ${is_new ? '<span title="已经更新">🔥</span>' : ''}
-                                                                ${(CODES[data.code] && CODES[data.code].keynote == 1) ? '<span class="j-code-keynote-del" style="" title="重点基金">❤️</span>' : ''}
-                                                                ${(CODES[data.code] && CODES[data.code].shield == 1) ? '<span class="j-code-shield-del" style="" title="抗跌基金">🛡️</span>' : ''}
-                                                                ${(CODES[data.code] && CODES[data.code].heavy == 1) ? '<span class="j-code-heavy-del" style="" title="重仓基金">🏋🏿</span>' : ''}
+                                                                ${CODES[data.code] && Object.keys(EMOJIS).map(emoji=>{
+                                                                    return CODES[data.code][EMOJIS[emoji].key]==1?`<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>`:'';
+                                                                }).join('') || ''}
                                                             </td>
                                                             <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                                             ${total_arr.map(total => {
@@ -774,9 +788,9 @@ const Tools = {
                                                                 ${data.position && Tools.isNumber1(data.position.qt)?`其他：${data.position.qt}%`:''}
                                                             </td>
                                                             <td style="font-size:12px; padding:2px 10px;">
-                                                                ${data.uniqueInfo && data.uniqueInfo.stddev1?`最大波动：${data.uniqueInfo.stddev1.toFixed(2)}%<br/>`:''}
-                                                                ${data.uniqueInfo && data.uniqueInfo.sharp1?`夏普比率：${data.uniqueInfo.sharp1.toFixed(2)}%<br/>`:''}
-                                                                ${data.uniqueInfo && data.uniqueInfo.maxretra1?`最大回撤：${data.uniqueInfo.maxretra1.toFixed(2)}%`:''}
+                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.stddev1)?`最大波动：${+data.uniqueInfo.stddev1.toFixed(2)}%<br/>`:''}
+                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.sharp1)?`夏普比率：${+data.uniqueInfo.sharp1.toFixed(2)}%<br/>`:''}
+                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.maxretra1)?`最大回撤：${+data.uniqueInfo.maxretra1.toFixed(2)}%`:''}
                                                             </td>
                                                             <td class="fs12">
                                                                 <input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" />
@@ -809,9 +823,9 @@ const Tools = {
                     <th><input type="checkbox" class="j-code-checkbox-sel" ${SORT.checked == 1 ? 'checked' : ''} />基金代码</th>
                     <th>
                         基金名称
-                        <span class="emoji j-emoji ${SORT.emoji == '❤️' ? 'sel' : ''}">❤️</span>
-                        <span class="emoji j-emoji ${SORT.emoji == '🛡️' ? 'sel' : ''}">🛡️</span>
-                        <span class="emoji j-emoji ${SORT.emoji == '🏋🏿' ? 'sel' : ''}">🏋🏿</span>
+                        ${Object.keys(EMOJIS).map(emoji=>{
+                            return `<span class="emoji j-emoji ${SORT.emoji == emoji ? 'sel' : ''}">${emoji}</span>`;
+                        }).join('')}
                     </th>
                     <th>购后均日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     ${total_arr.map(total => {
@@ -1089,11 +1103,11 @@ addEventListener($table,'click',e=>{
             <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;font-size:12px;line-height:1.5">定投开始日：${strategy.dtStartDate}，定投结束日：${strategy.dtEndDate}，<br />定投金额：${strategy.dtAmount}，每${strategy.round}周定投</div>
             <table>
                 <thead>
-                    <tr><th>定投总期数</th><th>投入总本金</th><th>总收益</th><th>定投收益率</th></tr>
+                    <tr><th>定投时间</th><th>定投总期数</th><th>投入总本金</th><th>总收益</th><th>定投收益率</th></tr>
                 </thead>
                 <tbody>
-                    ${Object.keys(investment).map(weekDtDay => `<tr><td>${investment[weekDtDay]['dtPeriods']}期</td><td>${(+investment[weekDtDay]['totalPrincipal']).toFixed(2)}</td><td>${(+investment[weekDtDay]['totalSy']).toFixed(2)}</td><td>${(+investment[weekDtDay]['dtSly']).toFixed(2)}%</td></tr>`).join('')}
-                    <tr><td>total</td><td>${total.totalPrincipal.toFixed(2)}</td><td>${total.totalSy.toFixed(2)}</td><td>${(total.dtSly/5).toFixed(2)}%</td></tr>
+                    ${Object.keys(investment).map(weekDtDay => `<tr><td>星期${weekDtDay}</td><td>${investment[weekDtDay]['dtPeriods']}期</td><td>${(+investment[weekDtDay]['totalPrincipal']).toFixed(2)}</td><td>${(+investment[weekDtDay]['totalSy']).toFixed(2)}</td><td>${(+investment[weekDtDay]['dtSly']).toFixed(2)}%</td></tr>`).join('')}
+                    <tr><td></td><td>total</td><td>${total.totalPrincipal.toFixed(2)}</td><td>${total.totalSy.toFixed(2)}</td><td>${(total.dtSly/5).toFixed(2)}%</td></tr>
                 </tbody>
             </table>
         </div>
@@ -1221,14 +1235,14 @@ addEventListener($form,'click', e=>{
 //     Tools.updateDatasTable();
 // }, '.j-code-keynote')
 // 删除重点
-addEventListener($table, 'click', e => {
-    const code = e.target.closest('[data-code]').getAttribute('data-code');
-    // console.log(code)
-    if (confirm('确定取消重点基金吗?')) {
-        Tools.setCustomCodes(code, { keynote: 0 });
-        Tools.updateDatasTable();
-    }
-}, '.j-code-keynote-del')
+// addEventListener($table, 'click', e => {
+//     const code = e.target.closest('[data-code]').getAttribute('data-code');
+//     // console.log(code)
+//     if (confirm('确定取消重点基金吗?')) {
+//         Tools.setCustomCodes(code, { keynote: 0 });
+//         Tools.updateDatasTable();
+//     }
+// }, '.j-code-keynote-del')
 // 添加抗跌
 // addEventListener($form, 'click', e => {
 //     const code = $codeIpt.value;
@@ -1236,23 +1250,33 @@ addEventListener($table, 'click', e => {
 //     Tools.updateDatasTable();
 // }, '.j-code-shield')
 // 删除抗跌
-addEventListener($table, 'click', e => {
-    const code = e.target.closest('[data-code]').getAttribute('data-code');
-    // console.log(code)
-    if (confirm('确定取消抗跌基金吗?')) {
-        Tools.setCustomCodes(code, { shield: 0 });
-        Tools.updateDatasTable();
-    }
-}, '.j-code-shield-del')
+// addEventListener($table, 'click', e => {
+//     const code = e.target.closest('[data-code]').getAttribute('data-code');
+//     // console.log(code)
+//     if (confirm('确定取消抗跌基金吗?')) {
+//         Tools.setCustomCodes(code, { shield: 0 });
+//         Tools.updateDatasTable();
+//     }
+// }, '.j-code-shield-del')
 // 删除重仓
-addEventListener($table, 'click', e => {
+// addEventListener($table, 'click', e => {
+//     const code = e.target.closest('[data-code]').getAttribute('data-code');
+//     // console.log(code)
+//     if (confirm('确定取消重仓基金吗?')) {
+//         Tools.setCustomCodes(code, { heavy: 0 });
+//         Tools.updateDatasTable();
+//     }
+// }, '.j-code-heavy-del')
+// 删除emoji
+addEventListener($table,'click',e=>{
     const code = e.target.closest('[data-code]').getAttribute('data-code');
+    const emoji = e.target.getAttribute('data-emoji');
     // console.log(code)
-    if (confirm('确定取消重仓基金吗?')) {
-        Tools.setCustomCodes(code, { heavy: 0 });
+    if (confirm(`确定取消${EMOJIS[emoji].title}吗?`)) {
+        Tools.setCustomCodes(code, { [EMOJIS[emoji].key]: 0 });
         Tools.updateDatasTable();
     }
-}, '.j-code-heavy-del')
+},'.j-code-emoji-del')
 // 添加限额
 // addEventListener($form, 'click', e => {
 //     const code = $codeIpt.value;
@@ -1612,9 +1636,9 @@ class Contextmenu{
             <!-- 鼠标右键菜单 -->
             <div class="context-menu" style="displqy:none;">
                 <div class="name" style="text-align:center;border-bottom:1px solid #e7dfdf;padding:5px;font-size: 14px; color:gray;line-height:1.4;"></div>
-                <div class="context-menu-item">添加重点❤️</div>
-                <div class="context-menu-item">添加抗跌🛡️</div>
-                <div class="context-menu-item">添加重仓🏋🏿</div>
+                ${Object.keys(EMOJIS).map(emoji=>{
+                    return  `<div class="context-menu-item" data-emoji="${emoji}">添加${EMOJIS[emoji].title.substr(0,2)}${emoji}</div>`;
+                }).join('')}
                 <div class="context-menu-item">更新基金🔃</div>
                 <div class="context-menu-item">删除基金🔃</div>
                 <div class="context-menu-item">更新定投🔃</div>
@@ -1676,21 +1700,12 @@ class Contextmenu{
     }
     async item($item){
         const con = $item.textContent;
+        const emoji = $item.getAttribute('data-emoji');
         const Data = this.Data;
         const code = Data.code;
         const _this = this;
-        if(con.includes('添加重点')){
-            Tools.setCustomCodes(code, { keynote: 1 });
-            Tools.updateDatasTable();
-            this.hide();
-        }
-        if(con.includes('添加抗跌')){
-            Tools.setCustomCodes(code, { shield: 1 });
-            Tools.updateDatasTable();
-            this.hide();
-        }
-        if(con.includes('添加重仓')){
-            Tools.setCustomCodes(code, { heavy: 1 });
+        if(emoji){
+            Tools.setCustomCodes(code, { [EMOJIS[emoji].key]: 1 });
             Tools.updateDatasTable();
             this.hide();
         }
