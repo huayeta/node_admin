@@ -517,6 +517,12 @@ const Tools = {
         }
         Tools.updateDatasTable();
     },
+    // 删除定投
+    delInvestment:(codes)=>{
+        codes.forEach(code=>{
+            
+        })
+    },
     getCustomType:(Data)=>{
         // 基金组合
         let customType = '';
@@ -726,14 +732,23 @@ const Tools = {
                     return `${(+CODES[data.code].investment[week].dtSly)}`;
                 }).reduce((acc, num) => (+acc) + (+num), 0)/5).toFixed(2);
             }
-            const emoji_keys = Object.keys(EMOJIS).map(emoji=>EMOJIS[emoji].key);
+            // 判断搜索的name是否存在
+            let is_filter_name = true;
+            {
+                if(!SORT.name){
+                    is_filter_name = true;
+                }else{
+                    let arr = SORT.name.split(',');
+                    is_filter_name = arr.some(str=>(data.name.includes(str) || data.code.includes(str)));
+                }
+            }
             // 判断是否有筛选
             // 债券组合筛选
             if ((!SORT.type || (data.customType && data.customType.includes(SORT.type)))) {
                 // 基金代码选中筛选
                 if (!SORT.checked || (SORT.checked == 1 && CODES[data.code] && CODES[data.code].checked == 1)) {
                     // name筛选/code筛选
-                    if (!SORT.name || (data.name.includes(SORT.name) || data.code.includes(SORT.name))) {
+                    if (is_filter_name) {
                         // note筛选
                         if (!SORT.note || (CODES[data.code] && CODES[data.code].note && CODES[data.code].note.includes(SORT.note))) {
                             // position持仓筛选
@@ -914,8 +929,9 @@ const Tools = {
                 定投结束日：<input type="date" class="search_input mr10" name="dtEndDate" value="${Tools.getNowDate().now}" />
                 定投周期：每<input class="search_input" type="text" placeholder="" name="round" style="width:35px;" value="1" /><select class="mr10" name="roundType"><option value="1">周</option><!--<option value="2">月</option>--></select>
                 定投日：<select class="mr10" name="weekDtDay">${['星期一','星期二','星期三','星期四','星期五'].map((date,index)=>`<option value="${index+1}" ${index==2?'selected':''}>${date}</option>`)}</select>
-                每期定投金额：<input class="search_input mr10" type="text" placeholder="" name="dtAmount" value="500" />
+                每期定投金额：<input class="search_input mr10" type="text" placeholder="" name="dtAmount" value="200" />
                 <button class="search_btn reb j-fundDtCalculator">计算</button>
+                <span class="ml10 gray">移动止盈：设定目标收益率为<span class="red">20%</span>，止赢回撤比例为<span class="red">5%</span></span>
             </div>
             <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债权</span></div>
             <div class="g-table"></div>
@@ -1642,13 +1658,14 @@ class Contextmenu{
                 <div class="context-menu-item">更新基金🔃</div>
                 <div class="context-menu-item">删除基金🔃</div>
                 <div class="context-menu-item">更新定投🔃</div>
+                <div class="context-menu-item">显示代码🔻</div>
                 <div class="br"></div>
                 <div class="context-menu-item">对比债权❇️</div>
+                <div class="context-menu-item">筛选债权✅</div>
                 <div class="context-menu-item">列表基金🔃</div>
                 <div class="context-menu-item">列表持仓🔃</div>
                 <div class="context-menu-item">列表定投🔃</div>
-                <div class="br"></div>
-                <div class="context-menu-item">显示代码🔻</div>
+                <div class="br"></div>  
                 <div style="padding: 10px; font-size:12px;display: flex; justify-content: space-between;"><span style="color:red;cursor: pointer;" class="j-code-filter-clear">清楚筛选</span><span style=" color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span></div>
             </div>
         `
@@ -1730,6 +1747,13 @@ class Contextmenu{
         if(con.includes('对比债权')){
             $form.querySelector('.j-code-compare').click();
             this.hide();
+        }
+        if(con.includes('筛选债权')){
+            const codes = Tools.getSelCodes();
+            const $codeNameIput = document.querySelector('.j-code-name-ipt');
+            $codeNameIput.value = codes.join(',');
+            Tools.dispatchEvent($codeNameIput,'input');
+            _this.hide();
         }
         if(con.includes('列表基金')){
             const codes = Tools.getNowCodes();
