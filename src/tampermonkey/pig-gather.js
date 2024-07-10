@@ -39,9 +39,11 @@
         { name: 'A97-欢乐购秒杀1群-有新人', fix: 'QQ', value: '626195966' },
         { name: 'A97-欢乐购秒杀2群', fix: 'QQ', value: '244917614' },
         { name: 'A97-欢乐购秒杀11群', fix: 'QQ', value: '1074927054' },
+        {name:'A97-欢乐购秒杀5群-新群',fix:'QQ',value:'87201879'},
         { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
         { name: 'A97-欢乐购火箭🚀④群-新人', fix: 'QQ', value: '532849108' },
+        {name:'A97-欢乐购秒杀🚀5群-新群',fix:'QQ',value:'940096908'},
         { name: 'pig', fix: '', value: 'pig', commission: '7' },
         { name: '凤凰', fix: '', value: 'fh' },
     ];
