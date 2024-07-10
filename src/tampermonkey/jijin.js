@@ -772,6 +772,7 @@ const Tools = {
                                                                 ${CODES[data.code] && Object.keys(EMOJIS).map(emoji=>{
                                                                     return CODES[data.code][EMOJIS[emoji].key]==1?`<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>`:'';
                                                                 }).join('') || ''}
+                                                                <p class="j-copyText fs12 green">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
                                                             </td>
                                                             <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                                             ${total_arr.map(total => {
@@ -782,10 +783,9 @@ const Tools = {
                                                             <td>${Tools.isSale(data.code)}</td>
                                                             <td>
                                                                 <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
-                                                                <p class="j-copyText">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
                                                                 <p class="fs12 gray j-show-investment">
                                                                     ${CODES[data.code] && CODES[data.code].investment?`
-                                                                        定投收益率：${dtSly}%
+                                                                        ${dtSly}%
                                                                     `:''}
                                                                 </p>
                                                             </td>
@@ -851,7 +851,7 @@ const Tools = {
                     </th>
                     <th>卖出时间</th>
                     <th>是否售出</th>
-                    <th>备注</th>
+                    <th>定投收益</th>
                     <th>资产</th>
                     <th>持仓情况<span class="caret-wrapper ${SORT.day == 'credit' ? sortClassname : ''}" data-day="credit"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>特色数据</th>
