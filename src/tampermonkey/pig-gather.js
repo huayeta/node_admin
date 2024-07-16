@@ -3058,8 +3058,10 @@
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const qq_exec_pre = $qqExecPre.value;
             const come_type = $comeType.value;
-            if (Tools.alertFuc({ phone, shop_label, qq_exec_pre, come_type })) return;
-            Tools.modifyDataToLastRecord(phone, { shop_label, qq_exec_pre, come_type });
+            const obj = {qq_exec_pre,come_type};
+            if(shop_label)obj.shop_label = shop_label;
+            if (Tools.alertFuc({ phone, qq_exec_pre, come_type })) return;
+            Tools.modifyDataToLastRecord(phone, obj);
             alert('修改成功');
         }, '.j-modifyLastRecord')
         // 添加真实姓名

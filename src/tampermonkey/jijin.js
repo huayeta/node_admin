@@ -324,64 +324,77 @@ const Tools = {
         Data.customLastWeekGrowth = (customLastWeekGrowth).toFixed(2);
         Data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
         Data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
-        // 获取基金的持仓情况
-        const {data:{fundBondInvestDistri=[],fundAssetAllocationByDate={},expansion,fundInverstPosition={}}} = await Tools.fetch('jjxqy2',{'fcode':code});
-        // 资产情况
-        Data.asset = {}
-        if(fundAssetAllocationByDate && fundAssetAllocationByDate[expansion] && fundAssetAllocationByDate[expansion].length>0){
-            const data = fundAssetAllocationByDate[expansion][0];
-            Data.asset={
-                jj:data.JJ,//基金
-                gp:data.GP,//股票
-                zq:data.ZQ,//债权
-                xj:data.HB,//现金
-                qt:data.QT,//其他
-            }
+        // 基金的持仓情况asset 持仓具体情况assetPosition 债权情况position
+        const {asset,assetPosition,position} = await Tools.getAsset(code);
+        Data.asset = asset;
+        Data.assetPosition = assetPosition;
+        Data.position = position;
+        if(Data.name.includes('联接') && Data.assetPosition.etf && Data.assetPosition.etf.code){
+            const {asset,assetPosition,position} = await Tools.getAsset(Data.assetPosition.etf.code);
+            Data.ljjj = {
+                asset,
+                assetPosition,
+                position,
+            };
         }
-        if(fundInverstPosition){
-            Data.assetPosition={
-                // 基金
-                etf:{
-                    code:fundInverstPosition.ETFCODE,
-                    name:fundInverstPosition.ETFSHORTNAME,
-                },
-                // 股票
-                fundStocks:fundInverstPosition.fundStocks,
-                // 债权
-                fundboods:fundInverstPosition.fundboods,
-            }
-            const fundDiff = await Tools.countDp(Data.assetPosition.fundStocks,Data.assetPosition.fundboods);
-            Object.assign(Data.assetPosition,fundDiff);
-        }
-        Data.position={};
-        if(fundBondInvestDistri){
-            fundBondInvestDistri.forEach(data=>{
-                switch (data.BONDTYPENEW) {
-                    case '1':
-                        // 信用债
-                        Data.position.xx=data.PCTNV;
-                        break;
-                    case '2':
-                        // 利率债
-                        Data.position.lv=data.PCTNV;
-                        break;
-                    case '3':
-                        // 可转债
-                        Data.position.kzz=data.PCTNV;
-                        break;
-                    case '4':
-                        // 其他
-                        Data.position.qt=data.PCTNV;
-                        break;
-                    default:
-                        break;
-                }
-            })
-        }
+        // // 获取基金的持仓情况
+        // const {data:{fundBondInvestDistri=[],fundAssetAllocationByDate={},expansion,fundInverstPosition={}}} = await Tools.fetch('jjxqy2',{'fcode':code});
+        // // 资产情况
+        // Data.asset = {}
+        // if(fundAssetAllocationByDate && fundAssetAllocationByDate[expansion] && fundAssetAllocationByDate[expansion].length>0){
+        //     const data = fundAssetAllocationByDate[expansion][0];
+        //     Data.asset={
+        //         jj:data.JJ,//基金
+        //         gp:data.GP,//股票
+        //         zq:data.ZQ,//债权
+        //         xj:data.HB,//现金
+        //         qt:data.QT,//其他
+        //     }
+        // }
+        // if(fundInverstPosition){
+        //     Data.assetPosition={
+        //         // 基金
+        //         etf:{
+        //             code:fundInverstPosition.ETFCODE,
+        //             name:fundInverstPosition.ETFSHORTNAME,
+        //         },
+        //         // 股票
+        //         fundStocks:fundInverstPosition.fundStocks,
+        //         // 债权
+        //         fundboods:fundInverstPosition.fundboods,
+        //     }
+        //     const fundDiff = await Tools.countDp(Data.assetPosition.fundStocks,Data.assetPosition.fundboods);
+        //     Object.assign(Data.assetPosition,fundDiff);
+        // }
+        // Data.position={};
+        // if(fundBondInvestDistri){
+        //     fundBondInvestDistri.forEach(data=>{
+        //         switch (data.BONDTYPENEW) {
+        //             case '1':
+        //                 // 信用债
+        //                 Data.position.xx=data.PCTNV;
+        //                 break;
+        //             case '2':
+        //                 // 利率债
+        //                 Data.position.lv=data.PCTNV;
+        //                 break;
+        //             case '3':
+        //                 // 可转债
+        //                 Data.position.kzz=data.PCTNV;
+        //                 break;
+        //             case '4':
+        //                 // 其他
+        //                 Data.position.qt=data.PCTNV;
+        //                 break;
+        //             default:
+        //                 break;
+        //         }
+        //     })
+        // }
         // 其他基本信息
         const {data:{rateInfo:{sh,MAXSG,CYCLE,SGZT},uniqueInfo}} = await Tools.fetch('jjxqy1_2',{'fcode':code})
         // 卖出时间
-        {
+        if(CYCLE!='' || sh!=''){
             const time = (CYCLE?CYCLE:sh[sh.length-1].time).match(/(\d+)(.+)/);
             if(time){
                 if(time[0].includes('天'))Data.maxSaleTime = time[1];
@@ -409,6 +422,66 @@ const Tools = {
         console.log(Data);
         Tools.setCode(Data);
         return Data;
+    },
+    getAsset:async (code)=>{
+        // 资产情况
+        let asset = {};
+        // 资产具体情况
+        let assetPosition = {};
+        // 债权情况
+        let position ={};
+        // 获取基金的持仓情况
+        const {data:{fundBondInvestDistri=[],fundAssetAllocationByDate={},expansion,fundInverstPosition={}}} = await Tools.fetch('jjxqy2',{'fcode':code});
+        if(fundAssetAllocationByDate && fundAssetAllocationByDate[expansion] && fundAssetAllocationByDate[expansion].length>0){
+            const data = fundAssetAllocationByDate[expansion][0];
+            asset={
+                jj:data.JJ,//基金
+                gp:data.GP,//股票
+                zq:data.ZQ,//债权
+                xj:data.HB,//现金
+                qt:data.QT,//其他
+            }
+        }
+        if(fundInverstPosition){
+            assetPosition={
+                // 基金
+                etf:{
+                    code:fundInverstPosition.ETFCODE,
+                    name:fundInverstPosition.ETFSHORTNAME,
+                },
+                // 股票
+                fundStocks:fundInverstPosition.fundStocks,
+                // 债权
+                fundboods:fundInverstPosition.fundboods,
+            }
+            const fundDiff = await Tools.countDp(assetPosition.fundStocks,assetPosition.fundboods);
+            Object.assign(assetPosition,fundDiff);
+        }
+        if(fundBondInvestDistri){
+            fundBondInvestDistri.forEach(data=>{
+                switch (data.BONDTYPENEW) {
+                    case '1':
+                        // 信用债
+                        position.xx=data.PCTNV;
+                        break;
+                    case '2':
+                        // 利率债
+                        position.lv=data.PCTNV;
+                        break;
+                    case '3':
+                        // 可转债
+                        position.kzz=data.PCTNV;
+                        break;
+                    case '4':
+                        // 其他
+                        position.qt=data.PCTNV;
+                        break;
+                    default:
+                        break;
+                }
+            })
+        }
+        return {asset,assetPosition,position};
     },
     upDateFundDiff:async (code)=>{
         if(!code || !DATAS[code] || !DATAS[code].assetPosition)return;
@@ -513,9 +586,9 @@ const Tools = {
             }           
             // console.log(result);
             each(investment,`${index}/${codes.length}`);
-            Tools.setCustomCodes(code,{investment})
+            Tools.setCustomCodes(code,{investment});
+            Tools.updateDatasTable();
         }
-        Tools.updateDatasTable();
     },
     // 删除定投
     delInvestment:(codes)=>{
@@ -742,6 +815,13 @@ const Tools = {
                     is_filter_name = arr.some(str=>(data.name.includes(str) || data.code.includes(str)));
                 }
             }
+            // 判断资产是涨还是跌
+            let assetDp = 0;
+            if(data.assetPosition && data.assetPosition.fundStocksDp && +data.assetPosition.fundStocksDp.gprice!=0){
+                assetDp = +data.assetPosition.fundStocksDp.gprice
+            }else if(data.ljjj && data.ljjj.assetPosition && data.ljjj.assetPosition.fundStocksDp){
+                assetDp = +data.ljjj.assetPosition.fundStocksDp.gprice
+            }
             // 判断是否有筛选
             // 债券组合筛选
             if ((!SORT.type || (data.customType && data.customType.includes(SORT.type)))) {
@@ -789,7 +869,7 @@ const Tools = {
                                                                     `:''}
                                                                 </p>
                                                             </td>
-                                                            <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${data.assetPosition && data.assetPosition.fundStocksDp && (data.assetPosition.fundStocksDp.gprice>0?'background:rgba(255,0,12,.1)':data.assetPosition.fundStocksDp.gprice<0?'background:rgba(0,128,0,.1)':'')}">
+                                                            <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${(assetDp>0?'background:rgba(255,0,12,.1)':assetDp<0?'background:rgba(0,128,0,.1)':'')}">
                                                                 ${data.asset && Tools.isNumber1(data.asset.jj)?`基金：${data.asset.jj}%<br/>`:''}
                                                                 ${data.asset && Tools.isNumber1(data.asset.gp)?`股票：${data.asset.gp}%<br/>`:''}
                                                                 ${data.asset && Tools.isNumber1(data.asset.zq)?`债权：${data.asset.zq}%<br/>`:''}
@@ -1144,10 +1224,11 @@ addEventListener($table,'click',e=>{
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>基金名称</th><th>持仓占比</th></tr>
+                        <tr><th>代码</th><th>基金名称</th><th>持仓占比</th></tr>
                     </thead>
                     <tbody>
                         <tr>
+                            <td>${etf['code']}</td>
                             <td>${etf['name']}</td>
                             <td>${Data.asset.jj}%</td>
                         </tr>
@@ -1156,6 +1237,35 @@ addEventListener($table,'click',e=>{
             </div>
         `
     }
+    // 如果有联接基金
+    if(Data.ljjj){
+        // 联接股票情况
+        const fundStocks = Data.ljjj.assetPosition.fundStocks;
+        const fundStocksDiff = Data.ljjj.assetPosition.fundStocksDiff;
+        const {gprice,stockce}= Data.ljjj.assetPosition.fundStocksDp;
+        
+        if(fundStocks){
+            str+= `
+                <div style="margin:0 10px;">
+                    <table>
+                        <thead>
+                            <tr><th>联接股票名称</th><th>价格<p class="fs12 fwn ${gprice>0?'red':gprice<0?'green':''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
+                        </thead>
+                        <tbody>
+                            ${fundStocks.map(data => `
+                                <tr>
+                                    <td>${data['GPJC']}</td>
+                                    <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3']>0)?'red':(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3']<0)?'green':''}">${fundStocksDiff[data.GPDM]?`${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%`:''}</td>
+                                    <td>${data['JZBL']}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `
+        }
+    }
+
     // 股票情况
     const fundStocks = Data.assetPosition.fundStocks;
     const fundStocksDiff = Data.assetPosition.fundStocksDiff;
