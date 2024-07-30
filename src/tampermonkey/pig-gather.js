@@ -1806,7 +1806,7 @@
                         <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type => `<option value="${type}">${type}</option>`)}</select>
                         <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
                         <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}" ${type.value == 'pig'?'selected':''}>${type.name}</option>`).join('')}</select>
-                        <button class="search_btn reb j-come-type-search" style="">提醒唐人做单（<span>0</span>）</button>
+                        <button class="search_btn reb j-come-type-search" style="">查询渠道做单7</button>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -3022,23 +3022,23 @@
                 return new Date(str1)>new Date(str2);
             })
         }, false)
-        function getComeTypeByTang() {
-            const accounts = Tools.findAccountsBykeyValue([['qq_exec_pre', 'tang']], (data, i) => {
-                // console.log(data);
-                // 距离现在有20天
-                const account = data.pig_phone;
-                let endTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
-                // console.log(account,!RDATA.isExist(account,'comment_reminder'),new Date(data.pig_over_time)<= endTime,data.pig_over_time)
-                if (new Date(data.pig_over_time) <= endTime && !RDATA.isExist(account, 'comment_reminder')) return true;
-            }, true, (data, i) => i == 0);
-            qqAdd.querySelector('.j-come-type-search span').textContent = accounts.length;
-            return accounts;
-        }
-        requestAnimationFrame(getComeTypeByTang);
+        // function getComeTypeByTang() {
+        //     const accounts = Tools.findAccountsBykeyValue([['qq_exec_pre', 'tang']], (data, i) => {
+        //         // console.log(data);
+        //         // 距离现在有20天
+        //         const account = data.pig_phone;
+        //         let endTime = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
+        //         // console.log(account,!RDATA.isExist(account,'comment_reminder'),new Date(data.pig_over_time)<= endTime,data.pig_over_time)
+        //         if (new Date(data.pig_over_time) <= endTime && !RDATA.isExist(account, 'comment_reminder')) return true;
+        //     }, true, (data, i) => i == 0);
+        //     qqAdd.querySelector('.j-come-type-search span').textContent = accounts.length;
+        //     return accounts;
+        // }
+        // requestAnimationFrame(getComeTypeByTang);
         // 提醒唐人做单
         addEventListener(qqAdd, 'click', e => {
-            // const come_type = $comeType.value;
-            setCon(Tools.displayAccounts(getComeTypeByTang(), undefined, undefined, true));
+            const come_type = $comeType.value;
+            setCon(Tools.displayAccounts(Tools.findAccountsBykeyValue([['come_type',come_type]]), undefined, undefined, true));
         }, '.j-come-type-search')
         // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {
