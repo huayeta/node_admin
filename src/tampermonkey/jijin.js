@@ -229,9 +229,9 @@ const Tools = {
     isDebt:(code)=>{
         const data = DATAS[code];
         let is = 2;//债基
-        if(data.Ftype.includes('QDII') || data.Ftype.includes('指数型')){
+        if(data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')){
             is = 3; //QDII
-        }else if(data.asset && (+data.asset.gp>0 || +data.asset.jj>0)){
+        }else if(data.asset && (+data.asset.gp>0.1 || +data.asset.jj>0)){
             is = 1;
         }
         return is;
@@ -243,12 +243,24 @@ const Tools = {
 
         const today = new Date();
         const specificDate = new Date(buy_time);
-        const dayDiff = Math.ceil((today.getTime() - specificDate.getTime()) / (1000 * 3600 * 24));
-        const day = dayDiff - data.maxSaleTime;
-        if (day >= 0) {
+        // 判断购买时间是否是大于下午三点
+        const specific_hours = specificDate.getHours();
+        let step = +data.maxSaleTime;
+        if(specific_hours>15){
+            step++;
+        }
+        // 未来可以卖的三点
+        specificDate.setDate(specificDate.getDate()+step);
+        specificDate.setHours(15,0,0,0);
+        if(new Date()>specificDate){
             return '<span class="gray">可以售出</span>';
-        } else {
-            return `<span class="red">还差${-day}天售出</span>`
+        }else{
+            today.setHours(15,0,0,0);
+            let dayDiff = Math.floor((specificDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+            if((new Date()).getHours()<15){
+                dayDiff--;
+            }
+            return `<span class="red">${dayDiff}天后15:00售出</span>`
         }
     },
     updateDatasTable: () => {
@@ -298,7 +310,7 @@ const Tools = {
             }
         })
         // 获取基金历史涨幅
-        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': 1, 'pagesize': 4 * 30 });
+        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': 1, 'pagesize': 3 * 30 });
         let customLastWeekGrowth = 0;
         let custom2LastWeekGrowth = 0;
         let customLastMonthGrowth = 0;
@@ -860,7 +872,10 @@ const Tools = {
                                                     }).join('')}
                                                             <td>${data.customType?data.customType:''}</td>
                                                             <td>${data.maxSaleTime?`${data.maxSaleTime}天免`:''}</td>
-                                                            <td>${Tools.isSale(data.code)}</td>
+                                                            <td>
+                                                                ${CODES[data.code] && CODES[data.code].buy_time?`<p class="gray fs12">${CODES[data.code].buy_time}</p>`:''}
+                                                                ${Tools.isSale(data.code)}
+                                                            </td>
                                                             <td>
                                                                 <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
                                                                 <p class="fs12 gray j-show-investment">
@@ -887,12 +902,11 @@ const Tools = {
                                                                 ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.sharp1)?`夏普比率：${+data.uniqueInfo.sharp1.toFixed(2)}%<br/>`:''}
                                                                 ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.maxretra1)?`最大回撤：${+data.uniqueInfo.maxretra1.toFixed(2)}%`:''}
                                                             </td>
-                                                            <td class="fs12">
-                                                                <input type="date" class="j-code-buy-time" value="${CODES[data.code] && CODES[data.code].buy_time ? CODES[data.code].buy_time : ''}" />
-                                                                ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods)!=0?`<p class="green">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>`:''}
-                                                            </td>
                                                             <td>${Array.isArray(data.netWorthDate)?data.netWorthDate.join('<br />'):data.netWorthDate}</td>
-                                                            <td style="${data.Ftype.includes('混合型') ? 'color:brown;' : ''}">${Array.isArray(data.Ftype)?data.Ftype.join('<br />'):data.Ftype}</td>
+                                                            <td style="${data.Ftype.includes('混合型') ? 'color:brown;' : ''}">
+                                                                ${Array.isArray(data.Ftype)?data.Ftype.join('<br />'):data.Ftype}
+                                                                ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods)!=0?`<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>`:''}
+                                                            </td>
                                                         </tr>
                                                     `
                                                 }
@@ -935,7 +949,6 @@ const Tools = {
                     <th>资产</th>
                     <th>持仓情况<span class="caret-wrapper ${SORT.day == 'credit' ? sortClassname : ''}" data-day="credit"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>特色数据</th>
-                    <th>买入时间</th>
                     <th>净值更新日期</th>
                     <th>债权类型</th>
                 </tr>
@@ -1471,6 +1484,10 @@ addEventListener($table, 'change', e => {
     if (!checked) {
         Tools.setCustomCodes(code, { buy_time: '' });
         Tools.setCustomCodes(code,{heavy:''})
+    }else{
+        //设置买入时间
+        const buy_time = Tools.getTime();
+        Tools.setCustomCodes(code,{buy_time});
     }
     Tools.setCustomCodes(code, { checked: checked ? 1 : 0 });
     Tools.updateDatasTable();
@@ -1508,13 +1525,13 @@ addEventListener($form, 'change', e => {
     Tools.setCustomSort({ sale_time });
 }, '.j-code-sale_time-sel')
 // 基金买入时间
-addEventListener($table, 'change', e => {
-    const $buyTime = e.target;
-    const buy_time = $buyTime.value;
-    const code = $buyTime.closest('tr').getAttribute('data-code');
-    Tools.setCustomCodes(code, { buy_time });
-    Tools.updateDatasTable();
-}, '.j-code-buy-time')
+// addEventListener($table, 'change', e => {
+//     const $buyTime = e.target;
+//     const buy_time = $buyTime.value;
+//     const code = $buyTime.closest('tr').getAttribute('data-code');
+//     Tools.setCustomCodes(code, { buy_time });
+//     Tools.updateDatasTable();
+// }, '.j-code-buy-time')
 // 筛选名字
 addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
