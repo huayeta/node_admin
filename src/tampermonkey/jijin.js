@@ -9,8 +9,9 @@ let DATAS = {};
 let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,investment:定投相关}}
 let CODES = {};
-const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
-const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金','组合'];
+//  ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'],
+const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'],['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
+const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金', '组合'];
 const SALETIME = {
     7: '7天免',
     30: '30天免',
@@ -22,26 +23,26 @@ const SALETIME = {
 };
 const EMOJIS = {
     '❤️': {
-        key:'keynote',
-        title:'重点基金'
+        key: 'keynote',
+        title: '重点基金'
     },
     '🛡️': {
-        key:'shield',
-        title:'抗跌基金'
+        key: 'shield',
+        title: '抗跌基金'
     },
     '🏋🏿': {
-        key:'heavy',
-        title:'重仓基金'
+        key: 'heavy',
+        title: '重仓基金'
     },
     '💸': {
-        key:'dingtou',
-        title:'定投基金'
+        key: 'dingtou',
+        title: '定投基金'
     }
 }
 const FTYPES = {
-    '3':'DQII',
-    '1':'股基',
-    '2':'债基',
+    '3': 'DQII',
+    '1': '股基',
+    '2': '债基',
 }
 
 const Tools = {
@@ -69,17 +70,17 @@ const Tools = {
             }
         };
     },
-    dispatchEvent:($ele,type)=>{
+    dispatchEvent: ($ele, type) => {
         const event = new Event(type, {
             bubbles: true,
             cancelable: true,
         });
         $ele.dispatchEvent(event);
     },
-    getTime:()=>{
+    getTime: () => {
         return new Date().toLocaleString();
     },
-    getNowDate:()=>{
+    getNowDate: () => {
         // Get current date
         let currentDate = new Date();
         // Get year, month, day, and time
@@ -97,21 +98,21 @@ const Tools = {
         if (minutes < 10) minutes = '0' + minutes;
         if (seconds < 10) seconds = '0' + seconds;
         return {
-            start:`${year}-01-01`,
-            now:`${year}-${month}-${day}`,
+            start: `${year}-01-01`,
+            now: `${year}-${month}-${day}`,
         }
     },
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
     },
-    isNumber:(str)=>{
+    isNumber: (str) => {
         const num = Number(str);
         return !isNaN(num);
     },
-    isNumber1:(str)=>{
-        if(!str) return false;
+    isNumber1: (str) => {
+        if (!str) return false;
         const num = parseFloat(str);
-        if(!isNaN(num) && (num>0 || num<0)){
+        if (!isNaN(num) && (num > 0 || num < 0)) {
             return true;
         }
         return false;
@@ -204,11 +205,11 @@ const Tools = {
                 if (CODES[a.code] && CODES[a.code][day]) aa = CODES[a.code][day];
                 if (CODES[b.code] && CODES[b.code][day]) bb = CODES[b.code][day];
                 result = aa - bb;
-            }else if(day == 'credit'){
+            } else if (day == 'credit') {
                 let aa = bb = (sort > 0 ? 0 : 10000);
-                if(a.position && +a.position.xx>0) aa = +a.position.xx;
-                if(b.position && +b.position.xx>0) bb = +b.position.xx;
-                return sort>0?(bb-aa):(aa-bb);
+                if (a.position && +a.position.xx > 0) aa = +a.position.xx;
+                if (b.position && +b.position.xx > 0) bb = +b.position.xx;
+                return sort > 0 ? (bb - aa) : (aa - bb);
             } else {
                 result = a[day] - b[day];
             }
@@ -226,12 +227,12 @@ const Tools = {
         }
     },
     // 是否是债基
-    isDebt:(code)=>{
+    isDebt: (code) => {
         const data = DATAS[code];
         let is = 2;//债基
-        if(data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')){
+        if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
             is = 3; //QDII
-        }else if(data.asset && (+data.asset.gp>0.1 || +data.asset.jj>0)){
+        } else if (data.asset && (+data.asset.gp > 0.1 || +data.asset.jj > 0)) {
             is = 1;
         }
         return is;
@@ -246,18 +247,18 @@ const Tools = {
         // 判断购买时间是否是大于下午三点
         const specific_hours = specificDate.getHours();
         let step = +data.maxSaleTime;
-        if(specific_hours>15){
+        if (specific_hours > 15) {
             step++;
         }
         // 未来可以卖的三点
-        specificDate.setDate(specificDate.getDate()+step);
-        specificDate.setHours(15,0,0,0);
-        if(new Date()>specificDate){
+        specificDate.setDate(specificDate.getDate() + step);
+        specificDate.setHours(15, 0, 0, 0);
+        if (new Date() > specificDate) {
             return '<span class="gray">可以售出</span>';
-        }else{
-            today.setHours(15,0,0,0);
+        } else {
+            today.setHours(15, 0, 0, 0);
             let dayDiff = Math.floor((specificDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-            if((new Date()).getHours()<15){
+            if ((new Date()).getHours() < 15) {
                 dayDiff--;
             }
             return `<span class="red">${dayDiff}天后15:00售出</span>`
@@ -276,7 +277,7 @@ const Tools = {
         localStorage.setItem('jijin.codes', JSON.stringify(CODES));
     },
     // code:基金代码，name:基金名称，dayGrowth：日涨幅，lastWeekGrowth：周涨幅，lastMonthGrowth：月涨幅，lastThreeMonthsGrowth：三月涨幅，lastSixMonthsGrowth：六月涨幅，lastYearGrowth：年涨幅，netWorthDate：净值更新日期，expectWorthDate：净值估算更新日期
-    fetch: async (action_name, params) => {
+    fetch: async (action_name, params = {}) => {
         // console.log(Tools.objectToQueryParams(params));
         const res = await fetch(`http://127.0.0.1:3000/${action_name}?${Tools.objectToQueryParams(params)}`);
         const datas = await res.json();
@@ -287,7 +288,7 @@ const Tools = {
         const { SHORTNAME: name, FTYPE: Ftype } = (await Tools.fetch('fundMNDetailInformation', { 'FCODE': code })).Datas;
         // 获取基金涨幅
         const { Datas, Expansion: { TIME: netWorthDate } } = await Tools.fetch('fundMNPeriodIncrease', { 'FCODE': code });
-        const Data = { code, name, Ftype, netWorthDate,select_time:Tools.getTime() };
+        const Data = { code, name, Ftype, netWorthDate, select_time: Tools.getTime() };
         Datas.forEach(data => {
             switch (data.title) {
                 case 'Z':
@@ -317,7 +318,7 @@ const Tools = {
         let dayGrowth = 0;
         fundMNHisNetList.Datas.forEach((data, i) => {
             if (i == 0) dayGrowth = data.JZZZL;
-            if(Tools.isNumber(data.JZZZL)){
+            if (Tools.isNumber(data.JZZZL)) {
                 // 0,1,2,3   i=3  4-2=2  
                 if (i < 5) {
                     customLastWeekGrowth += (+data.JZZZL);
@@ -328,7 +329,7 @@ const Tools = {
                 if (i < 5 * 4) {
                     customLastMonthGrowth += (+data.JZZZL);
                 }
-            }          
+            }
         })
         // 留下来最近6个月的数据
         Data.dayGrowth = dayGrowth;
@@ -337,12 +338,12 @@ const Tools = {
         Data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
         Data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
         // 基金的持仓情况asset 持仓具体情况assetPosition 债权情况position
-        const {asset,assetPosition,position} = await Tools.getAsset(code);
+        const { asset, assetPosition, position } = await Tools.getAsset(code);
         Data.asset = asset;
         Data.assetPosition = assetPosition;
         Data.position = position;
-        if(Data.name.includes('联接') && Data.assetPosition.etf && Data.assetPosition.etf.code){
-            const {asset,assetPosition,position} = await Tools.getAsset(Data.assetPosition.etf.code);
+        if (Data.name.includes('联接') && Data.assetPosition.etf && Data.assetPosition.etf.code) {
+            const { asset, assetPosition, position } = await Tools.getAsset(Data.assetPosition.etf.code);
             Data.ljjj = {
                 asset,
                 assetPosition,
@@ -404,19 +405,19 @@ const Tools = {
         //     })
         // }
         // 其他基本信息
-        const {data:{rateInfo:{sh,MAXSG,CYCLE,SGZT},uniqueInfo}} = await Tools.fetch('jjxqy1_2',{'fcode':code})
+        const { data: { rateInfo: { sh, MAXSG, CYCLE, SGZT }, uniqueInfo } } = await Tools.fetch('jjxqy1_2', { 'fcode': code })
         // 卖出时间
-        if(CYCLE!='' || sh!=''){
-            const time = (CYCLE?CYCLE:sh[sh.length-1].time).match(/(\d+)(.+)/);
-            if(time){
-                if(time[0].includes('天'))Data.maxSaleTime = time[1];
-                if(time[0].includes('月'))Data.maxSaleTime = time[1]*30;
-                if(time[0].includes('年'))Data.maxSaleTime = time[1]*365;
+        if (CYCLE != '' || sh != '') {
+            const time = (CYCLE ? CYCLE : sh[sh.length - 1].time).match(/(\d+)(.+)/);
+            if (time) {
+                if (time[0].includes('天')) Data.maxSaleTime = time[1];
+                if (time[0].includes('月')) Data.maxSaleTime = time[1] * 30;
+                if (time[0].includes('年')) Data.maxSaleTime = time[1] * 365;
             }
         }
         // 特色数据
         Data.uniqueInfo = {}
-        if(uniqueInfo && uniqueInfo.length>0){
+        if (uniqueInfo && uniqueInfo.length > 0) {
             // 最大回撤
             Data.uniqueInfo.maxretra1 = uniqueInfo[0].MAXRETRA1;
             // 波动率
@@ -435,142 +436,142 @@ const Tools = {
         Tools.setCode(Data);
         return Data;
     },
-    getAsset:async (code)=>{
+    getAsset: async (code) => {
         // 资产情况
         let asset = {};
         // 资产具体情况
         let assetPosition = {};
         // 债权情况
-        let position ={};
+        let position = {};
         // 获取基金的持仓情况
-        const {data:{fundBondInvestDistri=[],fundAssetAllocationByDate={},expansion,fundInverstPosition={}}} = await Tools.fetch('jjxqy2',{'fcode':code});
-        if(fundAssetAllocationByDate && fundAssetAllocationByDate[expansion] && fundAssetAllocationByDate[expansion].length>0){
+        const { data: { fundBondInvestDistri = [], fundAssetAllocationByDate = {}, expansion, fundInverstPosition = {} } } = await Tools.fetch('jjxqy2', { 'fcode': code });
+        if (fundAssetAllocationByDate && fundAssetAllocationByDate[expansion] && fundAssetAllocationByDate[expansion].length > 0) {
             const data = fundAssetAllocationByDate[expansion][0];
-            asset={
-                jj:data.JJ,//基金
-                gp:data.GP,//股票
-                zq:data.ZQ,//债权
-                xj:data.HB,//现金
-                qt:data.QT,//其他
+            asset = {
+                jj: data.JJ,//基金
+                gp: data.GP,//股票
+                zq: data.ZQ,//债权
+                xj: data.HB,//现金
+                qt: data.QT,//其他
             }
         }
-        if(fundInverstPosition){
-            assetPosition={
+        if (fundInverstPosition) {
+            assetPosition = {
                 // 基金
-                etf:{
-                    code:fundInverstPosition.ETFCODE,
-                    name:fundInverstPosition.ETFSHORTNAME,
+                etf: {
+                    code: fundInverstPosition.ETFCODE,
+                    name: fundInverstPosition.ETFSHORTNAME,
                 },
                 // 股票
-                fundStocks:fundInverstPosition.fundStocks,
+                fundStocks: fundInverstPosition.fundStocks,
                 // 债权
-                fundboods:fundInverstPosition.fundboods,
+                fundboods: fundInverstPosition.fundboods,
             }
-            const fundDiff = await Tools.countDp(assetPosition.fundStocks,assetPosition.fundboods);
-            Object.assign(assetPosition,fundDiff);
+            const fundDiff = await Tools.countDp(assetPosition.fundStocks, assetPosition.fundboods);
+            Object.assign(assetPosition, fundDiff);
         }
-        if(fundBondInvestDistri){
-            fundBondInvestDistri.forEach(data=>{
+        if (fundBondInvestDistri) {
+            fundBondInvestDistri.forEach(data => {
                 switch (data.BONDTYPENEW) {
                     case '1':
                         // 信用债
-                        position.xx=data.PCTNV;
+                        position.xx = data.PCTNV;
                         break;
                     case '2':
                         // 利率债
-                        position.lv=data.PCTNV;
+                        position.lv = data.PCTNV;
                         break;
                     case '3':
                         // 可转债
-                        position.kzz=data.PCTNV;
+                        position.kzz = data.PCTNV;
                         break;
                     case '4':
                         // 其他
-                        position.qt=data.PCTNV;
+                        position.qt = data.PCTNV;
                         break;
                     default:
                         break;
                 }
             })
         }
-        return {asset,assetPosition,position};
+        return { asset, assetPosition, position };
     },
-    upDateFundDiff:async (code)=>{
-        if(!code || !DATAS[code] || !DATAS[code].assetPosition)return;
+    upDateFundDiff: async (code) => {
+        if (!code || !DATAS[code] || !DATAS[code].assetPosition) return;
         const Data = DATAS[code];
-        const diff = await Tools.countDp(Data.assetPosition.fundStocks,Data.assetPosition.fundboods);
-        Object.assign(Data.assetPosition,diff);
+        const diff = await Tools.countDp(Data.assetPosition.fundStocks, Data.assetPosition.fundboods);
+        Object.assign(Data.assetPosition, diff);
         Tools.storageDatas();
     },
-    countDp:async (fundStocks,fundboods)=>{
+    countDp: async (fundStocks, fundboods) => {
         // 计算出股票的涨跌
         const fundStocksDiff = {};
-        if(fundStocks && fundStocks.length>0){
+        if (fundStocks && fundStocks.length > 0) {
             const secids = [];
-            fundStocks.forEach(fund=>{
+            fundStocks.forEach(fund => {
                 secids.push(`${fund.NEWTEXCH}.${fund.GPDM}`);
             })
-            const {data} = await Tools.fetch('ulist',{secids:secids.join(',')});
-            if(data && data.diff && data.diff.length>0){
-                data.diff.forEach(item=>{
-                    fundStocksDiff[item['f12']]=item; 
+            const { data } = await Tools.fetch('ulist', { secids: secids.join(',') });
+            if (data && data.diff && data.diff.length > 0) {
+                data.diff.forEach(item => {
+                    fundStocksDiff[item['f12']] = item;
                 })
             }
         }
         // 计算股票的涨幅跟持仓
         let gprice = 0;
         let stockce = 0;
-        fundStocks && fundStocks.forEach(data=>{
-            stockce +=Number(data['JZBL']);
-            if(fundStocksDiff[data.GPDM] && Tools.isNumber(fundStocksDiff[data.GPDM]['f2']) && Tools.isNumber(fundStocksDiff[data.GPDM]['f3'])){
-                gprice += ((Number(fundStocksDiff[data.GPDM]['f2']) * Number(fundStocksDiff[data.GPDM]['f3']) * Number(data['JZBL']))/10000)
+        fundStocks && fundStocks.forEach(data => {
+            stockce += Number(data['JZBL']);
+            if (fundStocksDiff[data.GPDM] && Tools.isNumber(fundStocksDiff[data.GPDM]['f2']) && Tools.isNumber(fundStocksDiff[data.GPDM]['f3'])) {
+                gprice += ((Number(fundStocksDiff[data.GPDM]['f2']) * Number(fundStocksDiff[data.GPDM]['f3']) * Number(data['JZBL'])) / 10000)
             }
         })
 
         // 计算出债权的涨跌
         const fundboodsDiff = {};
-        if(fundboods && fundboods.length>0){
+        if (fundboods && fundboods.length > 0) {
             const secids = [];
-            fundboods.forEach(fund=>{
+            fundboods.forEach(fund => {
                 secids.push(`${fund.NEWTEXCH}.${fund.ZQDM}`);
             })
-            const {data} = await Tools.fetch('ulist',{secids:secids.join(',')});
-            if(data && data.diff && data.diff.length>0){
-                data.diff.forEach(item=>{
-                    fundboodsDiff[item['f12']]=item; 
+            const { data } = await Tools.fetch('ulist', { secids: secids.join(',') });
+            if (data && data.diff && data.diff.length > 0) {
+                data.diff.forEach(item => {
+                    fundboodsDiff[item['f12']] = item;
                 })
             }
         }
         // 计算出债权的涨幅和持仓
         let price = 0;
         let boodce = 0;
-        fundboods && fundboods.forEach(data=>{
+        fundboods && fundboods.forEach(data => {
             boodce += Number(data['ZJZBL']);
-            if(fundboodsDiff[data.ZQDM] && Tools.isNumber(fundboodsDiff[data.ZQDM]['f2']) && Tools.isNumber(fundboodsDiff[data.ZQDM]['f3'])){
-                price += ((Number(fundboodsDiff[data.ZQDM]['f2']) * Number(fundboodsDiff[data.ZQDM]['f3']) * Number(data['ZJZBL']))/10000)
+            if (fundboodsDiff[data.ZQDM] && Tools.isNumber(fundboodsDiff[data.ZQDM]['f2']) && Tools.isNumber(fundboodsDiff[data.ZQDM]['f3'])) {
+                price += ((Number(fundboodsDiff[data.ZQDM]['f2']) * Number(fundboodsDiff[data.ZQDM]['f3']) * Number(data['ZJZBL'])) / 10000)
             }
         })
         return {
             fundStocksDiff,
-            fundStocksDp:{
-                gprice:gprice.toFixed(4),
+            fundStocksDp: {
+                gprice: gprice.toFixed(4),
                 stockce,
             },
             fundboodsDiff,
-            fundboodsDp:{
-                price:price.toFixed(4),
+            fundboodsDp: {
+                price: price.toFixed(4),
                 boodce
             },
-            updateTime:Tools.getTime()
+            updateTime: Tools.getTime()
         }
     },
-    countInvestment:async (codes,each=()=>{})=>{
+    countInvestment: async (codes, each = () => { }) => {
         const $parent = document.querySelector('.j-fundDtCalculator').closest('div.m-search');
         const inputsAndSelects = $parent.querySelectorAll('input[name], select[name]');
-    
+
         // 创建一个对象来存储值
         const values = {};
-    
+
         // 遍历每个input和select元素，获取值和名称
         inputsAndSelects.forEach(element => {
             const name = element.getAttribute('name');
@@ -582,76 +583,77 @@ const Tools = {
             // console.log(code);
             index++;
             let investment = {};
-            for(let weekDtDay of [1,2,3,4,5]){
-                const result = await Tools.fetch('fundDtCalculator',{...values,fcode:code,weekDtDay});
-                if(result.errorCode==0){
-                    let {fcode,...strategy} = values;
-                    investment[weekDtDay]={
-                        dtPeriods:result.data.dtPeriods,//定投总期数
-                        dtSly:result.data.dtSly,//定投收益率%
-                        finalTotalAssets:result.data.finalTotalAssets,//期末总资产
-                        totalPrincipal:result.data.totalPrincipal,//投入总成本
-                        totalSy:result.data.totalSy,//收入多少
-                        strategy:strategy,//定投策略
+            for (let weekDtDay of [1, 2, 3, 4, 5]) {
+                const result = await Tools.fetch('fundDtCalculator', { ...values, fcode: code, weekDtDay });
+                if (result.errorCode == 0) {
+                    let { fcode, ...strategy } = values;
+                    investment[weekDtDay] = {
+                        dtPeriods: result.data.dtPeriods,//定投总期数
+                        dtSly: result.data.dtSly,//定投收益率%
+                        finalTotalAssets: result.data.finalTotalAssets,//期末总资产
+                        totalPrincipal: result.data.totalPrincipal,//投入总成本
+                        totalSy: result.data.totalSy,//收入多少
+                        strategy: strategy,//定投策略
                     }
                 }
-            }           
+            }
             // console.log(result);
-            each(investment,`${index}/${codes.length}`);
-            Tools.setCustomCodes(code,{investment});
+            each(investment, `${index}/${codes.length}`);
+            Tools.setCustomCodes(code, { investment });
             Tools.updateDatasTable();
         }
     },
     // 删除定投
-    delInvestment:(codes)=>{
-        codes.forEach(code=>{
-            
+    delInvestment: (codes) => {
+        codes.forEach(code => {
+
         })
     },
-    getCustomType:(Data)=>{
+    getCustomType: (Data) => {
         // 基金组合
         let customType = '';
-        if(Data.asset){
-            if(+Data.asset.gp>0)customType+='股票';
-            if(+Data.asset.jj>0)customType+='基金';
+        if (Data.asset) {
+            if (+Data.asset.gp > 0) customType += '股票';
+            if (+Data.asset.jj > 0) customType += '基金';
             let arr = [];
-            Object.keys(Data.position).forEach(position=>{
-                if(+Data.position[position]>0)arr.push(position);
+            Object.keys(Data.position).forEach(position => {
+                if (+Data.position[position] > 0) arr.push(position);
             })
-            arr=arr.sort((a,b)=>+Data.position[a]<+Data.position[b])
+            arr = arr.sort((a, b) => +Data.position[a] < +Data.position[b])
             switch (arr[0]) {
                 case 'xx':
-                    customType+='信用债';
+                    customType += '信用债';
                     break;
                 case 'lv':
-                    customType+='利率债';
+                    customType += '利率债';
                     break;
                 case 'kzz':
-                    customType+='可转债';
+                    customType += '可转债';
                     break;
                 case 'qt':
-                    customType+='其他';
+                    customType += '其他';
                     break;
                 default:
                     break;
             }
-            if(arr.length>1)customType+='为主';
+            if (arr.length > 1) customType += '为主';
         }
         return customType;
     },
-    showYh:(fundboods)=>{
-        if(!fundboods && fundboods.length==0)return '';
+    showYh: (fundboods) => {
+        if (!fundboods && fundboods.length == 0) return '';
         let count = 0;
-        fundboods.forEach(({ZJZBL,ZQMC,BONDTYPE})=>{
-            if((ZQMC.includes('银行二级') || ZQMC.includes('银行永续') || ZQMC.includes('银行CD'))){
-                count+=Number(ZJZBL);
+        fundboods.forEach(({ ZJZBL, ZQMC, BONDTYPE }) => {
+            if ((ZQMC.includes('银行二级') || ZQMC.includes('银行永续') || ZQMC.includes('银行CD'))) {
+                count += Number(ZJZBL);
             }
         })
         return count;
     },
     addCombinationCode: (codes) => {
-        const combination = { code: [], name: [], Ftype: [], netWorthDate: [], dayGrowth: 0, customNetWorkData: [], customLastWeekGrowth: 0, custom2LastWeekGrowth: 0, customLastMonthGrowth: 0,
-            lastWeekGrowth:0,lastMonthGrowth:0,lastThreeMonthsGrowth:0,lastSixMonthsGrowth:0,lastYearGrowth:0,
+        const combination = {
+            code: [], name: [], Ftype: [], netWorthDate: [], dayGrowth: 0, customNetWorkData: [], customLastWeekGrowth: 0, custom2LastWeekGrowth: 0, customLastMonthGrowth: 0,
+            lastWeekGrowth: 0, lastMonthGrowth: 0, lastThreeMonthsGrowth: 0, lastSixMonthsGrowth: 0, lastYearGrowth: 0,
         };
         const customNetWorkData = [];
         codes.forEach(code => {
@@ -697,21 +699,21 @@ const Tools = {
 
         combination.code = combination.code.join(',');
         // 涨幅列表
-        customNetWorkData[0].forEach((ssssss,key)=>{
+        customNetWorkData[0].forEach((ssssss, key) => {
             let JZZZL = 0;
-            for(let i= 0;i<customNetWorkData.length;i++){
-                JZZZL+= (+(customNetWorkData[i][key]?customNetWorkData[i][key].JZZZL:0));
+            for (let i = 0; i < customNetWorkData.length; i++) {
+                JZZZL += (+(customNetWorkData[i][key] ? customNetWorkData[i][key].JZZZL : 0));
             }
             const FSRQ = customNetWorkData[0][key].FSRQ;
             // combination.customNetWorkData.push({JZZZL:(JZZZL/codes.length).toFixed(2),FSRQ})
 
-            combination.customNetWorkData.push({JZZZL:(JZZZL).toFixed(2),FSRQ})
+            combination.customNetWorkData.push({ JZZZL: (JZZZL).toFixed(2), FSRQ })
         })
         Tools.setCode(combination);
         // console.log(combination);
 
     },
-    updatasCodes:async ($btn,codes)=>{
+    updatasCodes: async ($btn, codes) => {
         if ($btn.ing != undefined) return;
         $btn.ing = 1;
         const maxLength = codes.length;
@@ -751,21 +753,21 @@ const Tools = {
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
-    getSelCodes:()=>{
+    getSelCodes: () => {
         const $trs = $table.querySelectorAll('tr.select');
         const codes = [];
         $trs.forEach($tr => {
             const code = $tr.getAttribute('data-code');
-            if(code)codes.push(code);
+            if (code) codes.push(code);
         })
         return codes;
     },
-    getNowCodes:()=>{
+    getNowCodes: () => {
         const $trs = $table.querySelectorAll('tr');
         const codes = [];
         $trs.forEach($tr => {
             const code = $tr.getAttribute('data-code');
-            if(code)codes.push(code);
+            if (code) codes.push(code);
         })
         return codes;
     },
@@ -812,26 +814,26 @@ const Tools = {
             }
             // 定投收益率
             let dtSly = 0;
-            if(CODES[data.code] && CODES[data.code].investment){
-                dtSly = (Object.keys(CODES[data.code].investment).map(week=>{
+            if (CODES[data.code] && CODES[data.code].investment) {
+                dtSly = (Object.keys(CODES[data.code].investment).map(week => {
                     return `${(+CODES[data.code].investment[week].dtSly)}`;
-                }).reduce((acc, num) => (+acc) + (+num), 0)/5).toFixed(2);
+                }).reduce((acc, num) => (+acc) + (+num), 0) / 5).toFixed(2);
             }
             // 判断搜索的name是否存在
             let is_filter_name = true;
             {
-                if(!SORT.name){
+                if (!SORT.name) {
                     is_filter_name = true;
-                }else{
+                } else {
                     let arr = SORT.name.split(',');
-                    is_filter_name = arr.some(str=>(data.name.includes(str) || data.code.includes(str)));
+                    is_filter_name = arr.some(str => (data.name.includes(str) || data.code.includes(str)));
                 }
             }
             // 判断资产是涨还是跌
             let assetDp = 0;
-            if(data.assetPosition && data.assetPosition.fundStocksDp && +data.assetPosition.fundStocksDp.gprice!=0){
+            if (data.assetPosition && data.assetPosition.fundStocksDp && +data.assetPosition.fundStocksDp.gprice != 0) {
                 assetDp = +data.assetPosition.fundStocksDp.gprice
-            }else if(data.ljjj && data.ljjj.assetPosition && data.ljjj.assetPosition.fundStocksDp){
+            } else if (data.ljjj && data.ljjj.assetPosition && data.ljjj.assetPosition.fundStocksDp) {
                 assetDp = +data.ljjj.assetPosition.fundStocksDp.gprice
             }
             // 判断是否有筛选
@@ -844,74 +846,74 @@ const Tools = {
                         // note筛选
                         if (!SORT.note || (CODES[data.code] && CODES[data.code].note && CODES[data.code].note.includes(SORT.note))) {
                             // position持仓筛选
-                            if(!SORT.position || (data.position && +data.position[SORT.position]>0)){
+                            if (!SORT.position || (data.position && +data.position[SORT.position] > 0)) {
                                 // emoji筛选
                                 if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji].key] == 1)) {
                                     // 针对卖出时间筛选
                                     if (!SORT.sale_time || (data.maxSaleTime == SORT.sale_time)) {
                                         // 针对是否是债基筛选
-                                        if(!SORT.Ftype || SORT.Ftype == Tools.isDebt(data.code)){
+                                        if (!SORT.Ftype || SORT.Ftype == Tools.isDebt(data.code)) {
                                             // 筛选利率债<=
-                                            if(!SORT.lv || (data.position && (!data.position.lv || +data.position.lv<=+SORT.lv))){
+                                            if (!SORT.lv || (data.position && (!data.position.lv || +data.position.lv <= +SORT.lv))) {
                                                 // 筛选定投收益率
-                                                if(!SORT.dtSly || (CODES[data.code] && CODES[data.code].investment && dtSly>=(+SORT.dtSly))){
+                                                if (!SORT.dtSly || (CODES[data.code] && CODES[data.code].investment && dtSly >= (+SORT.dtSly))) {
                                                     str += `
-                                                        <tr data-code="${data.code}" style="${data.code.includes(',')?'background: #fff7f3;':''}">
-                                                            <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',')?data.code.replaceAll(',','<br />'):data.code}</span></td>
+                                                        <tr data-code="${data.code}" style="${data.code.includes(',') ? 'background: #fff7f3;' : ''}">
+                                                            <td>${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',') ? data.code.replaceAll(',', '<br />') : data.code}</span></td>
                                                             <td>
-                                                                <span class="j-code-name ${((data.maxBuy && +data.maxBuy<=50000) || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${(data.maxBuy && data.maxBuy<=50000)?`/${data.maxBuy}`:''}${(data.sgzt && data.sgzt.includes('暂停'))?`/${data.sgzt}`:''}</span>
+                                                                <span class="j-code-name ${((data.maxBuy && +data.maxBuy <= 50000) || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${(data.maxBuy && data.maxBuy <= 50000) ? `/${data.maxBuy}` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
                                                                 ${is_new ? '<span title="已经更新">🔥</span>' : ''}
-                                                                ${CODES[data.code] && Object.keys(EMOJIS).map(emoji=>{
-                                                                    return CODES[data.code][EMOJIS[emoji].key]==1?`<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>`:'';
-                                                                }).join('') || ''}
+                                                                ${CODES[data.code] && Object.keys(EMOJIS).map(emoji => {
+                                                        return CODES[data.code][EMOJIS[emoji].key] == 1 ? `<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>` : '';
+                                                    }).join('') || ''}
                                                                 <p class="j-copyText fs12 green">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
                                                             </td>
                                                             <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                                             ${total_arr.map(total => {
                                                         return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                                                     }).join('')}
-                                                            <td>${data.customType?data.customType:''}</td>
-                                                            <td>${data.maxSaleTime?`${data.maxSaleTime}天免`:''}</td>
+                                                            <td>${data.customType ? data.customType : ''}</td>
+                                                            <td>${data.maxSaleTime ? `${data.maxSaleTime}天免` : ''}</td>
                                                             <td>
-                                                                ${CODES[data.code] && CODES[data.code].buy_time?`<p class="gray fs12">${CODES[data.code].buy_time}</p>`:''}
+                                                                ${CODES[data.code] && CODES[data.code].buy_time ? `<p class="gray fs12">${CODES[data.code].buy_time}</p>` : ''}
                                                                 ${Tools.isSale(data.code)}
                                                             </td>
                                                             <td>
                                                                 <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
                                                                 <p class="fs12 gray j-show-investment">
-                                                                    ${CODES[data.code] && CODES[data.code].investment?`
+                                                                    ${CODES[data.code] && CODES[data.code].investment ? `
                                                                         ${dtSly}%
-                                                                    `:''}
+                                                                    `: ''}
                                                                 </p>
                                                             </td>
-                                                            <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${(assetDp>0?'background:rgba(255,0,12,.1)':assetDp<0?'background:rgba(0,128,0,.1)':'')}">
-                                                                ${data.asset && Tools.isNumber1(data.asset.jj)?`基金：${data.asset.jj}%<br/>`:''}
-                                                                ${data.asset && Tools.isNumber1(data.asset.gp)?`股票：${data.asset.gp}%<br/>`:''}
-                                                                ${data.asset && Tools.isNumber1(data.asset.zq)?`债权：${data.asset.zq}%<br/>`:''}
-                                                                ${data.asset && Tools.isNumber1(data.asset.xj)?`现金：${data.asset.xj}%<br/>`:''}
-                                                                ${data.asset && Tools.isNumber1(data.asset.qt)?`其他：${data.asset.qt}%<br/>`:''}
+                                                            <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${(assetDp > 0 ? 'background:rgba(255,0,12,.1)' : assetDp < 0 ? 'background:rgba(0,128,0,.1)' : '')}">
+                                                                ${data.asset && Tools.isNumber1(data.asset.jj) ? `基金：${data.asset.jj}%<br/>` : ''}
+                                                                ${data.asset && Tools.isNumber1(data.asset.gp) ? `股票：${data.asset.gp}%<br/>` : ''}
+                                                                ${data.asset && Tools.isNumber1(data.asset.zq) ? `债权：${data.asset.zq}%<br/>` : ''}
+                                                                ${data.asset && Tools.isNumber1(data.asset.xj) ? `现金：${data.asset.xj}%<br/>` : ''}
+                                                                ${data.asset && Tools.isNumber1(data.asset.qt) ? `其他：${data.asset.qt}%<br/>` : ''}
                                                             </td>
-                                                            <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${data.assetPosition && data.assetPosition.fundboodsDp && (data.assetPosition.fundboodsDp.price>0?'background:rgba(255,0,12,.1)':data.assetPosition.fundboodsDp.price<0?'background:rgba(0,128,0,.1)':'')}">
-                                                                ${data.position && Tools.isNumber1(data.position.xx)?`信用债：${data.position.xx}%<br/>`:''}
-                                                                ${data.position && Tools.isNumber1(data.position.lv)?`利率债：${data.position.lv}%<br/>`:''}
-                                                                ${data.position && Tools.isNumber1(data.position.kzz)?`<span class="red">可转债：${data.position.kzz}%</span><br/>`:''}
-                                                                ${data.position && Tools.isNumber1(data.position.qt)?`其他：${data.position.qt}%`:''}
+                                                            <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${data.assetPosition && data.assetPosition.fundboodsDp && (data.assetPosition.fundboodsDp.price > 0 ? 'background:rgba(255,0,12,.1)' : data.assetPosition.fundboodsDp.price < 0 ? 'background:rgba(0,128,0,.1)' : '')}">
+                                                                ${data.position && Tools.isNumber1(data.position.xx) ? `信用债：${data.position.xx}%<br/>` : ''}
+                                                                ${data.position && Tools.isNumber1(data.position.lv) ? `利率债：${data.position.lv}%<br/>` : ''}
+                                                                ${data.position && Tools.isNumber1(data.position.kzz) ? `<span class="red">可转债：${data.position.kzz}%</span><br/>` : ''}
+                                                                ${data.position && Tools.isNumber1(data.position.qt) ? `其他：${data.position.qt}%` : ''}
                                                             </td>
                                                             <td style="font-size:12px; padding:2px 10px;">
-                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.stddev1)?`最大波动：${+data.uniqueInfo.stddev1.toFixed(2)}%<br/>`:''}
-                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.sharp1)?`夏普比率：${+data.uniqueInfo.sharp1.toFixed(2)}%<br/>`:''}
-                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.maxretra1)?`最大回撤：${+data.uniqueInfo.maxretra1.toFixed(2)}%`:''}
+                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.stddev1) ? `最大波动：${+data.uniqueInfo.stddev1.toFixed(2)}%<br/>` : ''}
+                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.sharp1) ? `夏普比率：${+data.uniqueInfo.sharp1.toFixed(2)}%<br/>` : ''}
+                                                                ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.maxretra1) ? `最大回撤：${+data.uniqueInfo.maxretra1.toFixed(2)}%` : ''}
                                                             </td>
-                                                            <td>${Array.isArray(data.netWorthDate)?data.netWorthDate.join('<br />'):data.netWorthDate}</td>
+                                                            <td>${Array.isArray(data.netWorthDate) ? data.netWorthDate.join('<br />') : data.netWorthDate}</td>
                                                             <td style="${data.Ftype.includes('混合型') ? 'color:brown;' : ''}">
-                                                                ${Array.isArray(data.Ftype)?data.Ftype.join('<br />'):data.Ftype}
-                                                                ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods)!=0?`<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>`:''}
+                                                                ${Array.isArray(data.Ftype) ? data.Ftype.join('<br />') : data.Ftype}
+                                                                ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods) != 0 ? `<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>` : ''}
                                                             </td>
                                                         </tr>
                                                     `
                                                 }
-                                            }  
-                                        }  
+                                            }
+                                        }
                                     }
 
                                 }
@@ -932,9 +934,9 @@ const Tools = {
                     <th><input type="checkbox" class="j-code-checkbox-sel" ${SORT.checked == 1 ? 'checked' : ''} />基金代码</th>
                     <th>
                         基金名称
-                        ${Object.keys(EMOJIS).map(emoji=>{
-                            return `<span class="emoji j-emoji ${SORT.emoji == emoji ? 'sel' : ''}">${emoji}</span>`;
-                        }).join('')}
+                        ${Object.keys(EMOJIS).map(emoji => {
+            return `<span class="emoji j-emoji ${SORT.emoji == emoji ? 'sel' : ''}">${emoji}</span>`;
+        }).join('')}
                     </th>
                     <th>购后均日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     ${total_arr.map(total => {
@@ -1001,16 +1003,16 @@ const Tools = {
                     <!-- <input class="search_input j-code-credit-ipt" type="text" placeholder="信用占比" style="margin-left:10px;" />
                     <button class="search_btn reb j-code-credit-add" style="margin-left:0px">添加</button> -->
                     <span style="margin-left:10px; color:red;">筛选：</span>
-                    ${Object.keys(FTYPES).map(Ftype=>{
-                        return `<button class="search_btn j-code-filter-Ftype ${SORT.Ftype==Ftype?'reb':''}" data-ftype="${Ftype}" style="margin-left:10px">${FTYPES[Ftype]}</button>`
-                    }).join('')}
+                    ${Object.keys(FTYPES).map(Ftype => {
+            return `<button class="search_btn j-code-filter-Ftype ${SORT.Ftype == Ftype ? 'reb' : ''}" data-ftype="${Ftype}" style="margin-left:10px">${FTYPES[Ftype]}</button>`
+        }).join('')}
                     <input class="search_input j-code-name-ipt" type="text" placeholder="搜索名字/代码" style="margin-left:10px;" value="${SORT.name ? SORT.name : ''}" />
                     <input class="search_input j-code-type-ipt" type="text" placeholder="债权组合" style="margin-left:10px;" value="${SORT.type ? SORT.type : ''}" />
                     <input class="search_input j-code-note-sort" type="text" placeholder="搜索备注" style="margin-left:10px;" value="${SORT.note ? SORT.note : ''}" />
                     <select class="search_input j-code-position-sort" style="margin-left:10px;width:auto;"><option value="">持仓情况</option><option value="kzz" ${SORT.position == 'kzz' ? 'selected' : ''}>可转债</option></select>
                     <select class="search_input j-code-sale_time-sel" style="margin-left:10px;width:auto;"><option value="">选择卖出时间</option>${Object.keys(SALETIME).map(sale_time => (`<option value="${sale_time}" ${SORT.sale_time == sale_time ? 'selected' : ''}>${SALETIME[sale_time]}</option>`)).join('')}</select>
                     <input class="search_input j-code-lv-sort" type="text" placeholder="利率债<=?" style="margin-left:10px;" value="${SORT.lv ? SORT.lv : ''}" />
-                    <input class="search_input j-code-dtSly" type="text" placeholder="定投收益率>=?" style="margin-left:10px; width:110px;" value="${SORT.dtSly?SORT.dtSly:''}" />
+                    <input class="search_input j-code-dtSly" type="text" placeholder="定投收益率>=?" style="margin-left:10px; width:110px;" value="${SORT.dtSly ? SORT.dtSly : ''}" />
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
                     <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
@@ -1021,12 +1023,14 @@ const Tools = {
                 定投开始日：<input type="date" class="search_input mr10" name="dtStartDate" value="${Tools.getNowDate().start}" />
                 定投结束日：<input type="date" class="search_input mr10" name="dtEndDate" value="${Tools.getNowDate().now}" />
                 定投周期：每<input class="search_input" type="text" placeholder="" name="round" style="width:35px;" value="1" /><select class="mr10" name="roundType"><option value="1">周</option><!--<option value="2">月</option>--></select>
-                定投日：<select class="mr10" name="weekDtDay">${['星期一','星期二','星期三','星期四','星期五'].map((date,index)=>`<option value="${index+1}" ${index==2?'selected':''}>${date}</option>`)}</select>
+                定投日：<select class="mr10" name="weekDtDay">${['星期一', '星期二', '星期三', '星期四', '星期五'].map((date, index) => `<option value="${index + 1}" ${index == 2 ? 'selected' : ''}>${date}</option>`)}</select>
                 每期定投金额：<input class="search_input mr10" type="text" placeholder="" name="dtAmount" value="200" />
                 <button class="search_btn reb j-fundDtCalculator">计算</button>
                 <span class="ml10 gray">移动止盈：设定目标收益率为<span class="red">20%</span>，止赢回撤比例为<span class="red">5%</span></span>
             </div>
-            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债权</span></div>
+            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债券</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
+            <div class="j-hj-gn"></div>
+            <div class="j-hj-gj"></div>
             <div class="g-table"></div>
             <div class="g-con"></div>
         `;
@@ -1090,7 +1094,7 @@ class Alert {
         });
         $body.append($alert);
     }
-    show(con,cb) {
+    show(con, cb) {
         const { $alert } = this;
         const $con = $alert.querySelector('.con');
         $con.innerHTML = con;
@@ -1099,7 +1103,7 @@ class Alert {
             top: 0,
             behavior: 'smooth'
         });
-        if(cb) cb(this);
+        if (cb) cb(this);
     }
 }
 const myAlert = new Alert();
@@ -1156,9 +1160,9 @@ const compareCodes = function (codes) {
     let str = '';
     str += '<div style="display:flex;">';
     let arr = [];
-    codes.forEach(code=>{
+    codes.forEach(code => {
         arr.push(code);
-        if(code.includes(',')){
+        if (code.includes(',')) {
             arr = arr.concat(code.split(','))
         }
     })
@@ -1169,7 +1173,7 @@ const compareCodes = function (codes) {
         if (!customNetWorkData) return;
         str += `
         <div style="margin:0 10px;">
-            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;">${Array.isArray(name)?'组合':name}</div>
+            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;">${Array.isArray(name) ? '组合' : name}</div>
             <table>
                 <thead>
                     <tr><th>日期</th><th>日涨幅</th></tr>
@@ -1196,15 +1200,15 @@ addEventListener($table, 'click', e => {
     compareCodes([code]);
 }, '.j-code-name')
 // 定投点击
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
-    const investment=CODES[code].investment;
+    const investment = CODES[code].investment;
     let str = '';
-    let total={totalPrincipal:0,totalSy:0,dtSly:0};
-    Object.keys(investment).forEach(weekDtDay=>{
-        total.totalPrincipal+=(+investment[weekDtDay].totalPrincipal);
-        total.totalSy+=(+investment[weekDtDay].totalSy);
-        total.dtSly+=(+investment[weekDtDay].dtSly);
+    let total = { totalPrincipal: 0, totalSy: 0, dtSly: 0 };
+    Object.keys(investment).forEach(weekDtDay => {
+        total.totalPrincipal += (+investment[weekDtDay].totalPrincipal);
+        total.totalSy += (+investment[weekDtDay].totalSy);
+        total.dtSly += (+investment[weekDtDay].dtSly);
     })
     const strategy = investment[1].strategy;
     str += `
@@ -1216,24 +1220,24 @@ addEventListener($table,'click',e=>{
                 </thead>
                 <tbody>
                     ${Object.keys(investment).map(weekDtDay => `<tr><td>星期${weekDtDay}</td><td>${investment[weekDtDay]['dtPeriods']}期</td><td>${(+investment[weekDtDay]['totalPrincipal']).toFixed(2)}</td><td>${(+investment[weekDtDay]['totalSy']).toFixed(2)}</td><td>${(+investment[weekDtDay]['dtSly']).toFixed(2)}%</td></tr>`).join('')}
-                    <tr><td></td><td>total</td><td>${total.totalPrincipal.toFixed(2)}</td><td>${total.totalSy.toFixed(2)}</td><td>${(total.dtSly/5).toFixed(2)}%</td></tr>
+                    <tr><td></td><td>total</td><td>${total.totalPrincipal.toFixed(2)}</td><td>${total.totalSy.toFixed(2)}</td><td>${(total.dtSly / 5).toFixed(2)}%</td></tr>
                 </tbody>
             </table>
         </div>
         `
     myAlert.show(str);
-},'.j-show-investment')
+}, '.j-show-investment')
 // 持仓情况点击
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
     const Data = DATAS[code];
-    if(!Data.assetPosition)return;
-    let str = `<div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all">${Data.name}${Data.assetPosition.updateTime?`<p style="font-size:12px;">${Data.assetPosition.updateTime}<span class="red j-fundUpdata" style="margin-left:10px;cursor:pointer;">更新</span></p>`:''}</div>`;
+    if (!Data.assetPosition) return;
+    let str = `<div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all">${Data.name}${Data.assetPosition.updateTime ? `<p style="font-size:12px;">${Data.assetPosition.updateTime}<span class="red j-fundUpdata" style="margin-left:10px;cursor:pointer;">更新</span></p>` : ''}</div>`;
     str += '<div style="display:flex;">';
     // 基金情况
     const etf = Data.assetPosition.etf;
-    if(+Data.asset.jj>0){
-        str+= `
+    if (+Data.asset.jj > 0) {
+        str += `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
@@ -1251,24 +1255,24 @@ addEventListener($table,'click',e=>{
         `
     }
     // 如果有联接基金
-    if(Data.ljjj){
+    if (Data.ljjj) {
         // 联接股票情况
         const fundStocks = Data.ljjj.assetPosition.fundStocks;
         const fundStocksDiff = Data.ljjj.assetPosition.fundStocksDiff;
-        const {gprice,stockce}= Data.ljjj.assetPosition.fundStocksDp;
-        
-        if(fundStocks){
-            str+= `
+        const { gprice, stockce } = Data.ljjj.assetPosition.fundStocksDp;
+
+        if (fundStocks) {
+            str += `
                 <div style="margin:0 10px;">
                     <table>
                         <thead>
-                            <tr><th>联接股票名称</th><th>价格<p class="fs12 fwn ${gprice>0?'red':gprice<0?'green':''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
+                            <tr><th>联接股票名称</th><th>价格<p class="fs12 fwn ${gprice > 0 ? 'red' : gprice < 0 ? 'green' : ''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
                         </thead>
                         <tbody>
                             ${fundStocks.map(data => `
                                 <tr>
                                     <td>${data['GPJC']}</td>
-                                    <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3']>0)?'red':(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3']<0)?'green':''}">${fundStocksDiff[data.GPDM]?`${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%`:''}</td>
+                                    <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] > 0) ? 'red' : (fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] < 0) ? 'green' : ''}">${fundStocksDiff[data.GPDM] ? `${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%` : ''}</td>
                                     <td>${data['JZBL']}%</td>
                                 </tr>
                             `).join('')}
@@ -1282,20 +1286,20 @@ addEventListener($table,'click',e=>{
     // 股票情况
     const fundStocks = Data.assetPosition.fundStocks;
     const fundStocksDiff = Data.assetPosition.fundStocksDiff;
-    const {gprice,stockce}= Data.assetPosition.fundStocksDp;
+    const { gprice, stockce } = Data.assetPosition.fundStocksDp;
 
-    if(fundStocks){
-        str+= `
+    if (fundStocks) {
+        str += `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>股票名称</th><th>价格<p class="fs12 fwn ${gprice>0?'red':gprice<0?'green':''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
+                        <tr><th>股票名称</th><th>价格<p class="fs12 fwn ${gprice > 0 ? 'red' : gprice < 0 ? 'green' : ''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
                     </thead>
                     <tbody>
                         ${fundStocks.map(data => `
                             <tr>
                                 <td>${data['GPJC']}</td>
-                                <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3']>0)?'red':(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3']<0)?'green':''}">${fundStocksDiff[data.GPDM]?`${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%`:''}</td>
+                                <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] > 0) ? 'red' : (fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] < 0) ? 'green' : ''}">${fundStocksDiff[data.GPDM] ? `${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%` : ''}</td>
                                 <td>${data['JZBL']}%</td>
                             </tr>
                         `).join('')}
@@ -1307,33 +1311,33 @@ addEventListener($table,'click',e=>{
     // 债权情况
     const fundboods = Data.assetPosition.fundboods;
     const fundboodsDiff = Data.assetPosition.fundboodsDiff;
-    const {price,boodce} = Data.assetPosition.fundboodsDp;
+    const { price, boodce } = Data.assetPosition.fundboodsDp;
 
-    if(fundboods){
-        str+= `
+    if (fundboods) {
+        str += `
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>债权名称</th><th>价格${price!=0?`<p class="fs12 fwn ${price>0?'red':price<0?'green':''}" style="margin-top:-8px;">${price}</p>`:''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th></tr>
+                        <tr><th>债权名称</th><th>价格${price != 0 ? `<p class="fs12 fwn ${price > 0 ? 'red' : price < 0 ? 'green' : ''}" style="margin-top:-8px;">${price}</p>` : ''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th></tr>
                     </thead>
                     <tbody>
-                        ${fundboods.map(data => `<tr><td>${data['ZQMC']}</td><td class="${(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']>0)?'red':(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3']<0)?'green':''}">${fundboodsDiff[data.ZQDM]?`${fundboodsDiff[data.ZQDM]['f2']}/${fundboodsDiff[data.ZQDM]['f3']}%`:''}</td><td>${data['ZJZBL']}%</td><td>${{'1':'信用债','2':'利率债','3':'可转债','4':'其他','5':'同业存单'}[data.BONDTYPE]}</td></tr>`).join('')}
+                        ${fundboods.map(data => `<tr><td>${data['ZQMC']}</td><td class="${(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3'] > 0) ? 'red' : (fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3'] < 0) ? 'green' : ''}">${fundboodsDiff[data.ZQDM] ? `${fundboodsDiff[data.ZQDM]['f2']}/${fundboodsDiff[data.ZQDM]['f3']}%` : ''}</td><td>${data['ZJZBL']}%</td><td>${{ '1': '信用债', '2': '利率债', '3': '可转债', '4': '其他', '5': '同业存单' }[data.BONDTYPE]}</td></tr>`).join('')}
                     </tbody>
                 </table>
             </div>
         `
     }
     str += '</div>';
-    myAlert.show(str,Alert=>{
+    myAlert.show(str, Alert => {
         // console.log(Alert);
         const $alert = Alert.$alert;
-        $alert.querySelector('.j-fundUpdata').addEventListener('click',event=>{
-            Tools.upDateFundDiff(Data.code).then(res=>{
+        $alert.querySelector('.j-fundUpdata').addEventListener('click', event => {
+            Tools.upDateFundDiff(Data.code).then(res => {
                 e.target.click();
-            })        
+            })
         })
     });
-},'.j-code-asset-alert')
+}, '.j-code-asset-alert')
 //点击代码填写进入上面的ipt
 addEventListener($table, 'click', e => {
     const $code = e.target;
@@ -1357,16 +1361,16 @@ addEventListener($form, 'click', async e => {
     // 开始筛选
     // Tools.setCustomSort({ name: code });
     const $codeNameFilter = document.querySelector('.j-code-name-ipt');
-    $codeNameFilter.value= code;
-    Tools.dispatchEvent($codeNameFilter,'input');
+    $codeNameFilter.value = code;
+    Tools.dispatchEvent($codeNameFilter, 'input');
     // window.location.reload();
     Tools.updateDatasTable();
 }, '.j-code-add')
 // 添加组合
-addEventListener($form,'click', e=>{
+addEventListener($form, 'click', e => {
     const codes = Tools.getSelCodes();
-    if(codes.length>0) Tools.addCombinationCode(codes);
-},'.j-code-combination-add')
+    if (codes.length > 0) Tools.addCombinationCode(codes);
+}, '.j-code-combination-add')
 // 添加重点
 // addEventListener($form, 'click', e => {
 //     const code = $codeIpt.value;
@@ -1407,7 +1411,7 @@ addEventListener($form,'click', e=>{
 //     }
 // }, '.j-code-heavy-del')
 // 删除emoji
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
     const emoji = e.target.getAttribute('data-emoji');
     // console.log(code)
@@ -1415,7 +1419,7 @@ addEventListener($table,'click',e=>{
         Tools.setCustomCodes(code, { [EMOJIS[emoji].key]: 0 });
         Tools.updateDatasTable();
     }
-},'.j-code-emoji-del')
+}, '.j-code-emoji-del')
 // 添加限额
 // addEventListener($form, 'click', e => {
 //     const code = $codeIpt.value;
@@ -1452,10 +1456,10 @@ addEventListener($form, 'click', e => {
 // 更新债权
 addEventListener($form, 'click', async e => {
     const $btn = e.target;
-    Tools.updatasCodes($btn,Object.keys(DATAS));
+    Tools.updatasCodes($btn, Object.keys(DATAS));
 }, '.j-code-updata')
 // 更新组合
-addEventListener($form,'click',e=>{
+addEventListener($form, 'click', e => {
     const $btn = e.target;
     if ($btn.ing != undefined) return;
     $btn.ing = 1;
@@ -1474,7 +1478,7 @@ addEventListener($form,'click',e=>{
     $btn.innerHTML = '更新组合';
     Tools.updateDatasTable();
     alert('更新成功');
-},'.j-code-combination-updata')
+}, '.j-code-combination-updata')
 // 选择基金代码
 addEventListener($table, 'change', e => {
     const $checkbox = e.target;
@@ -1483,11 +1487,11 @@ addEventListener($table, 'change', e => {
     // 删掉买入时间，重仓基金
     if (!checked) {
         Tools.setCustomCodes(code, { buy_time: '' });
-        Tools.setCustomCodes(code,{heavy:''})
-    }else{
+        Tools.setCustomCodes(code, { heavy: '' })
+    } else {
         //设置买入时间
         const buy_time = Tools.getTime();
-        Tools.setCustomCodes(code,{buy_time});
+        Tools.setCustomCodes(code, { buy_time });
     }
     Tools.setCustomCodes(code, { checked: checked ? 1 : 0 });
     Tools.updateDatasTable();
@@ -1538,23 +1542,23 @@ addEventListener($form, 'input', Tools.throttle(e => {
     Tools.setCustomSort({ name: value });
 }, 500), '.j-code-name-ipt')
 // 筛选债基
-addEventListener($form,'click',e=>{
+addEventListener($form, 'click', e => {
     const $Ftype = e.target;
-    if($Ftype.classList.contains('reb')){
+    if ($Ftype.classList.contains('reb')) {
         $Ftype.classList.remove('reb');
-        Tools.setCustomSort({Ftype:''});
+        Tools.setCustomSort({ Ftype: '' });
         return;
     }
     const Ftype = $Ftype.getAttribute('data-ftype');
-    Tools.setCustomSort({Ftype:Ftype});
-    Array.from(document.querySelectorAll('.j-code-filter-Ftype')).filter(ele=>{
-        if(ele===$Ftype){
+    Tools.setCustomSort({ Ftype: Ftype });
+    Array.from(document.querySelectorAll('.j-code-filter-Ftype')).filter(ele => {
+        if (ele === $Ftype) {
             ele.classList.add('reb');
-        }else{
+        } else {
             ele.classList.remove('reb');
         }
     })
-},'.j-code-filter-Ftype')
+}, '.j-code-filter-Ftype')
 // 筛选备注
 addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
@@ -1564,7 +1568,7 @@ addEventListener($form, 'click', Tools.throttle(e => {
     const value = e.target.textContent;
     const $noteSort = document.querySelector('.j-code-note-sort');
     $noteSort.value = value;
-    Tools.dispatchEvent($noteSort,'input');
+    Tools.dispatchEvent($noteSort, 'input');
     // Tools.setCustomSort({ note: value });
 }, 500), '.j-code-note-span')
 // 筛选利率债
@@ -1583,12 +1587,12 @@ addEventListener($form, 'input', Tools.throttle(e => {
     Tools.setCustomSort({ position: value });
 }, 500), '.j-code-position-sort')
 // 自定义筛选债权
-document.querySelector('.j-custom-filter').addEventListener('click',e=>{
+document.querySelector('.j-custom-filter').addEventListener('click', e => {
     Tools.setCustomSort({
-        Ftype:2,//债基
-        type:'信用债',//债权类型
-        sale_time:'7',//7天卖出时间
-        lv:'15',//利率债筛选
+        Ftype: 2,//债基
+        type: '信用债',//债权类型
+        sale_time: '7',//7天卖出时间
+        lv: '15',//利率债筛选
     })
     window.location.reload();
 })
@@ -1618,15 +1622,15 @@ addEventListener($form, 'click', e => {
     Tools.updateDatasTable();
 }, '.j-code-select-clear')
 // 定投计算
-document.querySelector('.j-fundDtCalculator').addEventListener('click',async e=>{
+document.querySelector('.j-fundDtCalculator').addEventListener('click', async e => {
     const $parent = e.target.closest('div.m-search');
     const inputsAndSelects = $parent.querySelector('input[name=fcode]');
     const code = inputsAndSelects.value;
-    if(!code)return 'fcode不存在';
-    if(!DATAS[code])return `DATAS里面不存在${code}`;
+    if (!code) return 'fcode不存在';
+    if (!DATAS[code]) return `DATAS里面不存在${code}`;
     Tools.countInvestment([code]);
     alert('计算成功');
-},false)
+}, false)
 // 选择卖出时间
 // addEventListener($table, 'change', e => {
 //     const $select = e.target;
@@ -1742,10 +1746,10 @@ addEventListener($table, 'click', e => {
 }, '.j-copyText')
 
 // 监听右键点击事件
-class Contextmenu{
-    constructor(){
+class Contextmenu {
+    constructor() {
         const $div = document.createElement('div');
-        $div.innerHTML=`
+        $div.innerHTML = `
             <style>
                 /* 样式化右键菜单 */
                 .context-menu {
@@ -1779,9 +1783,9 @@ class Contextmenu{
             <!-- 鼠标右键菜单 -->
             <div class="context-menu" style="displqy:none;">
                 <div class="name" style="text-align:center;border-bottom:1px solid #e7dfdf;padding:5px;font-size: 14px; color:gray;line-height:1.4;"></div>
-                ${Object.keys(EMOJIS).map(emoji=>{
-                    return  `<div class="context-menu-item" data-emoji="${emoji}">添加${EMOJIS[emoji].title.substr(0,2)}${emoji}</div>`;
-                }).join('')}
+                ${Object.keys(EMOJIS).map(emoji => {
+            return `<div class="context-menu-item" data-emoji="${emoji}">添加${EMOJIS[emoji].title.substr(0, 2)}${emoji}</div>`;
+        }).join('')}
                 <div class="context-menu-item">更新基金🔃</div>
                 <div class="context-menu-item">删除基金🔃</div>
                 <div class="context-menu-item">更新定投🔃</div>
@@ -1801,7 +1805,7 @@ class Contextmenu{
         this.$menu = $div.querySelector('.context-menu');
         this.$name = $div.querySelector('.name');
         // 阻止浏览器默认的右键菜单
-        addEventListener($table,'contextmenu',event=>{
+        addEventListener($table, 'contextmenu', event => {
             event.preventDefault();
             const $tr = event.target.closest('tr');
             const Data = DATAS[$tr.getAttribute('data-code')];
@@ -1809,112 +1813,112 @@ class Contextmenu{
             this.$tr = $tr;
             // 显示右键菜单
             this.show(event);
-        },'tbody>tr')
+        }, 'tbody>tr')
         // 取消弹窗
-        addEventListener($table,'click',e=>{
+        addEventListener($table, 'click', e => {
             this.hide();
         })
         // 点击菜单
-        addEventListener(this.$menu,'click',e=>{
+        addEventListener(this.$menu, 'click', e => {
             this.item(e.target);
-        },'.context-menu-item')
-        this.$menu.querySelector('.j-code-filter-clear').addEventListener('click',e=>{
+        }, '.context-menu-item')
+        this.$menu.querySelector('.j-code-filter-clear').addEventListener('click', e => {
             $form.querySelector('.j-code-filter-clear').click();
             this.hide();
         })
-        this.$menu.querySelector('.j-code-select-clear').addEventListener('click',e=>{
+        this.$menu.querySelector('.j-code-select-clear').addEventListener('click', e => {
             $form.querySelector('.j-code-select-clear').click();
             this.hide();
         })
     }
-    show(event){
+    show(event) {
         this.$name.innerHTML = `${this.Data.name}`;
         var x = event.clientX + window.scrollX;
         var y = event.clientY + window.scrollY;
-        var maxX = window.innerWidth + window.scrollX - this.$menu.offsetWidth-20;
-        var maxY = window.innerHeight + window.scrollY - this.$menu.offsetHeight-20;
+        var maxX = window.innerWidth + window.scrollX - this.$menu.offsetWidth - 20;
+        var maxY = window.innerHeight + window.scrollY - this.$menu.offsetHeight - 20;
         x = Math.min(x, maxX);
         y = Math.min(y, maxY);
         this.$menu.style.left = x + "px";
         this.$menu.style.top = y + "px";
         this.$menu.style.display = 'block';
     }
-    hide(){
+    hide() {
         this.$menu.style.display = 'none';
     }
-    async item($item){
+    async item($item) {
         const con = $item.textContent;
         const emoji = $item.getAttribute('data-emoji');
         const Data = this.Data;
         const code = Data.code;
         const _this = this;
-        if(emoji){
+        if (emoji) {
             Tools.setCustomCodes(code, { [EMOJIS[emoji].key]: 1 });
             Tools.updateDatasTable();
             this.hide();
         }
-        if(con.includes('更新基金')){
+        if (con.includes('更新基金')) {
             // this.$tr.querySelector('.j-code').click();
             // document.querySelector('.j-code-add').click();
             const codes = [code];
-            Tools.updatasCodes(document.querySelector('.j-code-updata'),codes);
+            Tools.updatasCodes(document.querySelector('.j-code-updata'), codes);
             this.hide();
         }
-        if(con.includes('删除基金')){
+        if (con.includes('删除基金')) {
             if (confirm('确定删除吗？')) {
                 Tools.delCode(code);
             }
             this.hide();
         }
-        if(con.includes('更新定投')){
-            Tools.countInvestment([code]).then(res=>{
+        if (con.includes('更新定投')) {
+            Tools.countInvestment([code]).then(res => {
                 _this.hide();
             })
         }
-        if(con.includes('对比债权')){
+        if (con.includes('对比债权')) {
             $form.querySelector('.j-code-compare').click();
             this.hide();
         }
-        if(con.includes('筛选债权')){
+        if (con.includes('筛选债权')) {
             const codes = Tools.getSelCodes();
             const $codeNameIput = document.querySelector('.j-code-name-ipt');
             $codeNameIput.value = codes.join(',');
-            Tools.dispatchEvent($codeNameIput,'input');
+            Tools.dispatchEvent($codeNameIput, 'input');
             _this.hide();
         }
-        if(con.includes('列表基金')){
+        if (con.includes('列表基金')) {
             const codes = Tools.getNowCodes();
-            Tools.updatasCodes(document.querySelector('.j-code-updata'),codes);
+            Tools.updatasCodes(document.querySelector('.j-code-updata'), codes);
             this.hide();
         }
-        if(con.includes('列表持仓')){
+        if (con.includes('列表持仓')) {
             const codes = Tools.getNowCodes();
             const $span = document.createElement('span');
             $span.style = 'color:gray;'
             $item.append($span);
             let index = 0;
-            for(let code of codes){
+            for (let code of codes) {
                 index++;
-                $span.innerHTML=`${index}/${codes.length}`
+                $span.innerHTML = `${index}/${codes.length}`
                 await Tools.upDateFundDiff(code);
             }
             $span.remove();
             this.hide();
             Tools.updateDatasTable();
         }
-        if(con.includes('列表定投')){
+        if (con.includes('列表定投')) {
             const codes = Tools.getNowCodes();
             const $span = document.createElement('span');
             $span.style = 'color:gray;'
             $item.append($span);
-            Tools.countInvestment(codes,(result,pm)=>{
+            Tools.countInvestment(codes, (result, pm) => {
                 $span.innerHTML = pm;
-            }).then(res=>{
+            }).then(res => {
                 $span.remove();
                 _this.hide();
             })
         }
-        if(con.includes('显示代码')){
+        if (con.includes('显示代码')) {
             console.log(Data);
             console.log(CODES[Data.code]);
             this.hide();
@@ -1922,3 +1926,83 @@ class Contextmenu{
     }
 }
 const Menu = new Contextmenu();
+// 黄金
+class HJ {
+    constructor(ele,params) {
+        this.timer = null;
+        this.data = {};
+        this.$ele = document.querySelector(ele);
+        this.$ele.classList.add('gray')
+        this.$ele.style = `margin:15px 0; `;
+        this.codes= params.codes;
+        this.max = params.max;
+        this.min = params.min;
+        this.zl = params.zl;
+        this.title = params.title;
+        this.getHj().then(() => {
+            this.startTimer();
+            addEventListener(this.$ele, 'click', (e) => {
+                if (this.timer) {
+                    this.clearTimer();
+                    e.target.innerHTML = '开始';
+                } else {
+                    this.startTimer();
+                    e.target.innerHTML = '暂停';
+                }
+            }, '.j-hj-btn')
+        });
+    }
+    async getHj() {
+        const res = await Tools.fetch('hj',{codes:this.codes});
+        this.data = {
+            kp: res.q1,//开盘价
+            sp: res.q64,//收盘价
+            zg: res.q3,//最高价
+            zd: res.q4,//最低价
+            xj: res.q63,//现价
+            time: res.time
+        }
+        this.updateHtml();
+    }
+    updateHtml() {
+        this.$ele.innerHTML = `${this.title} 现价：<span class="red" style="font-size:18px;">${this.data.xj}</span>，开盘价:${this.data.kp}，收盘价：${this.data.sp}，最高价：${this.data.zg}，最低价：${this.data.zd} ${new Date(this.data.time).toLocaleString()}<span class="red j-hj-btn" style="margin:0 10px;">暂停</span><div class="map"></div>`;
+        this.drawMap(this.$ele.querySelector('.map'));
+    }
+    startTimer() {
+        this.timer = setInterval(() => {
+            this.getHj();
+        }, 3000);
+    }
+    clearTimer() {
+        clearInterval(this.timer);
+        this.timer = null;
+    }
+    drawMap($map){
+        const max = this.max;
+        const min = this.min;
+        const zl = this.zl;
+        const now_max = +this.data.zg;
+        const now_min = +this.data.zd;
+        const now = +this.data.xj;
+        const unit = 300;
+        const dis_unit = unit/(max-min);
+        $map.style='display:inline-block;vertical-align:0px;';
+        $map.innerHTML = `
+            <span style="margin-right:5px;">${min}</span>
+            <span class="con" style="width:${unit}px;height:5px;background:#e4e4e4;display:inline-block;vertical-align:2px;position:relative;">
+                <span class="now" style="height:100%;background:#1e80ff;display:inline-block;position:absolute;width:${dis_unit*(now_max-now_min)}px;left:${dis_unit*(now_min-min)}px;">
+                    <span class="now_z" style="display:inline-block;height:100%;width:2px;background:red;position:absolute;left:${(now-now_min)*dis_unit}px;">
+                        <span style="position:absolute;top:0;left:50%;transform:translate(-50%, -100%)">${((now-min)/(max-min)*100).toFixed(2)}%</span>
+                    </span>
+                </span>
+                <span style="display:inline-block;height:200%;width:2px;background:green;position:absolute;bottom:0;left:${(zl-min)*dis_unit}px;">
+
+                    <span style="position:absolute;top:0;left:50%;transform:translate(-50%, 80%);white-space: nowrap;">阻力线${zl}</span>
+                </span>
+            </span>
+            <span style="margin-left:5px;">${max}</span>
+        `;
+    }
+}
+new HJ('.j-hj-gn',{codes:'JO_9753',max:581.23,min:541.12,zl:571,title:'国内黄金'});
+// new HJ('.j-hj-gj',{codes:'JO_92233',max:2483.49,min:2353,zl:2450,title:'国际黄金'});
