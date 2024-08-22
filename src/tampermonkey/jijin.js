@@ -1971,7 +1971,7 @@ class HJ {
     startTimer() {
         this.timer = setInterval(() => {
             this.getHj();
-        }, 3000);
+        }, 6000);
     }
     clearTimer() {
         clearInterval(this.timer);
@@ -2005,4 +2005,4 @@ class HJ {
     }
 }
 new HJ('.j-hj-gn',{codes:'JO_9753',max:581.23,min:541.12,zl:571,title:'国内黄金'});
-// new HJ('.j-hj-gj',{codes:'JO_92233',max:2483.49,min:2353,zl:2450,title:'国际黄金'});
+// new HJ('.j-hj-gj',{codes:'JO_92233',max:2508.49,min:2353,zl:2450,title:'国际黄金'});
