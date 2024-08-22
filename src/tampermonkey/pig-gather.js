@@ -1433,7 +1433,6 @@
         const data = {
             completeOrders: DATA,
             notes: notes ? JSON.parse(notes) : {},
-            downloadTime: localStorage.getItem('downloadTime'),
             remindDatas: remindDatas ? JSON.parse(remindDatas) : {}
         }
         MDownload([JSON.stringify(data)], '小猪数据');
@@ -1445,7 +1444,6 @@
         }
     } else {
         Download();
-
     }
 
     // 人性化的做单记录数据
@@ -1838,6 +1836,9 @@
                             </tbody>
                         </table> -->
                     </div>
+                    <div style="margin-top:15px;" class="j-datas-add">
+                        <textarea placeholder="复制进下载的数据" class="search_input"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -1861,6 +1862,37 @@
         const $teamerIpt = qqAdd.querySelector('.j-teamer-ipt');
         const $genderIpt = qqAdd.querySelector('.j-gender-ipt');
         const $wwNoteIpt = qqAdd.querySelector('.j-ww-note-ipt');
+        // 下面是储存json
+        const $datasAddDiv = document.querySelector('.j-datas-add');
+        const $datasText = $datasAddDiv.querySelector('textarea');
+        const $datasBtn = $datasAddDiv.querySelector('button');
+        function isJSON(obj) {
+            const str = JSON.stringify(obj);
+            try {
+                return JSON.parse(str) && str.length > 0;
+            } catch (e) {
+                return false;
+            }
+        }
+        const cshLocal = (obj) => {
+            Object.keys(obj).forEach(key => {
+                localStorage.setItem(key, JSON.stringify(obj[key]));
+            })
+        }
+        $datasBtn.addEventListener('click', () => {
+            const text = $datasText.value;
+            if (!text) return alert('数据不存在！');
+            try {
+                if (!isJSON(text)) return alert('数据必须是json对象')
+                const datas = JSON.parse(text);
+                cshLocal(datas);
+                alert('储存成功')
+            } catch (error) {
+                console.log(error);
+                alert(error.message);
+            }
+        }, false)
+
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -3343,14 +3375,9 @@
     //     document.querySelector('.release_tab').before(RecordCodeDiv);
     // }
     // ModifyRecordCode();
-    const cshLocal = (obj) => {
-        Object.keys(obj).forEach(key => {
-            localStorage.setItem(key, JSON.stringify(obj[key]));
-        })
-    }
 
     window.PIG = {
         Download,
-        Tools, cshLocal
+        Tools
     }
 })();

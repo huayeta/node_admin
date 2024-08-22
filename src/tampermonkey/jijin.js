@@ -10,7 +10,7 @@ let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,investment:定投相关}}
 let CODES = {};
 //  ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'],
-const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'],['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
+const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金', '组合'];
 const SALETIME = {
     7: '7天免',
@@ -311,7 +311,7 @@ const Tools = {
             }
         })
         // 获取基金历史涨幅
-        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': 1, 'pagesize': 3 * 30 });
+        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': 1, 'pagesize': 2.5 * 30 });
         let customLastWeekGrowth = 0;
         let custom2LastWeekGrowth = 0;
         let customLastMonthGrowth = 0;
@@ -1033,6 +1033,9 @@ const Tools = {
             <div class="j-hj-gj"></div>
             <div class="g-table"></div>
             <div class="g-con"></div>
+            <div style="margin-top:15px;" class="j-datas-add">
+                <textarea placeholder="复制进下载的数据" class="search_input"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
+            </div>
         `;
         document.querySelector('.content').innerHTML = con;
         // 初始化收入
@@ -1040,6 +1043,36 @@ const Tools = {
         //     Tools.upDateIncome(code);
         // })
         Tools.updateDatasTable();
+        // 下面是储存json
+        const $datasAddDiv = document.querySelector('.j-datas-add');
+        const $datasText = $datasAddDiv.querySelector('textarea');
+        const $datasBtn = $datasAddDiv.querySelector('button');
+        function isJSON(obj) {
+            const str = JSON.stringify(obj);
+            try {
+                return JSON.parse(str) && str.length > 0;
+            } catch (e) {
+                return false;
+            }
+        }
+        const cshLocal = (obj) => {
+            Object.keys(obj).forEach(key => {
+                localStorage.setItem(key, JSON.stringify(obj[key]));
+            })
+        }
+        $datasBtn.addEventListener('click', () => {
+            const text = $datasText.value;
+            if (!text) return alert('数据不存在！');
+            try {
+                if (!isJSON(text)) return alert('数据必须是json对象')
+                const datas = JSON.parse(text);
+                cshLocal(datas);
+                alert('储存成功')
+            } catch (error) {
+                console.log(error);
+                alert(error.message);
+            }
+        }, false)
     }
 }
 // 初始化
@@ -1709,12 +1742,20 @@ const MDownload = (data, name) => {
 // MDownload([1],'2');
 const Download = () => {
     const data = {
-        DATAS: JSON.parse(localStorage.getItem('jijin.datas')),
-        SORT: JSON.parse(localStorage.getItem('jijin.sort')),
-        CODES: JSON.parse(localStorage.getItem('jijin.codes')),
+        'jijin.datas': JSON.parse(localStorage.getItem('jijin.datas')),
+        'jijin.sort': JSON.parse(localStorage.getItem('jijin.sort')),
+        'jijin.codes': JSON.parse(localStorage.getItem('jijin.codes')),
     }
     MDownload([JSON.stringify(data)], '基金数据');
     // console.log(JSON.stringify(data));
+    localStorage.setItem('jijin.downloadTime', new Date().toLocaleString());
+}
+if (localStorage.getItem('jijin.downloadTime')) {
+    if ((new Date().getTime() - 1 * 24 * 60 * 60 * 1000) > new Date(localStorage.getItem('jijin.downloadTime')).getTime() || new Date(localStorage.getItem('jijin.downloadTime')).getDate() != new Date().getDate()) {
+        Download();
+    }
+} else {
+    Download();
 }
 addEventListener($form, 'click', Download, '.j-code-download')
 // 点击copy
@@ -1928,13 +1969,13 @@ class Contextmenu {
 const Menu = new Contextmenu();
 // 黄金
 class HJ {
-    constructor(ele,params) {
+    constructor(ele, params) {
         this.timer = null;
         this.data = {};
         this.$ele = document.querySelector(ele);
         this.$ele.classList.add('gray')
         this.$ele.style = `margin:15px 0; `;
-        this.codes= params.codes;
+        this.codes = params.codes;
         this.max = params.max;
         this.min = params.min;
         this.zl = params.zl;
@@ -1953,7 +1994,7 @@ class HJ {
         });
     }
     async getHj() {
-        const res = await Tools.fetch('hj',{codes:this.codes});
+        const res = await Tools.fetch('hj', { codes: this.codes });
         this.data = {
             kp: res.q1,//开盘价
             sp: res.q64,//收盘价
@@ -1977,7 +2018,7 @@ class HJ {
         clearInterval(this.timer);
         this.timer = null;
     }
-    drawMap($map){
+    drawMap($map) {
         const max = this.max;
         const min = this.min;
         const zl = this.zl;
@@ -1985,17 +2026,17 @@ class HJ {
         const now_min = +this.data.zd;
         const now = +this.data.xj;
         const unit = 300;
-        const dis_unit = unit/(max-min);
-        $map.style='display:inline-block;vertical-align:0px;';
+        const dis_unit = unit / (max - min);
+        $map.style = 'display:inline-block;vertical-align:0px;';
         $map.innerHTML = `
             <span style="margin-right:5px;">${min}</span>
             <span class="con" style="width:${unit}px;height:5px;background:#e4e4e4;display:inline-block;vertical-align:2px;position:relative;">
-                <span class="now" style="height:100%;background:#1e80ff;display:inline-block;position:absolute;width:${dis_unit*(now_max-now_min)}px;left:${dis_unit*(now_min-min)}px;">
-                    <span class="now_z" style="display:inline-block;height:100%;width:2px;background:red;position:absolute;left:${(now-now_min)*dis_unit}px;">
-                        <span style="position:absolute;top:0;left:50%;transform:translate(-50%, -100%)">${((now-min)/(max-min)*100).toFixed(2)}%</span>
+                <span class="now" style="height:100%;background:#1e80ff;display:inline-block;position:absolute;width:${dis_unit * (now_max - now_min)}px;left:${dis_unit * (now_min - min)}px;">
+                    <span class="now_z" style="display:inline-block;height:100%;width:2px;background:red;position:absolute;left:${(now - now_min) * dis_unit}px;">
+                        <span style="position:absolute;top:0;left:50%;transform:translate(-50%, -100%)">${((now - min) / (max - min) * 100).toFixed(2)}%</span>
                     </span>
                 </span>
-                <span style="display:inline-block;height:200%;width:2px;background:green;position:absolute;bottom:0;left:${(zl-min)*dis_unit}px;">
+                <span style="display:inline-block;height:200%;width:2px;background:green;position:absolute;bottom:0;left:${(zl - min) * dis_unit}px;">
 
                     <span style="position:absolute;top:0;left:50%;transform:translate(-50%, 80%);white-space: nowrap;">阻力线${zl}</span>
                 </span>
@@ -2004,5 +2045,5 @@ class HJ {
         `;
     }
 }
-new HJ('.j-hj-gn',{codes:'JO_9753',max:581.23,min:541.12,zl:571,title:'国内黄金'});
+new HJ('.j-hj-gn', { codes: 'JO_9753', max: 581.23, min: 541.12, zl: 571, title: '国内黄金' });
 // new HJ('.j-hj-gj',{codes:'JO_92233',max:2508.49,min:2353,zl:2450,title:'国际黄金'});
