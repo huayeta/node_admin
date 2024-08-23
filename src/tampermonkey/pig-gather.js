@@ -39,11 +39,11 @@
         { name: 'A97-欢乐购秒杀1群-有新人', fix: 'QQ', value: '626195966' },
         { name: 'A97-欢乐购秒杀2群', fix: 'QQ', value: '244917614' },
         { name: 'A97-欢乐购秒杀11群', fix: 'QQ', value: '1074927054' },
-        {name:'A97-欢乐购秒杀5群-新群',fix:'QQ',value:'87201879'},
+        { name: 'A97-欢乐购秒杀5群-新群', fix: 'QQ', value: '87201879' },
         { name: 'A97-欢乐购火箭🚀1群', fix: 'QQ', value: '272916421' },
         { name: 'A97-欢乐购火箭🚀3群', fix: 'QQ', value: '325019211' },
         { name: 'A97-欢乐购火箭🚀④群-新人', fix: 'QQ', value: '532849108' },
-        {name:'A97-欢乐购秒杀🚀5群-新群',fix:'QQ',value:'940096908'},
+        { name: 'A97-欢乐购秒杀🚀5群-新群', fix: 'QQ', value: '940096908' },
         { name: 'pig', fix: '', value: 'pig', commission: '7' },
         { name: '凤凰', fix: '', value: 'fh' },
     ];
@@ -132,20 +132,20 @@
         'nn': {
             text: '闹闹总监'
         },
-        'xhm':{
-            text:'小红帽'
+        'xhm': {
+            text: '小红帽'
         },
-        'yoyo':{
-            text:'YOYO总代'
+        'yoyo': {
+            text: 'YOYO总代'
         }
     };
-    const ORDERTYPES = ['TB'];
+    const ORDERTYPES = ['TB', 'JD'];
     const storageData = () => {
         localStorage.setItem('completeOrders', JSON.stringify(DATA));
     }
     // 店铺数据
     const LABELS = {
-        datas: [
+        TB_datas: [
             {
                 label: '万阁',
                 options: ['痔疮7', '肛裂6', '肛瘘9'],
@@ -159,23 +159,18 @@
                 options: ['痔疮6', '乳腺1', '疱疹2', '白斑2'],
             }
         ],
-        jd_datas: [
+        JD_datas: [
             {
-                label: '德医济世',
+                label: 'jd处韵',
                 options: ['肛瘘1'],
             }
         ],
         getShopOptionsHtml: (pig_type = 'TB') => {
-            const datas = (pig_type == 'TB' ? LABELS.datas : LABELS.jd_datas);
+            // const datas = (pig_type == 'TB' ? LABELS.TB_datas : LABELS.JD_datas);
+            const datas = LABELS[`${pig_type}_datas`];
             return `<option value="">没有选择店铺</option>` + datas.map(shop => {
                 return `<optgroup label='${shop.label}'>${shop.options.map(option => `<option value='${shop.label}-${option}'>${shop.label}-${option}</option>`).reduce((a, b) => a + b, '')}</optgroup>`;
             }).reduce((a, b) => a + b, '');
-        },
-        getShopElement: (pig_type = 'TB') => {
-            const $shop = document.createElement('select');
-            $shop.innerHTML = LABELS.getShopOptionsHtml(pig_type);
-            $shop.style = 'width:auto;';
-            return $shop;
         }
     }
     // 店铺缓存数据
@@ -330,7 +325,7 @@
                 }
             };
         },
-        getTime:()=>{
+        getTime: () => {
             return new Date().toLocaleString();
         },
         // 判断是否是一个日期字符串
@@ -370,7 +365,7 @@
             if (!data || !key) return false;
             const keys = Object.keys(data);
             // 必须是is里面的字段
-            const is = ['pig_phone', key, 'is_del', 'create_time','gender'];
+            const is = ['pig_phone', key, 'is_del', 'create_time', 'gender'];
             for (let k of keys) {
                 if (is.includes(k)) {
                     result = true;
@@ -563,11 +558,11 @@
             // 排序
             if (sort) {
                 let str = 'pig_over_time';
-                if(typeof sort === 'string'){
+                if (typeof sort === 'string') {
                     str = sort;
                 }
                 accounts.sort((a, b) => {
-                    if (DATA[a].length > 0 && DATA[b].length > 0 && (typeof sort=='function'?sort(DATA[a],DATA[b]):(new Date(DATA[a][0]['pig_over_time']) > new Date(DATA[b][0]['pig_over_time'])))) {
+                    if (DATA[a].length > 0 && DATA[b].length > 0 && (typeof sort == 'function' ? sort(DATA[a], DATA[b]) : (new Date(DATA[a][0]['pig_over_time']) > new Date(DATA[b][0]['pig_over_time'])))) {
                         return 1;
                     } else {
                         return -1;
@@ -592,7 +587,7 @@
             return [dyStr + table, code ? str : ''];
         },
         // 通过某个条件找到所有的数据并显示
-        displayAccountByKeyValue: (arr, otherKeysFuc, isBreakFuc = (data, i) => i == 0,sort) => {
+        displayAccountByKeyValue: (arr, otherKeysFuc, isBreakFuc = (data, i) => i == 0, sort) => {
             const accounts = Tools.findAccountsBykeyValue(arr, otherKeysFuc, true, isBreakFuc);
             // console.log(accounts,come_type);
 
@@ -807,6 +802,18 @@
             })
             return arr;
         },
+        // 添加京东号
+        addJd:(account,jd)=>{
+            return Tools.addKeyValue(account,'jd',jd);
+        },
+        // 删除京东号
+        delJd:(account,jd)=>{
+            return Tools.delKeyValue(account,'jd',jd);
+        },
+        // 找到所有的京东号
+        findJdsByDatas:(datas)=>{
+            return Tools.findKeysByDatas(datas,'jd');
+        },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
             // if (Tools.alertFuc({ pig_phone, ww_exec })) return false;
@@ -983,15 +990,15 @@
         // 给旺旺添加性别
         addGenderByAccount: (pig_phone, ww, gender) => {
             return Tools.updataDataByAccount(pig_phone, { gender }, (data, index) => {
-                if(data.ww_exec == ww){
+                if (data.ww_exec == ww) {
                     return 'break';
                 }
             })
         },
         // 给旺旺添加备注
         addWwNoteByAccount: (pig_phone, ww, note) => {
-            return Tools.updataDataByAccount(pig_phone, { note,note_create_time:Tools.getTime() }, (data, index) => {
-                if(data.ww_exec == ww){
+            return Tools.updataDataByAccount(pig_phone, { note, note_create_time: Tools.getTime() }, (data, index) => {
+                if (data.ww_exec == ww) {
                     return 'break';
                 }
             })
@@ -1067,7 +1074,7 @@
         },
         // 通过账号给最后一个记录添加评论或者默认评论或者直接评论
         lastAddCommentByPhone: (account, is_comment = '1', pig_type) => {
-            return Tools.updataDataByAccount(account, { is_comment,comment_time:new Date().toLocaleString() }, (data, i) => {
+            return Tools.updataDataByAccount(account, { is_comment, comment_time: new Date().toLocaleString() }, (data, i) => {
                 if (data.pig_type == pig_type) {
                     return 'break';
                 }
@@ -1197,8 +1204,8 @@
             return datas.filter((data, index) => {
                 if (!data.pig_type) data.pig_type = 'TB';
                 if (Tools.isRecord(data) && data.pig_type == pig_type) {
-                    // 筛选出来连续做单错误记录
-                    if (datas[index - 1] && new Date(new Date(data.pig_over_time).getTime() + 2 * 24 * 60 * 60 * 1000) > new Date(datas[index - 1].pig_over_time)) {
+                    // 筛选出来连续做单错误记录不公平
+                    if (datas[index - 1] && new Date(new Date(data.pig_over_time).getTime() + 0 * 24 * 60 * 60 * 1000) > new Date(datas[index - 1].pig_over_time)) {
                         return false;
                     }
                     return true;
@@ -1462,8 +1469,8 @@
         let diffPhones = is_almighty ? Tools.almightySearch([pig_phone]).filter(phone => phone != pig_phone) : [];
         // 找到真实姓名
         const real_name_arr = Tools.findRealNamesByDatas(datas);
-        // 通过真实姓名找到不同的phones
-
+        // 找到最近做单类型
+        const last_recode = (datas[0] && datas[0].pig_type)?datas[0].pig_type:'';
         // 找到注册时间
         let register_time = Tools.findRegisterTimeByDatas(records);
         // 找到唐人注册时间
@@ -1476,6 +1483,8 @@
         const commission = Tools.findCommission(datas);
         // 找到所有团队
         const teamers = Tools.findTeamersByDatas(datas);
+        // 找到所有京东账号
+        const jds = Tools.findJdsByDatas(datas);
         // 是否待处理账号
         const is_wait = Tools.IsWaitByDatas(datas);
         // 找到真实姓名对应的微信名字s
@@ -1533,6 +1542,7 @@
             register_time: register_time,
             tang_register_time: tang_register_time,
             tang_id: tang_id,
+            last_recode:last_recode,
             commission: commission,
             nickname: nickname,
             teamers: teamers,
@@ -1547,6 +1557,7 @@
             wws: wws,
             wxs: wxs,
             wx_names: wx_names,
+            jds:jds,
             remind_texts, remind_texts,
         }
     }
@@ -1584,7 +1595,7 @@
             trs += `
             <tr data-account="${humanData.phone}" data-mobile="${humanData.mobiles[0]}">
                 <td>
-                    ${humanData.commission ? `<p style="color:darkturquoise;font-size:25px;">+${humanData.commission}</p>` : ''}
+                    ${humanData.commission ? `<p style="color:darkturquoise;font-size:25px;">+${humanData.commission}，jd+6</p>` : ''}
                     <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}
                     <span class="j-phone j-copyText">${Tools.highLightStr(humanData.phone, highLightStr)}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
@@ -1605,12 +1616,15 @@
                 </td>
                 <td style="color:red;">
                     ${humanData.wws.reduce((a, b) => {
-                return a + `<p class="${b.is_del=='1'?'del':''}">
+                return a + `<p class="${b.is_del == '1' ? 'del' : ''}">
                                 <span class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</span>
-                                ${b.gender!=undefined?`（<span class="blue">${b.gender==1?'男':'女'}</span>）`:''}
-                                ${b.note?`（<span class="cadetblue j-copyText">${b.note}</span>）`:''}
+                                ${b.gender != undefined ? `（<span class="blue">${b.gender == 1 ? '男' : '女'}</span>）` : ''}
+                                ${b.note ? `（<span class="cadetblue j-copyText">${b.note}</span>）` : ''}
                             </p>`;
             }, '')}
+                    ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:red;">全部京东号：</p>${humanData.jds.reduce((a, b) => {
+                        return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
+                    }, '')}` : ''}
                 </td>
                 <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>
                 <td>
@@ -1618,7 +1632,7 @@
                         <tbody>
                             <tr>
                                 <th></th>
-                                ${ORDERTYPES.map(type => `<th>${type}</th>`).join('')}
+                                ${ORDERTYPES.map(type => `<th class="${type == humanData.last_recode?'bg-blue':''}">${type}</th>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单渠道</td>
@@ -1759,6 +1773,9 @@
                     <button class="search_btn reb j-gender-add-btn" style="margin-left:10px;">添加男女</button>
                     <input class="search_input j-ww-note-ipt" type="text" placeholder="旺旺备注" style="margin-left:10px;" />
                     <button class="search_btn j-ww-note-add" style="margin-left:10px;">添加旺旺备注</button>
+                    <input class="search_input j-jd-ipt" type="text" placeholder="京东号" style="margin-left:10px;" />
+                    <button class="search_btn j-jd-add" style="margin-left:10px;">添加京东号</button>
+                    <button class="search_btn j-jd-del" style="margin-left:10px;">删除京东号</button>
                 </div>
                 <div class="btns">
                     <style>
@@ -1785,12 +1802,11 @@
                             color:#d9d6d6;
                         }
                     </style>
-                    <!-- <div style="color:darkmagenta; ">${JSON.stringify(qqs_obj)}</div> -->
                     <div class="m-findData search">
                         <button class="search_btn j-almightySearch" style="">qq|phone|ww|wx全能搜索</button>
                         <button class="search_btn reb j-reg-search" style="margin-left:10px;">正则realname|ww搜索</button>
                         <button class="search_btn j-gatherQqs" style="">倒序筛选qq1235</button>
-                        <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq1235</button>
+                        <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq123</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据346</button>
                         <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
                         <button class="search_btn download" style="">下载数据</button>
@@ -1802,8 +1818,8 @@
                         <span class="gray">3：</span><input class="search_input j-search-time" placeholder="搜索时间" value="2023-04-01" type="date" />
                         <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
                         <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type => `<option value="${type}">${type}</option>`)}</select>
-                        <span class="gray">6：</span><select class="search_input j-shop-id">${LABELS.getShopOptionsHtml()}</select>
-                        <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}" ${type.value == 'pig'?'selected':''}>${type.name}</option>`).join('')}</select>
+                        <span class="gray">6：</span><select class="search_input j-shop-id"></select>
+                        <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}" ${type.value == 'pig' ? 'selected' : ''}>${type.name}</option>`).join('')}</select>
                         <button class="search_btn reb j-come-type-search" style="">查询渠道做单7</button>
                     </div>
                     <div class="u-con">
@@ -1847,6 +1863,7 @@
         const $byQQ = qqAdd.querySelector('.byqq');
         const $ww = qqAdd.querySelector('.j-ww-exec');
         const $pigType = qqAdd.querySelector('.j-pig-type');
+        const $shopId = qqAdd.querySelector('.j-shop-id');
         const $comeType = qqAdd.querySelector('.j-come-type');
         const $qqExecPre = qqAdd.querySelector('.qq_exec_pre');
         const $searchTime = qqAdd.querySelector('.j-search-time');
@@ -1862,6 +1879,7 @@
         const $teamerIpt = qqAdd.querySelector('.j-teamer-ipt');
         const $genderIpt = qqAdd.querySelector('.j-gender-ipt');
         const $wwNoteIpt = qqAdd.querySelector('.j-ww-note-ipt');
+        const $jdIpt = qqAdd.querySelector('.j-jd-ipt');
         // 下面是储存json
         const $datasAddDiv = document.querySelector('.j-datas-add');
         const $datasText = $datasAddDiv.querySelector('textarea');
@@ -1892,7 +1910,12 @@
                 alert(error.message);
             }
         }, false)
-
+        // $pigType变动的话
+        $pigType.addEventListener('change',e=>{
+            const pig_type = $pigType.value;
+            $shopId.innerHTML = LABELS.getShopOptionsHtml(pig_type);
+        },false)
+        $pigType.dispatchEvent(new Event('change'));
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
             const come_type = $comeType.value;
@@ -1965,7 +1988,7 @@
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[phone], ['come_type', 'qq_exec_pre']);
             if (come_type) $comeType.value = come_type;
             if (qq_exec_pre) $qqExecPre.value = qq_exec_pre;
-            
+
             // const datas = findDatasByQq(qq);
             // // console.log(datas);
             // if (datas.length > 0) {
@@ -2002,7 +2025,7 @@
             }
         }, 1000), false)
         // 当点击手机后填充
-        addEventListener(qqAdd,'click',e=>{
+        addEventListener(qqAdd, 'click', e => {
             const account = e.target.textContent;
             $phone.value = account;
             // 得到最后一个记录的come-type,qq_exec_pre
@@ -2014,7 +2037,7 @@
             const wxs = Tools.findWxsByDatas(DATA[account]);
             // console.log(wxs);
             $wx.value = wxs.join('，');
-        },'.j-phone')
+        }, '.j-phone')
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click', e => {
             const orderId = qqAdd.querySelector('.j-order-search .order-id').value;
@@ -2570,21 +2593,21 @@
         // ww性别的添加
         addEventListener(qqAdd, 'click', e => {
             const wws = $ww.value.split('，');
-            const ww = wws[wws.length-1];
+            const ww = wws[wws.length - 1];
             const account = $phone.value;
             const gender = $genderIpt.value;
             // console.log(ww);
-            const result = Tools.addGenderByAccount(account, ww,gender);
+            const result = Tools.addGenderByAccount(account, ww, gender);
             if (result) alert('性别添加成功');
         }, '.j-gender-add-btn')
         // ww备注的添加
         addEventListener(qqAdd, 'click', e => {
             const wws = $ww.value.split('，');
-            const ww = wws[wws.length-1];
+            const ww = wws[wws.length - 1];
             const account = $phone.value;
             const note = $wwNoteIpt.value;
             // console.log(ww);
-            const result = Tools.addWwNoteByAccount(account, ww,note);
+            const result = Tools.addWwNoteByAccount(account, ww, note);
             if (result) alert(`${ww}备注添加成功`);
         }, '.j-ww-note-add')
         // 添加佣金
@@ -2594,6 +2617,20 @@
             const result = Tools.addCommission(account, commission);
             if (result) alert('佣金添加成功');
         }, '.j-commission-add')
+        // 添加京东
+        addEventListener(qqAdd, 'click', e => {
+            const ipt = $jdIpt.value;
+            const account = $phone.value;
+            const result = Tools.addJd(account, ipt);
+            if (result) alert('京东添加成功');
+        }, '.j-jd-add')
+        // 删除京东
+        addEventListener(qqAdd, 'click', e => {
+            const ipt = $jdIpt.value;
+            const account = $phone.value;
+            const result = Tools.delJd(account, ipt);
+            if (result) alert('京东删除成功');
+        }, '.j-jd-del')
         // 添加唐人id
         addEventListener(qqAdd, 'click', e => {
             const tang_id = $tangIdIpt.value;
@@ -2927,7 +2964,8 @@
                 for (let i = 0; i < datas.length; i++) {
                     const data = Tools.copyObj(datas[i]);
                     if (!data.pig_type) data.pig_type = 'TB';
-                    if (data.pig_type == pig_type && data.pig_over_time) {
+                    //在这里先不筛选pig_type
+                    if ((data.pig_type == pig_type || true) && data.pig_over_time) {
                         result = data;
                         break;
                     }
@@ -3008,7 +3046,7 @@
         // 通过店铺找到做单数据
         qqAdd.querySelector('.j-gatherShop').addEventListener('click', () => {
             const arr = [];
-            const shop_label = qqAdd.querySelector('.j-shop-id').value;
+            const shop_label = $shopId.value;
             const comment_sel = qqAdd.querySelector('.j-comment-sel').value;
             const search_time = $searchTime.value;
             if (!shop_label) return;
@@ -3047,11 +3085,11 @@
                 if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
                     if (!RDATA.isExist(data.pig_phone, 'comment_reminder') && new Date(data.pig_over_time) > new Date(search_time)) return true;
                 }
-            }, (data, i) => i == 0),(data1,data2)=>{
+            }, (data, i) => i == 0), (data1, data2) => {
                 // 排序
-                let str1 = data1[0].comment_time?data1[0].comment_time:data1[0].pig_over_time;
-                let str2 = data2[0].comment_time?data2[0].comment_time:data2[0].pig_over_time;
-                return new Date(str1)>new Date(str2);
+                let str1 = data1[0].comment_time ? data1[0].comment_time : data1[0].pig_over_time;
+                let str2 = data2[0].comment_time ? data2[0].comment_time : data2[0].pig_over_time;
+                return new Date(str1) > new Date(str2);
             })
         }, false)
         // function getComeTypeByTang() {
@@ -3070,7 +3108,7 @@
         // 提醒唐人做单
         addEventListener(qqAdd, 'click', e => {
             const come_type = $comeType.value;
-            setCon(Tools.displayAccounts(Tools.findAccountsBykeyValue([['come_type',come_type]]), undefined, undefined, true));
+            setCon(Tools.displayAccounts(Tools.findAccountsBykeyValue([['come_type', come_type]]), undefined, undefined, true));
         }, '.j-come-type-search')
         // 标注已评跟默认评价按钮
         addEventListener($con, 'click', (e) => {
@@ -3090,8 +3128,8 @@
             const shop_label = qqAdd.querySelector('.j-shop-id').value;
             const qq_exec_pre = $qqExecPre.value;
             const come_type = $comeType.value;
-            const obj = {qq_exec_pre,come_type};
-            if(shop_label)obj.shop_label = shop_label;
+            const obj = { qq_exec_pre, come_type };
+            if (shop_label) obj.shop_label = shop_label;
             if (Tools.alertFuc({ phone, qq_exec_pre, come_type })) return;
             Tools.modifyDataToLastRecord(phone, obj);
             alert('修改成功');
