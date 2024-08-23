@@ -1289,7 +1289,7 @@
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (emptyStr(data.pig_qq, keyword) || emptyStr(data.pig_phone, keyword) || emptyStr(data.ww_exec, keyword) || emptyStr(data.wx, keyword) || emptyStr(data.wx_name, keyword) || emptyStr(data.mobile, keyword) || emptyStr(data.nickname ? data.nickname.replace('A97', '') : '', keyword) || emptyStr((data.real_name && data.real_name.includes('*')) ? '' : data.real_name, keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                    if (emptyStr(data.pig_qq, keyword) || emptyStr(data.pig_phone, keyword) || emptyStr(data.ww_exec, keyword) || emptyStr(data.wx, keyword) || emptyStr(data.wx_name, keyword) || emptyStr(data.mobile, keyword) || emptyStr(data.jd, keyword) || emptyStr(data.nickname ? data.nickname.replace('A97', '') : '', keyword) || emptyStr((data.real_name && data.real_name.includes('*')) ? '' : data.real_name, keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
                         if (!results.includes(phone)) results.push(phone);
                     }
                 })
@@ -1323,7 +1323,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
+                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile,data.jd, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -1940,6 +1940,7 @@
                 $ww.value = '';
                 $wx.value = '';
                 $gNote.value = '';
+                $jdIpt.value = '';
                 $comeType.value = come_type_default;
                 $qqExecPre.value = qq_exec_pre_default;
                 $mobileIpt.value = '';
@@ -1952,6 +1953,7 @@
                 $ww.value = '';
                 $wx.value = '';
                 $gNote.value = '';
+                $jdIpt.value = '';
                 $comeType.value = come_type_default;
                 $qqExecPre.value = qq_exec_pre_default;
                 $mobileIpt.value = '';
@@ -1978,6 +1980,7 @@
             $ww.value = wws.join('，');
             $wx.value = Tools.findWxsByDatas(DATA[phone], false).join(',');
             $gNote.value = Tools.findRealNamesByDatas(DATA[phone]).join(',');
+            $jdIpt.value = Tools.findJdsByDatas(DATA[phone]).join(',');
             $mobileIpt.value = '';
             $registerTime.value = '';
             $tangIdIpt.value = '';
@@ -3164,8 +3167,9 @@
             const ww = $ww.value;
             const wx = $wx.value;
             const mobile = $mobileIpt.value;
-            const keywords = [qq, phone, ww, wx].filter(keyword => keyword);
-            if (keywords.length == 0) return alert('请填写关键字qq||phone|ww|wx!');
+            const jd = $jdIpt.value;
+            const keywords = [qq, phone, ww, wx,jd].filter(keyword => keyword);
+            if (keywords.length == 0) return alert('请填写关键字qq||phone|ww|wx|jd!');
             // console.log(keywords);
             // console.log(Tools.findPhonesByKeyword(qq));
             // return;
