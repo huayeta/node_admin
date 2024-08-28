@@ -803,16 +803,16 @@
             return arr;
         },
         // 添加京东号
-        addJd:(account,jd)=>{
-            return Tools.addKeyValue(account,'jd',jd);
+        addJd: (account, jd) => {
+            return Tools.addKeyValue(account, 'jd', jd);
         },
         // 删除京东号
-        delJd:(account,jd)=>{
-            return Tools.delKeyValue(account,'jd',jd);
+        delJd: (account, jd) => {
+            return Tools.delKeyValue(account, 'jd', jd);
         },
         // 找到所有的京东号
-        findJdsByDatas:(datas)=>{
-            return Tools.findKeysByDatas(datas,'jd');
+        findJdsByDatas: (datas) => {
+            return Tools.findKeysByDatas(datas, 'jd');
         },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
@@ -1323,7 +1323,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile,data.jd, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
+                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.jd, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -1470,7 +1470,7 @@
         // 找到真实姓名
         const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到最近做单类型
-        const last_recode = (datas[0] && datas[0].pig_type)?datas[0].pig_type:'';
+        const last_recode = (datas[0] && datas[0].pig_type) ? datas[0].pig_type : '';
         // 找到注册时间
         let register_time = Tools.findRegisterTimeByDatas(records);
         // 找到唐人注册时间
@@ -1492,6 +1492,7 @@
         // 提醒文本
         const remind_texts = Tools.remindText(datas);
         function formateDatasByPigType(datas, pig_type) {
+            // 做单数据
             const records = Tools.getDatasByPigType(datas, pig_type);
             // 备注数据
             let notes = Tools.findNotesByDatas(datas, pig_type);
@@ -1542,7 +1543,7 @@
             register_time: register_time,
             tang_register_time: tang_register_time,
             tang_id: tang_id,
-            last_recode:last_recode,
+            last_recode: last_recode,
             commission: commission,
             nickname: nickname,
             teamers: teamers,
@@ -1557,7 +1558,7 @@
             wws: wws,
             wxs: wxs,
             wx_names: wx_names,
-            jds:jds,
+            jds: jds,
             remind_texts, remind_texts,
         }
     }
@@ -1622,9 +1623,9 @@
                                 ${b.note ? `（<span class="cadetblue j-copyText">${b.note}</span>）` : ''}
                             </p>`;
             }, '')}
-                    ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:red;">全部京东号：</p>${humanData.jds.reduce((a, b) => {
-                        return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
-                    }, '')}` : ''}
+                    ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:gray">全部京东号：</p>${humanData.jds.reduce((a, b) => {
+                return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
+            }, '')}` : ''}
                 </td>
                 <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>
                 <td>
@@ -1632,7 +1633,7 @@
                         <tbody>
                             <tr>
                                 <th></th>
-                                ${ORDERTYPES.map(type => `<th class="${type == humanData.last_recode?'bg-blue':''}">${type}</th>`).join('')}
+                                ${ORDERTYPES.map(type => `<th class="${type == humanData.last_recode ? 'bg-blue' : ''}">${type}</th>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单渠道</td>
@@ -1656,15 +1657,15 @@
                             </tr>
                             <tr>
                                 <td>最近评论状态</td>
-                                ${ORDERTYPES.map(type => `<td>${humanData.typeDatas[type].record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas[type].record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas[type].record_comment || `<a style="color:cadetblue;margin-right:10px;cursor:pointer;" class="j-addComment" data-val="1" data-type="${type}">标注已评价</a><a style="color:cadetblue;cursor:pointer;" class="j-addComment" data-val="-1" data-type="${type}">标注默认评价</a>`}</td>`).join('')}
+                                ${ORDERTYPES.map(type => `<td>${humanData.typeDatas[type].record_comment == '1' ? '<span style="color:gray;">已经评价</span>' : humanData.typeDatas[type].record_comment == '-1' ? '<span style="color:rgb(16, 0, 255);">默认评价</span>' : humanData.typeDatas[type].record_comment || humanData.typeDatas[type].record_num > 0 ? `<a style="color:cadetblue;margin-right:10px;cursor:pointer;" class="j-addComment" data-val="1" data-type="${type}">标注已评价</a><a style="color:cadetblue;cursor:pointer;" class="j-addComment" data-val="-1" data-type="${type}">标注默认评价</a>` : ''}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td>备注</td>
                                 ${ORDERTYPES.map(type => `<td style="color:red;">
-                                ${humanData.typeDatas[type].notes.reduce((a, b) => {
-                return a + `<p>${Tools.highLightStr(b, highLightStr)}</p>`;
-            }, '')}
-                            </td>`).join('')}
+                                        ${humanData.typeDatas[type].notes.reduce((a, b) => {
+                                            return a + `<p>${Tools.highLightStr(b, highLightStr)}</p>`;
+                                        }, '')}
+                                    </td>`).join('')}
                                 </td>
                             </tr>
                         </tbody>
@@ -1911,10 +1912,10 @@
             }
         }, false)
         // $pigType变动的话
-        $pigType.addEventListener('change',e=>{
+        $pigType.addEventListener('change', e => {
             const pig_type = $pigType.value;
             $shopId.innerHTML = LABELS.getShopOptionsHtml(pig_type);
-        },false)
+        }, false)
         $pigType.dispatchEvent(new Event('change'));
         // 当come-type变动的话
         $comeType.addEventListener('change', e => {
@@ -2909,7 +2910,8 @@
             const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
             $btn.textContent = '已去除';
             $btn.style.color = 'gray';
-            copyToClipboard(qq ? qq : mobile);
+            const exec = DATA[phone][0].wx?DATA[phone][0].wx:DATA[phone][0].pig_qq;
+            copyToClipboard(exec ? exec : mobile);
             switch (datas.type) {
                 case 'order_reminder':
                     RDATA.addOrderReminder(phone);
@@ -3168,7 +3170,7 @@
             const wx = $wx.value;
             const mobile = $mobileIpt.value;
             const jd = $jdIpt.value;
-            const keywords = [qq, phone, ww, wx,jd].filter(keyword => keyword);
+            const keywords = [qq, phone, ww, wx, jd].filter(keyword => keyword);
             if (keywords.length == 0) return alert('请填写关键字qq||phone|ww|wx|jd!');
             // console.log(keywords);
             // console.log(Tools.findPhonesByKeyword(qq));
