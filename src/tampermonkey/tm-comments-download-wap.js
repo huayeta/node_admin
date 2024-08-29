@@ -8,7 +8,7 @@
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==
-
+// 比如：https://h5.m.taobao.com/app/rate/www/rate-list/index.html?auctionNumId=708253681975
 (function () {
     'use strict';
     // Your code here...
