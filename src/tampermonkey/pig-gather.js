@@ -27,6 +27,7 @@
     //         {pig_phone,teamer} 属于哪个团队
     //         {pig_phone,wait} 等待处理
     //         {pig_phone,nickname} 昵称
+    //         {pig_phone,jd,jd_nickname?} 添加京东号，京东号昵称
     //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
     //     ]
     // }
@@ -810,9 +811,15 @@
         delJd: (account, jd) => {
             return Tools.delKeyValue(account, 'jd', jd);
         },
+        // 添加京东昵称
+        addJdNickname:(account,jd,jd_nickname)=>{
+            return Tools.updataDataByAccount(account,{jd_nickname},(data)=>{
+                if(data.jd == jd)return 'break';
+            })
+        },
         // 找到所有的京东号
         findJdsByDatas: (datas) => {
-            return Tools.findKeysByDatas(datas, 'jd');
+            return Tools.findKeysByDatas(datas, 'jd',undefined,true);
         },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
@@ -1487,7 +1494,7 @@
         const jds = Tools.findJdsByDatas(datas);
         // 是否待处理账号
         const is_wait = Tools.IsWaitByDatas(datas);
-        // 找到真实姓名对应的微信名字s
+        // 找到真实姓名对应的微信名字
         const wx_names = Tools.findRealNameWxNamesByDatas(datas) || {};
         // 提醒文本
         const remind_texts = Tools.remindText(datas);
@@ -1624,7 +1631,7 @@
                             </p>`;
             }, '')}
                     ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:gray">全部京东号：</p>${humanData.jds.reduce((a, b) => {
-                return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
+                return a + `<p><span class="j-copyText">${Tools.highLightStr(b.jd, highLightStr)}</span>${b.jd_nickname?`（<span class="cadetblue j-copyText">${Tools.highLightStr(b.jd_nickname, highLightStr)}</span>）`:''}</p>`;
             }, '')}` : ''}
                 </td>
                 <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>
@@ -1774,6 +1781,7 @@
                     <button class="search_btn reb j-gender-add-btn" style="margin-left:10px;">添加男女</button>
                     <input class="search_input j-ww-note-ipt" type="text" placeholder="旺旺备注" style="margin-left:10px;" />
                     <button class="search_btn j-ww-note-add" style="margin-left:10px;">添加旺旺备注</button>
+                    <button class="search_btn j-jd-nickname-add" style="margin-left:10px;">添加京东昵称</button>
                     <input class="search_input j-jd-ipt" type="text" placeholder="京东号" style="margin-left:10px;" />
                     <button class="search_btn j-jd-add" style="margin-left:10px;">添加京东号</button>
                     <button class="search_btn j-jd-del" style="margin-left:10px;">删除京东号</button>
@@ -1981,7 +1989,7 @@
             $ww.value = wws.join('，');
             $wx.value = Tools.findWxsByDatas(DATA[phone], false).join(',');
             $gNote.value = Tools.findRealNamesByDatas(DATA[phone]).join(',');
-            $jdIpt.value = Tools.findJdsByDatas(DATA[phone]).join(',');
+            $jdIpt.value = Tools.findJdsByDatas(DATA[phone]).map(a=>a.jd).join(',');
             $mobileIpt.value = '';
             $registerTime.value = '';
             $tangIdIpt.value = '';
@@ -2635,6 +2643,15 @@
             const result = Tools.delJd(account, ipt);
             if (result) alert('京东删除成功');
         }, '.j-jd-del')
+        // ww备注的添加
+        addEventListener(qqAdd, 'click', e => {
+            const jds = $jdIpt.value.split('，');
+            const jd = jds[jds.length-1];
+            const account = $phone.value;
+            const jd_nickname = $wwNoteIpt.value;
+            const result = Tools.addJdNickname(account, jd, jd_nickname);
+            if (result) alert(`${jd}昵称添加成功`);
+        }, '.j-jd-nickname-add')
         // 添加唐人id
         addEventListener(qqAdd, 'click', e => {
             const tang_id = $tangIdIpt.value;
