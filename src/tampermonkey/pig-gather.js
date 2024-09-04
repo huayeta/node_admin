@@ -163,7 +163,7 @@
         JD_datas: [
             {
                 label: 'jd处韵',
-                options: ['肛瘘1'],
+                options: ['肛瘘1','肛裂1'],
             }
         ],
         getShopOptionsHtml: (pig_type = 'TB') => {
@@ -812,14 +812,14 @@
             return Tools.delKeyValue(account, 'jd', jd);
         },
         // 添加京东昵称
-        addJdNickname:(account,jd,jd_nickname)=>{
-            return Tools.updataDataByAccount(account,{jd_nickname},(data)=>{
-                if(data.jd == jd)return 'break';
+        addJdNickname: (account, jd, jd_nickname) => {
+            return Tools.updataDataByAccount(account, { jd_nickname }, (data) => {
+                if (data.jd == jd) return 'break';
             })
         },
         // 找到所有的京东号
         findJdsByDatas: (datas) => {
-            return Tools.findKeysByDatas(datas, 'jd',undefined,true);
+            return Tools.findKeysByDatas(datas, 'jd', undefined, true);
         },
         // 添加旺旺号
         addWW: (pig_phone, ww_exec) => {
@@ -1330,7 +1330,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.jd,data.jd_nickname, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
+                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.jd, data.jd_nickname, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -1631,7 +1631,7 @@
                             </p>`;
             }, '')}
                     ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:gray">全部京东号：</p>${humanData.jds.reduce((a, b) => {
-                return a + `<p><span class="j-copyText">${Tools.highLightStr(b.jd, highLightStr)}</span>${b.jd_nickname?`（<span class="cadetblue j-copyText">${Tools.highLightStr(b.jd_nickname, highLightStr)}</span>）`:''}</p>`;
+                return a + `<p><span class="j-copyText">${Tools.highLightStr(b.jd, highLightStr)}</span>${b.jd_nickname ? `（<span class="cadetblue j-copyText">${Tools.highLightStr(b.jd_nickname, highLightStr)}</span>）` : ''}</p>`;
             }, '')}` : ''}
                 </td>
                 <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>
@@ -1670,8 +1670,8 @@
                                 <td>备注</td>
                                 ${ORDERTYPES.map(type => `<td style="color:red;">
                                         ${humanData.typeDatas[type].notes.reduce((a, b) => {
-                                            return a + `<p>${Tools.highLightStr(b, highLightStr)}</p>`;
-                                        }, '')}
+                return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
+            }, '')}
                                     </td>`).join('')}
                                 </td>
                             </tr>
@@ -1769,7 +1769,7 @@
                 <div class="search m-search j-order-search">
                     查询订单是否被抓：<input class="search_input order-id" placeholder="查询订单号" style="width:140px;" /> <button class="search_btn order-search
                     " style="margin: 0 10px;">查询</button>
-                    <input type="text" class="search_input j-modify-code-ipt" /><button class="search_btn j-modify-code-btn-get">获取源码</button>
+                    <textarea class="search_input j-modify-code-ipt" style="height:24px; margin-right:5px;"></textarea><button class="search_btn j-modify-code-btn-get">获取源码</button>
                     <button class="search_btn reb j-modify-code-btn" style="margin-left:10px;">修改源码</button>
                     <input class="search_input j-commission-ipt" type="text" placeholder="佣金" style="margin-left:10px; width:70px;" />
                     <button class="search_btn j-commission-add" style="margin-left:10px;">添加佣金比例</button>
@@ -1938,37 +1938,57 @@
                 $phone.value = `${fix}-${qq}`;
             }
         }, false)
+        // 把input textarea select恢复初始值
+        function restoreInitialValue(ele) {
+            const elements = Array.from(document.querySelectorAll('.search_input')).filter(element=>ele!=element);
+            elements.forEach(element => {
+                if (element && (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT')) {
+                    if (element.tagName === 'INPUT' && element.type === 'text') {
+                        element.value = element.defaultValue;
+                    } else if (element.tagName === 'TEXTAREA') {
+                        element.textContent = element.defaultValue;
+                    } else if (element.tagName === 'SELECT') {
+                        for (let i = 0; i < element.options.length; i++) {
+                            element.options[i].selected = element.options[i].defaultSelected;
+                        }
+                    }
+                }
+            });
+            // bug修复
+            $pigType.dispatchEvent(new Event('change'));
+        }
         // qq改变后填充phone和旺旺和wx和真实姓名
         $byQQ.addEventListener('input', Tools.throttle(e => {
             const qq = $byQQ.value;
             let phones = Tools.almightySearch([qq]);
             const come_type_default = Tools.findDefaultValueBySelect($comeType);
             const qq_exec_pre_default = Tools.findDefaultValueBySelect($qqExecPre);
+            restoreInitialValue($byQQ);
             if (phones.length == 0) {
-                $phone.value = '';
-                $ww.value = '';
-                $wx.value = '';
-                $gNote.value = '';
-                $jdIpt.value = '';
-                $comeType.value = come_type_default;
-                $qqExecPre.value = qq_exec_pre_default;
-                $mobileIpt.value = '';
-                $tangIdIpt.value = '';
-                $registerTime.value = '';
-                $modifyCodeIpt.value = '';
+                // $phone.value = '';
+                // $ww.value = '';
+                // $wx.value = '';
+                // $gNote.value = '';
+                // $jdIpt.value = '';
+                // $comeType.value = come_type_default;
+                // $qqExecPre.value = qq_exec_pre_default;
+                // $mobileIpt.value = '';
+                // $tangIdIpt.value = '';
+                // $registerTime.value = '';
+                // $modifyCodeIpt.value = '';
                 return;
             }
             if (phones.length > 1) {
-                $ww.value = '';
-                $wx.value = '';
-                $gNote.value = '';
-                $jdIpt.value = '';
-                $comeType.value = come_type_default;
-                $qqExecPre.value = qq_exec_pre_default;
-                $mobileIpt.value = '';
-                $tangIdIpt.value = '';
-                $registerTime.value = '';
-                $modifyCodeIpt.value = '';
+                // $ww.value = '';
+                // $wx.value = '';
+                // $gNote.value = '';
+                // $jdIpt.value = '';
+                // $comeType.value = come_type_default;
+                // $qqExecPre.value = qq_exec_pre_default;
+                // $mobileIpt.value = '';
+                // $tangIdIpt.value = '';
+                // $registerTime.value = '';
+                // $modifyCodeIpt.value = '';
                 // 判断是否有黑名单的出现
                 const accounts = phones.filter(account => {
                     const datas = DATA[account];
@@ -1989,13 +2009,13 @@
             $ww.value = wws.join('，');
             $wx.value = Tools.findWxsByDatas(DATA[phone], false).join(',');
             $gNote.value = Tools.findRealNamesByDatas(DATA[phone]).join(',');
-            $jdIpt.value = Tools.findJdsByDatas(DATA[phone]).map(a=>a.jd).join(',');
-            $mobileIpt.value = '';
-            $registerTime.value = '';
-            $tangIdIpt.value = '';
-            $modifyCodeIpt.value = '';
-            $comeType.value = come_type_default;
-            $qqExecPre.value = qq_exec_pre_default;
+            $jdIpt.value = Tools.findJdsByDatas(DATA[phone]).map(a => a.jd).join(',');
+            // $mobileIpt.value = '';
+            // $registerTime.value = '';
+            // $tangIdIpt.value = '';
+            // $modifyCodeIpt.value = '';
+            // $comeType.value = come_type_default;
+            // $qqExecPre.value = qq_exec_pre_default;
             // 得到最后一个记录的come-type,qq_exec_pre
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[phone], ['come_type', 'qq_exec_pre']);
             if (come_type) $comeType.value = come_type;
@@ -2646,7 +2666,7 @@
         // ww备注的添加
         addEventListener(qqAdd, 'click', e => {
             const jds = $jdIpt.value.split('，');
-            const jd = jds[jds.length-1];
+            const jd = jds[jds.length - 1];
             const account = $phone.value;
             const jd_nickname = $wwNoteIpt.value;
             const result = Tools.addJdNickname(account, jd, jd_nickname);
@@ -2927,7 +2947,7 @@
             const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
             $btn.textContent = '已去除';
             $btn.style.color = 'gray';
-            const exec = DATA[phone][0].wx?DATA[phone][0].wx:DATA[phone][0].pig_qq;
+            const exec = DATA[phone][0].wx ? DATA[phone][0].wx : DATA[phone][0].pig_qq;
             copyToClipboard(exec ? exec : mobile);
             switch (datas.type) {
                 case 'order_reminder':
