@@ -2037,7 +2037,6 @@ class HJ {
                     </span>
                 </span>
                 <span style="display:inline-block;height:200%;width:2px;background:green;position:absolute;bottom:0;left:${(zl - min) * dis_unit}px;">
-
                     <span style="position:absolute;top:0;left:50%;transform:translate(-50%, 80%);white-space: nowrap;">阻力线${zl}</span>
                 </span>
             </span>
@@ -2046,4 +2045,4 @@ class HJ {
     }
 }
 new HJ('.j-hj-gn', { codes: 'JO_9753', max: 581.23, min: 541.12, zl: 571, title: '国内黄金' });
-// new HJ('.j-hj-gj',{codes:'JO_92233',max:2508.49,min:2353,zl:2450,title:'国际黄金'});
+new HJ('.j-hj-gj',{codes:'JO_92233',max:2508.49,min:2353,zl:2450,title:'国际黄金'});
