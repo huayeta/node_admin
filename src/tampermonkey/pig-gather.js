@@ -536,14 +536,17 @@
             return true;
         },
         // 通过datas找到所有的keys=data[] | string[]
-        findKeysByDatas: (datas, key, otherJudge = () => true, is_complete = false) => {
+        findKeysByDatas: (datas, key, otherJudge = () => '1', is_complete = false) => {
             let arr = [];
             for (let i = 0; i < datas.length; i++) {
                 const data = datas[i];
                 const result = otherJudge(data, i);
+                // console.log(data,data[key],result,key);
                 if (data[key] && result) {
                     arr.push(is_complete ? data : data[key]);
-                    if (result === 'break') break;
+                    if (result === 'break') {
+                        break;
+                    }
                 }
             }
             // datas.forEach((data,index) => {
@@ -1153,7 +1156,7 @@
         },
         // 找到注册时间
         findRegisterTimeByDatas: (datas) => {
-            return Tools.findLastKeyValuesByDatas(datas, ['pig_register_time']).pig_register_time;
+            // return Tools.findLastKeyValuesByDatas(datas, ['pig_register_time']).pig_register_time;
             // let register_time = '';
             // for (let i = 0; i < datas.length; i++) {
             //     if (datas[i].pig_register_time) {
@@ -1162,19 +1165,17 @@
             //     }
             // }
             // return register_time;
-        },
-        // 获取注册时间
-        findRegisterTimeByTr: (tr) => {
-            // let register_time = '';
-            // if(!tr)return register_time;
-            // const result = tr.match(/!--\s+?<td>(.+?)<\/td>/);
-            // if(result){
-            //     const time = trim(result[1]);
-            //     if(Tools.isDateValid(time)){
-            //         register_time = time;
-            //     } 
-            // }
-            // return register_time;
+            const register_time = Tools.findKeysByDatas(datas,'pig_register_time', (data, i) => {
+                if (data.pig_register_time) {
+                    return 'break';
+                }
+            })[0]
+            const create_time_arr = Tools.findKeysByDatas(datas,'create_time');
+            // 找到create_time_arr最早的时间
+            const create_time = create_time_arr.sort((a, b) => {
+                return new Date(a) - new Date(b);
+            })[0];
+            return register_time?register_time:create_time;
         },
         // 判断是否是做单记录
         isRecord: (data) => {
@@ -1479,7 +1480,7 @@
         // 找到最近做单类型
         const last_recode = (datas[0] && datas[0].pig_type) ? datas[0].pig_type : '';
         // 找到注册时间
-        let register_time = Tools.findRegisterTimeByDatas(records);
+        let register_time = Tools.findRegisterTimeByDatas(datas);
         // 找到唐人注册时间
         const tang_register_time = Tools.findTangRegisterTime(datas);
         // 找到唐人id

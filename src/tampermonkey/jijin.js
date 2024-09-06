@@ -1794,7 +1794,6 @@ class Contextmenu {
             <style>
                 /* 样式化右键菜单 */
                 .context-menu {
-                    display: none;
                     position: absolute;
                     border: 1px solid #e7dfdf;
                     padding: 10px 0;
@@ -1822,7 +1821,7 @@ class Contextmenu {
                 }
             </style>
             <!-- 鼠标右键菜单 -->
-            <div class="context-menu" style="displqy:none;">
+            <div class="context-menu" style="display:none;">
                 <div class="name" style="text-align:center;border-bottom:1px solid #e7dfdf;padding:5px;font-size: 14px; color:gray;line-height:1.4;"></div>
                 ${Object.keys(EMOJIS).map(emoji => {
             return `<div class="context-menu-item" data-emoji="${emoji}">添加${EMOJIS[emoji].title.substr(0, 2)}${emoji}</div>`;
@@ -1873,6 +1872,7 @@ class Contextmenu {
         })
     }
     show(event) {
+        this.$menu.style.display = 'block';
         this.$name.innerHTML = `${this.Data.name}`;
         var x = event.clientX + window.scrollX;
         var y = event.clientY + window.scrollY;
@@ -1882,7 +1882,6 @@ class Contextmenu {
         y = Math.min(y, maxY);
         this.$menu.style.left = x + "px";
         this.$menu.style.top = y + "px";
-        this.$menu.style.display = 'block';
     }
     hide() {
         this.$menu.style.display = 'none';
