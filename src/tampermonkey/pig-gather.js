@@ -1785,7 +1785,8 @@
                     <button class="search_btn j-jd-nickname-add" style="margin-left:10px;">添加京东昵称</button>
                     <input class="search_input j-jd-ipt" type="text" placeholder="京东号" style="margin-left:10px;" />
                     <button class="search_btn j-jd-add" style="margin-left:10px;">添加京东号</button>
-                    <button class="search_btn j-jd-del" style="margin-left:10px;">删除京东号</button>
+                    <button class="search_btn j-jd-del" style="margin-left:10px; margin-right:5px;">删除京东号</button>
+                    8：<input class="search_input j-filter-ipt" type="text" placeholder="筛选排出的产品" />
                 </div>
                 <div class="btns">
                     <style>
@@ -1815,8 +1816,8 @@
                     <div class="m-findData search">
                         <button class="search_btn j-almightySearch" style="">qq|phone|ww|wx全能搜索</button>
                         <button class="search_btn reb j-reg-search" style="margin-left:10px;">正则realname|ww搜索</button>
-                        <button class="search_btn j-gatherQqs" style="">倒序筛选qq1235</button>
-                        <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq123</button>
+                        <button class="search_btn j-gatherQqs" style="">倒序筛选qq1238</button>
+                        <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq1238</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据346</button>
                         <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
                         <button class="search_btn download" style="">下载数据</button>
@@ -3031,6 +3032,13 @@
                 ) {
                     if ((is_screen == '1' && (notes.indexOf('被抓') == -1 || notes.indexOf('已换号') != -1)) || is_screen == '0') {
                         // console.log(humanData);
+                        const $filterIpt = document.querySelector('.j-filter-ipt');
+                        const filterVal = $filterIpt.value;
+                        if(filterVal && datas[0] && datas[0].shop_label && datas[0].shop_label.includes(filterVal)){
+                            return false;
+                        }else{
+                            return true;
+                        }
                         return true;
                     }
                 }

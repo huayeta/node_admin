@@ -4,7 +4,7 @@
 // @version      2024-08-28
 // @description  try to take over the world!
 // @author       You
-// @match        https://shop.jd.com/jdm/trade/order/orderList*
+// @match        https://shop.jd.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=jd.com
 // @grant        none
 // ==/UserScript==
