@@ -77,29 +77,30 @@ const Tools = {
         });
         $ele.dispatchEvent(event);
     },
-    getTime: () => {
-        return new Date().toLocaleString();
+    getTime: (format='yyyy/mm/dd hh:ii:ss', date=new Date().getTime()) => {
+        date = new Date(date);
+        let year = date.getFullYear();
+        let month = ("0" + (date.getMonth() + 1)).slice(-2);
+        let day = ("0" + date.getDate()).slice(-2);
+        let hours = ("0" + date.getHours()).slice(-2);
+        let minutes = ("0" + date.getMinutes()).slice(-2);
+        let seconds = ("0" + date.getSeconds()).slice(-2);
+
+        let formattedTime = format
+        .replace(/[|Y|y]+/g, year)
+        .replace(/[M|m]+/g, month)
+        .replace(/[D|d]+/g, day)
+        .replace(/[H|h]+/g, hours)
+        .replace(/[I|i]+/g, minutes)
+        .replace(/[S|s]+/g, seconds);
+
+        return formattedTime;
+        // return new Date().toLocaleString();
     },
     getNowDate: () => {
-        // Get current date
-        let currentDate = new Date();
-        // Get year, month, day, and time
-        let year = currentDate.getFullYear();
-        let month = currentDate.getMonth() + 1; // January is 0, so we add 1
-        let day = currentDate.getDate();
-        let hours = currentDate.getHours();
-        let minutes = currentDate.getMinutes();
-        let seconds = currentDate.getSeconds();
-
-        // Format month, day, hours, minutes, and seconds to always have two digits (e.g., 01, 02, ..., 09)
-        if (month < 10) month = '0' + month;
-        if (day < 10) day = '0' + day;
-        if (hours < 10) hours = '0' + hours;
-        if (minutes < 10) minutes = '0' + minutes;
-        if (seconds < 10) seconds = '0' + seconds;
         return {
-            start: `${year}-01-01`,
-            now: `${year}-${month}-${day}`,
+            start: Tools.getTime('yyyy-01-01'),
+            now: Tools.getTime('yyyy-mm-dd'),
         }
     },
     objectToQueryParams: (params) => {
@@ -241,30 +242,41 @@ const Tools = {
     },
     isSale: (code) => {
         const data = DATAS[code];
-        if (!data || !data.maxSaleTime || !CODES[code] || !CODES[code].buy_time) return '';
-        const { buy_time } = CODES[code];
-
-        const today = new Date();
-        const specificDate = new Date(buy_time);
-        // 判断购买时间是否是大于下午三点
-        const specific_hours = specificDate.getHours();
-        let step = +data.maxSaleTime;
-        if (specific_hours > 15) {
-            step++;
-        }
-        // 未来可以卖的三点
-        specificDate.setDate(specificDate.getDate() + step);
-        specificDate.setHours(15, 0, 0, 0);
-        if (new Date() > specificDate) {
-            return '<span class="gray">可以售出</span>';
-        } else {
-            today.setHours(15, 0, 0, 0);
-            let dayDiff = Math.floor((specificDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-            if ((new Date()).getHours() < 15) {
-                dayDiff--;
+        if (!data || !data.maxSaleTime || !CODES[code] || !CODES[code].buy_time) return [];
+        let { buy_time } = CODES[code];
+        if(!Array.isArray(buy_time))buy_time = [buy_time];
+        const arr=[];
+        buy_time.forEach(time=>{
+            const today = new Date();
+            const specificDate = new Date(time);
+            // 判断购买时间是否是大于下午三点
+            const specific_hours = specificDate.getHours();
+            let step = +data.maxSaleTime;
+            if (specific_hours > 15) {
+                step++;
             }
-            return `<span class="red">${dayDiff}天后15:00售出</span>`
-        }
+            // 未来可以卖的三点
+            specificDate.setDate(specificDate.getDate() + step);
+            specificDate.setHours(15, 0, 0, 0);
+            if (new Date() > specificDate) {
+                arr.push({
+                    time:time,
+                    str:'<span class="gray">可以售出</span>'
+                });
+            } else {
+                today.setHours(15, 0, 0, 0);
+                let dayDiff = Math.floor((specificDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+                if ((new Date()).getHours() < 15) {
+                    dayDiff--;
+                }
+                arr.push({
+                    time:time,
+                    str:`<span class="red">${dayDiff}天后15:00售出</span>`
+                });
+            }
+        })
+        // console.log(arr);
+        return arr;
     },
     updateDatasTable: () => {
         let codes = Object.values(DATAS);
@@ -744,6 +756,26 @@ const Tools = {
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
+    addBuyTime:(code)=>{
+        //设置买入时间
+        const time = Tools.getTime();
+        let buy_time = CODES[code]['buy_time'];
+        if(buy_time == undefined){
+            buy_time = [time];
+        }else{
+            if(!Array.isArray(buy_time))buy_time=[buy_time];
+            buy_time = [...buy_time,time];
+        }
+        Tools.setCustomCodes(code, { buy_time });
+    },
+    delBuyTime:(code,index)=>{
+        console.log(index)
+        // 删除index索引的值
+        const buy_time = CODES[code]['buy_time'];
+        buy_time.splice(index, 1);
+        console.log(buy_time);
+        Tools.setCustomCodes(code, { buy_time });
+    },
     setCode: (datas) => {
         DATAS[datas.code] = datas;
         // 排行
@@ -877,8 +909,14 @@ const Tools = {
                                                             <td>${data.customType ? data.customType : ''}</td>
                                                             <td>${data.maxSaleTime ? `${data.maxSaleTime}天免` : ''}</td>
                                                             <td>
-                                                                ${CODES[data.code] && CODES[data.code].buy_time ? `<p class="gray fs12">${CODES[data.code].buy_time}</p>` : ''}
-                                                                ${Tools.isSale(data.code)}
+                                                                ${Tools.isSale(data.code).map((sale,index)=>{
+                                                                    return `
+                                                                        <div data-index="${index}" class="j-del-buyTime">
+                                                                            <p class="gray fs12">${sale.time}</p>
+                                                                            ${sale.str}
+                                                                        </div>
+                                                                    `
+                                                                })}
                                                             </td>
                                                             <td>
                                                                 <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
@@ -1525,8 +1563,7 @@ addEventListener($table, 'change', e => {
         Tools.setCustomCodes(code, { heavy: '' })
     } else {
         //设置买入时间
-        const buy_time = Tools.getTime();
-        Tools.setCustomCodes(code, { buy_time });
+        Tools.addBuyTime(code);
     }
     Tools.setCustomCodes(code, { checked: checked ? 1 : 0 });
     Tools.updateDatasTable();
@@ -1787,7 +1824,16 @@ addEventListener($table, 'click', e => {
     }
     $text.setAttribute('data-copyed', '1');
 }, '.j-copyText')
-
+// 删除购物时间
+addEventListener($table, 'click', e => {
+    const $target = e.target.closest('.j-del-buyTime');
+    const index = $target.getAttribute('data-index');
+    const code = e.target.closest('[data-code]').getAttribute('data-code');
+    if(confirm(`确定删除（${DATAS[code].name}）的第${Number(index)+1}条定投记录吗`)){
+        Tools.delBuyTime(code, index);
+        Tools.updateDatasTable();
+    }
+}, '.j-del-buyTime')
 // 监听右键点击事件
 class Contextmenu {
     constructor() {
@@ -1832,6 +1878,7 @@ class Contextmenu {
                 <div class="context-menu-item">删除基金🔃</div>
                 <div class="context-menu-item">更新定投🔃</div>
                 <div class="context-menu-item">显示代码🔻</div>
+                <div class="context-menu-item">添购时间⏱</div>
                 <div class="br"></div>
                 <div class="context-menu-item">对比债权❇️</div>
                 <div class="context-menu-item">筛选债权✅</div>
@@ -1910,6 +1957,11 @@ class Contextmenu {
             if (confirm('确定删除吗？')) {
                 Tools.delCode(code);
             }
+            this.hide();
+        }
+        if (con.includes('添购时间')) {
+            Tools.addBuyTime(code);
+            Tools.updateDatasTable();
             this.hide();
         }
         if (con.includes('更新定投')) {
