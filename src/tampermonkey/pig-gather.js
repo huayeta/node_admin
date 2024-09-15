@@ -1183,16 +1183,18 @@
             return false;
         },
         // 汇总phone数据里面的店铺数据
-        findShopLabelsByDatas: (datas, switch_time, record_color) => {
+        findShopLabelsByDatas: (datas, switch_time=[], record_color) => {
             const results = [];
             datas.forEach((data, index) => {
                 // 添加已换号
-                if (switch_time) {
-                    // 3天误差
-                    if (new Date(new Date(switch_time).getTime() - 3 * 24 * 60 * 60 * 1000) > new Date(data.pig_over_time)) {
-                        results.unshift('<span style="color:red;">已换号</span>');
-                        switch_time = undefined;
-                    }
+                if (switch_time.length>0) {
+                    switch_time.forEach((time,index)=>{
+                        // 3天误差
+                        if (new Date(new Date(time).getTime() - 3 * 24 * 60 * 60 * 1000) > new Date(data.pig_over_time)) {
+                            results.unshift('<span style="color:red;">已换号</span>');
+                            switch_time.splice(index,1);
+                        }
+                    })
                 }
                 if (data.shop_label) {
                     const shopLabels = data.shop_label.split('-');
@@ -1507,10 +1509,10 @@
             // 记录颜色
             const record_color = records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '';
             // 切换时间
-            let switch_time;
+            let switch_time=[];
             notes.forEach(note => {
                 if (note.pig_note && note.pig_note.indexOf('已换号') !== -1) {
-                    switch_time = note.create_time;
+                    switch_time.push(note.create_time);
                 }
             })
             // 汇总店铺做单记录
@@ -1632,7 +1634,7 @@
                             </p>`;
             }, '')}
                     ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:gray">全部京东号：</p>${humanData.jds.reduce((a, b) => {
-                return a + `<p><span class="j-copyText">${Tools.highLightStr(b.jd, highLightStr)}</span>${b.jd_nickname ? `（<span class="cadetblue j-copyText">${Tools.highLightStr(b.jd_nickname, highLightStr)}</span>）` : ''}</p>`;
+                return a + `<p><span class="j-copyText">${Tools.highLightStr(b.jd, highLightStr)}</span>${b.jd_nickname ? `<br/>（<span class="cadetblue j-copyText">${Tools.highLightStr(b.jd_nickname, highLightStr)}</span>）` : ''}</p>`;
             }, '')}` : ''}
                 </td>
                 <td>${humanData.real_names.reduceRight((a, real_name) => a + `<p class="j-copyText">${real_name}${humanData.wx_names[real_name] ? `（<span style="color:gray;font-size:12px;">${humanData.wx_names[real_name]}</span>）` : ''}</p>`, '')}</td>

@@ -211,7 +211,7 @@ const Tools = {
                 if (b.position && +b.position.xx > 0) bb = +b.position.xx;
                 return sort > 0 ? (bb - aa) : (aa - bb);
             } else {
-                result = a[day] - b[day];
+                result = Number(a[day]) - Number(b[day]);
             }
             return sort == 1 ? result : -result;
         })
@@ -230,7 +230,9 @@ const Tools = {
     isDebt: (code) => {
         const data = DATAS[code];
         let is = 2;//债基
-        if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
+        if(data.Ftype.includes('固收')){
+            is = 2;//债基
+        }else if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
             is = 3; //QDII
         } else if (data.asset && (+data.asset.gp > 0.1 || +data.asset.jj > 0)) {
             is = 1;
