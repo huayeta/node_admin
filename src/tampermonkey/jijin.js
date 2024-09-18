@@ -77,7 +77,7 @@ const Tools = {
         });
         $ele.dispatchEvent(event);
     },
-    getTime: (format='yyyy/mm/dd hh:ii:ss', date=new Date().getTime()) => {
+    getTime: (format = 'yyyy/mm/dd hh:ii:ss', date = new Date().getTime()) => {
         date = new Date(date);
         let year = date.getFullYear();
         let month = ("0" + (date.getMonth() + 1)).slice(-2);
@@ -87,12 +87,12 @@ const Tools = {
         let seconds = ("0" + date.getSeconds()).slice(-2);
 
         let formattedTime = format
-        .replace(/[|Y|y]+/g, year)
-        .replace(/[M|m]+/g, month)
-        .replace(/[D|d]+/g, day)
-        .replace(/[H|h]+/g, hours)
-        .replace(/[I|i]+/g, minutes)
-        .replace(/[S|s]+/g, seconds);
+            .replace(/[|Y|y]+/g, year)
+            .replace(/[M|m]+/g, month)
+            .replace(/[D|d]+/g, day)
+            .replace(/[H|h]+/g, hours)
+            .replace(/[I|i]+/g, minutes)
+            .replace(/[S|s]+/g, seconds);
 
         return formattedTime;
         // return new Date().toLocaleString();
@@ -165,6 +165,7 @@ const Tools = {
     },
     setCustomCodes: (code, obj) => {
         if (Tools.alertFuc({ code, obj })) return false;
+        if (!DATAS[code]) return alert('code不存在');
         if (!CODES[code]) CODES[code] = {};
         Object.assign(CODES[code], obj);
         // console.log(obj,CODES[code],obj);
@@ -231,9 +232,9 @@ const Tools = {
     isDebt: (code) => {
         const data = DATAS[code];
         let is = 2;//债基
-        if(data.Ftype.includes('固收')){
+        if (data.Ftype.includes('固收')) {
             is = 2;//债基
-        }else if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
+        } else if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
             is = 3; //QDII
         } else if (data.asset && (+data.asset.gp > 0.1 || +data.asset.jj > 0)) {
             is = 1;
@@ -244,9 +245,9 @@ const Tools = {
         const data = DATAS[code];
         if (!data || !data.maxSaleTime || !CODES[code] || !CODES[code].buy_time) return [];
         let { buy_time } = CODES[code];
-        if(!Array.isArray(buy_time))buy_time = [buy_time];
-        const arr=[];
-        buy_time.forEach(time=>{
+        if (!Array.isArray(buy_time)) buy_time = [buy_time];
+        const arr = [];
+        buy_time.forEach(time => {
             const today = new Date();
             const specificDate = new Date(time);
             // 判断购买时间是否是大于下午三点
@@ -260,8 +261,8 @@ const Tools = {
             specificDate.setHours(15, 0, 0, 0);
             if (new Date() > specificDate) {
                 arr.push({
-                    time:time,
-                    str:'<span class="gray">可以售出</span>'
+                    time: time,
+                    str: '<span class="gray">可以售出</span>'
                 });
             } else {
                 today.setHours(15, 0, 0, 0);
@@ -270,8 +271,8 @@ const Tools = {
                     dayDiff--;
                 }
                 arr.push({
-                    time:time,
-                    str:`<span class="red">${dayDiff}天后15:00售出</span>`
+                    time: time,
+                    str: `<span class="red">${dayDiff}天后15:00售出</span>`
                 });
             }
         })
@@ -756,19 +757,21 @@ const Tools = {
         Tools.storageDatas();
         Tools.updateDatasTable();
     },
-    addBuyTime:(code)=>{
+    addBuyTime: (code, time) => {
+        if (!code || !DATAS[code]) return alert('code不对')
         //设置买入时间
-        const time = Tools.getTime();
+        time = time || Tools.getTime();
         let buy_time = CODES[code]['buy_time'];
-        if(buy_time == undefined){
+        if (!CODES[code]) CODES[code] = {};
+        if (buy_time == undefined) {
             buy_time = [time];
-        }else{
-            if(!Array.isArray(buy_time))buy_time=[buy_time];
-            buy_time = [...buy_time,time];
+        } else {
+            if (!Array.isArray(buy_time)) buy_time = [buy_time];
+            buy_time = [...buy_time, time];
         }
         Tools.setCustomCodes(code, { buy_time });
     },
-    delBuyTime:(code,index)=>{
+    delBuyTime: (code, index) => {
         console.log(index)
         // 删除index索引的值
         const buy_time = CODES[code]['buy_time'];
@@ -909,14 +912,14 @@ const Tools = {
                                                             <td>${data.customType ? data.customType : ''}</td>
                                                             <td>${data.maxSaleTime ? `${data.maxSaleTime}天免` : ''}</td>
                                                             <td>
-                                                                ${Tools.isSale(data.code).map((sale,index)=>{
-                                                                    return `
+                                                                ${Tools.isSale(data.code).map((sale, index) => {
+                                                        return `
                                                                         <div data-index="${index}" class="j-del-buyTime">
                                                                             <p class="gray fs12">${sale.time}</p>
                                                                             ${sale.str}
                                                                         </div>
                                                                     `
-                                                                })}
+                                                    }).join('<div class="br"></div>')}
                                                             </td>
                                                             <td>
                                                                 <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
@@ -1057,16 +1060,18 @@ const Tools = {
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
                     <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
                 </div>
-            </div>
-            <div class="m-search">
-                定投基金：<input class="search_input mr10" type="text" placeholder="" name="fcode" />
-                定投开始日：<input type="date" class="search_input mr10" name="dtStartDate" value="${Tools.getNowDate().start}" />
-                定投结束日：<input type="date" class="search_input mr10" name="dtEndDate" value="${Tools.getNowDate().now}" />
-                定投周期：每<input class="search_input" type="text" placeholder="" name="round" style="width:35px;" value="1" /><select class="mr10" name="roundType"><option value="1">周</option><!--<option value="2">月</option>--></select>
-                定投日：<select class="mr10" name="weekDtDay">${['星期一', '星期二', '星期三', '星期四', '星期五'].map((date, index) => `<option value="${index + 1}" ${index == 2 ? 'selected' : ''}>${date}</option>`)}</select>
-                每期定投金额：<input class="search_input mr10" type="text" placeholder="" name="dtAmount" value="200" />
-                <button class="search_btn reb j-fundDtCalculator">计算</button>
-                <span class="ml10 gray">移动止盈：设定目标收益率为<span class="red">20%</span>，止赢回撤比例为<span class="red">5%</span></span>
+                <div class="m-search">
+                    <input type="datetime-local" class="search_input mr10 j-buyTime-ipt" style="width:150px;" value="${Tools.getTime('yyyy-mm-dd hh:mm')}" />
+                    <button class="search_btn mr10 j-buyTime-btn">插入购买时间</button>
+                    定投基金：<input class="search_input mr10" type="text" placeholder="" name="fcode" />
+                    定投开始日：<input type="date" class="search_input mr10" name="dtStartDate" value="${Tools.getNowDate().start}" />
+                    定投结束日：<input type="date" class="search_input mr10" name="dtEndDate" value="${Tools.getNowDate().now}" />
+                    定投周期：每<input class="search_input" type="text" placeholder="" name="round" style="width:35px;" value="1" /><select class="mr10" name="roundType"><option value="1">周</option><!--<option value="2">月</option>--></select>
+                    定投日：<select class="mr10" name="weekDtDay">${['星期一', '星期二', '星期三', '星期四', '星期五'].map((date, index) => `<option value="${index + 1}" ${index == 2 ? 'selected' : ''}>${date}</option>`)}</select>
+                    每期定投金额：<input class="search_input mr10" type="text" placeholder="" name="dtAmount" value="200" />
+                    <button class="search_btn reb j-fundDtCalculator">计算</button>
+                    <span class="ml10 gray">移动止盈：设定目标收益率为<span class="red">20%</span>，止赢回撤比例为<span class="red">5%</span></span>
+                </div>
             </div>
             <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债券</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
             <div class="j-hj-gn"></div>
@@ -1829,11 +1834,18 @@ addEventListener($table, 'click', e => {
     const $target = e.target.closest('.j-del-buyTime');
     const index = $target.getAttribute('data-index');
     const code = e.target.closest('[data-code]').getAttribute('data-code');
-    if(confirm(`确定删除（${DATAS[code].name}）的第${Number(index)+1}条定投记录吗`)){
+    if (confirm(`确定删除（${DATAS[code].name}）的第${Number(index) + 1}条定投记录吗`)) {
         Tools.delBuyTime(code, index);
         Tools.updateDatasTable();
     }
 }, '.j-del-buyTime')
+// 添加购买时间
+addEventListener($form, 'click', e => {
+    const buy_time = Tools.getTime('yyyy-mm-dd hh:mm:ss', document.querySelector('.j-buyTime-ipt').value);
+    const code = $codeIpt.value;
+    Tools.addBuyTime(code, buy_time);
+    Tools.updateDatasTable();
+}, '.j-buyTime-btn')
 // 监听右键点击事件
 class Contextmenu {
     constructor() {
@@ -2034,7 +2046,11 @@ class HJ {
         this.zl = params.zl;
         this.title = params.title;
         this.getHj().then(() => {
-            this.startTimer();
+            // 判断是不是周末
+            let dayOfWeek = currentDate.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                this.startTimer();
+            }
             addEventListener(this.$ele, 'click', (e) => {
                 if (this.timer) {
                     this.clearTimer();
@@ -2059,7 +2075,7 @@ class HJ {
         this.updateHtml();
     }
     updateHtml() {
-        this.$ele.innerHTML = `${this.title} 现价：<span class="red" style="font-size:18px;">${this.data.xj}</span>，开盘价:${this.data.kp}，收盘价：${this.data.sp}，最高价：${this.data.zg}，最低价：${this.data.zd} ${new Date(this.data.time).toLocaleString()}<span class="red j-hj-btn" style="margin:0 10px;">暂停</span><div class="map"></div>`;
+        this.$ele.innerHTML = `${this.title} 现价：<span class="red" style="font-size:18px;">${this.data.xj}</span>，开盘价:${this.data.kp}，收盘价：${this.data.sp}，最高价：${this.data.zg}，最低价：${this.data.zd} ${new Date(this.data.time).toLocaleString()}<span class="red j-hj-btn" style="margin:0 10px;">${this.timer?'暂停':'开始'}</span><div class="map"></div>`;
         this.drawMap(this.$ele.querySelector('.map'));
     }
     startTimer() {
@@ -2097,5 +2113,5 @@ class HJ {
         `;
     }
 }
-new HJ('.j-hj-gn', { codes: 'JO_9753', max: 581.23, min: 541.12, zl: 571, title: '国内黄金' });
-new HJ('.j-hj-gj',{codes:'JO_92233',max:2508.49,min:2353,zl:2450,title:'国际黄金'});
+new HJ('.j-hj-gn', { codes: 'JO_9753', max: 584, min: 541.12, zl: 571, title: '国内黄金' });
+new HJ('.j-hj-gj', { codes: 'JO_92233', max: 2571, min: 2353, zl: 2450, title: '国际黄金' });

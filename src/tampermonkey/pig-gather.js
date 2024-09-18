@@ -1007,7 +1007,11 @@
         },
         // 给旺旺添加备注
         addWwNoteByAccount: (pig_phone, ww, note) => {
-            return Tools.updataDataByAccount(pig_phone, { note, note_create_time: Tools.getTime() }, (data, index) => {
+            const obj = {note, note_create_time: Tools.getTime()};
+            if(note.includes('被抓')){
+                obj.is_del = "1";
+            }
+            return Tools.updataDataByAccount(pig_phone, obj, (data, index) => {
                 if (data.ww_exec == ww) {
                     return 'break';
                 }
@@ -1299,7 +1303,7 @@
             for (let phone in DATA) {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    if (emptyStr(data.pig_qq, keyword) || emptyStr(data.pig_phone, keyword) || emptyStr(data.ww_exec, keyword) || emptyStr(data.wx, keyword) || emptyStr(data.wx_name, keyword) || emptyStr(data.mobile, keyword) || emptyStr(data.jd, keyword) || emptyStr(data.jd_nickname, keyword) || emptyStr(data.nickname ? data.nickname.replace('A97', '') : '', keyword) || emptyStr((data.real_name && data.real_name.includes('*')) ? '' : data.real_name, keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1)) {
+                    if (emptyStr(data.pig_qq, keyword) || emptyStr(data.pig_phone, keyword) || emptyStr(data.ww_exec, keyword) || emptyStr(data.wx, keyword) || emptyStr(data.wx_name, keyword) || emptyStr(data.mobile, keyword) || emptyStr(data.jd, keyword) || emptyStr(data.jd_nickname, keyword) || emptyStr(data.nickname ? data.nickname.replace('A97', '') : '', keyword) || emptyStr((data.real_name && data.real_name.includes('*')) ? '' : data.real_name, keyword) || (data.pig_note && data.pig_note.indexOf(keyword) != -1) || emptyStr(data.note, keyword)) {
                         if (!results.includes(phone)) results.push(phone);
                     }
                 })
@@ -1333,7 +1337,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.jd, data.jd_nickname, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
+                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.jd, data.jd_nickname, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name,data.note].forEach(str => {
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -1615,24 +1619,24 @@
                     ${humanData.nickname ? `<p style="color:gray;"><span>昵称：</span><span class="j-copyText">${humanData.nickname}</span></p>` : ''}
                 </td>
                 <td style="color: blueviolet;">
-                    ${humanData.qqs.reduce((a, b) => {
+                    ${humanData.qqs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部qq号：</p>${humanData.qqs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
-            }, '')}
-                ${humanData.wxs.length > 0 ? `<p style="margin-top:15px; color:red;">全部wx号：</p>${humanData.wxs.reduce((a, b) => {
+            }, '')}`:''}
+                ${humanData.wxs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部wx号：</p>${humanData.wxs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}` : ''}
-                ${humanData.mobiles.length > 0 ? `<p style="margin-top:15px; color:red;">全部mobiles号：</p>${humanData.mobiles.reduce((a, b) => {
+                ${humanData.mobiles.length > 0 ? `<p style="margin-top:15px; color:gray;">全部mobiles号：</p>${humanData.mobiles.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}` : ''}
                 </td>
                 <td style="color:red;">
-                    ${humanData.wws.reduce((a, b) => {
+                    ${humanData.wws.length > 0 ?`<p style="margin-top:15px; color:gray">全部旺旺号：</p>${humanData.wws.reduce((a, b) => {
                 return a + `<p class="${b.is_del == '1' ? 'del' : ''}">
                                 <span class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</span>
                                 ${b.gender != undefined ? `（<span class="blue">${b.gender == 1 ? '男' : '女'}</span>）` : ''}
                                 ${b.note ? `（<span class="cadetblue j-copyText">${b.note}</span>）` : ''}
                             </p>`;
-            }, '')}
+            }, '')}`:''}
                     ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:gray">全部京东号：</p>${humanData.jds.reduce((a, b) => {
                 return a + `<p><span class="j-copyText">${Tools.highLightStr(b.jd, highLightStr)}</span>${b.jd_nickname ? `<br/>（<span class="cadetblue j-copyText">${Tools.highLightStr(b.jd_nickname, highLightStr)}</span>）` : ''}</p>`;
             }, '')}` : ''}
@@ -1695,8 +1699,8 @@
             <tbody>
                 <tr>
                     <th>账号</th>
-                    <th>qq号和wx号</th>
-                    <th>旺旺号</th>
+                    <th>qq/wx/phone</th>
+                    <th>旺旺/京东</th>
                     <th>真实姓名（微信名字）</th>
                     <th>做单数据</th>
                     <th>注册时间</th>
@@ -2984,9 +2988,13 @@
         // 点击copy
         addEventListener($con, 'click', e => {
             const $text = e.target;
-            const text = $text.textContent;
+            let text = $text.textContent;
             $text.style.cursor = 'pointer';
             $text.title = '点击复制';
+            // 如果首位有（）去掉正则表达式
+            if(text){
+                text = text.replace(/^[\(|（]|[\)|）]$/g, '')
+            }
             copyToClipboard(text);
             const copyed = $text.getAttribute('data-copyed');
             if (copyed !== '1') {
