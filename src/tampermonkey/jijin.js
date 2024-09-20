@@ -1079,8 +1079,12 @@ const Tools = {
             <div class="g-table"></div>
             <div class="g-con"></div>
             <div style="margin-top:15px;" class="j-datas-add">
-                <textarea placeholder="复制进下载的数据" class="search_input"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
+                <textarea placeholder="复制进下载的数据" class="search_input" style="height:24px;"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
             </div>
+            <view-img src="/public/uploads/1.jpg" ></view-img>
+            <view-img src="/public/uploads/3.jpg" ></view-img>
+            <view-img src="/public/uploads/4.jpg" ></view-img>
+            <view-img src="/public/uploads/5.jpg" ></view-img>
         `;
         document.querySelector('.content').innerHTML = con;
         // 初始化收入
@@ -2045,19 +2049,19 @@ class HJ {
         this.min = params.min;
         this.zl = params.zl;
         this.title = params.title;
+        this.$hjBtn = this.$ele.querySelector('.j-hj-btn');
         this.getHj().then(() => {
             // 判断是不是周末
-            let dayOfWeek = currentDate.getDay();
+            let dayOfWeek = new Date().getDay();
             if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                this.getHj();
                 this.startTimer();
             }
             addEventListener(this.$ele, 'click', (e) => {
                 if (this.timer) {
                     this.clearTimer();
-                    e.target.innerHTML = '开始';
                 } else {
                     this.startTimer();
-                    e.target.innerHTML = '暂停';
                 }
             }, '.j-hj-btn')
         });
@@ -2081,6 +2085,7 @@ class HJ {
     startTimer() {
         this.timer = setInterval(() => {
             this.getHj();
+
         }, 6000);
     }
     clearTimer() {
@@ -2115,3 +2120,32 @@ class HJ {
 }
 new HJ('.j-hj-gn', { codes: 'JO_9753', max: 584, min: 541.12, zl: 571, title: '国内黄金' });
 new HJ('.j-hj-gj', { codes: 'JO_92233', max: 2571, min: 2353, zl: 2450, title: '国际黄金' });
+// 查看图片
+class ViewImg extends HTMLElement {
+    constructor() {
+        super();
+        const shadow = this.attachShadow({ mode: 'open' });
+        shadow.innerHTML = `
+            <style>
+                .img{
+                    width:150px;
+                }
+                .con{
+                    display:inline-block
+                }
+            </style>
+            <div class="con">
+                <!-- <div class="title" style="text-align:center;font-size:14px;">title</div>-->
+                <img class="img">
+            </div>
+        `;
+        this.$img = shadow.querySelector('.img');
+        this.$img.src = this.getAttribute('src');
+        
+        this.addEventListener('click',this.handleImageClick.bind(this))
+    }
+    handleImageClick(){
+        myAlert.show(`<img src="${this.$img.src}" style="width:400px;" />`)
+    }
+}
+customElements.define('view-img', ViewImg);

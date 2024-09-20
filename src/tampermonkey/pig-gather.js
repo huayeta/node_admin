@@ -163,7 +163,7 @@
         JD_datas: [
             {
                 label: 'jd处韵',
-                options: ['肛瘘1','肛裂1'],
+                options: ['肛瘘1','肛裂1','痔疮1'],
             }
         ],
         getShopOptionsHtml: (pig_type = 'TB') => {
@@ -1337,7 +1337,7 @@
             phones.forEach(phone => {
                 const datas = DATA[phone];
                 datas.forEach(data => {
-                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.jd, data.jd_nickname, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name,data.note].forEach(str => {
+                    [data.pig_qq, data.pig_phone, data.ww_exec, data.wx, data.wx_name, data.mobile, data.jd, data.jd_nickname, data.nickname ? data.nickname.replace('A97', '') : '', (data.real_name && data.real_name.includes('*')) ? '' : data.real_name].forEach(str => {
                         // console.log(str+'1111');
                         pushData(str);
                     })
@@ -1619,25 +1619,25 @@
                     ${humanData.nickname ? `<p style="color:gray;"><span>昵称：</span><span class="j-copyText">${humanData.nickname}</span></p>` : ''}
                 </td>
                 <td style="color: blueviolet;">
-                    ${humanData.qqs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部qq号：</p>${humanData.qqs.reduce((a, b) => {
+                    ${humanData.qqs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部qqs：</p>${humanData.qqs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}`:''}
-                ${humanData.wxs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部wx号：</p>${humanData.wxs.reduce((a, b) => {
+                ${humanData.wxs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部wxs：</p>${humanData.wxs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}` : ''}
-                ${humanData.mobiles.length > 0 ? `<p style="margin-top:15px; color:gray;">全部mobiles号：</p>${humanData.mobiles.reduce((a, b) => {
+                ${humanData.mobiles.length > 0 ? `<p style="margin-top:15px; color:gray;">全部mobiles：</p>${humanData.mobiles.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}` : ''}
                 </td>
                 <td style="color:red;">
-                    ${humanData.wws.length > 0 ?`<p style="margin-top:15px; color:gray">全部旺旺号：</p>${humanData.wws.reduce((a, b) => {
+                    ${humanData.wws.length > 0 ?`<p style="margin-top:15px; color:gray">全部wws：</p>${humanData.wws.reduce((a, b) => {
                 return a + `<p class="${b.is_del == '1' ? 'del' : ''}">
                                 <span class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</span>
                                 ${b.gender != undefined ? `（<span class="blue">${b.gender == 1 ? '男' : '女'}</span>）` : ''}
                                 ${b.note ? `（<span class="cadetblue j-copyText">${b.note}</span>）` : ''}
                             </p>`;
             }, '')}`:''}
-                    ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:gray">全部京东号：</p>${humanData.jds.reduce((a, b) => {
+                    ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:gray">全部jds：</p>${humanData.jds.reduce((a, b) => {
                 return a + `<p><span class="j-copyText">${Tools.highLightStr(b.jd, highLightStr)}</span>${b.jd_nickname ? `<br/>（<span class="cadetblue j-copyText">${Tools.highLightStr(b.jd_nickname, highLightStr)}</span>）` : ''}</p>`;
             }, '')}` : ''}
                 </td>
@@ -1870,7 +1870,7 @@
                         </table> -->
                     </div>
                     <div style="margin-top:15px;" class="j-datas-add">
-                        <textarea placeholder="复制进下载的数据" class="search_input"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
+                        <textarea placeholder="复制进下载的数据" class="search_input" style="height:24px;"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
                     </div>
                 </div>
             </div>
@@ -1947,8 +1947,8 @@
             }
         }, false)
         // 把input textarea select恢复初始值
-        function restoreInitialValue(ele) {
-            const elements = Array.from(document.querySelectorAll('.search_input')).filter(element=>ele!=element);
+        function restoreInitialValue(arrCss) {
+            const elements = Array.from(document.querySelectorAll('.search_input')).filter(element=>!arrCss.some(css=>element.matches(css)));
             elements.forEach(element => {
                 if (element && (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT')) {
                     if (element.tagName === 'INPUT' && element.type === 'text') {
@@ -1963,7 +1963,7 @@
                 }
             });
             // bug修复
-            $pigType.dispatchEvent(new Event('change'));
+            // $pigType.dispatchEvent(new Event('change'));
         }
         // qq改变后填充phone和旺旺和wx和真实姓名
         $byQQ.addEventListener('input', Tools.throttle(e => {
@@ -1971,7 +1971,7 @@
             let phones = Tools.almightySearch([qq]);
             const come_type_default = Tools.findDefaultValueBySelect($comeType);
             const qq_exec_pre_default = Tools.findDefaultValueBySelect($qqExecPre);
-            restoreInitialValue($byQQ);
+            restoreInitialValue(['.byqq','.j-filter-ipt','.j-pig-type','.j-shop-id']);
             if (phones.length == 0) {
                 // $phone.value = '';
                 // $ww.value = '';
@@ -2026,7 +2026,7 @@
             // $qqExecPre.value = qq_exec_pre_default;
             // 得到最后一个记录的come-type,qq_exec_pre
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[phone], ['come_type', 'qq_exec_pre']);
-            if (come_type) $comeType.value = come_type;
+            // if (come_type) $comeType.value = come_type;
             if (qq_exec_pre) $qqExecPre.value = qq_exec_pre;
 
             // const datas = findDatasByQq(qq);
@@ -3044,10 +3044,16 @@
                         // console.log(humanData);
                         const $filterIpt = document.querySelector('.j-filter-ipt');
                         const filterVal = $filterIpt.value;
-                        if(filterVal && datas[0] && datas[0].shop_label && datas[0].shop_label.includes(filterVal)){
-                            return false;
-                        }else{
-                            return true;
+                        if(filterVal){
+                            if(filterVal.split(',').some(element=>JSON.stringify(datas).includes(element))){
+                                return false;
+                            }
+                            // if(datas[0] && datas[0].shop_label && filterVal.split(',').some(ele=>datas[0].shop_label.includes(ele))){
+                            //     return false;
+                            // }
+                            // if(datas[1] && datas[1].shop_label && datas[1].pig_type != datas[0].pig_type && filterVal.split(',').some(ele=>datas[1].shop_label.includes(ele))){
+                            //     return false;
+                            // }
                         }
                         return true;
                     }
