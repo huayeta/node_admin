@@ -3,6 +3,27 @@
 // https://kouchao.github.io/TiantianFundApi/apis/ 所有api信息
 // 更新的话先 cd E:\work\TiantianFundApi-main 然后npm run start
 
+class CustomStorage {
+    constructor() {
+        this.storage = localStorage;
+    }
+
+    setItem(key, value) {
+        const compressedValue = LZString.compressToBase64(JSON.stringify(value));
+        this.storage.setItem(key, compressedValue);
+    }
+
+    getItem(key) {
+        const storedValue = this.storage.getItem(key);
+        if (storedValue) {
+            return JSON.parse(LZString.decompressFromBase64(storedValue));
+        }
+        return null;
+    }
+}
+const customStorage = new CustomStorage();
+// customStorage.setItem('jijin.datas1', JSON.parse(localStorage.getItem('jijin.datas')));
+
 // {code:...data}
 let DATAS = {};
 // {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME,position:持仓情况,lv:利率债小于等于,dtSly:定投收益率大于等于}
@@ -177,12 +198,12 @@ const Tools = {
                 income_sort: '',
             })
         }
-        localStorage.setItem('jijin.codes', JSON.stringify(CODES));
+        customStorage.setItem('jijin.codes', CODES);
         // Tools.updateDatasTable();
     },
     delCustomCodes: (code) => {
         delete CODES[code];
-        localStorage.setItem('jijin.codes', JSON.stringify(CODES));
+        customStorage.setItem('jijin.codes', CODES);
     },
     setCustomSort: (obj) => {
         if (Tools.alertFuc({ obj })) return false;
@@ -236,7 +257,8 @@ const Tools = {
             is = 2;//债基
         } else if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
             is = 3; //QDII
-        } else if (data.asset && (+data.asset.gp > 0.1 || +data.asset.jj > 0)) {
+        } else if (data.asset && (+data.asset.gp >10 || +data.asset.jj > 0)) {
+            // 股票占比大于10的
             is = 1;
         }
         return is;
@@ -287,9 +309,9 @@ const Tools = {
         Tools.setTable(Tools.getTable(codes));
     },
     storageDatas: () => {
-        localStorage.setItem('jijin.datas', JSON.stringify(DATAS));
+        customStorage.setItem('jijin.datas', DATAS);
         localStorage.setItem('jijin.sort', JSON.stringify(SORT));
-        localStorage.setItem('jijin.codes', JSON.stringify(CODES));
+        customStorage.setItem('jijin.codes', CODES);
     },
     // code:基金代码，name:基金名称，dayGrowth：日涨幅，lastWeekGrowth：周涨幅，lastMonthGrowth：月涨幅，lastThreeMonthsGrowth：三月涨幅，lastSixMonthsGrowth：六月涨幅，lastYearGrowth：年涨幅，netWorthDate：净值更新日期，expectWorthDate：净值估算更新日期
     fetch: async (action_name, params = {}) => {
@@ -303,7 +325,7 @@ const Tools = {
         const { SHORTNAME: name, FTYPE: Ftype } = (await Tools.fetch('fundMNDetailInformation', { 'FCODE': code })).Datas;
         // 获取基金涨幅
         const { Datas, Expansion: { TIME: netWorthDate } } = await Tools.fetch('fundMNPeriodIncrease', { 'FCODE': code });
-        const Data = { code, name, Ftype, netWorthDate, select_time: Tools.getTime() };
+        const Data = { code, name, Ftype, netWorthDate, update_time: Tools.getTime() };
         Datas.forEach(data => {
             switch (data.title) {
                 case 'Z':
@@ -761,7 +783,9 @@ const Tools = {
         if (!code || !DATAS[code]) return alert('code不对')
         //设置买入时间
         time = time || Tools.getTime();
-        let buy_time = CODES[code]['buy_time'];
+        // console.log(time,code)
+        if(!CODES[code])CODES[code] = {};
+        let buy_time = CODES[code]['time'];
         if (!CODES[code]) CODES[code] = {};
         if (buy_time == undefined) {
             buy_time = [time];
@@ -1012,9 +1036,9 @@ const Tools = {
     },
     initialization: () => {
 
-        DATAS = localStorage.getItem('jijin.datas') ? JSON.parse(localStorage.getItem('jijin.datas')) : {};
+        DATAS = customStorage.getItem('jijin.datas') || {};
         SORT = localStorage.getItem('jijin.sort') ? JSON.parse(localStorage.getItem('jijin.sort')) : {};
-        CODES = localStorage.getItem('jijin.codes') ? JSON.parse(localStorage.getItem('jijin.codes')) : {};
+        CODES = customStorage.getItem('jijin.codes') || {};
 
         const con = `
             <div class="g-form">
@@ -1085,6 +1109,7 @@ const Tools = {
             <view-img src="/public/uploads/3.jpg" ></view-img>
             <view-img src="/public/uploads/4.jpg" ></view-img>
             <view-img src="/public/uploads/5.jpg" ></view-img>
+            <view-img src="/public/uploads/6.jpg" ></view-img>
         `;
         document.querySelector('.content').innerHTML = con;
         // 初始化收入
@@ -1790,9 +1815,9 @@ const MDownload = (data, name) => {
 // MDownload([1],'2');
 const Download = () => {
     const data = {
-        'jijin.datas': JSON.parse(localStorage.getItem('jijin.datas')),
+        'jijin.datas': customStorage.getItem('jijin.datas'),
         'jijin.sort': JSON.parse(localStorage.getItem('jijin.sort')),
-        'jijin.codes': JSON.parse(localStorage.getItem('jijin.codes')),
+        'jijin.codes': customStorage.getItem('jijin.codes'),
     }
     MDownload([JSON.stringify(data)], '基金数据');
     // console.log(JSON.stringify(data));
@@ -2128,7 +2153,7 @@ class ViewImg extends HTMLElement {
         shadow.innerHTML = `
             <style>
                 .img{
-                    width:150px;
+                    max-width:150px;
                 }
                 .con{
                     display:inline-block

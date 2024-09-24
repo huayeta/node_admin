@@ -8,6 +8,26 @@
 // @match        http://www.mypig.com/home/member/fangdan.html
 // @grant        none
 // ==/UserScript==
+class CustomStorage {
+    constructor() {
+        this.storage = localStorage;
+    }
+
+    setItem(key, value) {
+        const compressedValue = LZString.compressToBase64(JSON.stringify(value));
+        this.storage.setItem(key, compressedValue);
+    }
+
+    getItem(key) {
+        const storedValue = this.storage.getItem(key);
+        if (storedValue) {
+            return JSON.parse(LZString.decompressFromBase64(storedValue));
+        }
+        return null;
+    }
+}
+const customStorage = new CustomStorage();
+
 
 (function () {
     'use strict';
@@ -32,9 +52,8 @@
     //     ]
     // }
     // 获取已完成小猪数据
-    const DATA = localStorage.getItem('completeOrders') ? JSON.parse(localStorage.getItem('completeOrders')) : {};
-    // 是否自定义
-    const is_custom = true;
+    const DATA = customStorage.getItem('completeOrders')|| {};
+
     const COMETYPE = [
         { name: '唐人', fix: '', value: 'tang' },
         { name: 'A97-欢乐购秒杀1群-有新人', fix: 'QQ', value: '626195966' },
@@ -142,7 +161,7 @@
     };
     const ORDERTYPES = ['TB', 'JD'];
     const storageData = () => {
-        localStorage.setItem('completeOrders', JSON.stringify(DATA));
+        customStorage.setItem('completeOrders', DATA);
     }
     // 店铺数据
     const LABELS = {
@@ -163,7 +182,7 @@
         JD_datas: [
             {
                 label: 'jd处韵',
-                options: ['肛瘘1','肛裂1','痔疮1'],
+                options: ['肛瘘1', '肛裂1', '痔疮1'],
             }
         ],
         getShopOptionsHtml: (pig_type = 'TB') => {
@@ -1007,8 +1026,8 @@
         },
         // 给旺旺添加备注
         addWwNoteByAccount: (pig_phone, ww, note) => {
-            const obj = {note, note_create_time: Tools.getTime()};
-            if(note.includes('被抓')){
+            const obj = { note, note_create_time: Tools.getTime() };
+            if (note.includes('被抓')) {
                 obj.is_del = "1";
             }
             return Tools.updataDataByAccount(pig_phone, obj, (data, index) => {
@@ -1169,17 +1188,17 @@
             //     }
             // }
             // return register_time;
-            const register_time = Tools.findKeysByDatas(datas,'pig_register_time', (data, i) => {
+            const register_time = Tools.findKeysByDatas(datas, 'pig_register_time', (data, i) => {
                 if (data.pig_register_time) {
                     return 'break';
                 }
             })[0]
-            const create_time_arr = Tools.findKeysByDatas(datas,'create_time');
+            const create_time_arr = Tools.findKeysByDatas(datas, 'create_time');
             // 找到create_time_arr最早的时间
             const create_time = create_time_arr.sort((a, b) => {
                 return new Date(a) - new Date(b);
             })[0];
-            return register_time?register_time:create_time;
+            return register_time ? register_time : create_time;
         },
         // 判断是否是做单记录
         isRecord: (data) => {
@@ -1187,16 +1206,16 @@
             return false;
         },
         // 汇总phone数据里面的店铺数据
-        findShopLabelsByDatas: (datas, switch_time=[], record_color) => {
+        findShopLabelsByDatas: (datas, switch_time = [], record_color) => {
             const results = [];
             datas.forEach((data, index) => {
                 // 添加已换号
-                if (switch_time.length>0) {
-                    switch_time.forEach((time,index)=>{
+                if (switch_time.length > 0) {
+                    switch_time.forEach((time, index) => {
                         // 3天误差
                         if (new Date(new Date(time).getTime() - 3 * 24 * 60 * 60 * 1000) > new Date(data.pig_over_time)) {
                             results.unshift('<span style="color:red;">已换号</span>');
-                            switch_time.splice(index,1);
+                            switch_time.splice(index, 1);
                         }
                     })
                 }
@@ -1410,7 +1429,7 @@
     }
     // 初始化数据
     Tools.formateWwFromData();
-    storageData();
+    // storageData();
 
     // const DATA = getData();
     // const DATA = {
@@ -1513,7 +1532,7 @@
             // 记录颜色
             const record_color = records.length > 0 && records[0].qq_exec_pre && QQS[records[0].qq_exec_pre].color || '';
             // 切换时间
-            let switch_time=[];
+            let switch_time = [];
             notes.forEach(note => {
                 if (note.pig_note && note.pig_note.indexOf('已换号') !== -1) {
                     switch_time.push(note.create_time);
@@ -1591,7 +1610,6 @@
         // const defBtns = [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }];
         records.forEach(datas => {
             let humanData = humanDatas(datas);
-            console.log(humanData);
             // console.log(humanData);
             let btnStr = '';
             if (typeof btn == 'string' && btn) {
@@ -1621,7 +1639,7 @@
                 <td style="color: blueviolet;">
                     ${humanData.qqs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部qqs：</p>${humanData.qqs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
-            }, '')}`:''}
+            }, '')}` : ''}
                 ${humanData.wxs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部wxs：</p>${humanData.wxs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}` : ''}
@@ -1630,13 +1648,13 @@
             }, '')}` : ''}
                 </td>
                 <td style="color:red;">
-                    ${humanData.wws.length > 0 ?`<p style="margin-top:15px; color:gray">全部wws：</p>${humanData.wws.reduce((a, b) => {
+                    ${humanData.wws.length > 0 ? `<p style="margin-top:15px; color:gray">全部wws：</p>${humanData.wws.reduce((a, b) => {
                 return a + `<p class="${b.is_del == '1' ? 'del' : ''}">
                                 <span class="j-copyText">${Tools.highLightStr(b.ww_exec, highLightStr)}</span>
                                 ${b.gender != undefined ? `（<span class="blue">${b.gender == 1 ? '男' : '女'}</span>）` : ''}
                                 ${b.note ? `（<span class="cadetblue j-copyText">${b.note}</span>）` : ''}
                             </p>`;
-            }, '')}`:''}
+            }, '')}` : ''}
                     ${humanData.jds.length > 0 ? `<p style="margin-top:15px; color:gray">全部jds：</p>${humanData.jds.reduce((a, b) => {
                 return a + `<p><span class="j-copyText">${Tools.highLightStr(b.jd, highLightStr)}</span>${b.jd_nickname ? `<br/>（<span class="cadetblue j-copyText">${Tools.highLightStr(b.jd_nickname, highLightStr)}</span>）` : ''}</p>`;
             }, '')}` : ''}
@@ -1948,7 +1966,7 @@
         }, false)
         // 把input textarea select恢复初始值
         function restoreInitialValue(arrCss) {
-            const elements = Array.from(document.querySelectorAll('.search_input')).filter(element=>!arrCss.some(css=>element.matches(css)));
+            const elements = Array.from(document.querySelectorAll('.search_input')).filter(element => !arrCss.some(css => element.matches(css)));
             elements.forEach(element => {
                 if (element && (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT')) {
                     if (element.tagName === 'INPUT' && element.type === 'text') {
@@ -1971,7 +1989,7 @@
             let phones = Tools.almightySearch([qq]);
             const come_type_default = Tools.findDefaultValueBySelect($comeType);
             const qq_exec_pre_default = Tools.findDefaultValueBySelect($qqExecPre);
-            restoreInitialValue(['.byqq','.j-filter-ipt','.j-pig-type','.j-shop-id']);
+            restoreInitialValue(['.byqq', '.j-filter-ipt', '.j-pig-type', '.j-shop-id']);
             if (phones.length == 0) {
                 // $phone.value = '';
                 // $ww.value = '';
@@ -2992,8 +3010,13 @@
             $text.style.cursor = 'pointer';
             $text.title = '点击复制';
             // 如果首位有（）去掉正则表达式
-            if(text){
+            if (text) {
                 text = text.replace(/^[\(|（]|[\)|）]$/g, '')
+                let regex = /^(.*?)(?:占位符)?$/;
+                let match = text.match(regex);
+                if (match && match[1]) {
+                    text = match[1];
+                }
             }
             copyToClipboard(text);
             const copyed = $text.getAttribute('data-copyed');
@@ -3044,8 +3067,8 @@
                         // console.log(humanData);
                         const $filterIpt = document.querySelector('.j-filter-ipt');
                         const filterVal = $filterIpt.value;
-                        if(filterVal){
-                            if(filterVal.split(',').some(element=>JSON.stringify(datas).includes(element))){
+                        if (filterVal) {
+                            if (filterVal.split(',').some(element => JSON.stringify(datas).includes(element))) {
                                 return false;
                             }
                             // if(datas[0] && datas[0].shop_label && filterVal.split(',').some(ele=>datas[0].shop_label.includes(ele))){
