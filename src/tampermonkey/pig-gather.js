@@ -52,7 +52,7 @@ const customStorage = new CustomStorage();
     //     ]
     // }
     // 获取已完成小猪数据
-    const DATA = customStorage.getItem('completeOrders')|| {};
+    const DATA = customStorage.getItem('completeOrders') || {};
 
     const COMETYPE = [
         { name: '唐人', fix: '', value: 'tang' },
@@ -160,7 +160,7 @@ const customStorage = new CustomStorage();
         }
     };
     const ORDERTYPES = ['TB', 'JD'];
-    const storageData = () => {
+    const storageData = async () => {
         customStorage.setItem('completeOrders', DATA);
     }
     // 店铺数据
@@ -344,6 +344,13 @@ const customStorage = new CustomStorage();
                     }, remainingTime);
                 }
             };
+        },
+        dispatchEvent: ($ele, type) => {
+            const event = new Event(type, {
+                bubbles: true,
+                cancelable: true,
+            });
+            $ele.dispatchEvent(event);
         },
         getTime: () => {
             return new Date().toLocaleString();
@@ -575,6 +582,20 @@ const customStorage = new CustomStorage();
             // })
             // 去重
             return arr = [...new Set(arr)];
+        },
+        // 通过keyvalue找到所有data
+        findDataBykeyVlueByDatas: (datas, keyvalues = {}) => {
+            let arr = [];
+            datas.forEach(data => {
+                let is = true;
+                Object.keys(keyvalues).forEach(key => {
+                    if (data[key]!=keyvalues[key]) is = false;
+                })
+                if (is) {
+                    arr.push(data);
+                }
+            })
+            return arr;
         },
         // 展示数据
         displayAccounts: (accounts, code = true, sort = true, btns = false, max = 5, highLightStr) => {
@@ -1428,7 +1449,7 @@ const customStorage = new CustomStorage();
         }
     }
     // 初始化数据
-    Tools.formateWwFromData();
+    // Tools.formateWwFromData();
     // storageData();
 
     // const DATA = getData();
@@ -1629,7 +1650,7 @@ const customStorage = new CustomStorage();
             <tr data-account="${humanData.phone}" data-mobile="${humanData.mobiles[0]}">
                 <td>
                     ${humanData.commission ? `<p style="color:darkturquoise;font-size:25px;">+${humanData.commission}，jd+6</p>` : ''}
-                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join('，')}</span>` : ''}
+                    <p>${humanData.remind_texts.length > 0 ? `<span style="display:block;color:red;font-size:30px;">${humanData.remind_texts.join(',')}</span>` : ''}
                     <span class="j-phone j-copyText">${Tools.highLightStr(humanData.phone, highLightStr)}</span>${btnStr}</p>
                     ${humanData.diffPhones.length > 0 ? ('<p style="color:red;">有不同的账号：' + JSON.stringify(humanData.diffPhones) + '</p>') : ''}
                     ${humanData.tang_id > 0 ? `<p style="margin-top:15px;"><span style="color:blueviolet;">唐人id：</span><span class="j-copyText">${humanData.tang_id}</span></p>` : ''}
@@ -1784,8 +1805,8 @@ const customStorage = new CustomStorage();
                     <input class="search_input j-mobile-input" type="text" placeholder="不同mobile" />
                     <button class="search_btn j-mobile-add" data-key="wx" style="margin-left:10px">添加mobile</button>
                     <button class="search_btn red j-mobile-del" data-key="wx" style="margin-left:10px;">删除mobile</button>
-                    <input class="search_input j-ww-exec" placeholder="旺旺号" style="margin-left:10px;" /> <button class="search_btn j-ww-add
-                    " style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red j-ww-del">删除旺旺号</button>
+                    <input class="search_input j-ww-exec" placeholder="旺旺号" style="margin-left:10px;" />
+                    <button class="search_btn j-ww-add" style="margin: 0 10px;">添加旺旺号</button><button class="search_btn red j-ww-del">删除旺旺号</button>
                     <button class="search_btn j-ww-add-back-second" style="margin-left:10px;">前面添加旺旺号</button>
                     <input class="search_input j-tang-id" type="text" placeholder="唐人id" style="margin-left:10px;width:80px;" />
                     <button class="search_btn j-tang-id-add" style="margin-left:10px;">添加唐人id</button>
@@ -2032,7 +2053,8 @@ const customStorage = new CustomStorage();
             const phone = phones[0];
             $phone.value = phone;
             const wws = Tools.findWwsByPhones([phone]);
-            $ww.value = wws.join('，');
+            $ww.value = wws.join(',');
+            Tools.dispatchEvent($ww,'input')
             $wx.value = Tools.findWxsByDatas(DATA[phone], false).join(',');
             $gNote.value = Tools.findRealNamesByDatas(DATA[phone]).join(',');
             $jdIpt.value = Tools.findJdsByDatas(DATA[phone]).map(a => a.jd).join(',');
@@ -2054,7 +2076,7 @@ const customStorage = new CustomStorage();
             //         const phone = datas[0][0].pig_phone;
             //         $phone.value = phone;
             //         const wwExecs = findWWExecs(DATA[phone]);
-            //         $ww.value = wwExecs.join('，');
+            //         $ww.value = wwExecs.join(',');
             //     } else {
             //         $phone.value = '有多个账号';
             //     }
@@ -2071,15 +2093,18 @@ const customStorage = new CustomStorage();
         // 旺旺号变化之后的反应
         $ww.addEventListener('input', Tools.throttle(e => {
             const wwExec = e.target.value;
+            // console.log(wwExec)
             if (wwExec) {
-                const phoneArr = Tools.almightySearch([wwExec]);
-                // console.log(phoneArr);
-                if (phoneArr.length > 0 && !$phone.value) {
-                    $phone.value = phoneArr.join(',');
-                    // setCon(['']);
-                } else {
-                    // setCon(['没有找到phone']);
-                }
+                const code = $phone.value;
+                if(!DATA[code])return;
+                const ww_arr = wwExec.split(',');
+                const ww = ww_arr[ww_arr.length-1];
+                // console.log(ww);
+                const datas = Tools.findDataBykeyVlueByDatas(DATA[code],{ww_exec:ww});
+                if(datas.length==0)return;
+                // console.log(datas);
+                const note = datas[0].note;
+                $wwNoteIpt.value = note;
             }
         }, 1000), false)
         // 当点击手机后填充
@@ -2091,10 +2116,10 @@ const customStorage = new CustomStorage();
             if (come_type) $comeType.value = come_type;
             if (qq_exec_pre) $qqExecPre.value = qq_exec_pre;
             const wws = Tools.findWwsByPhones([account]);
-            $ww.value = wws.join('，');
+            $ww.value = wws.join(',');
             const wxs = Tools.findWxsByDatas(DATA[account]);
             // console.log(wxs);
-            $wx.value = wxs.join('，');
+            $wx.value = wxs.join(',');
         }, '.j-phone')
         // 查询订单是否违规
         qqAdd.querySelector('.j-order-search .order-search').addEventListener('click', e => {
@@ -2590,7 +2615,7 @@ const customStorage = new CustomStorage();
             } else {
                 orderConArr.push('没查询到;');
             }
-            // orderCon.innerHTML = orderConArr.join('，');
+            // orderCon.innerHTML = orderConArr.join(',');
             setCon(orderConArr);
         }, false)
         // 待处理
@@ -2650,7 +2675,7 @@ const customStorage = new CustomStorage();
         }, '.j-teamer-add-btn')
         // ww性别的添加
         addEventListener(qqAdd, 'click', e => {
-            const wws = $ww.value.split('，');
+            const wws = $ww.value.split(',');
             const ww = wws[wws.length - 1];
             const account = $phone.value;
             const gender = $genderIpt.value;
@@ -2660,7 +2685,7 @@ const customStorage = new CustomStorage();
         }, '.j-gender-add-btn')
         // ww备注的添加
         addEventListener(qqAdd, 'click', e => {
-            const wws = $ww.value.split('，');
+            const wws = $ww.value.split(',');
             const ww = wws[wws.length - 1];
             const account = $phone.value;
             const note = $wwNoteIpt.value;
@@ -2691,7 +2716,7 @@ const customStorage = new CustomStorage();
         }, '.j-jd-del')
         // ww备注的添加
         addEventListener(qqAdd, 'click', e => {
-            const jds = $jdIpt.value.split('，');
+            const jds = $jdIpt.value.split(',');
             const jd = jds[jds.length - 1];
             const account = $phone.value;
             const jd_nickname = $wwNoteIpt.value;
@@ -3011,8 +3036,8 @@ const customStorage = new CustomStorage();
             $text.title = '点击复制';
             // 如果首位有（）去掉正则表达式
             if (text) {
-                text = text.replace(/^[\(|（]|[\)|）]$/g, '')
-                let regex = /^(.*?)(?:占位符)?$/;
+                text = text.replace(/^[\(|\（](.*)[\)|\）]$/, '$1')
+                let regex = /^(?:A97)?(.*?)(?:占位符)?$/;
                 let match = text.match(regex);
                 if (match && match[1]) {
                     text = match[1];
