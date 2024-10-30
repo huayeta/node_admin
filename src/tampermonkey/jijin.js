@@ -257,7 +257,7 @@ const Tools = {
             is = 2;//债基
         } else if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
             is = 3; //QDII
-        } else if (data.asset && (+data.asset.gp > 10 || +data.asset.jj > 0)) {
+        } else if (data.asset && (+data.asset.gp > 0 || +data.asset.jj > 0)) {
             // 股票占比大于10的
             is = 1;
         }
@@ -1138,6 +1138,7 @@ const Tools = {
                 </div>
             </div>
             <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债券</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
+            <audio src="/public/uploads/1.mp3" controls="controls" class="audio" loop="true" style="display:none;"></audio>
             <div class="j-hj-gn"></div>
             <div class="j-hj-gj"></div>
             <div class="g-table"></div>
@@ -1145,7 +1146,7 @@ const Tools = {
             <div style="margin-top:15px;" class="j-datas-add">
                 <textarea placeholder="复制进下载的数据" class="search_input" style="height:24px;"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
             </div>
-            ${[1, 3, 4, 5, 6, 7, 8].map(name => {
+            ${['大佬-1', '大佬-2','大佬-3', 1, 3, 5, 6, 7, 8].map(name => {
             return `<view-img src="/public/uploads/${name}.jpg" ></view-img>`
         }).join('')}
         `;
@@ -1300,6 +1301,7 @@ const $table = $Content.querySelector('.g-table');
 const $codeIpt = $form.querySelector('.j-code-ipt');
 const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
 const $codeCredit = $form.querySelector('.j-code-credit-ipt');
+const $audio = $Content.querySelector('.audio');
 
 const compareCodes = function (codes) {
     let str = '';
@@ -1344,7 +1346,7 @@ const compareCodes = function (codes) {
             const code = e.target.getAttribute('data-code');
             pageIndex++;
             const history = await Tools.fundMNHisNetList(code, pageIndex);
-            if(history.length==0)return e.target.remove();
+            if (history.length == 0) return e.target.remove();
             const $trs = getJZZL(history).join('');
             const $tbody2 = document.createElement('tbody');
             $tbody2.innerHTML = $trs;
@@ -1929,7 +1931,7 @@ addEventListener($table, 'click', e => {
     const $target = e.target.closest('.j-del-buyTime');
     const index = $target.getAttribute('data-index');
     const code = e.target.closest('[data-code]').getAttribute('data-code');
-    if (confirm(`确定删除（${DATAS[code].name}）的第${Number(index) + 1}条定投记录吗`)) {
+    if (confirm(`确定删除（${DATAS[code].name}）的第${Number(index) + 1}条购买记录吗`)) {
         Tools.delBuyTime(code, index);
         Tools.updateDatasTable();
     }
@@ -2140,22 +2142,31 @@ class HJ {
         this.min = params.min;
         this.zl = params.zl;
         this.title = params.title;
-        this.$hjBtn = this.$ele.querySelector('.j-hj-btn');
-        this.getHj().then(() => {
-            // 判断是不是周末
-            let dayOfWeek = new Date().getDay();
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                this.getHj();
+        this.jk_price = params.jk_price;
+        this.jker = false;
+        // 判断是不是周末
+        let dayOfWeek = new Date().getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            this.getHj().then(() => {
+                this.startTimer();
+            });
+        }
+        addEventListener(this.$ele, 'click', (e) => {
+            if (this.timer) {
+                this.clearTimer();
+            } else {
                 this.startTimer();
             }
-            addEventListener(this.$ele, 'click', (e) => {
-                if (this.timer) {
-                    this.clearTimer();
-                } else {
-                    this.startTimer();
-                }
-            }, '.j-hj-btn')
-        });
+        }, '.j-hj-btn')
+        if(this.jk_price)this.jker = true;
+        addEventListener(this.$ele, 'click', (e) => {
+            if (this.jker) {
+                this.closeJkAudio();
+            } else {
+                this.jker = true;
+            }
+            this.updateHtml();
+        }, '.j-jk-btn')
     }
     async getHj() {
         const res = await Tools.fetch('hj', { codes: this.codes });
@@ -2167,21 +2178,41 @@ class HJ {
             xj: res.q63,//现价
             time: res.time
         }
+        // 如果现价大于监控价报警
+        if(this.jker && this.data.xj<=this.jk_price){
+            this.startJkAutio();
+        }
         this.updateHtml();
     }
     updateHtml() {
-        this.$ele.innerHTML = `${this.title} 现价：<span class="red" style="font-size:18px;">${this.data.xj}</span>，开盘价:${this.data.kp}，收盘价：${this.data.sp}，最高价：${this.data.zg}，最低价：${this.data.zd} ${new Date(this.data.time).toLocaleString()}<span class="red j-hj-btn" style="margin:0 10px;">${this.timer ? '暂停' : '开始'}</span><div class="map"></div>`;
+        this.$ele.innerHTML = `${this.title} 
+        现价：<span class="red" style="font-size:18px;">${this.data.xj}</span>，
+        开盘价:${this.data.kp}，收盘价：${this.data.sp}，最高价：${this.data.zg}，最低价：${this.data.zd} ${new Date(this.data.time).toLocaleString()}
+        <span class="red j-hj-btn" style="margin:0 10px;">${this.timer ? '暂停' : '开始'}</span>
+        ${this.jk_price?`<span class="red j-jk-btn" style="margin-right:10px;">${this.jker ? `被监控${this.jk_price}` : `监控${this.jk_price}`}</span>`:''}
+        <div class="map"></div>`;
         this.drawMap(this.$ele.querySelector('.map'));
     }
     startTimer() {
+        this.$ele.querySelector('.j-hj-btn').innerHTML = '暂停';
         this.timer = setInterval(() => {
             this.getHj();
 
         }, 6000);
     }
     clearTimer() {
+        this.$ele.querySelector('.j-hj-btn').innerHTML = '开始';
         clearInterval(this.timer);
         this.timer = null;
+    }
+    startJkAutio() {
+        this.jker = true;
+        $audio.play();
+    }
+    closeJkAudio() {
+        this.jker = false;
+        $audio.pause();
+        // this.$ele.querySelector('.j-jk-btn').innerHTML = '监控';
     }
     drawMap($map) {
         const max = this.max;
@@ -2209,7 +2240,7 @@ class HJ {
         `;
     }
 }
-new HJ('.j-hj-gn', { codes: 'JO_9753', max: 584, min: 541.12, zl: 571, title: '国内黄金' });
+new HJ('.j-hj-gn', { codes: 'JO_9753', max: 584, min: 541.12, zl: 571, title: '国内黄金',jk_price:633 });
 new HJ('.j-hj-gj', { codes: 'JO_92233', max: 2571, min: 2353, zl: 2450, title: '国际黄金' });
 // 查看图片
 class ViewImg extends HTMLElement {

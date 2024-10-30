@@ -2094,6 +2094,7 @@ const customStorage = new CustomStorage();
         $ww.addEventListener('input', Tools.throttle(e => {
             const wwExec = e.target.value;
             // console.log(wwExec)
+            $wwNoteIpt.value = '';
             if (wwExec) {
                 const code = $phone.value;
                 if(!DATA[code])return;
@@ -2104,6 +2105,7 @@ const customStorage = new CustomStorage();
                 if(datas.length==0)return;
                 // console.log(datas);
                 const note = datas[0].note;
+                if(!note)return;
                 $wwNoteIpt.value = note;
             }
         }, 1000), false)
