@@ -2142,7 +2142,8 @@ class HJ {
         this.min = params.min;
         this.zl = params.zl;
         this.title = params.title;
-        this.jk_price = params.jk_price;
+        this.jk_min_price = params.jk_min_price;
+        this.jk_max_price = params.jk_max_price;
         this.jker = false;
         // 判断是不是周末
         let dayOfWeek = new Date().getDay();
@@ -2158,9 +2159,10 @@ class HJ {
                 this.startTimer();
             }
         }, '.j-hj-btn')
-        if(this.jk_price)this.jker = true;
+        if(this.jk_min_price || this.jk_max_price)this.jker = true;
         addEventListener(this.$ele, 'click', (e) => {
             if (this.jker) {
+                this.jker = false;
                 this.closeJkAudio();
             } else {
                 this.jker = true;
@@ -2179,8 +2181,12 @@ class HJ {
             time: res.time
         }
         // 如果现价大于监控价报警
-        if(this.jker && this.data.xj<=this.jk_price){
-            this.startJkAutio();
+        if(this.jker){
+            if(this.data.xj<=this.jk_min_price || this.data.xj>=this.jk_max_price){
+                this.startJkAutio();
+            }else{
+                this.closeJkAudio();
+            }      
         }
         this.updateHtml();
     }
@@ -2189,7 +2195,7 @@ class HJ {
         现价：<span class="red" style="font-size:18px;">${this.data.xj}</span>，
         开盘价:${this.data.kp}，收盘价：${this.data.sp}，最高价：${this.data.zg}，最低价：${this.data.zd} ${new Date(this.data.time).toLocaleString()}
         <span class="red j-hj-btn" style="margin:0 10px;">${this.timer ? '暂停' : '开始'}</span>
-        ${this.jk_price?`<span class="red j-jk-btn" style="margin-right:10px;">${this.jker ? `被监控${this.jk_price}` : `监控${this.jk_price}`}</span>`:''}
+        ${(this.jk_min_price || this.jk_max_price)?`<span class="red j-jk-btn" style="margin-right:10px;">${this.jker ? `被监控` : `监控`}（<span class="blue">${this.jk_min_price}</span>/<span class="blue">${this.jk_max_price}</span>）</span>`:''}
         <div class="map"></div>`;
         this.drawMap(this.$ele.querySelector('.map'));
     }
@@ -2206,13 +2212,10 @@ class HJ {
         this.timer = null;
     }
     startJkAutio() {
-        this.jker = true;
         $audio.play();
     }
     closeJkAudio() {
-        this.jker = false;
         $audio.pause();
-        // this.$ele.querySelector('.j-jk-btn').innerHTML = '监控';
     }
     drawMap($map) {
         const max = this.max;
@@ -2240,7 +2243,7 @@ class HJ {
         `;
     }
 }
-new HJ('.j-hj-gn', { codes: 'JO_9753', max: 584, min: 541.12, zl: 571, title: '国内黄金',jk_price:633 });
+new HJ('.j-hj-gn', { codes: 'JO_9753', max: 584, min: 541.12, zl: 571, title: '国内黄金',jk_min_price:624,jk_max_price:637 });
 new HJ('.j-hj-gj', { codes: 'JO_92233', max: 2571, min: 2353, zl: 2450, title: '国际黄金' });
 // 查看图片
 class ViewImg extends HTMLElement {
