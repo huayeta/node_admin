@@ -78,12 +78,15 @@ const downloadDocx = (TITLE, type = 1, Data = { day: 30 }) => {
                     docp2.addText(`第${index + 1}天：`, {
                         font_size: 14,
                     });
-                    docp2.addText(`学习内容：____________________________________________；`, {
+                    docp2.addText(`学习内容：_______________；`, {
                         font_size: 14
                     });
-                    if (data.length > 1) docx.createP().addText(`${index + 1 >= 10 ? ' ' : ''}                 复习内容：${flatten(data.slice(1).reverse(), '，')}；`, {
+                    if (data.length > 1) docp2.addText(`复习内容：${flatten(data.slice(1).reverse(), '，')}`,{
                         font_size: 14
-                    });
+                    })
+                    // if (data.length > 1) docx.createP().addText(`${index + 1 >= 10 ? ' ' : ''}                 复习内容：${flatten(data.slice(1).reverse(), '，')}；`, {
+                    //     font_size: 14
+                    // });
                 } else {
                     docx.createP().addText(`第${index + 1}天：复习内容：${flatten(data.reverse(), '，')}；`, {
                         font_size: 14
@@ -138,7 +141,7 @@ const printDirLists = () => {
     }
     // 去除开头跟后缀 C007_Going Away_Password_Removed
     function removeOtherStr(str) {
-        return str.replace(/_Password_Removed$/, "").replace(/^C\d+?_/,'');
+        return str.replace(/_Password_Removed$/, "").replace(/^C\d+?_/, '');
     }
     // 调用函数读取目录
     readDirectoryAsync(directoryPath)
@@ -195,7 +198,7 @@ const printLists1 = () => {
 // 打开之后调整页面间距适中 添加页码1/2居中 添加页眉居中标题颜色灰色 段落1.05
 const printLists2 = () => {
     // 模拟天数
-    const DAY = 60;
+    const DAY = 30;
     // 学习计划名称
     const TITLE = `${DAY}天-学习计划`;
     // 学习进度

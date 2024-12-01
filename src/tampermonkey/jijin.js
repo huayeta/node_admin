@@ -1146,7 +1146,7 @@ const Tools = {
             <div style="margin-top:15px;" class="j-datas-add">
                 <textarea placeholder="复制进下载的数据" class="search_input" style="height:24px;"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
             </div>
-            ${['大佬-1', '大佬-2','大佬-3', 1, 3, 5, 6, 7, 8].map(name => {
+            ${['大佬-1', '大佬-2', '大佬-3', 1, 3, 5, 6, 7, 8].map(name => {
             return `<view-img src="/public/uploads/${name}.jpg" ></view-img>`
         }).join('')}
         `;
@@ -2136,7 +2136,8 @@ class HJ {
         this.data = {};
         this.$ele = document.querySelector(ele);
         this.$ele.classList.add('gray')
-        this.$ele.style = `margin:15px 0; `;
+        this.$ele.style = `margin:15px 0; display:flex;`;
+        this.$ele.innerHTML =`<div class="hj-con"></div>`;
         this.codes = params.codes;
         this.max = params.max;
         this.min = params.min;
@@ -2145,6 +2146,16 @@ class HJ {
         this.jk_min_price = params.jk_min_price;
         this.jk_max_price = params.jk_max_price;
         this.jker = false;
+        // 判断是否有本地储存的键控制
+        const hj = localStorage.getItem('jijin.hj');
+        if(hj){
+            const jk = JSON.parse(hj);
+            if(jk[this.codes]){
+                const jk_codes = jk[this.codes];
+                this.jk_min_price = jk_codes.jk_min_price;
+                this.jk_max_price = jk_codes.jk_max_price;
+            }
+        }
         // 判断是不是周末
         let dayOfWeek = new Date().getDay();
         if (dayOfWeek !== 0 && dayOfWeek !== 6) {
@@ -2159,7 +2170,7 @@ class HJ {
                 this.startTimer();
             }
         }, '.j-hj-btn')
-        if(this.jk_min_price || this.jk_max_price)this.jker = true;
+        if (this.jk_min_price || this.jk_max_price) this.jker = true;
         addEventListener(this.$ele, 'click', (e) => {
             if (this.jker) {
                 this.jker = false;
@@ -2169,6 +2180,32 @@ class HJ {
             }
             this.updateHtml();
         }, '.j-jk-btn')
+        if(this.jker){
+            // 后面插入一段html，输入监控价
+            // 输入格式为 100/101
+            this.$ele.insertAdjacentHTML('beforeend',`<div class="hj-jk" style="margin-left:10px;">监控价：<input type="text" pattern="\d+\/\d+" class="search_input ti0 tam" style="width:60px;" value="${this.jk_min_price}/${this.jk_max_price}" /></div>`)
+            addEventListener(this.$ele,'change',e=>{
+                const $ipt = e.target;
+                const value = $ipt.value;
+                const reg = /^(\d+)\/(\d+)$/;
+                const match = value.match(reg);
+                if (match) {
+                    const minPrice = match[1];
+                    const maxPrice = match[2];
+                    this.jk_min_price = minPrice;
+                    this.jk_max_price = maxPrice;
+                    this.updateHtml();
+                    // 保存到本地
+                    localStorage.setItem('jijin.hj', JSON.stringify({
+                        [this.codes]: {
+                            jk_min_price: this.jk_min_price,
+                            jk_max_price: this.jk_max_price
+                        }
+                    }));
+                
+                }
+            },'.hj-jk input')
+        }
     }
     async getHj() {
         const res = await Tools.fetch('hj', { codes: this.codes });
@@ -2180,22 +2217,26 @@ class HJ {
             xj: res.q63,//现价
             time: res.time
         }
-        // 如果现价大于监控价报警
-        if(this.jker){
-            if(this.data.xj<=this.jk_min_price || this.data.xj>=this.jk_max_price){
+        if (this.jker) {
+            // 如果现价大于小于监控价报警，现价振幅大于2%报警，振幅大约10快的报警
+            if (this.data.xj < this.jk_min_price ||
+                this.data.xj >= this.jk_max_price
+                // || Math.abs(this.data.xj - this.data.kp) / this.data.kp > 0.015
+                // || Math.abs(this.data.xj - this.data.kp) > 10
+            ) {
                 this.startJkAutio();
-            }else{
+            } else {
                 this.closeJkAudio();
-            }      
+            }
         }
         this.updateHtml();
     }
     updateHtml() {
-        this.$ele.innerHTML = `${this.title} 
+        this.$ele.querySelector('.hj-con').innerHTML = `${this.title} 
         现价：<span class="red" style="font-size:18px;">${this.data.xj}</span>，
         开盘价:${this.data.kp}，收盘价：${this.data.sp}，最高价：${this.data.zg}，最低价：${this.data.zd} ${new Date(this.data.time).toLocaleString()}
         <span class="red j-hj-btn" style="margin:0 10px;">${this.timer ? '暂停' : '开始'}</span>
-        ${(this.jk_min_price || this.jk_max_price)?`<span class="red j-jk-btn" style="margin-right:10px;">${this.jker ? `被监控` : `监控`}（<span class="blue">${this.jk_min_price}</span>/<span class="blue">${this.jk_max_price}</span>）</span>`:''}
+        ${(this.jk_min_price || this.jk_max_price) ? `<span class="red j-jk-btn" style="margin-right:10px;">${this.jker ? `取消监控` : `监控`}（<span class="blue">${this.jk_min_price}</span>/<span class="blue">${this.jk_max_price}</span>）</span>` : ''}
         <div class="map"></div>`;
         this.drawMap(this.$ele.querySelector('.map'));
     }
@@ -2243,8 +2284,8 @@ class HJ {
         `;
     }
 }
-new HJ('.j-hj-gn', { codes: 'JO_9753', max: 584, min: 541.12, zl: 571, title: '国内黄金',jk_min_price:624,jk_max_price:637 });
-new HJ('.j-hj-gj', { codes: 'JO_92233', max: 2571, min: 2353, zl: 2450, title: '国际黄金' });
+new HJ('.j-hj-gn', { codes: 'JO_9753', max: 640, min: 580, zl: 626, title: '国内黄金', jk_min_price: 606, jk_max_price: 630 });
+new HJ('.j-hj-gj', { codes: 'JO_92233', max: 2750, min: 2500, zl: 2650, title: '国际黄金' });
 // 查看图片
 class ViewImg extends HTMLElement {
     constructor() {
