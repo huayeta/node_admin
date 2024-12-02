@@ -2146,44 +2146,21 @@ class HJ {
         this.jk_min_price = params.jk_min_price;
         this.jk_max_price = params.jk_max_price;
         this.jker = false;
-        // 判断是否有本地储存的键控制
-        const hj = localStorage.getItem('jijin.hj');
-        if(hj){
-            const jk = JSON.parse(hj);
-            if(jk[this.codes]){
-                const jk_codes = jk[this.codes];
-                this.jk_min_price = jk_codes.jk_min_price;
-                this.jk_max_price = jk_codes.jk_max_price;
-            }
-        }
-        // 判断是不是周末
-        let dayOfWeek = new Date().getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            this.getHj().then(() => {
-                this.startTimer();
-            });
-        }
-        addEventListener(this.$ele, 'click', (e) => {
-            if (this.timer) {
-                this.clearTimer();
-            } else {
-                this.startTimer();
-            }
-        }, '.j-hj-btn')
         if (this.jk_min_price || this.jk_max_price) this.jker = true;
-        addEventListener(this.$ele, 'click', (e) => {
-            if (this.jker) {
-                this.jker = false;
-                this.closeJkAudio();
-            } else {
-                this.jker = true;
-            }
-            this.updateHtml();
-        }, '.j-jk-btn')
+        // 判断是否有本地储存的键控制
         if(this.jker){
+            const hj = localStorage.getItem('jijin.hj');
+            if(hj){
+                const jk = JSON.parse(hj);
+                if(jk[this.codes]){
+                    const jk_codes = jk[this.codes];
+                    this.jk_min_price = jk_codes.jk_min_price;
+                    this.jk_max_price = jk_codes.jk_max_price;
+                }
+            }
             // 后面插入一段html，输入监控价
             // 输入格式为 100/101
-            this.$ele.insertAdjacentHTML('beforeend',`<div class="hj-jk" style="margin-left:10px;">监控价：<input type="text" pattern="\d+\/\d+" class="search_input ti0 tam" style="width:60px;" value="${this.jk_min_price}/${this.jk_max_price}" /></div>`)
+            this.$ele.insertAdjacentHTML('beforeend',`<div class="hj-jk" style="margin-left:10px;"><span class="red j-jk-btn">${this.jker ? `取消监控` : `监控`}</span>：<input type="text" pattern="\d+\/\d+" class="search_input ti0 tam" style="width:60px;" value="${this.jk_min_price}/${this.jk_max_price}" /></div>`)
             addEventListener(this.$ele,'change',e=>{
                 const $ipt = e.target;
                 const value = $ipt.value;
@@ -2205,7 +2182,32 @@ class HJ {
                 
                 }
             },'.hj-jk input')
+            addEventListener(this.$ele, 'click', (e) => {
+                const $btn = e.target;
+                if (this.jker) {
+                    this.jker = false;
+                    this.closeJkAudio();
+                    $btn.innerHTML = '监控';
+                } else {
+                    this.jker = true;
+                    $btn.innerHTML = '取消监控';
+                }
+            }, '.j-jk-btn')
+        } 
+        // 判断是不是周末
+        let dayOfWeek = new Date().getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            this.getHj().then(() => {
+                this.startTimer();
+            });
         }
+        addEventListener(this.$ele, 'click', (e) => {
+            if (this.timer) {
+                this.clearTimer();
+            } else {
+                this.startTimer();
+            }
+        }, '.j-hj-btn')
     }
     async getHj() {
         const res = await Tools.fetch('hj', { codes: this.codes });
@@ -2236,7 +2238,6 @@ class HJ {
         现价：<span class="red" style="font-size:18px;">${this.data.xj}</span>，
         开盘价:${this.data.kp}，收盘价：${this.data.sp}，最高价：${this.data.zg}，最低价：${this.data.zd} ${new Date(this.data.time).toLocaleString()}
         <span class="red j-hj-btn" style="margin:0 10px;">${this.timer ? '暂停' : '开始'}</span>
-        ${(this.jk_min_price || this.jk_max_price) ? `<span class="red j-jk-btn" style="margin-right:10px;">${this.jker ? `取消监控` : `监控`}（<span class="blue">${this.jk_min_price}</span>/<span class="blue">${this.jk_max_price}</span>）</span>` : ''}
         <div class="map"></div>`;
         this.drawMap(this.$ele.querySelector('.map'));
     }
@@ -2265,7 +2266,7 @@ class HJ {
         const now_max = +this.data.zg;
         const now_min = +this.data.zd;
         const now = +this.data.xj;
-        const unit = 300;
+        const unit = 200;
         const dis_unit = unit / (max - min);
         $map.style = 'display:inline-block;vertical-align:0px;';
         $map.innerHTML = `
@@ -2284,7 +2285,7 @@ class HJ {
         `;
     }
 }
-new HJ('.j-hj-gn', { codes: 'JO_9753', max: 640, min: 580, zl: 626, title: '国内黄金', jk_min_price: 606, jk_max_price: 630 });
+new HJ('.j-hj-gn', { codes: 'JO_9753', max: 630, min: 600, zl: 626, title: '国内黄金', jk_min_price: 606, jk_max_price: 630 });
 new HJ('.j-hj-gj', { codes: 'JO_92233', max: 2750, min: 2500, zl: 2650, title: '国际黄金' });
 // 查看图片
 class ViewImg extends HTMLElement {
