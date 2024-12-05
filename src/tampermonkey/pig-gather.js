@@ -1524,7 +1524,9 @@ const customStorage = new CustomStorage();
         // 找到真实姓名
         const real_name_arr = Tools.findRealNamesByDatas(datas);
         // 找到最近做单类型
-        const last_recode = (datas[0] && datas[0].pig_type) ? datas[0].pig_type : '';
+        const last_recode_type = (datas[0] && datas[0].pig_type) ? datas[0].pig_type : '';
+        // 最近的做单记录
+        const last_recode = datas[0];
         // 找到注册时间
         let register_time = Tools.findRegisterTimeByDatas(datas);
         // 找到唐人注册时间
@@ -1597,7 +1599,8 @@ const customStorage = new CustomStorage();
             register_time: register_time,
             tang_register_time: tang_register_time,
             tang_id: tang_id,
-            last_recode: last_recode,
+            last_recode_type: last_recode_type,
+            last_recode:last_recode,
             commission: commission,
             nickname: nickname,
             teamers: teamers,
@@ -1686,7 +1689,7 @@ const customStorage = new CustomStorage();
                         <tbody>
                             <tr>
                                 <th></th>
-                                ${ORDERTYPES.map(type => `<th class="${type == humanData.last_recode ? 'bg-blue' : ''}">${type}</th>`).join('')}
+                                ${ORDERTYPES.map(type => `<th class="${type == humanData.last_recode_type ? 'bg-blue' : ''}">${type}</th>`).join('')}
                             </tr>
                             <tr>
                                 <td>最近做单渠道</td>
@@ -1861,10 +1864,10 @@ const customStorage = new CustomStorage();
                     <div class="m-findData search">
                         <button class="search_btn j-almightySearch" style="">qq|phone|ww|wx全能搜索</button>
                         <button class="search_btn reb j-reg-search" style="margin-left:10px;">正则realname|ww搜索</button>
-                        <button class="search_btn j-gatherQqs" style="">倒序筛选qq1238</button>
-                        <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选qq1238</button>
+                        <button class="search_btn j-gatherQqs" style="">倒序筛选1238</button>
+                        <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选1238</button>
+                        <button class="search_btn j-gatherWx" style="">做单渠道号筛选1238</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据346</button>
-                        <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
                         <button class="search_btn download" style="">下载数据</button>
                         <button class="search_btn reb j-wait-search" style="">筛选待处理（<span>0</span>）</button>
                     </div>
@@ -1877,6 +1880,7 @@ const customStorage = new CustomStorage();
                         <span class="gray">6：</span><select class="search_input j-shop-id"></select>
                         <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}" ${type.value == 'pig' ? 'selected' : ''}>${type.name}</option>`).join('')}</select>
                         <button class="search_btn reb j-come-type-search" style="">查询渠道做单7</button>
+                        <button class="search_btn reb j-modifyLastRecord" style="">修改最后一个记录67</button>
                     </div>
                     <div class="u-con">
                         <!-- <table class="common_table">
@@ -3158,6 +3162,19 @@ const customStorage = new CustomStorage();
                 // 注册时间超过1个月 做单时间跟注册时间相隔1个月以上
                 // return new Date(humanData.record_time) - 30 * 24 * 60 * 60 * 10000 > new Date(humanData.register_time);
                 return true;
+            }, pig_type)
+        }, false)
+        qqAdd.querySelector('.j-gatherWx').addEventListener('click', () => {
+            const pig_type = $pigType.value;
+            const qq_exec_pre = $qqExecPre.value;
+            // console.log(qq_exec_pre);
+            GatherQqs(humanData => {
+                // 判断是否是wx
+                // console.log(humanData);
+                if(humanData.last_recode.qq_exec_pre==qq_exec_pre){
+                    return true;
+                }
+                return false;
             }, pig_type)
         }, false)
         // 通过店铺找到做单数据

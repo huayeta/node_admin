@@ -257,7 +257,7 @@ const Tools = {
             is = 2;//债基
         } else if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
             is = 3; //QDII
-        } else if (data.asset && (+data.asset.gp > 0 || +data.asset.jj > 0)) {
+        } else if (data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) {
             // 股票占比大于10的
             is = 1;
         }
@@ -301,31 +301,37 @@ const Tools = {
         // console.log(arr);
         return arr;
     },
-    countConsecutivePositives: (arr) => {
+    countConsecutivePositives: (arr,symbol='+') => {
         if (!Array.isArray(arr)) return { count: 0, sum: 0 };
         arr = arr.slice(0, 30);
         let count = 0;
         let sum = 0;
         let consecutiveCount = 0;
         let consecutiveSum = 0;
+        let max = 0;
         for (let i = 0; i < arr.length; i++) {
             // console.log(+arr[i].JZZZL,-1,+arr[i].JZZZL >= -1);
-            if (+arr[i].JZZZL >= -0.01) {
+            if ((symbol == '+' && +arr[i].JZZZL >= -0.01) || (symbol == '-' && +arr[i].JZZZL < 0)) {
                 // console.log('111111')
                 consecutiveCount++;
                 consecutiveSum += (+arr[i].JZZZL);
             } else {
-                if (consecutiveSum > sum) {
+                if ((symbol == '+' && consecutiveSum > sum) || (symbol == '-' && consecutiveSum < sum)) {
                     count = consecutiveCount;
                     sum = consecutiveSum;
                 }
                 consecutiveCount = 0;
                 consecutiveSum = 0;
             }
+            if(symbol == '+' && arr[i].JZZZL>max){
+                max = arr[i].JZZZL;
+            }else if(symbol == '-' && arr[i].JZZZL<max){
+                max = arr[i].JZZZL;
+            }
         }
         sum = sum.toFixed(2);
         // console.log({count,sum})
-        return { count, sum };
+        return { count, sum,max };
     },
     updateDatasTable: () => {
         let codes = Object.values(DATAS);
@@ -929,7 +935,9 @@ const Tools = {
                 assetDp = +data.ljjj.assetPosition.fundStocksDp.gprice
             }
             // 连续正天数数据
-            const count_pos = Tools.countConsecutivePositives(data.customNetWorkData);
+            const count_pos = Tools.countConsecutivePositives(data.customNetWorkData,'+');
+            // 连续负天数数据
+            const count_neg = Tools.countConsecutivePositives(data.customNetWorkData,'-');
             // 判断是否有筛选
             // 债券组合筛选
             if ((!SORT.type || (data.customType && data.customType.includes(SORT.type)))) {
@@ -957,7 +965,8 @@ const Tools = {
                                                             <tr data-code="${data.code}" style="${data.code.includes(',') ? 'background: #fff7f3;' : ''}">
                                                                 <td>
                                                                     ${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',') ? data.code.replaceAll(',', '<br />') : data.code}</span>
-                                                                    <p class="fs12 gray" style="text-indent:2em;">+${count_pos.count},+${count_pos.sum}</p>
+                                                                    <p class="fs12 gray" style="text-indent:2em;">+${count_pos.count},+${count_pos.sum}（${count_pos.max}）</p>
+                                                                    <p class="fs12 gray" style="text-indent:2em;">-${count_neg.count},${count_neg.sum}（${count_neg.max}）</p>
                                                                 </td>
                                                                 <td>
                                                                     <span class="j-code-name ${((data.maxBuy && +data.maxBuy <= 50000) || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${(data.maxBuy && data.maxBuy <= 50000) ? `/${data.maxBuy}` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
@@ -1146,7 +1155,7 @@ const Tools = {
             <div style="margin-top:15px;" class="j-datas-add">
                 <textarea placeholder="复制进下载的数据" class="search_input" style="height:24px;"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
             </div>
-            ${['大佬-1', '大佬-2', '大佬-3', 1, 3, 5, 6, 7, 8].map(name => {
+            ${['大佬-2', '大佬-3', 1, 3, 5, 6, 7, 8].map(name => {
             return `<view-img src="/public/uploads/${name}.jpg" ></view-img>`
         }).join('')}
         `;
@@ -1303,6 +1312,10 @@ const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
 const $codeCredit = $form.querySelector('.j-code-credit-ipt');
 const $audio = $Content.querySelector('.audio');
 
+// 拼凑tr数据
+const getJZZL = (history) => {
+    return [...history].map(data => `<tr><td>${data['FSRQ']}</td><td class="${data['JZZZL'] > 0 ? 'red' : 'green'}" style="text-align:right;">${data['JZZZL']}%</td></tr>`)
+}
 const compareCodes = function (codes) {
     let str = '';
     str += '<div style="display:flex;">';
@@ -1315,9 +1328,6 @@ const compareCodes = function (codes) {
     })
     arr = [...new Set(arr)];
     // console.log(arr,codes);
-    const getJZZL = (history) => {
-        return [...history].map(data => `<tr><td>${data['FSRQ']}</td><td class="${data['JZZZL'] > 0 ? 'red' : 'green'}" style="text-align:right;">${data['JZZZL']}%</td></tr>`)
-    }
     arr.forEach(code => {
         const { name, customNetWorkData } = DATAS[code];
         if (!customNetWorkData) return;
@@ -1337,25 +1347,23 @@ const compareCodes = function (codes) {
         `
     })
     str += '</div>';
-    myAlert.show(str, Alert => {
-        const { $alert } = Alert;
-        const $myDIv = document.createElement('div');
-        $alert.querySelector('.j-history-btn').addEventListener('click', async e => {
-            const $table = e.target.previousElementSibling;
-            let pageIndex = e.target.getAttribute('data-pageIndex');
-            const code = e.target.getAttribute('data-code');
-            pageIndex++;
-            const history = await Tools.fundMNHisNetList(code, pageIndex);
-            if (history.length == 0) return e.target.remove();
-            const $trs = getJZZL(history).join('');
-            const $tbody2 = document.createElement('tbody');
-            $tbody2.innerHTML = $trs;
-            $table.appendChild($tbody2);
-
-            e.target.setAttribute('data-pageIndex', pageIndex);
-        })
-    });
+    myAlert.show(str);
 }
+// 点击拉取更多
+addEventListener(myAlert.$alert,'click',async e=>{
+    const $table = e.target.previousElementSibling;
+    let pageIndex = e.target.getAttribute('data-pageIndex');
+    const code = e.target.getAttribute('data-code');
+    pageIndex++;
+    const history = await Tools.fundMNHisNetList(code, pageIndex);
+    if (history.length == 0) return e.target.remove();
+    const $trs = getJZZL(history).join('');
+    const $tbody2 = document.createElement('tbody');
+    $tbody2.innerHTML = $trs;
+    $table.appendChild($tbody2);
+
+    e.target.setAttribute('data-pageIndex', pageIndex);
+},'.j-history-btn')
 // 对比债基
 addEventListener($form, 'click', e => {
     const codes = Tools.getSelCodes();
