@@ -139,6 +139,22 @@ const Tools = {
         }
         return false;
     },
+    restoreInitialValue: ($ipts,arrCss=[]) => {
+        const elements = Array.from($ipts).filter(element => !arrCss.some(css => element.matches(css)));
+        elements.forEach(element => {
+            if (element && (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT')) {
+                if (element.tagName === 'INPUT' && element.type === 'text') {
+                    element.value = element.defaultValue;
+                } else if (element.tagName === 'TEXTAREA') {
+                    element.textContent = element.defaultValue;
+                } else if (element.tagName === 'SELECT') {
+                    for (let i = 0; i < element.options.length; i++) {
+                        element.options[i].selected = element.options[i].defaultSelected;
+                    }
+                }
+            }
+        });
+    },
     alertFuc: obj => {
         const keys = Object.keys(obj);
         const values = Object.values(obj);
@@ -301,7 +317,7 @@ const Tools = {
         // console.log(arr);
         return arr;
     },
-    countConsecutivePositives: (arr,symbol='+') => {
+    countConsecutivePositives: (arr, symbol = '+') => {
         if (!Array.isArray(arr)) return { count: 0, sum: 0 };
         arr = arr.slice(0, 30);
         let count = 0;
@@ -323,15 +339,15 @@ const Tools = {
                 consecutiveCount = 0;
                 consecutiveSum = 0;
             }
-            if(symbol == '+' && arr[i].JZZZL>max){
-                max = arr[i].JZZZL;
-            }else if(symbol == '-' && arr[i].JZZZL<max){
-                max = arr[i].JZZZL;
+            if (symbol == '+' && +arr[i].JZZZL > max) {
+                max = +arr[i].JZZZL;
+            } else if (symbol == '-' && +arr[i].JZZZL < max) {
+                max = +arr[i].JZZZL;
             }
         }
         sum = sum.toFixed(2);
         // console.log({count,sum})
-        return { count, sum,max };
+        return { count, sum, max };
     },
     updateDatasTable: () => {
         let codes = Object.values(DATAS);
@@ -791,15 +807,27 @@ const Tools = {
         if ($btn.ing != undefined) return;
         $btn.ing = 1;
         const maxLength = codes.length;
+        let arr = [];
         for (let code of codes) {
             // console.log(code);
             $btn.innerHTML = `正在更新${$btn.ing - 0}/${maxLength}`;
             const datas = DATAS[code];
             if (!code.includes(',') && `${new Date(datas.netWorthDate).getMonth()}-${new Date(datas.netWorthDate).getDate()}` != `${new Date().getMonth()}-${new Date().getDate()}`) {
                 // console.log(code);
-                await Tools.getCode(code);
+                // 一次性更新5个
+                if (arr.length < 5) {
+                    arr.push(Tools.getCode(code));
+                } else {
+                    await Promise.all(arr);
+                    arr = [];
+                }
+                // await Tools.getCode(code);
             }
             $btn.ing++;
+        }
+        if (arr.length > 0) {
+            await Promise.all(arr);
+            arr = [];
         }
         $btn.ing = undefined;
         $btn.innerHTML = '更新债权';
@@ -935,9 +963,9 @@ const Tools = {
                 assetDp = +data.ljjj.assetPosition.fundStocksDp.gprice
             }
             // 连续正天数数据
-            const count_pos = Tools.countConsecutivePositives(data.customNetWorkData,'+');
+            const count_pos = Tools.countConsecutivePositives(data.customNetWorkData, '+');
             // 连续负天数数据
-            const count_neg = Tools.countConsecutivePositives(data.customNetWorkData,'-');
+            const count_neg = Tools.countConsecutivePositives(data.customNetWorkData, '-');
             // 判断是否有筛选
             // 债券组合筛选
             if ((!SORT.type || (data.customType && data.customType.includes(SORT.type)))) {
@@ -1104,7 +1132,7 @@ const Tools = {
                         opacity: .9;
                     }
                 </style>
-                <div class="m-search">
+                <div class="m-search m-form">
                     <input class="search_input j-code-ipt" type="text" placeholder="债权代码" />
                     <span class="j-code-name gray" style="margin:0 5px;"></span>
                     <button class="search_btn reb j-code-add" style="margin-left:0px">添加债权</button>
@@ -1131,7 +1159,10 @@ const Tools = {
                     <input class="search_input j-code-ratePositiveDay-sort" type="text" placeholder="连续正天数>=?" style="margin-left:10px; width:110px;" value="${SORT.ratePositiveDay ? SORT.ratePositiveDay : ''}" />
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
-                    <span class="span-a" style="margin-left:10px;">例如：<a class="j-code-note-span">城投</a></span>
+                    <span class="span-a" style="margin-left:10px;">
+                    例如：<a class="j-sort-preset-span" data-sorts="${encodeURIComponent(JSON.stringify({ note: '城投' }))}">城投</a>
+                    <a class="j-sort-preset-span" data-sorts="${encodeURIComponent(JSON.stringify({ type: '信用', sale_time: '7', ratePositiveDay: '20',day:'customLastMonthGrowth',sort:'-1',Ftype:'2'}))}">信用</a>
+                    </span>
                 </div>
                 <div class="m-search">
                     <input type="datetime-local" class="search_input mr10 j-buyTime-ipt" style="width:150px;" value="${Tools.getTime('yyyy-mm-dd hh:mm')}" />
@@ -1146,7 +1177,8 @@ const Tools = {
                     <span class="ml10 gray">移动止盈：设定目标收益率为<span class="red">20%</span>，止赢回撤比例为<span class="red">5%</span></span>
                 </div>
             </div>
-            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-custom-filter" style="margin-left:10px;">筛选债券</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
+            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-sort-preset-span" style="margin-left:10px;" data-sorts="${encodeURIComponent(JSON.stringify({Ftype:'2', type: '信用', sale_time: '7', lv: '10' }))}">筛选债券</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
+            <div>${JSON.stringify(SORT)}</div>
             <audio src="/public/uploads/1.mp3" controls="controls" class="audio" loop="true" style="display:none;"></audio>
             <div class="j-hj-gn"></div>
             <div class="j-hj-gj"></div>
@@ -1350,7 +1382,7 @@ const compareCodes = function (codes) {
     myAlert.show(str);
 }
 // 点击拉取更多
-addEventListener(myAlert.$alert,'click',async e=>{
+addEventListener(myAlert.$alert, 'click', async e => {
     const $table = e.target.previousElementSibling;
     let pageIndex = e.target.getAttribute('data-pageIndex');
     const code = e.target.getAttribute('data-code');
@@ -1363,7 +1395,7 @@ addEventListener(myAlert.$alert,'click',async e=>{
     $table.appendChild($tbody2);
 
     e.target.setAttribute('data-pageIndex', pageIndex);
-},'.j-history-btn')
+}, '.j-history-btn')
 // 对比债基
 addEventListener($form, 'click', e => {
     const codes = Tools.getSelCodes();
@@ -1739,13 +1771,21 @@ addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
     Tools.setCustomSort({ note: value });
 }, 500), '.j-code-note-sort')
-addEventListener($form, 'click', Tools.throttle(e => {
-    const value = e.target.textContent;
-    const $noteSort = document.querySelector('.j-code-note-sort');
-    $noteSort.value = value;
-    Tools.dispatchEvent($noteSort, 'input');
+addEventListener(document, 'click', e => {
+    // const value = e.target.textContent;
+    // const $noteSort = document.querySelector('.j-code-note-sort');
+    // $noteSort.value = value;
+    // Tools.dispatchEvent($noteSort, 'input');
     // Tools.setCustomSort({ note: value });
-}, 500), '.j-code-note-span')
+    const $target = e.target;
+    const sorts = $target.getAttribute('data-sorts');
+    const obj = JSON.parse(decodeURIComponent(sorts));
+    // console.log(obj);
+    // Tools.restoreInitialValue(document.querySelectorAll('.m-form .search_input'))
+    Tools.dispatchEvent(document.querySelector('.j-code-filter-clear'), 'click');
+    Tools.setCustomSort(obj);
+    location.reload();
+}, '.j-sort-preset-span')
 // 筛选利率债
 addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
@@ -1766,16 +1806,6 @@ addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
     Tools.setCustomSort({ position: value });
 }, 500), '.j-code-position-sort')
-// 自定义筛选债权
-document.querySelector('.j-custom-filter').addEventListener('click', e => {
-    Tools.setCustomSort({
-        Ftype: 2,//债基
-        type: '信用债',//债权类型
-        sale_time: '7',//7天卖出时间
-        lv: '15',//利率债筛选
-    })
-    window.location.reload();
-})
 // 清除筛选
 addEventListener($form, 'click', e => {
     delete SORT.type;
@@ -2145,7 +2175,7 @@ class HJ {
         this.$ele = document.querySelector(ele);
         this.$ele.classList.add('gray')
         this.$ele.style = `margin:15px 0; display:flex;`;
-        this.$ele.innerHTML =`<div class="hj-con"></div>`;
+        this.$ele.innerHTML = `<div class="hj-con"></div>`;
         this.codes = params.codes;
         this.max = params.max;
         this.min = params.min;
@@ -2156,11 +2186,11 @@ class HJ {
         this.jker = false;
         if (this.jk_min_price || this.jk_max_price) this.jker = true;
         // 判断是否有本地储存的键控制
-        if(this.jker){
+        if (this.jker) {
             const hj = localStorage.getItem('jijin.hj');
-            if(hj){
+            if (hj) {
                 const jk = JSON.parse(hj);
-                if(jk[this.codes]){
+                if (jk[this.codes]) {
                     const jk_codes = jk[this.codes];
                     this.jk_min_price = jk_codes.jk_min_price;
                     this.jk_max_price = jk_codes.jk_max_price;
@@ -2168,8 +2198,8 @@ class HJ {
             }
             // 后面插入一段html，输入监控价
             // 输入格式为 100/101
-            this.$ele.insertAdjacentHTML('beforeend',`<div class="hj-jk" style="margin-left:10px;"><span class="red j-jk-btn">${this.jker ? `取消监控` : `监控`}</span>：<input type="text" pattern="\d+\/\d+" class="search_input ti0 tam" style="width:60px;" value="${this.jk_min_price}/${this.jk_max_price}" /></div>`)
-            addEventListener(this.$ele,'change',e=>{
+            this.$ele.insertAdjacentHTML('beforeend', `<div class="hj-jk" style="margin-left:10px;"><span class="red j-jk-btn">${this.jker ? `取消监控` : `监控`}</span>：<input type="text" pattern="\d+\/\d+" class="search_input ti0 tam" style="width:60px;" value="${this.jk_min_price}/${this.jk_max_price}" /></div>`)
+            addEventListener(this.$ele, 'change', e => {
                 const $ipt = e.target;
                 const value = $ipt.value;
                 const reg = /^(\d+)\/(\d+)$/;
@@ -2187,9 +2217,9 @@ class HJ {
                             jk_max_price: this.jk_max_price
                         }
                     }));
-                
+
                 }
-            },'.hj-jk input')
+            }, '.hj-jk input')
             addEventListener(this.$ele, 'click', (e) => {
                 const $btn = e.target;
                 if (this.jker) {
@@ -2201,7 +2231,7 @@ class HJ {
                     $btn.innerHTML = '取消监控';
                 }
             }, '.j-jk-btn')
-        } 
+        }
         // 判断是不是周末
         let dayOfWeek = new Date().getDay();
         if (dayOfWeek !== 0 && dayOfWeek !== 6) {
