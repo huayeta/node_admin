@@ -31,6 +31,7 @@ let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,investment:定投相关}}
 let CODES = {};
 //  ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'],
+let BONDS = {};
 const total_arr = [['dayGrowth', '日涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金', '组合'];
 const SALETIME = {
@@ -139,7 +140,7 @@ const Tools = {
         }
         return false;
     },
-    restoreInitialValue: ($ipts,arrCss=[]) => {
+    restoreInitialValue: ($ipts, arrCss = []) => {
         const elements = Array.from($ipts).filter(element => !arrCss.some(css => element.matches(css)));
         elements.forEach(element => {
             if (element && (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT')) {
@@ -317,6 +318,7 @@ const Tools = {
         // console.log(arr);
         return arr;
     },
+    // 计算最近30天的最大涨幅跌幅
     countConsecutivePositives: (arr, symbol = '+') => {
         if (!Array.isArray(arr)) return { count: 0, sum: 0 };
         arr = arr.slice(0, 30);
@@ -557,8 +559,21 @@ const Tools = {
                 // 债权
                 fundboods: fundInverstPosition.fundboods,
             }
+            // 计算债权涨跌幅
             const fundDiff = await Tools.countDp(assetPosition.fundStocks, assetPosition.fundboods);
             Object.assign(assetPosition, fundDiff);
+            // 获得债权的信息
+            const {fundboods}= assetPosition;
+            if (fundboods && fundboods.length > 0) {
+                for (let bood of fundboods) {
+                    if (!BONDS[bood.ZQDM]) {
+                        const arr = await Tools.getBondInfo({text:bood.ZQMC,code:bood.ZQDM});
+                        if (arr && arr.length > 0) {
+                            BONDS[bood.ZQDM] = arr;
+                        }
+                    }
+                }
+            }
         }
         if (fundBondInvestDistri) {
             fundBondInvestDistri.forEach(data => {
@@ -585,6 +600,21 @@ const Tools = {
             })
         }
         return { asset, assetPosition, position };
+    },
+    getBondInfo: async ({text,code}) => {
+        // 债券信息
+        if (BONDS[code]) return BONDS[code];
+        const Pcuss = 'eyJ0eXAiOiJKV1QiLCJ0eXBlIjoiand0IiwiYWxnIjoiSFMyNTYifQ.eyJjcmVhdGVUaW1lIjoiMjAyNC0xMi0wOSAxNDoyMzozNy44MjUiLCJleHAiOjE3MzM3MjYzMTcsInVzZXJJZCI6IjIwMjQxMjA5MTEzOTMwXzE4NzAzNjIwMTk1IiwiZXhwaXJlZFRpbWUiOiIyMDI0LTEyLTA5IDE0OjM4OjM3LjgyNSJ9.tzIGIgNxgB7MWM7EKaHC2joyRd9yKT9ndijQQk1-d7o';
+        const { data, returncode } = await Tools.fetch('finchinaSearch', { 'Pcuss': Pcuss, text: text });
+        if (returncode != '0') return;
+        if (data.list.length ==0) return;
+        const arr = [];
+        data.list[0].label.forEach(label => {
+            arr.push(label.name);
+        })
+        BONDS[code] = arr;
+        localStorage.setItem('jijin.bonds', JSON.stringify(BONDS));
+        return arr;
     },
     upDateFundDiff: async (code) => {
         if (!code || !DATAS[code] || !DATAS[code].assetPosition) return;
@@ -1115,6 +1145,8 @@ const Tools = {
         DATAS = customStorage.getItem('jijin.datas') || {};
         SORT = localStorage.getItem('jijin.sort') ? JSON.parse(localStorage.getItem('jijin.sort')) : {};
         CODES = customStorage.getItem('jijin.codes') || {};
+        BONDS = localStorage.getItem('jijin.bonds')? JSON.parse(localStorage.getItem('jijin.bonds')) : {};
+        // console.log(Object.keys(BONDS).length)
 
         const con = `
             <div class="g-form">
@@ -1161,7 +1193,7 @@ const Tools = {
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
                     <span class="span-a" style="margin-left:10px;">
                     例如：<a class="j-sort-preset-span" data-sorts="${encodeURIComponent(JSON.stringify({ note: '城投' }))}">城投</a>
-                    <a class="j-sort-preset-span" data-sorts="${encodeURIComponent(JSON.stringify({ type: '信用', sale_time: '7', ratePositiveDay: '20',day:'customLastMonthGrowth',sort:'-1',Ftype:'2'}))}">信用</a>
+                    <a class="j-sort-preset-span" data-sorts="${encodeURIComponent(JSON.stringify({ type: '信用', sale_time: '7', ratePositiveDay: '20', day: 'customLastMonthGrowth', sort: '-1', Ftype: '2' }))}">信用</a>
                     </span>
                 </div>
                 <div class="m-search">
@@ -1177,8 +1209,8 @@ const Tools = {
                     <span class="ml10 gray">移动止盈：设定目标收益率为<span class="red">20%</span>，止赢回撤比例为<span class="red">5%</span></span>
                 </div>
             </div>
-            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-sort-preset-span" style="margin-left:10px;" data-sorts="${encodeURIComponent(JSON.stringify({Ftype:'2', type: '信用', sale_time: '7', lv: '10' }))}">筛选债券</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
-            <div>${JSON.stringify(SORT)}</div>
+            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-sort-preset-span" style="margin-left:10px;" data-sorts="${encodeURIComponent(JSON.stringify({ Ftype: '2', type: '信用', sale_time: '7', lv: '10' }))}">筛选债券</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
+            <div style="margin:10px 0;" class="gray">${JSON.stringify(SORT)}</div>
             <audio src="/public/uploads/1.mp3" controls="controls" class="audio" loop="true" style="display:none;"></audio>
             <div class="j-hj-gn"></div>
             <div class="j-hj-gj"></div>
@@ -1526,10 +1558,10 @@ addEventListener($table, 'click', e => {
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>债权名称</th><th>价格${price != 0 ? `<p class="fs12 fwn ${price > 0 ? 'red' : price < 0 ? 'green' : ''}" style="margin-top:-8px;">${price}</p>` : ''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th></tr>
+                        <tr><th>债权代码</th><th>债权名称</th><th>价格${price != 0 ? `<p class="fs12 fwn ${price > 0 ? 'red' : price < 0 ? 'green' : ''}" style="margin-top:-8px;">${price}</p>` : ''}</th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${boodce.toFixed(2)}%</p></th><th>债权类型</th><th>债权标签</th></tr>
                     </thead>
                     <tbody>
-                        ${fundboods.map(data => `<tr><td>${data['ZQMC']}</td><td class="${(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3'] > 0) ? 'red' : (fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3'] < 0) ? 'green' : ''}">${fundboodsDiff[data.ZQDM] ? `${fundboodsDiff[data.ZQDM]['f2']}/${fundboodsDiff[data.ZQDM]['f3']}%` : ''}</td><td>${data['ZJZBL']}%</td><td>${{ '1': '信用债', '2': '利率债', '3': '可转债', '4': '其他', '5': '同业存单' }[data.BONDTYPE]}</td></tr>`).join('')}
+                        ${fundboods.map(data => `<tr><td>${data['ZQDM']}</td><td>${data['ZQMC']}</td><td class="${(fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3'] > 0) ? 'red' : (fundboodsDiff[data.ZQDM] && +fundboodsDiff[data.ZQDM]['f3'] < 0) ? 'green' : ''}">${fundboodsDiff[data.ZQDM] ? `${fundboodsDiff[data.ZQDM]['f2']}/${fundboodsDiff[data.ZQDM]['f3']}%` : ''}</td><td>${data['ZJZBL']}%</td><td>${{ '1': '信用债', '2': '利率债', '3': '可转债', '4': '其他', '5': '同业存单' }[data.BONDTYPE]}</td><td>${BONDS[data['ZQDM']] && BONDS[data['ZQDM']].map(label=>`<span class="u-box mr5">${label}</span>`).join('')  || ''}</td></tr>`).join('')}
                     </tbody>
                 </table>
             </div>
@@ -2101,7 +2133,7 @@ class Contextmenu {
             this.hide();
         }
         if (con.includes('删除基金')) {
-            if (confirm('确定删除吗？')) {
+            if (confirm(`确定删除（${Data.name}）吗`)) {
                 Tools.delCode(code);
             }
             this.hide();
@@ -2238,6 +2270,8 @@ class HJ {
             this.getHj().then(() => {
                 this.startTimer();
             });
+        } else {
+            this.$ele.style.display = 'none';
         }
         addEventListener(this.$ele, 'click', (e) => {
             if (this.timer) {

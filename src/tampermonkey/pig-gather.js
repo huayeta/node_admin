@@ -3088,7 +3088,7 @@ const customStorage = new CustomStorage();
                 const notes = humanData.notes.join('');
                 const diffPhones = humanData.diffPhones;
                 if (
-                    (notes.indexOf('满月') == -1 || true)
+                    (notes.indexOf('骗子') == -1)
                     && notes.indexOf('删订单') == -1
                     && (diffPhones.length == 0 || true)
                     && !RDATA.isExist(record.pig_phone, 'order_reminder')
