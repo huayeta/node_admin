@@ -389,10 +389,13 @@ const Tools = {
                 max = arr[i].JZZZL;
             }
         }
-        if(consecutiveCount){
+        if ((symbol == '+' && consecutiveSum > sum) || (symbol == '-' && consecutiveSum < sum)) {
+            // console.log(consecutiveCount,consecutiveSum);
             count = consecutiveCount;
             sum = consecutiveSum;
         }
+        consecutiveCount = 0;
+        consecutiveSum = 0;
         sum = sum.toFixed(2);
         // console.log({count,sum})
         return { count, sum, max };
