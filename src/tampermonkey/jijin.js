@@ -210,11 +210,12 @@ const Tools = {
     },
     upDateIncome: (code) => {
         if (!CODES[code]) return;
-        const { buy_time } = CODES[code];
+        let { buy_time } = CODES[code];
         if (!CODES[code].hasOwnProperty('buy_time')) return;
         if (buy_time == '') {
             return Tools.setCustomCodes(code, { income_sort: '' });
         }
+        buy_time = buy_time[0];
         // 计算购买后的收益率
         const { customNetWorkData } = DATAS[code];
         let income = 0;
@@ -966,13 +967,16 @@ const Tools = {
         // console.log(time,code)
         if (!CODES[code]) CODES[code] = {};
         let buy_time = CODES[code]['buy_time'];
-        if (!CODES[code]) CODES[code] = {};
         if (buy_time == undefined) {
             buy_time = [time];
         } else {
             // if (!Array.isArray(buy_time)) buy_time = [buy_time];
             buy_time = [...buy_time, time];
         }
+        // 排序数组(buy_time);
+        buy_time.sort((a, b) => {
+            return new Date(a) - new Date(b);
+        })
         Tools.setCustomCodes(code, { buy_time });
     },
     delBuyTime: (code, index) => {
@@ -1094,6 +1098,11 @@ const Tools = {
                     })
                 }
             }
+            // 判断是否限购
+            let is_limited= false;
+            if(data.maxBuy && +data.maxBuy <= 100000){
+                is_limited = true;
+            }
             // 判断是否有筛选
             // 债券组合筛选
             if ((!SORT.type || (data.customType && data.customType.includes(SORT.type)))) {
@@ -1129,7 +1138,7 @@ const Tools = {
                                                                         <p class="fs12 gray" style="text-indent:2em;">-${count_neg.count},${count_neg.sum}（${count_neg.max}）</p>
                                                                     </td>
                                                                     <td>
-                                                                        <span class="j-code-name ${((data.maxBuy && +data.maxBuy <= 50000) || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${(data.maxBuy && data.maxBuy <= 50000) ? `/${data.maxBuy}` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
+                                                                        <span class="j-code-name ${(is_limited || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${is_limited ? `/${data.maxBuy}` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
                                                                         ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                                                         ${CODES[data.code] && Object.keys(EMOJIS).map(emoji => {
                                                                 return CODES[data.code][EMOJIS[emoji].key] == 1 ? `<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>` : '';
