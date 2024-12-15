@@ -28,7 +28,7 @@ const customStorage = new CustomStorage();
 let DATAS = {};
 // {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME,position:持仓情况,lv:利率债小于等于,dtSly:定投收益率大于等于,ratePositiveDay:连续正收益率的天数大于等于}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,investment:定投相关}}
+// {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,investment:定投相关,is_ct:城投债}}
 let CODES = {};
 //  ['lastWeekGrowth', '周涨幅'], ['lastMonthGrowth', '月涨幅'],
 let BONDS = {};
@@ -324,30 +324,48 @@ const Tools = {
         const data = DATAS[code];
         if (!data || !data.maxSaleTime || !CODES[code] || !CODES[code].buy_time) return [];
         let { buy_time } = CODES[code];
-        if (!Array.isArray(buy_time)) buy_time = [buy_time];
+        // if (!Array.isArray(buy_time)) buy_time = [buy_time];
         const arr = [];
         buy_time.forEach(time => {
             const today = new Date();
             const specificDate = new Date(time);
-            // 判断购买时间是否是大于下午三点
-            const specific_hours = specificDate.getHours();
-            let step = ((+data.maxSaleTime) - 1);
-            if (specific_hours > 15) {
-                step++;
+
+            // 计算基金确认时间
+            // 如果当前时间小于15点，确认时间是T+1
+            // 如果当前时间大于15点，确认时间是T+2
+            // 判断购买时间是否是星期五
+            const specific_day = specificDate.getDay();
+            if (specific_day === 5) {
+                // 如果是15点前买的，确认时间是T+3，否则是T+4
+                if (specific_day.getHours() < 15) {
+                    specificDate.setDate(specificDate.getDate() + 3);
+                } else {
+                    specificDate.setDate(specificDate.getDate() + 4);
+                }
+            } else if (specific_day === 6) {
+                // 如果是星期六
+                specificDate.setDate(specificDate.getDate() + 3);
+            } else if (specific_day === 0) {
+                // 如果是星期天
+                specificDate.setDate(specificDate.getDate() + 2);
+            } else {
+                specificDate.setDate(specificDate.getDate() + 1);
             }
-            // 未来可以卖的三点
-            specificDate.setDate(specificDate.getDate() + step);
+            // 未来可卖的日期15点前
+            specificDate.setDate(specificDate.getDate() + Number(data.maxSaleTime)-1);
             specificDate.setHours(15, 0, 0, 0);
+            // 如果当前时间大于specificDate就可以卖出
             if (new Date() > specificDate) {
                 arr.push({
                     time: time,
-                    str: '<span class="gray">可以售出</span>'
+                    str: `<span class="gray">可以售出</span>`
                 });
-            } else {
+            }else{
                 today.setHours(15, 0, 0, 0);
                 let dayDiff = Math.floor((specificDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-                if ((new Date()).getHours() < 15) {
-                    dayDiff--;
+                // 修复一天内的bug
+                if (dayDiff==0 && (new Date()).getHours() > 15) {
+                    dayDiff++;
                 }
                 arr.push({
                     time: time,
