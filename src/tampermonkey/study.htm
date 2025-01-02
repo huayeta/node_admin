@@ -11,10 +11,54 @@
         li{
             margin: 5px 0;
         }
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .loading-spinner {
+            display: inline-block;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-top-color: #007BFF;
+            animation: spin 1s ease-in-out infinite;
+            -webkit-animation: spin 1s ease-in-out infinite;
+        }
+        .loading-text {
+            font-size: 16px;
+            color: #007BFF;
+            margin-top: 4px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @-webkit-keyframes spin {
+            to {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+        .bytes{
+            display: inline-block;
+            vertical-align: 1px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            padding: 0 5px;
+            font-size: 12px;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="content"></div>
 </body>
 </html>
-<script src="./study.js?t=1"></script>
+<script src="./study.js?t=7"></script>
