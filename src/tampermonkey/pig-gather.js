@@ -2070,7 +2070,7 @@ const customStorage = new CustomStorage();
             // $qqExecPre.value = qq_exec_pre_default;
             // 得到最后一个记录的come-type,qq_exec_pre
             const { come_type, qq_exec_pre } = Tools.findLastKeyValuesByDatas(DATA[phone], ['come_type', 'qq_exec_pre']);
-            // if (come_type) $comeType.value = come_type;
+            if (come_type) $comeType.value = come_type;
             if (qq_exec_pre) $qqExecPre.value = qq_exec_pre;
 
             // const datas = findDatasByQq(qq);
