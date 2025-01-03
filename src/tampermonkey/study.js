@@ -1,19 +1,9 @@
 
 // 获取网址上面的query参数
-// const Url = new URL(window.location.href);
-// const QUERY = Url.searchParams.get('query') ? Url.searchParams.get('query') : '';
-const rawQuery = window.location.href.split('?')[1];
-let QUERY = '';
-if (rawQuery) {
-    const paramPairs = rawQuery.split('&');
-    const targetParam = paramPairs.find(pair => pair.startsWith('query='));
-    if (targetParam) {
-        const value = targetParam.split('=')[1];
-        QUERY = decodeURIComponent(value);
-    }
-}
-const BaseUrl = window.location.href.split('?')[0];
-console.log(QUERY);
+const Url = new URL(window.location.href);
+const QUERY = Url.searchParams.get('query') ? Url.searchParams.get('query') : '';
+const Disk = Url.searchParams.get('disk')? Url.searchParams.get('disk') : '';
+const BaseUrl = `${Url.origin}${Url.pathname}`;
 
 const Tools = {
     formatBytes: (bytes) => {
@@ -28,9 +18,9 @@ const Tools = {
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
     },
-    fetch: async (query) => {
+    fetch: async (query,disk) => {
         // console.log(Tools.objectToQueryParams(params));
-        const res = await fetch(`/api/dir?${query ? Tools.objectToQueryParams({ query }) : ''}`);
+        const res = await fetch(`/api/dir?${query ? Tools.objectToQueryParams({ query,disk }) : ''}`);
         const contentType = res.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
             return res.json();
@@ -47,7 +37,7 @@ const Tools = {
         return res;
     },
     readDir: async () => {
-        const datas = await Tools.fetch(QUERY);
+        const datas = await Tools.fetch(QUERY,Disk);
         if (datas && datas.code == 0) {
             return datas;
         }
@@ -61,10 +51,11 @@ const Tools = {
             <h2>${QUERY}</h2>
             <ul>
                 ${datas.map((data) => {
-            if (data.type == "dir") {
-                return `<li><a href="?query=${QUERY ? `${encodeURIComponent(QUERY)}\\` : ''}${data.file}">${data.file}</a></li>`;
-            }
-            return `<li><a target="_black" href="/api/dir?query=${QUERY ? `${encodeURIComponent(QUERY)}\\` : ''}${data.file}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
+                    let url = `?query=${encodeURIComponent((QUERY?`${QUERY}\\`:'') + data.file)}&disk=${data.disk}`;
+                    if (data.type == "dir") {
+                        return `<li><a href="${url}">${data.file}</a></li>`;
+                    }
+                    return `<li><a target="_black" href="/api/dir${url}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
         }).join('')}
             </ul>`
         document.querySelector('.content').innerHTML = str;
