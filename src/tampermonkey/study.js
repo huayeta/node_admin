@@ -146,9 +146,19 @@ const Tools = {
                 $target.innerHTML = '搜索';
                 if (res.code == 0) {
                     document.querySelector('.search-con').innerHTML = `<div style="text-align:center;font-size:12px;color:gray;">搜索结果${res.datas.length}个，<span style="color:red;" class="j-search-clear">点击清楚结果</span></div><ul>
-                        ${res.datas.map(data => `
-                            <li><a ${data.type == 'file' ? 'target="_black"' : ''} href="${data.type === 'file' ? '/api/dir' : ''}?query=${encodeURIComponent(data.file)}&disk=${data.disk}">${Tools.HighlightKeywords(data.file,val.split(' '))}</a>${data.type === 'file' ? `<span class="bytes">${Tools.formatBytes(data.size)}</span>` : ''}</li>
-                        `).join('')}
+                        ${res.datas.map(data => {
+                        let subject = '';
+                        if (data.subject) {
+                            if (typeof data.subject == 'string') {
+                                subject = data.subject;
+                            } else {
+                                subject = data.subject.text;
+                            }
+                        }
+                        return `
+                            <li>${subject ? `<span class="subject" style="${subject == '英语' ? 'color:aquamarine' : ''}">${subject}</span>` : ''}<a ${data.type == 'file' ? 'target="_black"' : ''} href="${data.type === 'file' ? '/api/dir' : ''}?query=${encodeURIComponent(data.file)}&disk=${data.disk}">${Tools.HighlightKeywords(data.file, val.split(' '))}</a>${data.type === 'file' ? `<span class="bytes">${Tools.formatBytes(data.size)}</span>` : ''}</li>
+                        `;
+                    }).join('')}
                     </ul>`;
                 }
             }
