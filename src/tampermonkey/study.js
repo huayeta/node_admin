@@ -1,7 +1,7 @@
 // 获取网址上面的query参数
 const Url = new URL(window.location.href);
 const QUERY = Url.searchParams.get('query') ? Url.searchParams.get('query') : '';
-const Disk = Url.searchParams.get('disk')? Url.searchParams.get('disk') : '';
+const Disk = Url.searchParams.get('disk') ? Url.searchParams.get('disk') : '';
 const BaseUrl = `${Url.origin}${Url.pathname}`;
 
 function addEventListener(el, eventName, eventHandler, selector) {
@@ -27,9 +27,9 @@ function addEventListener(el, eventName, eventHandler, selector) {
 }
 
 const Tools = {
-    data:{
-      sel:null,
-      datas:[],
+    data: {
+        sel: '语文',
+        datas: [],
     },
     formatBytes: (bytes) => {
         if (bytes === 0) return '0 B';
@@ -43,9 +43,9 @@ const Tools = {
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
     },
-    fetch: async (query,disk) => {
+    fetch: async (query, disk) => {
         // console.log(Tools.objectToQueryParams(params));
-        const res = await fetch(`/api/dir?${query ? Tools.objectToQueryParams({ query,disk }) : ''}`);
+        const res = await fetch(`/api/dir?${query ? Tools.objectToQueryParams({ query, disk }) : ''}`);
         const contentType = res.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
             return res.json();
@@ -61,8 +61,12 @@ const Tools = {
         }
         return res;
     },
+    searchFetch: async (search) => {
+        const res = await fetch(`/api/dir?search=${search}`);
+        return res.json();
+    },
     readDir: async () => {
-        const datas = await Tools.fetch(QUERY,Disk);
+        const datas = await Tools.fetch(QUERY, Disk);
         if (datas && datas.code == 0) {
             return datas;
         }
@@ -74,15 +78,30 @@ const Tools = {
         const str = `
             <a href="${BaseUrl}" style="position:fixed;right:1em;bottom:1em;display:block;background:rgba(0,0,0,.2);padding:1em;width:2em;height:2em;border-radius:2em;line-height:2em;text-align:center;color:white;text-decoration:none;">主页</a>
             <h2>${QUERY}</h2>
-            ${!QUERY?`<div class="menu">${['语文','数学','英语'].map(data=>`<span ${(Tools.data.sel && Tools.data.sel.includes(data))?'class="sel"':''}>${data}</span>`).join('')}</div>`:''}
+            ${!QUERY ? `
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="多关键字加空格，例：337晨读 一年级">
+                    <button class="search-button">搜索</button>
+                </div>
+                <div class="search-con"></div>
+                <div class="menu">${['语文', '数学', '英语', '历史'].map(data => `<span ${(Tools.data.sel && Tools.data.sel.includes(data)) ? 'class="sel"' : ''}>${data}</span>`).join('')}</div>
+            `: ''}
             <ul>
                 ${datas.map((data) => {
-                    if(Tools.data.sel && data.subject && !data.subject.includes(Tools.data.sel))return '';
-                    let url = `?query=${encodeURIComponent((QUERY?`${QUERY}\\`:'') + data.file)}&disk=${data.disk}`;
-                    if (data.type == "dir") {
-                        return `<li>${data.subject?`<span class="subject" style="${data.subject=='英语'?'color:aquamarine':''}">${data.subject}</span>`:''}<a href="${url}">${data.file}</a></li>`;
-                    }
-                    return `<li><a target="_black" href="/api/dir${url}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
+            let subject = '';
+            if (data.subject) {
+                if (typeof data.subject == 'string') {
+                    subject = data.subject;
+                } else {
+                    subject = data.subject.text;
+                }
+            }
+            if (Tools.data.sel && subject && !subject.includes(Tools.data.sel)) return '';
+            let url = `?query=${encodeURIComponent((QUERY ? `${QUERY}\\` : '') + data.file)}&disk=${data.disk}`;
+            if (data.type == "dir") {
+                return `<li>${subject ? `<span class="subject" style="${subject == '英语' ? 'color:aquamarine' : ''}">${subject}</span>` : ''}${data.subject && data.subject.is_top == '1' ? `<span class="subject" style="color:#fff;">置顶</span>` : ''}<a href="${url}">${data.file}</a></li>`;
+            }
+            return `<li><a target="_black" href="/api/dir${url}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
         }).join('')}
             </ul>`
         document.querySelector('.content').innerHTML = str;
@@ -96,17 +115,39 @@ const Tools = {
         addEventListener(document.querySelector('.content'), 'click', (e) => {
             const $target = e.target;
             const sel = $target.textContent;
-            if(Tools.data.sel){
-                if(Tools.data.sel!==sel){
+            if (Tools.data.sel) {
+                if (Tools.data.sel !== sel) {
                     Tools.data.sel = sel;
-                }else{
+                } else {
                     Tools.data.sel = null;
                 }
-            }else{
+            } else {
                 Tools.data.sel = sel;
             }
             Tools.updataHtml(Tools.data.datas);
-        },'.menu span')
+        }, '.menu span')
+        addEventListener(document.querySelector('.content'), 'click', async (e) => {
+            const $target = e.target;
+            const val = document.querySelector('.search-container .search-input').value;
+            if (val) {
+                $target.disabled = true;
+                $target.innerHTML = '搜索中...';
+                const res = await Tools.searchFetch(val);
+                $target.disabled = false;
+                $target.innerHTML = '搜索';
+                if (res.code == 0) {
+                    document.querySelector('.search-con').innerHTML = `<div style="text-align:center;font-size:12px;color:gray;">搜索结果${res.datas.length}个，<span style="color:red;" class="j-search-clear">点击清楚结果</span></div><ul>
+                        ${res.datas.map(data => `
+                            <li><a ${data.type == 'file' ? 'target="_black"' : ''} href="${data.type === 'file' ? '/api/dir' : ''}?query=${encodeURIComponent(data.file)}&disk=${data.disk}">${data.file}</a>${data.type==='file'?`<span class="bytes">${Tools.formatBytes(data.size)}</span>`:''}</li>
+                        `).join('')}
+                    </ul>`;
+                }
+            }
+        }, '.search-container .search-button')
+        addEventListener(document.querySelector('.content'), 'click', (e) => {
+            document.querySelector('.search-con').innerHTML = '';
+            document.querySelector('.search-container .search-input').value = '';
+        }, '.j-search-clear')
     }
 }
 Tools.initialization();

@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学习</title>
     <style>
-        body{
+        body {
             font-size: 16px;
         }
-        li{
+
+        li {
             margin: 5px 0;
         }
+
         .loading-container {
             display: flex;
             justify-content: center;
@@ -18,6 +21,7 @@
             height: 100vh;
             flex-direction: column;
         }
+
         .loading-spinner {
             display: inline-block;
             border: 4px solid rgba(0, 0, 0, 0.1);
@@ -28,6 +32,7 @@
             animation: spin 1s ease-in-out infinite;
             -webkit-animation: spin 1s ease-in-out infinite;
         }
+
         .loading-text {
             font-size: 16px;
             color: #007BFF;
@@ -45,7 +50,8 @@
                 -webkit-transform: rotate(360deg);
             }
         }
-        .bytes{
+
+        .bytes {
             display: inline-block;
             vertical-align: 1px;
             background: rgba(0, 0, 0, 0.3);
@@ -55,7 +61,8 @@
             border-radius: 5px;
             margin-left: 10px;
         }
-        .subject{
+
+        .subject {
             display: inline-block;
             vertical-align: 1px;
             background: rgba(0, 0, 0, 0.3);
@@ -65,10 +72,12 @@
             border-radius: 5px;
             margin-right: 10px;
         }
-        .menu{
+
+        .menu {
             margin: 0 23px;
         }
-        .menu span{
+
+        .menu span {
             display: inline-block;
             vertical-align: 1px;
             padding: 5px 10px;
@@ -76,14 +85,52 @@
             margin-right: 10px;
             cursor: pointer;
         }
-        .menu span.sel{
+
+        .menu span.sel {
             background: rgba(0, 0, 0, 0.3);
             color: bisque;
         }
+        .search-container {
+            width: 90vw;
+            margin: 0 auto 10px;
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .search-input::placeholder {
+            color: #aaa;
+        }
+
+        .search-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
+
 <body>
     <div class="content"></div>
 </body>
+
 </html>
-<script src="./study.js?t=10"></script>
+<script src="./study.js?t=14"></script>
