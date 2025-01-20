@@ -40,6 +40,15 @@ const Tools = {
 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     },
+    HighlightKeywords: (inputString, keywords) => {
+        let result = inputString;
+        for (let keyword of keywords) {
+            // 创建一个不区分大小写的正则表达式，使用 g 标志进行全局匹配
+            const regex = new RegExp(keyword, 'gi');
+            result = result.replace(regex, `<span style="color:red;">$&</span>`);
+        }
+        return result;
+    },
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
     },
@@ -72,7 +81,7 @@ const Tools = {
         }
     },
     addLoading: () => {
-        document.querySelector('.content').innerHTML = `<div class="loading-container"><span class="loading-spinner"></span><div class="loading-text">正在加载中</div></div>`;
+        document.querySelector('.content').innerHTML = `<div class="loading-container"><span class="loading-spinner"></span><div class="loading-text">正在加载中，<a href="${BaseUrl}">返回首页</a></div></div>`;
     },
     updataHtml: (datas) => {
         const str = `
@@ -138,7 +147,7 @@ const Tools = {
                 if (res.code == 0) {
                     document.querySelector('.search-con').innerHTML = `<div style="text-align:center;font-size:12px;color:gray;">搜索结果${res.datas.length}个，<span style="color:red;" class="j-search-clear">点击清楚结果</span></div><ul>
                         ${res.datas.map(data => `
-                            <li><a ${data.type == 'file' ? 'target="_black"' : ''} href="${data.type === 'file' ? '/api/dir' : ''}?query=${encodeURIComponent(data.file)}&disk=${data.disk}">${data.file}</a>${data.type==='file'?`<span class="bytes">${Tools.formatBytes(data.size)}</span>`:''}</li>
+                            <li><a ${data.type == 'file' ? 'target="_black"' : ''} href="${data.type === 'file' ? '/api/dir' : ''}?query=${encodeURIComponent(data.file)}&disk=${data.disk}">${Tools.HighlightKeywords(data.file,val.split(' '))}</a>${data.type === 'file' ? `<span class="bytes">${Tools.formatBytes(data.size)}</span>` : ''}</li>
                         `).join('')}
                     </ul>`;
                 }
