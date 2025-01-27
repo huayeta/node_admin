@@ -371,9 +371,9 @@ const Tools = {
                 today.setHours(0, 0, 0, 0);
                 specificDate.setHours(0, 0, 0, 0);
                 let dayDiff = Math.floor((specificDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-                specificDate.setHours(15,0,0,0);
-                if(dayDiff==0) dayDiff = '明';
-                if(dayDiff<0) dayDiff = '今';
+                specificDate.setHours(15, 0, 0, 0);
+                if (dayDiff == 0) dayDiff = '明';
+                if (dayDiff < 0) dayDiff = '今';
                 arr.push({
                     time: time,
                     str: `<span class="red" title="${specificDate.toLocaleString()}">${dayDiff}天后15:00售出</span>`
@@ -447,8 +447,8 @@ const Tools = {
         return datas;
     },
     // 获得历史涨幅
-    fundMNHisNetList: async (code, pageIndex = 1) => {
-        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': pageIndex, 'pagesize': 2.5 * 30 });
+    fundMNHisNetList: async (code, pageIndex = 1, pagesize = 2.5 * 30) => {
+        const fundMNHisNetList = await Tools.fetch('fundMNHisNetList', { 'FCODE': code, 'pageIndex': pageIndex, 'pagesize': pagesize });
         return fundMNHisNetList.Datas;
     },
     getCode: async (code) => {
@@ -479,11 +479,13 @@ const Tools = {
             }
         })
         // 获取基金历史涨幅
-        const fundMNHisNetList = await Tools.fundMNHisNetList(code);
+        const fundMNHisNetList = await Tools.fundMNHisNetList(code, 1, 12 * 30);
         let customLastWeekGrowth = 0;
         let custom2LastWeekGrowth = 0;
         let customLastMonthGrowth = 0;
-        let dayGrowth = 0;
+        let dayGrowth = 0;// 最新日涨幅
+        // 最近一年每月的涨跌变化
+        const customMonthData = {};
         fundMNHisNetList.forEach((data, i) => {
             if (i == 0) dayGrowth = data.JZZZL;
             if (Tools.isNumber(data.JZZZL)) {
@@ -497,14 +499,29 @@ const Tools = {
                 if (i < 5 * 4) {
                     customLastMonthGrowth += (+data.JZZZL);
                 }
+                // 获取年月字段
+                const date = new Date(data.FSRQ);
+                const year = date.getFullYear();
+                let month = date.getMonth() + 1;
+                month = month < 10 ? `0${month}` : month;
+                const key = `${year}-${month}`;
+                // 计算月涨幅
+                if (!customMonthData[key]) {
+                    customMonthData[key] = 0;
+                }
+                customMonthData[key] += (+data.JZZZL);
             }
+        })
+        Object.keys(customMonthData).forEach(key => {
+            customMonthData[key] = customMonthData[key].toFixed(2);
         })
         // 留下来最近6个月的数据
         Data.dayGrowth = dayGrowth;
-        Data.customNetWorkData = fundMNHisNetList;
+        Data.customNetWorkData = fundMNHisNetList.slice(0, 2.5 * 30);
         Data.customLastWeekGrowth = (customLastWeekGrowth).toFixed(2);
         Data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
         Data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
+        Data.customMonthData = customMonthData;
         // 基金的持仓情况asset 持仓具体情况assetPosition 债权情况position
         const { asset, assetPosition, position } = await Tools.getAsset(code);
         Data.asset = asset;
@@ -1046,6 +1063,13 @@ const Tools = {
         })
         return codes;
     },
+    // 列表全选
+    selectAllTrs: () => {
+        const $trs = $table.querySelectorAll('tr');
+        $trs.forEach($tr => {
+            $tr.classList.add('select');
+        })
+    },
     // addCode: async (code) => {
     //     // console.log(code);
     //     const res = await Tools.fetch(code);
@@ -1137,7 +1161,7 @@ const Tools = {
             // 债券组合筛选
             if ((!SORT.type || (data.customType && data.customType.includes(SORT.type)))) {
                 // 债权类型筛选
-                if(!SORT.Ftype_text || (SORT.Ftype_text && data.Ftype && data.Ftype.includes(SORT.Ftype_text))){
+                if (!SORT.Ftype_text || (SORT.Ftype_text && data.Ftype && data.Ftype.includes(SORT.Ftype_text))) {
                     // 基金代码选中筛选
                     if (!SORT.checked || (SORT.checked == 1 && CODES[data.code] && CODES[data.code].checked == 1)) {
                         // name筛选/code筛选
@@ -1316,7 +1340,8 @@ const Tools = {
                     <button class="search_btn green j-code-combination-add" style="margin-left:10px">添加组合</button>
                     <button class="search_btn j-code-updata" style="margin-left:10px">更新债权</button>
                     <button class="search_btn j-code-combination-updata" style="margin-left:10px">更新组合</button>
-                    <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债权</button>
+                    <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债券</button>
+                    <button class="search_btn j-code-compare-month" style="margin-left:10px">对比月债</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
                     <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px; width:150px;" />
                     <button class="search_btn reb j-code-note-add" style="margin-left:0px">添加备注</button>
@@ -1336,6 +1361,7 @@ const Tools = {
                     <input class="search_input j-code-dtSly" type="text" placeholder="定投收益率>=?" style="margin-left:10px; width:110px;" value="${SORT.dtSly ? SORT.dtSly : ''}" />
                     <input class="search_input j-code-ratePositiveDay-sort" type="text" placeholder="连续正天数>=?" style="margin-left:10px; width:110px;" value="${SORT.ratePositiveDay ? SORT.ratePositiveDay : ''}" />
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
+                    <span style="margin-left:10px; color:red; cursor: pointer;" class="j-select-all">全选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>
                     <span class="span-a" style="margin-left:10px;">
                     例如：<a class="j-sort-preset-span" data-sorts="${encodeURIComponent(JSON.stringify({ is_ct: '1' }))}">城投</a>
@@ -1365,7 +1391,7 @@ const Tools = {
             <div style="margin-top:15px;" class="j-datas-add">
                 <textarea placeholder="复制进下载的数据" class="search_input" style="height:24px;"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
             </div>
-            ${['大佬-2', 9, 1, 3, 5, 6, 7, 8].map(name => {
+            ${['大佬-2', '大佬-4', 9, 1, 3, 5, 6, 7, 8].map(name => {
             return `<view-img src="/public/uploads/${name}.jpg" ></view-img>`
         }).join('')}
         `;
@@ -1454,8 +1480,12 @@ class Alert {
         <div class="con"></div>
     `;
         this.$alert = $alert;
+        // 储存数据
+        this.data = undefined;
         $alert.querySelector('.bg').addEventListener('click', e => {
             $alert.style.display = 'none';
+            // 删除数据
+            this.data = undefined;
         });
         $body.append($alert);
     }
@@ -1526,6 +1556,7 @@ const $audio = $Content.querySelector('.audio');
 const getJZZL = (history) => {
     return [...history].map(data => `<tr><td>${data['FSRQ']}</td><td class="${data['JZZZL'] > 0 ? 'red' : 'green'}" style="text-align:right;">${data['JZZZL']}%</td></tr>`)
 }
+// 对比债基
 const compareCodes = function (codes) {
     let str = '';
     str += '<div style="display:flex;">';
@@ -1574,11 +1605,76 @@ addEventListener(myAlert.$alert, 'click', async e => {
 
     e.target.setAttribute('data-pageIndex', pageIndex);
 }, '.j-history-btn')
+// 对比月债
+const getCompareMonthTable = (arr,Month)=>{
+    let str =  `
+        <table>
+            <thead>
+                <tr><th></th>${arr.map(code=>`<th><div class="owb" style="width:80px;white-space:initial;">${DATAS[code].name}</div></th>`).join('')}</tr>
+            </thead>
+            <tbody>
+                ${Object.keys(DATAS[arr[0]].customMonthData).map(month=>{
+                    let arr_tmp = [...arr];
+                    arr_tmp.sort((a,b)=>{
+                        return +DATAS[b].customMonthData[month] - +DATAS[a].customMonthData[month];
+                    })
+                    // console.log(arr_tmp)
+                    return `<tr class="${Month===month?'select':''}"><th>${month}</th>${arr.map(code=>{
+                            const num = +DATAS[code].customMonthData[month];
+                            // console.log(arr_tmp,code)
+                            const index = (arr_tmp.indexOf(code)+1);
+                            return `<td style="text-align:right;"><span class="${num > 0 ? 'red' : 'green'}">${num}%</span>/<span class="brown">${index}/${arr.length}</span></td>`
+                        }).join('')}</tr>`
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+    return str;
+}
+const compareMonthCodes = function (codes) {
+    let str = '';
+    str += '<div style="display:flex;">';
+    let arr = [];
+    codes.forEach(code => {
+        arr.push(code);
+        if (code.includes(',')) {
+            arr = arr.concat(code.split(','))
+        }
+    })
+    arr = [...new Set(arr)];
+    // console.log(arr,codes);
+    // 筛选出来customMonthData不存在的
+    arr = arr.filter(code=>DATAS[code] && DATAS[code].customMonthData);
+    if(arr.length == 0) return alert('没有数据');
+    str += `
+        <div style="margin:0 10px;" class="custom-month">
+            ${getCompareMonthTable(arr)}
+        </div>
+    `
+    str += '</div>';
+    myAlert.show(str,()=>{
+        // console.log(myAlert.$alert.querySelector('.custom-month'));
+        const $month = myAlert.$alert.querySelector('.custom-month');
+        addEventListener($month,'click',e=>{
+            const $th = e.target;
+            const month = $th.innerHTML;
+            // arr排序
+            arr.sort((a,b)=>{
+                return +DATAS[b].customMonthData[month] - +DATAS[a].customMonthData[month];
+            })
+            $month.innerHTML = getCompareMonthTable(arr,month);
+        },'tbody>tr>th')
+    });
+}
 // 对比债基
 addEventListener($form, 'click', e => {
     const codes = Tools.getSelCodes();
     if (codes.length > 0) compareCodes(codes);
 }, '.j-code-compare')
+addEventListener($form, 'click', e => {
+    const codes = Tools.getSelCodes();
+    if (codes.length > 0) compareMonthCodes(codes);
+}, '.j-code-compare-month')
 
 // 基金名称点击
 addEventListener($table, 'click', e => {
@@ -2013,6 +2109,10 @@ addEventListener($form, 'click', e => {
     Tools.storageDatas();
     Tools.updateDatasTable();
 }, '.j-code-filter-clear')
+// 全选
+addEventListener($form, 'click', e => {
+    Tools.selectAllTrs();
+}, '.j-select-all')
 // 清除选择
 addEventListener($form, 'click', e => {
     Tools.updateDatasTable();
@@ -2214,13 +2314,14 @@ class Contextmenu {
                 <div class="context-menu-item">添购时间⏱</div>
                 <div class="br"></div>
                 <div class="context-menu-item">对比债权❇️</div>
+                <div class="context-menu-item">对比月债❇️</div>
                 <div class="context-menu-item">筛选债权✅</div>
                 <div class="context-menu-item">列表基金🔃</div>
                 <div class="context-menu-item">列表债券🔃</div>
                 <div class="context-menu-item">列表持仓🔃</div>
                 <div class="context-menu-item">列表定投🔃</div>
                 <div class="br"></div>  
-                <div style="padding: 10px; font-size:12px;display: flex; justify-content: space-between;"><span style="color:red;cursor: pointer;" class="j-code-filter-clear">清楚筛选</span><span style=" color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span></div>
+                <div style="padding: 10px; font-size:12px;display: flex; justify-content: space-between;"><span style="color:red;cursor: pointer;" class="j-code-filter-clear">清楚筛选</span><span class="j-select-all">全选</span><span style=" color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span></div>
             </div>
         `
         const $body = document.querySelector('body');
@@ -2251,6 +2352,10 @@ class Contextmenu {
         })
         this.$menu.querySelector('.j-code-select-clear').addEventListener('click', e => {
             $form.querySelector('.j-code-select-clear').click();
+            this.hide();
+        })
+        this.$menu.querySelector('.j-select-all').addEventListener('click', e => {
+            $form.querySelector('.j-select-all').click();
             this.hide();
         })
     }
@@ -2312,6 +2417,10 @@ class Contextmenu {
             $form.querySelector('.j-code-compare').click();
             this.hide();
         }
+        if (con.includes('对比月债')) {
+            $form.querySelector('.j-code-compare-month').click();
+            this.hide();
+        }
         if (con.includes('筛选债权')) {
             const codes = Tools.getSelCodes();
             const $codeNameIput = document.querySelector('.j-code-name-ipt');
@@ -2328,6 +2437,8 @@ class Contextmenu {
             // await Tools.getBondInfosByData(Data);
             // alert('更新完成');
             // this.hide();
+            const result = confirm('确定查询吗');
+            if (!result) return;
             const codes = Tools.getNowCodes();
             const $span = document.createElement('span');
             $span.style = 'color:gray;'

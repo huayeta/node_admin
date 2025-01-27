@@ -99,7 +99,10 @@
             font-weight: normal;
         }
         .owb{
-            overflow-wrap: break-word;
+            /* 允许在单词内换行 */
+            overflow-wrap: break-word; 
+            /* 强制在任意字符处换行 */
+            word-break: break-all; 
         }
         .br{
             border-top: 1px double #e7dfdf;

@@ -25,11 +25,48 @@ function addEventListener(el, eventName, eventHandler, selector) {
         return wrappedHandler;
     }
 }
+// 创建音乐播放器Class
+class MusicPlayer {
+    constructor() {
+        this.audio = new Audio();
+        this.audio.volume = 1;
+        // 音乐播放完之后自动播放下一首
+        this.audio.addEventListener('ended', () => {
+            console.log('播放完了');
+            if(this.nextMusic)this.nextMusic();
+        });
+    }
+    pause() {
+        this.audio.pause(); 
+    }
+    stop() {
+        this.audio.pause();
+        this.audio.currentTime = 0;
+    }
+    isPlaying() {
+        return !this.audio.paused;
+    }
+    getCurrentTime() {
+        return this.audio.currentTime;
+    }
+    getDuration() {
+        return this.audio.duration;
+    }
+    setCurrentTime(time) {
+        this.audio.currentTime = time;
+    }
+    play(music) {
+        this.audio.src = music;
+        this.audio.play();
+    }
+}
+const musicPlayer = new MusicPlayer();
 
 const Tools = {
     data: {
         sel: '语文',
         datas: [],
+        $music: null,
     },
     formatBytes: (bytes) => {
         if (bytes === 0) return '0 B';
@@ -48,6 +85,31 @@ const Tools = {
             result = result.replace(regex, `<span style="color:red;">$&</span>`);
         }
         return result;
+    },
+    // 判断是否音乐文件
+    isMusicFile: (ext) => {
+        const musicExtensions = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma'];
+        return musicExtensions.includes(ext);
+    },
+    findNextSiblingWithClass: (element, className) => {
+        let currentElement = element.nextElementSibling;
+        while (currentElement) {
+            if (currentElement.classList.contains(className)) {
+                return currentElement;
+            }
+            currentElement = currentElement.nextElementSibling;
+        }
+        return null; 
+    },
+    findFirstSiblingWithClass: (element, className) => {
+        let currentElement = element.previousElementSibling;
+        while (currentElement) {
+            if (currentElement.classList.contains(className)) {
+                return currentElement;
+            }
+            currentElement = currentElement.previousElementSibling;
+        }
+        return null;
     },
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
@@ -83,7 +145,8 @@ const Tools = {
     addLoading: () => {
         document.querySelector('.content').innerHTML = `<div class="loading-container"><span class="loading-spinner"></span><div class="loading-text">正在加载中，<a href="${BaseUrl}">返回首页</a></div></div>`;
     },
-    updataHtml: (datas) => {
+    updataHtml: () => {
+        const datas = Tools.data.datas;
         const str = `
             <a href="${BaseUrl}" style="position:fixed;right:1em;bottom:1em;display:block;background:rgba(0,0,0,.2);padding:1em;width:2em;height:2em;border-radius:2em;line-height:2em;text-align:center;color:white;text-decoration:none;">主页</a>
             <h2>${QUERY}</h2>
@@ -110,6 +173,9 @@ const Tools = {
             if (data.type == "dir") {
                 return `<li>${subject ? `<span class="subject" style="${subject == '英语' ? 'color:aquamarine' : ''}">${subject}</span>` : ''}${data.subject && data.subject.is_top == '1' ? `<span class="subject" style="color:#fff;">置顶</span>` : ''}<a href="${url}">${data.file}</a></li>`;
             }
+            // if(Tools.isMusicFile(data.ext)){
+            //     return `<li class="music" data-href="/api/dir${url}"><a href="javascript:;">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
+            // }
             return `<li><a target="_black" href="/api/dir${url}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
         }).join('')}
             </ul>`
@@ -118,9 +184,12 @@ const Tools = {
     initialization: async () => {
         Tools.addLoading();
         const datas = await Tools.readDir();
-        if (datas) Tools.updataHtml(datas.datas);
-        Tools.data.datas = datas.datas;
+        if (datas) {
+            Tools.data.datas = datas.datas;
+            Tools.updataHtml();
+        }
         document.title = QUERY;
+        // 顶部的菜单切换
         addEventListener(document.querySelector('.content'), 'click', (e) => {
             const $target = e.target;
             const sel = $target.textContent;
@@ -133,8 +202,9 @@ const Tools = {
             } else {
                 Tools.data.sel = sel;
             }
-            Tools.updataHtml(Tools.data.datas);
+            Tools.updataHtml();
         }, '.menu span')
+        // 搜索
         addEventListener(document.querySelector('.content'), 'click', async (e) => {
             const $target = e.target;
             const val = document.querySelector('.search-container .search-input').value;
@@ -167,6 +237,49 @@ const Tools = {
             document.querySelector('.search-con').innerHTML = '';
             document.querySelector('.search-container .search-input').value = '';
         }, '.j-search-clear')
+        // 音乐播放
+        musicPlayer.nextMusic = ()=>{
+            const $music = Tools.data.$music;
+            if ($music) {
+                // 去掉正在播放的图标
+                $music.innerHTML = $music.innerHTML.replace('<span class="u-playing">正在播放..</span>', '');
+                // 找到下一个音乐元素带class=music的元素
+                const $nextMusic = Tools.findNextSiblingWithClass($music, 'music');
+                if ($nextMusic) {
+                    Tools.data.$music = $nextMusic;
+                }else{
+                    const $firstMusic = Tools.findFirstSiblingWithClass($music,'music');
+                    if ($firstMusic) {
+                        Tools.data.$music = $firstMusic;
+                    }
+                }
+                const href = Tools.data.$music.getAttribute('data-href');
+                musicPlayer.play(href);
+                // 再元素前面加一个正在播放的图标
+                Tools.data.$music.innerHTML = `<span class="u-playing">正在播放..</span>${Tools.data.$music.innerHTML}`;
+            }
+        }
+        addEventListener(document.querySelector('.content'), 'click', (e) => {
+            const $target = e.target.closest('.music');
+            const href = $target.getAttribute('data-href');
+            if (href) {
+                if (Tools.data.$music) {
+                    // 去掉正在播放的图标
+                    Tools.data.$music.innerHTML = Tools.data.$music.innerHTML.replace('<span class="u-playing">正在播放..</span>', '');
+                    // 如果点击的是正在播放的音乐，停止播放
+                    if (Tools.data.$music == $target) {
+                        musicPlayer.stop();
+                        Tools.data.$music = null;
+                        return;
+                    }
+                }
+                musicPlayer.play(href);
+                Tools.data.$music = $target;
+                e.preventDefault();
+                // 再元素前面加一个正在播放的图标
+                $target.innerHTML = `<span class="u-playing">正在播放..</span>${$target.innerHTML}`;
+            }
+        },'.music a')
     }
 }
 Tools.initialization();
