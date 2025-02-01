@@ -156,6 +156,23 @@ const Tools = {
             now: Tools.getTime('yyyy-mm-dd'),
         }
     },
+    // 计算包含的天数
+    getIncludeDays: (startDateStr, endDateStr) => {
+        const startDate = new Date(startDateStr);
+        const endDate = new Date(endDateStr);
+
+        const timeStart = startDate.getTime();
+        const timeEnd = endDate.getTime();
+
+        const diffTime = Math.abs(timeEnd - timeStart);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            return 1;
+        } else {
+            return diffDays + 1;
+        }
+    },
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
     },
@@ -486,6 +503,8 @@ const Tools = {
         let dayGrowth = 0;// 最新日涨幅
         // 最近一年每月的涨跌变化
         const customMonthData = {};
+        // 记录每个时段的涨跌变化
+        const customAdjacentData = [];
         fundMNHisNetList.forEach((data, i) => {
             if (i == 0) dayGrowth = data.JZZZL;
             if (Tools.isNumber(data.JZZZL)) {
@@ -510,6 +529,26 @@ const Tools = {
                     customMonthData[key] = 0;
                 }
                 customMonthData[key] += (+data.JZZZL);
+                if (i <= 3 * 30) {
+                    // 记录每个时段的涨跌变化
+                    const lastAdjacentObj = customAdjacentData[customAdjacentData.length - 1];
+                    // 存在并正负相同就累加
+                    // console.log(lastAdjacentObj);
+                    if (lastAdjacentObj && Math.sign(lastAdjacentObj.sum) === Math.sign(+data.JZZZL)) {
+                        // console.log((lastAdjacentObj.sum + (+data.JZZZL)));
+                        // lastAdjacentObj.sum = (+lastAdjacentObj.sum + (+data.JZZZL)).toFixed(2);
+                        lastAdjacentObj.sum = (+lastAdjacentObj.sum + (+data.JZZZL));
+                        // 取两位数并转换数字
+                        lastAdjacentObj.sum = +(+lastAdjacentObj.sum).toFixed(2);
+                        lastAdjacentObj.next = data.FSRQ;
+                    } else {
+                        customAdjacentData.push({
+                            sum: +data.JZZZL,
+                            start: data.FSRQ,
+                            next: data.FSRQ,
+                        })
+                    }
+                }
             }
         })
         Object.keys(customMonthData).forEach(key => {
@@ -522,6 +561,7 @@ const Tools = {
         Data.custom2LastWeekGrowth = (custom2LastWeekGrowth).toFixed(2);
         Data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
         Data.customMonthData = customMonthData;
+        Data.customAdjacentData = customAdjacentData;
         // 基金的持仓情况asset 持仓具体情况assetPosition 债权情况position
         const { asset, assetPosition, position } = await Tools.getAsset(code);
         Data.asset = asset;
@@ -1342,6 +1382,7 @@ const Tools = {
                     <button class="search_btn j-code-combination-updata" style="margin-left:10px">更新组合</button>
                     <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债券</button>
                     <button class="search_btn j-code-compare-month" style="margin-left:10px">对比月债</button>
+                    <button class="search_btn j-code-compare-bp" style="margin-left:10px">对比涨跌</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
                     <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px; width:150px;" />
                     <button class="search_btn reb j-code-note-add" style="margin-left:0px">添加备注</button>
@@ -1606,26 +1647,26 @@ addEventListener(myAlert.$alert, 'click', async e => {
     e.target.setAttribute('data-pageIndex', pageIndex);
 }, '.j-history-btn')
 // 对比月债
-const getCompareMonthTable = (arr,Month)=>{
-    let str =  `
+const getCompareMonthTable = (arr, Month) => {
+    let str = `
         <table>
             <thead>
-                <tr><th></th>${arr.map(code=>`<th><div class="owb" style="width:80px;white-space:initial;">${DATAS[code].name}</div></th>`).join('')}</tr>
+                <tr><th></th>${arr.map(code => `<th><div class="owb" style="white-space:initial;">${DATAS[code].name}</div></th>`).join('')}</tr>
             </thead>
             <tbody>
-                ${Object.keys(DATAS[arr[0]].customMonthData).map(month=>{
-                    let arr_tmp = [...arr];
-                    arr_tmp.sort((a,b)=>{
-                        return +DATAS[b].customMonthData[month] - +DATAS[a].customMonthData[month];
-                    })
-                    // console.log(arr_tmp)
-                    return `<tr class="${Month===month?'select':''}"><th>${month}</th>${arr.map(code=>{
-                            const num = +DATAS[code].customMonthData[month];
-                            // console.log(arr_tmp,code)
-                            const index = (arr_tmp.indexOf(code)+1);
-                            return `<td style="text-align:right;"><span class="${num > 0 ? 'red' : 'green'}">${num}%</span>/<span class="brown">${index}/${arr.length}</span></td>`
-                        }).join('')}</tr>`
-                }).join('')}
+                ${Object.keys(DATAS[arr[0]].customMonthData).map(month => {
+        let arr_tmp = [...arr];
+        arr_tmp.sort((a, b) => {
+            return +DATAS[b].customMonthData[month] - +DATAS[a].customMonthData[month];
+        })
+        // console.log(arr_tmp)
+        return `<tr class="${Month === month ? 'select' : ''}"><th>${month}</th>${arr.map(code => {
+            const num = +DATAS[code].customMonthData[month];
+            // console.log(arr_tmp,code)
+            const index = (arr_tmp.indexOf(code) + 1);
+            return `<td style="text-align:right;"><span class="${num > 0 ? 'red' : 'green'}">${num}%</span>/<span class="brown">${index}/${arr.length}</span></td>`
+        }).join('')}</tr>`
+    }).join('')}
             </tbody>
         </table>
     `;
@@ -1644,27 +1685,60 @@ const compareMonthCodes = function (codes) {
     arr = [...new Set(arr)];
     // console.log(arr,codes);
     // 筛选出来customMonthData不存在的
-    arr = arr.filter(code=>DATAS[code] && DATAS[code].customMonthData);
-    if(arr.length == 0) return alert('没有数据');
+    arr = arr.filter(code => DATAS[code] && DATAS[code].customMonthData);
+    if (arr.length == 0) return alert('没有数据');
     str += `
         <div style="margin:0 10px;" class="custom-month">
             ${getCompareMonthTable(arr)}
         </div>
     `
     str += '</div>';
-    myAlert.show(str,()=>{
+    myAlert.show(str, () => {
         // console.log(myAlert.$alert.querySelector('.custom-month'));
         const $month = myAlert.$alert.querySelector('.custom-month');
-        addEventListener($month,'click',e=>{
+        addEventListener($month, 'click', e => {
             const $th = e.target;
             const month = $th.innerHTML;
             // arr排序
-            arr.sort((a,b)=>{
+            arr.sort((a, b) => {
                 return +DATAS[b].customMonthData[month] - +DATAS[a].customMonthData[month];
             })
-            $month.innerHTML = getCompareMonthTable(arr,month);
-        },'tbody>tr>th')
+            $month.innerHTML = getCompareMonthTable(arr, month);
+        }, 'tbody>tr>th')
     });
+}
+// 对比涨跌
+const compareBp = function (codes) {
+    let str = '';
+    str += '<div style="display:flex;">';
+    let arr = [];
+    codes.forEach(code => {
+        arr.push(code);
+        if (code.includes(',')) {
+            arr = arr.concat(code.split(','))
+        }
+    })
+    arr = [...new Set(arr)];
+    // console.log(arr,codes);
+    arr.forEach(code => {
+        const { name, customAdjacentData } = DATAS[code];
+        if (!customAdjacentData) return;
+        str += `
+        <div style="margin:0 10px;">
+            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;">${Array.isArray(name)? '组合' : name}</div>
+            <table>
+                <thead>
+                    <tr><th>日期</th><th>日涨幅</th></tr>
+                </thead>
+                <tbody>
+                    ${[...customAdjacentData].map(data => `<tr><td class="gray">${data.start}~<br/>${data.next}</td><td class="${data['sum'] > 0 ? 'red' : 'green'}" style="text-align:right;">${data['sum']}%/<span class="gray">${Tools.getIncludeDays(data.start,data.next)}</span></td></tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+        `
+    })
+    str += '</div>';
+    myAlert.show(str);
 }
 // 对比债基
 addEventListener($form, 'click', e => {
@@ -1675,6 +1749,10 @@ addEventListener($form, 'click', e => {
     const codes = Tools.getSelCodes();
     if (codes.length > 0) compareMonthCodes(codes);
 }, '.j-code-compare-month')
+addEventListener($form, 'click', e => {
+    const codes = Tools.getSelCodes();
+    if (codes.length > 0) compareBp(codes);
+}, '.j-code-compare-bp')
 
 // 基金名称点击
 addEventListener($table, 'click', e => {
@@ -2315,6 +2393,7 @@ class Contextmenu {
                 <div class="br"></div>
                 <div class="context-menu-item">对比债权❇️</div>
                 <div class="context-menu-item">对比月债❇️</div>
+                <div class="context-menu-item">对比涨跌❇️</div>
                 <div class="context-menu-item">筛选债权✅</div>
                 <div class="context-menu-item">列表基金🔃</div>
                 <div class="context-menu-item">列表债券🔃</div>
@@ -2419,6 +2498,10 @@ class Contextmenu {
         }
         if (con.includes('对比月债')) {
             $form.querySelector('.j-code-compare-month').click();
+            this.hide();
+        }
+        if (con.includes('对比涨跌')) {
+            $form.querySelector('.j-code-compare-bp').click();
             this.hide();
         }
         if (con.includes('筛选债权')) {
