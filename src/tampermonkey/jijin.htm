@@ -1,135 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>基金</title>
     <style>
-        body{
+        body {
             padding: 10px;
             font-size: 12px;
         }
-        table,table td,table th{
+
+        table,
+        table td,
+        table th {
             border: 1px solid #e7dfdf;
-            border-collapse:collapse;
+            border-collapse: collapse;
             padding: 10px;
             font-size: 14px;
             white-space: nowrap;
         }
-        p{
+
+        p {
             margin: 0;
         }
-        select{
+
+        select {
             border: 1px solid #e7dfdf;
             height: 30px;
             padding: 0 5px;
         }
-        .search_input{
+
+        .search_input {
             border: 1px solid #e7dfdf;
             line-height: 2;
         }
-        input[type='text']{
+
+        input[type='text'] {
             text-indent: 1em;
         }
-        button{
+
+        button {
             border: none;
             line-height: 28px;
             cursor: pointer;
-            border-radius:5px;
+            border-radius: 5px;
         }
-        button:hover{
+
+        button:hover {
             opacity: .8;
         }
-        button.red{
+
+        button.red {
             color: white;
             background: red;
         }
-        button.reb{
+
+        button.reb {
             color: white;
             background: rebeccapurple;
         }
-        .brown{
+
+        .brown {
             color: #b7a4a4;
         }
-        .red{
+
+        .red {
             color: red;
         }
-        .green{
+
+        .green {
             color: green;
         }
-        .gray{
+
+        .gray {
             color: gray;
         }
-        .blue{
+
+        .blue {
             color: blue;
         }
-        .del{
+
+        .del {
             color: gray;
             text-decoration: line-through;
         }
-        .fs12{
+
+        .fs12 {
             font-size: 12px;
         }
-        .fs14{
+
+        .fs14 {
             font-size: 14px;
         }
-        .tac{
+
+        .tac {
             text-align: center;
         }
-        .ml10{
+
+        .ml10 {
             margin-left: 10px;
         }
-        .mr10{
+
+        .mr10 {
             margin-right: 10px;
         }
-        .mt10{
+
+        .mt10 {
             margin-top: 10px;
         }
-        .mt5{
+
+        .mt5 {
             margin-top: 5px;
         }
-        .mr5{
+
+        .mr5 {
             margin-right: 5px;
         }
-        .cp{
+
+        .cp {
             cursor: pointer;
         }
-        .fwn{
+
+        .fwn {
             font-weight: normal;
         }
-        .owb{
+
+        .owb {
             /* 允许在单词内换行 */
-            overflow-wrap: break-word; 
+            overflow-wrap: break-word;
             /* 强制在任意字符处换行 */
-            word-break: break-all; 
+            word-break: break-all;
         }
-        .br{
+
+        .br {
             border-top: 1px double #e7dfdf;
             margin: 5px 0;
         }
-        .ti0{
+
+        .ti0 {
             text-indent: 0 !important;
         }
-        .tam{
+
+        .tam {
             text-align: center;
         }
-        .emoji{
+
+        .emoji {
             cursor: pointer;
             margin-left: 5px;
             user-select: none;
         }
-        .emoji.sel{
+
+        .emoji.sel {
             background: burlywood;
         }
-        table tbody tr.select,table tbody tr:hover{
+
+        table tbody tr.select,
+        table tbody tr:hover {
             background: aliceblue !important;
         }
-        .el-table thead tr{
+
+        .el-table thead tr {
             position: sticky;
             top: 0;
             background: #fff;
         }
+
         .el-table .caret-wrapper {
             display: -webkit-inline-box;
             display: -ms-inline-flexbox;
@@ -148,7 +186,7 @@
             overflow: initial;
             position: relative
         }
-        
+
         .el-table .sort-caret {
             width: 0;
             height: 0;
@@ -157,38 +195,82 @@
             left: 7px;
             cursor: pointer;
         }
-        
+
         .el-table .sort-caret.ascending {
             border-bottom-color: #c0c4cc;
             top: 5px
         }
-        
+
         .el-table .sort-caret.descending {
             border-top-color: #c0c4cc;
             bottom: 7px
         }
-        
+
         .el-table .ascending .sort-caret.ascending {
             border-bottom-color: #409eff
         }
-        
+
         .el-table .descending .sort-caret.descending {
             border-top-color: #409eff
         }
-        .u-box{
+
+        .u-box {
             padding: 0 4px;
             background: rgb(241, 242, 251);
-            color:rgb(118, 134, 222);
+            color: rgb(118, 134, 222);
             line-height: 18px;
             font-size: 12px;
         }
+
+        /* 下面是tip样式 */
+        .tip-container {
+            position: relative;
+        }
+
+        .tip-container:hover .tip {
+            opacity: 1;
+            pointer-events: auto;
+            /* 恢复事件 */
+        }
+
+        .tip-container .tip {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateX(100%) translateY(-50%);
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-width: 300px;
+            transition: opacity 0.2s;
+            opacity: 0;
+            pointer-events: none;
+            /* 避免阻挡触发器的事件 */
+            z-index: 1000;
+        }
+
+        /* 添加一个三角样式 */
+        .tip-container .tip::before {
+            content: "";
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent gray transparent transparent;
+        }
     </style>
 </head>
+
 <body>
     <div class="content">
-        
+
     </div>
 </body>
+
 </html>
 <script src="/public/libs/lz-string.min.js"></script>
 <script src="./jijin.js"></script>

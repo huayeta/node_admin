@@ -353,8 +353,9 @@ const Tools = {
                 nextDay.setDate(nextDay.getDate() + (symbol == '+' ? 1 : -1));
             }
         }
-        // 遍历购买时间
-        buy_time.forEach(time => {
+        const getSaleStr = (time, maxSaleTime) => {
+            if (!time || !maxSaleTime) return {};
+            let result = {};
             let today = new Date();
             let specificDate = new Date(time);
             // console.log(specificDate,getWorkingDay(specificDate));
@@ -368,7 +369,7 @@ const Tools = {
             // 计算基金确认时间
             specificDate = getWorkingDay(specificDate.setDate(specificDate.getDate() + 1));
             // 未来算满基金购买日期
-            specificDate.setDate(specificDate.getDate() + Number(data.maxSaleTime) - 1);
+            specificDate.setDate(specificDate.getDate() + Number(maxSaleTime) - 1);
             specificDate.setHours(15, 0, 0, 0);
             // 往上获取到工作日
             specificDate = getWorkingDay(specificDate, '-');
@@ -378,10 +379,10 @@ const Tools = {
             specificDate = getWorkingDay(specificDate, '-');
             // 如果当前时间大于specificDate就可以卖出
             if (new Date() > specificDate) {
-                arr.push({
+                result = {
                     time: time,
                     str: `<span class="gray" title="${specificDate.toLocaleString()}">可以售出</span>`
-                });
+                };
             } else {
                 // today.setHours(15, 0, 0, 0);
                 today.setDate(today.getDate() + 1);
@@ -391,12 +392,77 @@ const Tools = {
                 specificDate.setHours(15, 0, 0, 0);
                 if (dayDiff == 0) dayDiff = '明';
                 if (dayDiff < 0) dayDiff = '今';
-                arr.push({
+                result = {
                     time: time,
                     str: `<span class="red" title="${specificDate.toLocaleString()}">${dayDiff}天后15:00售出</span>`
-                });
+                }
             }
+            return result;
+        }
+        buy_time.forEach(time => {
+            const obj = getSaleStr(time, data.maxSaleTime);
+            if (obj && obj.str && !obj.str.includes('可以售出')) {
+                let resultStr = '';
+                for (let index = 0; index < data.saleTime.length; index++) {
+                    const saleTime = data.saleTime[index];
+                    if (time && saleTime.saleTime) {
+                        const result = getSaleStr(time, saleTime.saleTime);
+                        // console.log(result);
+                        if (result.str && !result.str.includes('可以售出')) {
+                            resultStr = { ...result, rate: saleTime.rate };
+                            break;
+                        }
+                    }
+                }
+                obj.rate = resultStr;
+            }
+            arr.push(obj);
         })
+        // console.log(arr);
+        // 遍历购买时间
+        // buy_time.forEach(time => {
+        //     let today = new Date();
+        //     let specificDate = new Date(time);
+        //     // console.log(specificDate,getWorkingDay(specificDate));
+        //     // 如果是15点后买的就推迟一天当购买时间
+        //     if (specificDate.getHours() >= 15) {
+        //         specificDate.setDate(specificDate.getDate() + 1)
+        //         specificDate.setHours(12, 0, 0, 0);
+        //     }
+        //     // 获取真正的工作日购买时间15点前
+        //     specificDate = getWorkingDay(specificDate);
+        //     // 计算基金确认时间
+        //     specificDate = getWorkingDay(specificDate.setDate(specificDate.getDate() + 1));
+        //     // 未来算满基金购买日期
+        //     specificDate.setDate(specificDate.getDate() + Number(data.maxSaleTime) - 1);
+        //     specificDate.setHours(15, 0, 0, 0);
+        //     // 往上获取到工作日
+        //     specificDate = getWorkingDay(specificDate, '-');
+        //     // 再往前走一天
+        //     specificDate.setDate(specificDate.getDate() - 1);
+        //     // 往上获取到工作日
+        //     specificDate = getWorkingDay(specificDate, '-');
+        //     // 如果当前时间大于specificDate就可以卖出
+        //     if (new Date() > specificDate) {
+        //         arr.push({
+        //             time: time,
+        //             str: `<span class="gray" title="${specificDate.toLocaleString()}">可以售出</span>`
+        //         });
+        //     } else {
+        //         // today.setHours(15, 0, 0, 0);
+        //         today.setDate(today.getDate() + 1);
+        //         today.setHours(0, 0, 0, 0);
+        //         specificDate.setHours(0, 0, 0, 0);
+        //         let dayDiff = Math.floor((specificDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+        //         specificDate.setHours(15, 0, 0, 0);
+        //         if (dayDiff == 0) dayDiff = '明';
+        //         if (dayDiff < 0) dayDiff = '今';
+        //         arr.push({
+        //             time: time,
+        //             str: `<span class="red" title="${specificDate.toLocaleString()}">${dayDiff}天后15:00售出</span>`
+        //         });
+        //     }
+        // })
         return arr;
     },
     // 计算最近30天的最大涨幅跌幅
@@ -534,7 +600,7 @@ const Tools = {
                     const lastAdjacentObj = customAdjacentData[customAdjacentData.length - 1];
                     // 存在并正负相同就累加
                     // console.log(lastAdjacentObj);
-                    if (lastAdjacentObj && Math.sign(lastAdjacentObj.sum) === Math.sign(+data.JZZZL)) {
+                    if (lastAdjacentObj && (Math.sign(lastAdjacentObj.sum) === Math.sign(+data.JZZZL) || Math.sign(+data.JZZZL) == 0)) {
                         // console.log((lastAdjacentObj.sum + (+data.JZZZL)));
                         // lastAdjacentObj.sum = (+lastAdjacentObj.sum + (+data.JZZZL)).toFixed(2);
                         lastAdjacentObj.sum = (+lastAdjacentObj.sum + (+data.JZZZL));
@@ -633,11 +699,29 @@ const Tools = {
         const { data: { rateInfo: { sh, MAXSG, CYCLE, SGZT }, uniqueInfo } } = await Tools.fetch('jjxqy1_2', { 'fcode': code })
         // 卖出时间
         if (CYCLE != '' || sh != '') {
-            const time = (CYCLE ? CYCLE : sh[sh.length - 1].time).match(/(\d+)(.+)/);
-            if (time) {
-                if (time[0].includes('天')) Data.maxSaleTime = time[1];
-                if (time[0].includes('月')) Data.maxSaleTime = time[1] * 30;
-                if (time[0].includes('年')) Data.maxSaleTime = time[1] * 365;
+            // const time = (CYCLE ? CYCLE : sh[sh.length - 1].time).match(/(\d+)(.+)/);
+            // if (time) {
+            //     if (time[0].includes('天')) Data.maxSaleTime = time[1];
+            //     if (time[0].includes('月')) Data.maxSaleTime = time[1] * 30;
+            //     if (time[0].includes('年')) Data.maxSaleTime = time[1] * 365;
+            // }
+            Data.saleTime = CYCLE || sh;
+            if (Data.saleTime && Data.saleTime.length > 0) {
+                for (let i = 0; i < Data.saleTime.length; i++) {
+                    const item = Data.saleTime[i];
+                    const time = item.time.match(/(\d+)\D*$/);
+                    let saleTime = '';
+                    if (time) {
+                        if (time[0].includes('天')) saleTime = time[1];
+                        if (time[0].includes('月')) saleTime = time[1] * 30;
+                        if (time[0].includes('年')) saleTime = time[1] * 365;
+                    }
+                    Data.saleTime[i] = {
+                        ...Data.saleTime[i],
+                        saleTime: saleTime,
+                    }
+                }
+                Data.maxSaleTime = Data.saleTime[Data.saleTime.length - 1].saleTime;
             }
         }
         // 特色数据
@@ -1246,13 +1330,21 @@ const Tools = {
                                                                         return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                                                                     }).join('')}
                                                                         <td>${data.customType ? data.customType : ''}</td>
-                                                                        <td>${data.maxSaleTime ? `${data.maxSaleTime}天免` : ''}</td>
+                                                                        <td>
+                                                                            <div class="tip-container">
+                                                                                <div>${data.maxSaleTime ? `${data.maxSaleTime}天免` : ''}</div>
+                                                                                <div class="tip j-tip">
+                                                                                    ${Array.isArray(data.saleTime) && data.saleTime.map(item => `<p>${item.time}，<span class="red">${item.rate}</span></p>`).join('')}
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
                                                                         <td>
                                                                             ${Tools.isSale(data.code).map((sale, index) => {
                                                                         return `
                                                                                     <div data-index="${index}" class="j-del-buyTime">
                                                                                         <p class="gray fs12">${sale.time}</p>
                                                                                         ${sale.str}
+                                                                                        ${sale.rate?`<div class="gray" title="${sale.rate.time}">${sale.rate.rate}，${sale.rate.str.replaceAll('red','')}</div>`:''}
                                                                                     </div>
                                                                                 `
                                                                     }).join('<div class="br"></div>')}
@@ -1725,13 +1817,13 @@ const compareBp = function (codes) {
         if (!customAdjacentData) return;
         str += `
         <div style="margin:0 10px;">
-            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;">${Array.isArray(name)? '组合' : name}</div>
+            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;">${Array.isArray(name) ? '组合' : name}</div>
             <table>
                 <thead>
                     <tr><th>日期</th><th>日涨幅</th></tr>
                 </thead>
                 <tbody>
-                    ${[...customAdjacentData].map(data => `<tr><td class="gray">${data.start}~<br/>${data.next}</td><td class="${data['sum'] > 0 ? 'red' : 'green'}" style="text-align:right;">${data['sum']}%/<span class="gray">${Tools.getIncludeDays(data.start,data.next)}</span></td></tr>`).join('')}
+                    ${[...customAdjacentData].map(data => `<tr><td class="gray">${data.start}~<br/>${data.next}</td><td class="${data['sum'] > 0 ? 'red' : 'green'}" style="text-align:right;">${data['sum']}%/<span class="gray">${Tools.getIncludeDays(data.start, data.next)}</span></td></tr>`).join('')}
                 </tbody>
             </table>
         </div>

@@ -33,11 +33,11 @@ class MusicPlayer {
         // 音乐播放完之后自动播放下一首
         this.audio.addEventListener('ended', () => {
             console.log('播放完了');
-            if(this.nextMusic)this.nextMusic();
+            if (this.nextMusic) this.nextMusic();
         });
     }
     pause() {
-        this.audio.pause(); 
+        this.audio.pause();
     }
     stop() {
         this.audio.pause();
@@ -99,7 +99,7 @@ const Tools = {
             }
             currentElement = currentElement.nextElementSibling;
         }
-        return null; 
+        return null;
     },
     findFirstSiblingWithClass: (element, className) => {
         let currentElement = element.previousElementSibling;
@@ -156,7 +156,7 @@ const Tools = {
                     <button class="search-button">搜索</button>
                 </div>
                 <div class="search-con"></div>
-                <div class="menu">${['语文', '数学', '英语', '历史'].map(data => `<span ${(Tools.data.sel && Tools.data.sel.includes(data)) ? 'class="sel"' : ''}>${data}</span>`).join('')}</div>
+                <div class="menu">${['语文', '数学', '英语', '阅读', '历史', '初中', '高中', '其他'].map(data => `<span ${(Tools.data.sel && Tools.data.sel.includes(data)) ? 'class="sel"' : ''}>${data}</span>`).join('')}</div>
             `: ''}
             <ul>
                 ${datas.map((data) => {
@@ -168,7 +168,15 @@ const Tools = {
                     subject = data.subject.text;
                 }
             }
-            if (Tools.data.sel && subject && !subject.includes(Tools.data.sel)) return '';
+            // 容差小学
+            // if(subject && subject.includes('小学'))subject+=' 语文 数学 英语';
+            if (Tools.data.sel && subject && !subject.includes(Tools.data.sel)) {
+                if (subject.includes('小学') && (Tools.data.sel == '语文' || Tools.data.sel == '数学' || Tools.data.sel == '英语')) {
+
+                } else {
+                    return '';
+                }
+            }
             let url = `?query=${encodeURIComponent((QUERY ? `${QUERY}\\` : '') + data.file)}&disk=${data.disk}`;
             if (data.type == "dir") {
                 return `<li>${subject ? `<span class="subject" style="${subject == '英语' ? 'color:aquamarine' : ''}">${subject}</span>` : ''}${data.subject && data.subject.is_top == '1' ? `<span class="subject" style="color:#fff;">置顶</span>` : ''}<a href="${url}">${data.file}</a></li>`;
@@ -182,11 +190,83 @@ const Tools = {
         document.querySelector('.content').innerHTML = str;
     },
     initialization: async () => {
-        Tools.addLoading();
-        const datas = await Tools.readDir();
-        if (datas) {
-            Tools.data.datas = datas.datas;
-            Tools.updataHtml();
+        // 如果query的后缀名是.pdf
+        if (QUERY && QUERY.endsWith('.pdf')) {
+            const pdfjs = await import('https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.min.mjs');
+            // 初始化PDF.js库 
+            pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+            // 加载PDF文件
+            let url = `?query=${encodeURIComponent(QUERY)}&disk=${Disk}`;
+            // const response = await fetch(`/api/dir${url}`);
+            // console.log(response instanceof ReadableStream)
+            // const blob = await response.blob();
+
+            // const reader = new FileReader();
+            // reader.onload = function (e) {
+            //     console.log(e.target)
+            //     const pdfData = e.target.result;
+            //     pdfjs.getDocument(pdfData).promise.then(function (pdfDoc) {
+            //         console.log(pdfDoc)
+            //         const container = document.querySelector('.content');
+            //         pdfDoc.getPage(2).then(function (page) {
+            //             const viewport = page.getViewport({ scale: 1 });
+            //             const canvas = document.createElement('canvas');
+            //             canvas.width = viewport.width;
+            //             canvas.height = viewport.height;
+            //             container.appendChild(canvas);
+            //             const renderContext = {
+            //                 canvasContext: canvas.getContext('2d'),
+            //                 viewport: viewport
+            //             };
+            //             page.render(renderContext);
+            //         });
+            //     });
+            // };
+            // reader.readAsArrayBuffer(blob);
+            var loadingTask = pdfjs.getDocument({
+                url: `/api/dir${url}`,
+                // 开启流式加载
+                disableAutoFetch: false,
+                // 分块加载大小，可根据实际情况调整
+                rangeChunkSize: 65536
+            });
+            loadingTask.promise.then(function (pdf) {
+                console.log('PDF loaded');
+
+                // Fetch the first page
+                var pageNumber = 1;
+                pdf.getPage(pageNumber).then(function (page) {
+                    console.log('Page loaded');
+
+                    var scale = 1;
+                    var viewport = page.getViewport({ scale: scale });
+
+                    // Prepare canvas using PDF page dimensions
+                    const container = document.querySelector('.content');
+                    var canvas = document.createElement('canvas');
+                    var context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    container.appendChild(canvas);
+
+                    // Render PDF page into canvas context
+                    var renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    var renderTask = page.render(renderContext);
+                    renderTask.promise.then(function () {
+                        console.log('Page rendered');
+                    });
+                });
+            });
+        } else {
+            Tools.addLoading();
+            const datas = await Tools.readDir();
+            if (datas) {
+                Tools.data.datas = datas.datas;
+                Tools.updataHtml();
+            }
         }
         document.title = QUERY;
         // 顶部的菜单切换
@@ -238,7 +318,7 @@ const Tools = {
             document.querySelector('.search-container .search-input').value = '';
         }, '.j-search-clear')
         // 音乐播放
-        musicPlayer.nextMusic = ()=>{
+        musicPlayer.nextMusic = () => {
             const $music = Tools.data.$music;
             if ($music) {
                 // 去掉正在播放的图标
@@ -247,8 +327,8 @@ const Tools = {
                 const $nextMusic = Tools.findNextSiblingWithClass($music, 'music');
                 if ($nextMusic) {
                     Tools.data.$music = $nextMusic;
-                }else{
-                    const $firstMusic = Tools.findFirstSiblingWithClass($music,'music');
+                } else {
+                    const $firstMusic = Tools.findFirstSiblingWithClass($music, 'music');
                     if ($firstMusic) {
                         Tools.data.$music = $firstMusic;
                     }
@@ -279,7 +359,7 @@ const Tools = {
                 // 再元素前面加一个正在播放的图标
                 $target.innerHTML = `<span class="u-playing">正在播放..</span>${$target.innerHTML}`;
             }
-        },'.music a')
+        }, '.music a')
     }
 }
 Tools.initialization();
