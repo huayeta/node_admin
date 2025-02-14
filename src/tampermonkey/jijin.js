@@ -326,11 +326,14 @@ const Tools = {
     // 是否是债基
     isDebt: (code) => {
         const data = DATAS[code];
+        const { Ftype='债权' } = data;
+        // console.log(data);
         let is = 2;//债基
-        if (data.Ftype.includes('固收')) {
+        if (Ftype.includes('固收')) {
             is = 2;//债基
-        } else if (data.Ftype.includes('QDII') || data.Ftype.includes('指数型') || data.Ftype.includes('商品')) {
-            is = 3; //QDII
+        } else if (Ftype.includes('QDII') || Ftype.includes('指数型') || Ftype.includes('商品')) {
+            // is = 3; //QDII
+            is=1;
         } else if (data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) {
             // 股票占比大于10的
             is = 1;
@@ -418,51 +421,6 @@ const Tools = {
             }
             arr.push(obj);
         })
-        // console.log(arr);
-        // 遍历购买时间
-        // buy_time.forEach(time => {
-        //     let today = new Date();
-        //     let specificDate = new Date(time);
-        //     // console.log(specificDate,getWorkingDay(specificDate));
-        //     // 如果是15点后买的就推迟一天当购买时间
-        //     if (specificDate.getHours() >= 15) {
-        //         specificDate.setDate(specificDate.getDate() + 1)
-        //         specificDate.setHours(12, 0, 0, 0);
-        //     }
-        //     // 获取真正的工作日购买时间15点前
-        //     specificDate = getWorkingDay(specificDate);
-        //     // 计算基金确认时间
-        //     specificDate = getWorkingDay(specificDate.setDate(specificDate.getDate() + 1));
-        //     // 未来算满基金购买日期
-        //     specificDate.setDate(specificDate.getDate() + Number(data.maxSaleTime) - 1);
-        //     specificDate.setHours(15, 0, 0, 0);
-        //     // 往上获取到工作日
-        //     specificDate = getWorkingDay(specificDate, '-');
-        //     // 再往前走一天
-        //     specificDate.setDate(specificDate.getDate() - 1);
-        //     // 往上获取到工作日
-        //     specificDate = getWorkingDay(specificDate, '-');
-        //     // 如果当前时间大于specificDate就可以卖出
-        //     if (new Date() > specificDate) {
-        //         arr.push({
-        //             time: time,
-        //             str: `<span class="gray" title="${specificDate.toLocaleString()}">可以售出</span>`
-        //         });
-        //     } else {
-        //         // today.setHours(15, 0, 0, 0);
-        //         today.setDate(today.getDate() + 1);
-        //         today.setHours(0, 0, 0, 0);
-        //         specificDate.setHours(0, 0, 0, 0);
-        //         let dayDiff = Math.floor((specificDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-        //         specificDate.setHours(15, 0, 0, 0);
-        //         if (dayDiff == 0) dayDiff = '明';
-        //         if (dayDiff < 0) dayDiff = '今';
-        //         arr.push({
-        //             time: time,
-        //             str: `<span class="red" title="${specificDate.toLocaleString()}">${dayDiff}天后15:00售出</span>`
-        //         });
-        //     }
-        // })
         return arr;
     },
     // 计算最近30天的最大涨幅跌幅
@@ -536,10 +494,10 @@ const Tools = {
     },
     getCode: async (code) => {
         // 获取基金名字
-        const { SHORTNAME: name, FTYPE: Ftype } = (await Tools.fetch('fundMNDetailInformation', { 'FCODE': code })).Datas;
+        // const { SHORTNAME: name, FTYPE: Ftype } = (await Tools.fetch('fundMNDetailInformation', { 'FCODE': code })).Datas;
         // 获取基金涨幅
         const { Datas, Expansion: { TIME: netWorthDate } } = await Tools.fetch('fundMNPeriodIncrease', { 'FCODE': code });
-        const Data = { code, name, Ftype, netWorthDate, update_time: Tools.getTime() };
+        const Data = { code, netWorthDate, update_time: Tools.getTime() };
         Datas.forEach(data => {
             switch (data.title) {
                 case 'Z':
@@ -562,7 +520,7 @@ const Tools = {
             }
         })
         // 获取基金历史涨幅
-        const fundMNHisNetList = await Tools.fundMNHisNetList(code, 1, 12 * 30);
+        const fundMNHisNetList = await Tools.fundMNHisNetList(code, 1, 8 * 30);
         let customLastWeekGrowth = 0;
         let custom2LastWeekGrowth = 0;
         let customLastMonthGrowth = 0;
@@ -628,75 +586,15 @@ const Tools = {
         Data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
         Data.customMonthData = customMonthData;
         Data.customAdjacentData = customAdjacentData;
-        // 基金的持仓情况asset 持仓具体情况assetPosition 债权情况position
-        const { asset, assetPosition, position } = await Tools.getAsset(code);
-        Data.asset = asset;
-        Data.assetPosition = assetPosition;
-        Data.position = position;
-        if (Data.name.includes('联接') && Data.assetPosition.etf && Data.assetPosition.etf.code) {
-            const { asset, assetPosition, position } = await Tools.getAsset(Data.assetPosition.etf.code);
-            Data.ljjj = {
-                asset,
-                assetPosition,
-                position,
-            };
-        }
-        // // 获取基金的持仓情况
-        // const {data:{fundBondInvestDistri=[],fundAssetAllocationByDate={},expansion,fundInverstPosition={}}} = await Tools.fetch('jjxqy2',{'fcode':code});
-        // // 资产情况
-        // Data.asset = {}
-        // if(fundAssetAllocationByDate && fundAssetAllocationByDate[expansion] && fundAssetAllocationByDate[expansion].length>0){
-        //     const data = fundAssetAllocationByDate[expansion][0];
-        //     Data.asset={
-        //         jj:data.JJ,//基金
-        //         gp:data.GP,//股票
-        //         zq:data.ZQ,//债权
-        //         xj:data.HB,//现金
-        //         qt:data.QT,//其他
-        //     }
-        // }
-        // if(fundInverstPosition){
-        //     Data.assetPosition={
-        //         // 基金
-        //         etf:{
-        //             code:fundInverstPosition.ETFCODE,
-        //             name:fundInverstPosition.ETFSHORTNAME,
-        //         },
-        //         // 股票
-        //         fundStocks:fundInverstPosition.fundStocks,
-        //         // 债权
-        //         fundboods:fundInverstPosition.fundboods,
-        //     }
-        //     const fundDiff = await Tools.countDp(Data.assetPosition.fundStocks,Data.assetPosition.fundboods);
-        //     Object.assign(Data.assetPosition,fundDiff);
-        // }
-        // Data.position={};
-        // if(fundBondInvestDistri){
-        //     fundBondInvestDistri.forEach(data=>{
-        //         switch (data.BONDTYPENEW) {
-        //             case '1':
-        //                 // 信用债
-        //                 Data.position.xx=data.PCTNV;
-        //                 break;
-        //             case '2':
-        //                 // 利率债
-        //                 Data.position.lv=data.PCTNV;
-        //                 break;
-        //             case '3':
-        //                 // 可转债
-        //                 Data.position.kzz=data.PCTNV;
-        //                 break;
-        //             case '4':
-        //                 // 其他
-        //                 Data.position.qt=data.PCTNV;
-        //                 break;
-        //             default:
-        //                 break;
-        //         }
-        //     })
-        // }
+        
         // 其他基本信息
-        const { data: { rateInfo: { sh, MAXSG, CYCLE, SGZT }, uniqueInfo } } = await Tools.fetch('jjxqy1_2', { 'fcode': code })
+        const { data: {FundACRateInfoV2Expansion:{ShortName:name,FType:Ftype},rateInfo: { sh, MAXSG, CYCLE, SGZT }, uniqueInfo,fundRelateTheme } } = await Tools.fetch('jjxqy1_2', { 'fcode': code })
+        // 相关主题
+        Data.relateTheme = fundRelateTheme;
+        // 名称和类型
+        Data.name = name;
+        Data.Ftype = Ftype;
+        // console.log(Ftype);
         // 卖出时间
         if (CYCLE != '' || sh != '') {
             // const time = (CYCLE ? CYCLE : sh[sh.length - 1].time).match(/(\d+)(.+)/);
@@ -705,23 +603,35 @@ const Tools = {
             //     if (time[0].includes('月')) Data.maxSaleTime = time[1] * 30;
             //     if (time[0].includes('年')) Data.maxSaleTime = time[1] * 365;
             // }
-            Data.saleTime = CYCLE || sh;
+            const getTime = (str) => {
+                const time = str.match(/(\d+)\D*$/);
+                let saleTime = '';
+                if (time) {
+                    if (time[0].includes('天')) saleTime = time[1];
+                    if (time[0].includes('月')) saleTime = time[1] * 30;
+                    if (time[0].includes('年')) saleTime = time[1] * 365;
+                }
+                return saleTime;
+            }
+            // CYCLE是一个字符串比如：2个月
+            Data.saleTime = sh;
             if (Data.saleTime && Data.saleTime.length > 0) {
                 for (let i = 0; i < Data.saleTime.length; i++) {
                     const item = Data.saleTime[i];
-                    const time = item.time.match(/(\d+)\D*$/);
-                    let saleTime = '';
-                    if (time) {
-                        if (time[0].includes('天')) saleTime = time[1];
-                        if (time[0].includes('月')) saleTime = time[1] * 30;
-                        if (time[0].includes('年')) saleTime = time[1] * 365;
-                    }
+                    if(!item.time)continue;
+                    // const time = item.time.match(/(\d+)\D*$/);
+                    let saleTime = getTime(item.time);
+                    // if (time) {
+                    //     if (time[0].includes('天')) saleTime = time[1];
+                    //     if (time[0].includes('月')) saleTime = time[1] * 30;
+                    //     if (time[0].includes('年')) saleTime = time[1] * 365;
+                    // }
                     Data.saleTime[i] = {
                         ...Data.saleTime[i],
                         saleTime: saleTime,
                     }
                 }
-                Data.maxSaleTime = Data.saleTime[Data.saleTime.length - 1].saleTime;
+                Data.maxSaleTime = CYCLE? getTime(CYCLE):Data.saleTime[Data.saleTime.length - 1].saleTime;
             }
         }
         // 特色数据
@@ -740,6 +650,20 @@ const Tools = {
         Data.maxBuy = MAXSG;
         // 是否可以申购
         Data.sgzt = SGZT;
+
+        // 基金的持仓情况asset 持仓具体情况assetPosition 债权情况position
+        const { asset, assetPosition, position } = await Tools.getAsset(code);
+        Data.asset = asset;
+        Data.assetPosition = assetPosition;
+        Data.position = position;
+        if (Data.name.includes('联接') && Data.assetPosition.etf && Data.assetPosition.etf.code) {
+            const { asset, assetPosition, position } = await Tools.getAsset(Data.assetPosition.etf.code);
+            Data.ljjj = {
+                asset,
+                assetPosition,
+                position,
+            };
+        }
 
         console.log(Data);
         Tools.setCode(Data);
@@ -1230,6 +1154,7 @@ const Tools = {
     getTable: (datas = []) => {
         let str = '';
         datas.forEach((data, index) => {
+            // console.log(data)
             // 判断是否更新
             let is_new = false;
             if (new Date().getDate() == new Date(data.netWorthDate).getDate()) {
@@ -1324,6 +1249,7 @@ const Tools = {
                                                                         return CODES[data.code][EMOJIS[emoji].key] == 1 ? `<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>` : '';
                                                                     }).join('') || ''}
                                                                             <p class="j-copyText fs12 green">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
+                                                                            ${Array.isArray(data.relateTheme) && `<p class="wsi">${data.relateTheme.map((theme,index)=>`<span class="u-box-1" style="${index!==0 && 'margin-left:5px;' || ''}">${theme.SEC_NAME}</span>`).join('')}</p>` || ''}
                                                                         </td>
                                                                         <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                                                         ${total_arr.map(total => {
@@ -1338,16 +1264,16 @@ const Tools = {
                                                                                 </div>
                                                                             </div>
                                                                         </td>
-                                                                        <td>
+                                                                        <td style="padding:0;">
                                                                             ${Tools.isSale(data.code).map((sale, index) => {
                                                                         return `
-                                                                                    <div data-index="${index}" class="j-del-buyTime">
+                                                                                    <div data-index="${index}" class="j-del-buyTime" style="padding:10px; ${(sale.rate && +sale.rate.rate.slice(0,-1)<1.5)?'background-color:antiquewhite;':''}">
                                                                                         <p class="gray fs12">${sale.time}</p>
                                                                                         ${sale.str}
                                                                                         ${sale.rate?`<div class="gray" title="${sale.rate.time}">${sale.rate.rate}，${sale.rate.str.replaceAll('red','')}</div>`:''}
                                                                                     </div>
                                                                                 `
-                                                                    }).join('<div class="br"></div>')}
+                                                                    }).join('<div class="br" style="margin:0 10px;"></div>')}
                                                                         </td>
                                                                         <td>
                                                                             <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
@@ -1376,7 +1302,7 @@ const Tools = {
                                                                             ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.maxretra1) ? `最大回撤：${+data.uniqueInfo.maxretra1.toFixed(2)}%` : ''}
                                                                         </td>
                                                                         <td>${Array.isArray(data.netWorthDate) ? data.netWorthDate.join('<br />') : data.netWorthDate}</td>
-                                                                        <td style="${data.Ftype.includes('混合型') ? 'color:brown;' : ''}">
+                                                                        <td style="${(data.Ftype && data.Ftype.includes('混合型')) ? 'color:brown;' : ''}">
                                                                             ${Array.isArray(data.Ftype) ? data.Ftype.join('<br />') : data.Ftype}
                                                                             ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods) != 0 ? `<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>` : ''}
                                                                         </td>
@@ -1950,7 +1876,7 @@ addEventListener($table, 'click', e => {
                     <tbody>
                         ${fundStocks.map(data => `
                             <tr>
-                                <td>${data['GPJC']}</td>
+                                <td style="line-height:1;"><div>${data['GPJC']}</div><span class="u-box-1" style="margin-top:4px;">${data['INDEXNAME']}</span></td>
                                 <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] > 0) ? 'red' : (fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] < 0) ? 'green' : ''}">${fundStocksDiff[data.GPDM] ? `${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%` : ''}</td>
                                 <td>${data['JZBL']}%</td>
                             </tr>
@@ -2476,6 +2402,7 @@ class Contextmenu {
                 ${Object.keys(EMOJIS).map(emoji => {
             return `<div class="context-menu-item" data-emoji="${emoji}">添加${EMOJIS[emoji].title.substr(0, 2)}${emoji}</div>`;
         }).join('')}
+                <div class="context-menu-item">点击天天✅</div>
                 <div class="context-menu-item">更新基金🔃</div>
                 <div class="context-menu-item">更新债权🔃</div>
                 <div class="context-menu-item">删除基金🔃</div>
@@ -2554,6 +2481,10 @@ class Contextmenu {
         if (emoji) {
             Tools.setCustomCodes(code, { [EMOJIS[emoji].key]: 1 });
             Tools.updateDatasTable();
+            this.hide();
+        }
+        if (con.includes('点击天天')) {
+            window.open(`https://fund.eastmoney.com/${code}.html`, '_blank')
             this.hide();
         }
         if (con.includes('更新基金')) {
