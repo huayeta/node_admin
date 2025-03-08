@@ -120,10 +120,11 @@ const Tools = {
                     <button class="search-button">搜索</button>
                 </div>
                 <div class="search-con"></div>
+                <div class="menu-a">超链：<a href="?query=乐乐课堂%5C动画版乐乐课堂乐乐小学%5C04人教版1-6年级数学视频%2BPDF习题%5C二年级%5C二年级上&disk=l1">乐二上</a><a href="?query=乐乐课堂%5C281-小学奥数乐乐课堂%5C一年级%5C01【一年级奥数】-%2084集&disk=l1">乐高一</a><a href="?query=洋葱学院%5C洋葱学院小学数学人教版%5C人教版%5C二年级%5C二年级上册&disk=l1">洋二上</a></div>
                 <div class="menu">${['语文', '数学', '英语', '阅读', '历史', '初中', '高中', '其他'].map(data => `<span ${(Tools.data.sel && Tools.data.sel.includes(data)) ? 'class="sel"' : ''}>${data}</span>`).join('')}</div>
             `: ''}
             <ul>
-                ${datas.map((data,index) => {
+                ${datas.map((data, index) => {
             let subject = '';
             if (data.subject) {
                 if (typeof data.subject == 'string') {
@@ -148,15 +149,15 @@ const Tools = {
             if (Tools.isMusicFile(data.ext)) {
                 const urlMusic = new URL(window.location.href);
                 urlMusic.searchParams.set('musice', index);
-                return `<li><a target="_black" href="${urlMusic.toString()}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
+                return `<li><a data-musice="${index}" href="javascript:;" class="j-musice">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
             }
             return `<li><a target="_black" href="/api/dir${url}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
         }).join('')}
             </ul>`
         document.querySelector('.content').innerHTML = str;
     },
-    playMusic: async () => {
-        const { MYPlayer } = await import('./study-player.js');
+    playMusic: async (index) => {
+        const { MYPlayer } = await import('./study-player.js?t=1');
         const myPlayer = new MYPlayer();
         // 找到所有音频文件
         const files = Tools.data.datas.filter(data => {
@@ -170,7 +171,7 @@ const Tools = {
         // console.log(files)
         await myPlayer.init(files, '.content');
         // console.log(myPlayer.player.skipTo)
-        myPlayer.player.skipTo(+Musice); 
+        myPlayer.player.skipTo(index);
     },
     initialization: async () => {
         // const aa = import('./study-player.js');
@@ -249,17 +250,19 @@ const Tools = {
             const datas = await Tools.readDir();
             if (datas) {
                 Tools.data.datas = datas.datas;
+                Tools.updataHtml();
                 // 判断是否全部是音频
-                const isAllMusic = datas.datas.every(data => {
-                    // console.log(data.ext,Tools.isMusicFile(data.ext));
-                    return Tools.isMusicFile(data.ext);
-                });
-                if (isAllMusic) {
-                    Tools.playMusic();
-                } else if (Musice) {
-                    Tools.playMusic();
-                } else {
-                    Tools.updataHtml();
+                // const isAllMusic = datas.datas.every(data => {
+                //     // console.log(data.ext,Tools.isMusicFile(data.ext));
+                //     return Tools.isMusicFile(data.ext);
+                // });
+                // if (isAllMusic) {
+                //     Tools.playMusic();
+                // }
+                // if (Musice) {
+                //     Tools.playMusic();
+                // } else {
+                    // Tools.updataHtml();
                     // 是否存在音频
                     // const hasMusic = datas.datas.some(data => {
                     //     return Tools.isMusicFile(data.ext);
@@ -274,10 +277,18 @@ const Tools = {
                     //     qpbt.innerHTML = `<span style="font-size:1em;">全屏播放</span>`;
                     //     document.querySelector('.content').appendChild(qpbt);
                     // }
-                }
+                // }
             }
         }
         document.title = QUERY;
+        // 音乐点击
+        addEventListener(document.querySelector('.content'), 'click', async (e) => {
+            const $target = e.target;
+            const index = $target.dataset.musice;
+            if (index) {
+                await Tools.playMusic(index);
+            }
+        }, '.j-musice')
         // 顶部的菜单切换
         addEventListener(document.querySelector('.content'), 'click', (e) => {
             const $target = e.target;
