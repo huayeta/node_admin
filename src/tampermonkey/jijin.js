@@ -1289,7 +1289,7 @@ const Tools = {
                                                                                 </td>
                                                                                 <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                                                                 <td>${Array.isArray(data.customAdjacentData) && `<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}</td>
-                                                                                <td><fund-valuation code="${data.code}" delay="${increment * 200}" /></td>
+                                                                                <td><fund-valuation code="${data.code}" delay="${increment * 1000}" /></td>
                                                                                 ${total_arr.map(total => {
                                                                             return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                                                                         }).join('')}
@@ -2888,7 +2888,7 @@ class FundValuation extends HTMLElement {
         }
     }
     fill() {
-        this.$span.textContent = this.valuation.value+'%';
+        this.$span.innerHTML = `<span>${this.valuation.value+'%'}</span><br><span style="font-size:12px;color:gray;">${this.valuation.date}</span>`;
         this.$span.title = this.valuation.date;
         if (this.valuation.value < 0) {
             this.$span.style.color = 'green';
