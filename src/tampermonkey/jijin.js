@@ -32,7 +32,7 @@ let SORT = {};
 let CODES = {};
 //  ['lastWeekGrowth', '周涨幅',day], ['lastMonthGrowth', '月涨幅',day],
 let BONDS = {};
-const total_arr = [['dayGrowth', '日涨幅'], ,['custom3DayGrowth','最近3天涨幅'],['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
+const total_arr = [['dayGrowth', '日涨幅'], , ['custom3DayGrowth', '最近3天涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金', '组合'];
 const SALETIME = {
     7: '7天免',
@@ -67,15 +67,15 @@ const FTYPES = {
     '2': '债基',
 }
 const CLASSIFICATION = {
-   '1':'CPO通信',
-   '2':'半导体',
-   '3':'机器人',
-   '4':'AI算力',
-   '5':'中证新能源光伏',
-   '6':'AI医疗创新药',
-   '7':'卫星互联网',
-   '8':'低空经济',
-   '10':'大数据',
+    '1': 'CPO通信',
+    '2': '半导体',
+    '3': '机器人',
+    '4': 'AI算力',
+    '5': '中证新能源光伏',
+    '6': 'AI医疗创新药',
+    '7': '卫星互联网',
+    '8': '低空经济',
+    '10': '大数据',
 }
 // 异步处理函数
 class AsyncFunc {
@@ -305,7 +305,7 @@ const Tools = {
         // Tools.updateDatasTable();
     },
     sortCodes: (codes, day, sort) => {
-        // console.log(codes,day,sort);
+        // console.log(codes, day, sort);
         codes.sort((a, b) => {
             let result = 0;
             if (day == 'income') {
@@ -318,15 +318,21 @@ const Tools = {
                 if (a.position && +a.position.xx > 0) aa = +a.position.xx;
                 if (b.position && +b.position.xx > 0) bb = +b.position.xx;
                 return sort > 0 ? (bb - aa) : (aa - bb);
-            }else if(day == 'sumLastDp'){
-                if(Array.isArray(a.customAdjacentData) && Array.isArray(b.customAdjacentData)){
-                    result=Number(a.customAdjacentData[0].sum)-Number(b.customAdjacentData[0].sum);
-                } 
+            } else if (day == 'sumLastDp') {
+                if (Array.isArray(a.customAdjacentData) && Array.isArray(b.customAdjacentData)) {
+                    result = Number(a.customAdjacentData[0].sum) - Number(b.customAdjacentData[0].sum);
+                }
+            } else if (day == 'valuation') {
+                let aa = bb = (sort > 0 ? 1000 : 0);
+                if (CODES[a.code] && CODES[a.code].valuation && CODES[a.code].valuation.value) aa = CODES[a.code].valuation.value;
+                if (CODES[b.code] && CODES[b.code].valuation && CODES[b.code].valuation.value) bb = CODES[b.code].valuation.value;
+                result = aa - bb;
             } else {
                 result = Number(a[day]) - Number(b[day]);
             }
             return sort == 1 ? result : -result;
         })
+        // console.log(codes);
         return codes;
     },
     sortHtml: (day) => {
@@ -341,14 +347,14 @@ const Tools = {
     // 是否是债基
     isDebt: (code) => {
         const data = DATAS[code];
-        const { Ftype='债权' } = data;
+        const { Ftype = '债权' } = data;
         // console.log(data);
         let is = 2;//债基
         if (Ftype.includes('固收')) {
             is = 2;//债基
         } else if (Ftype.includes('QDII') || Ftype.includes('指数型') || Ftype.includes('商品')) {
             // is = 3; //QDII
-            is=1;
+            is = 1;
         } else if (data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) {
             // 股票占比大于10的
             is = 1;
@@ -550,9 +556,9 @@ const Tools = {
             if (i == 0) dayGrowth = data.JZZZL;
             if (Tools.isNumber(data.JZZZL)) {
                 // 0,1,2,3   i=3  4-2=2
-                if(i<3){
+                if (i < 3) {
                     custom3DayGrowth += (+data.JZZZL);
-                } 
+                }
                 if (i < 5) {
                     customLastWeekGrowth += (+data.JZZZL);
                 }
@@ -591,7 +597,7 @@ const Tools = {
                             sum: +data.JZZZL,
                             start: data.FSRQ,
                             next: data.FSRQ,
-                            days:1,
+                            days: 1,
                         })
                     }
                 }
@@ -609,9 +615,9 @@ const Tools = {
         Data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
         Data.customMonthData = customMonthData;
         Data.customAdjacentData = customAdjacentData;
-        
+
         // 其他基本信息
-        const { data: {FundACRateInfoV2Expansion:{ShortName:name,FType:Ftype},rateInfo: { sh, MAXSG, CYCLE, SGZT }, uniqueInfo,fundRelateTheme } } = await Tools.fetch('jjxqy1_2', { 'fcode': code })
+        const { data: { FundACRateInfoV2Expansion: { ShortName: name, FType: Ftype }, rateInfo: { sh, MAXSG, CYCLE, SGZT }, uniqueInfo, fundRelateTheme } } = await Tools.fetch('jjxqy1_2', { 'fcode': code })
         // 相关主题
         Data.relateTheme = fundRelateTheme;
         // 名称和类型
@@ -641,7 +647,7 @@ const Tools = {
             if (Data.saleTime && Data.saleTime.length > 0) {
                 for (let i = 0; i < Data.saleTime.length; i++) {
                     const item = Data.saleTime[i];
-                    if(!item.time)continue;
+                    if (!item.time) continue;
                     // const time = item.time.match(/(\d+)\D*$/);
                     let saleTime = getTime(item.time);
                     // if (time) {
@@ -654,7 +660,7 @@ const Tools = {
                         saleTime: saleTime,
                     }
                 }
-                Data.maxSaleTime = CYCLE? getTime(CYCLE):Data.saleTime[Data.saleTime.length - 1].saleTime;
+                Data.maxSaleTime = CYCLE ? getTime(CYCLE) : Data.saleTime[Data.saleTime.length - 1].saleTime;
             }
         }
         // 特色数据
@@ -1001,15 +1007,15 @@ const Tools = {
             combination.lastSixMonthsGrowth += (+DATAS[code].lastSixMonthsGrowth);
             combination.lastYearGrowth += (+DATAS[code].lastYearGrowth);
         })
-        combination.dayGrowth = (combination.dayGrowth/codes.length).toFixed(2);
-        combination.customLastWeekGrowth = (combination.customLastWeekGrowth/codes.length).toFixed(2);
-        combination.custom2LastWeekGrowth = (combination.custom2LastWeekGrowth/codes.length).toFixed(2);
-        combination.customLastMonthGrowth = (combination.customLastMonthGrowth/codes.length).toFixed(2);
-        combination.lastWeekGrowth = (combination.lastWeekGrowth/codes.length).toFixed(2);
-        combination.lastMonthGrowth = (combination.lastMonthGrowth/codes.length).toFixed(2);
-        combination.lastThreeMonthsGrowth = (combination.lastThreeMonthsGrowth/codes.length).toFixed(2);
-        combination.lastSixMonthsGrowth = (combination.lastSixMonthsGrowth/codes.length).toFixed(2);
-        combination.lastYearGrowth = (combination.lastYearGrowth/codes.length).toFixed(2);
+        combination.dayGrowth = (combination.dayGrowth / codes.length).toFixed(2);
+        combination.customLastWeekGrowth = (combination.customLastWeekGrowth / codes.length).toFixed(2);
+        combination.custom2LastWeekGrowth = (combination.custom2LastWeekGrowth / codes.length).toFixed(2);
+        combination.customLastMonthGrowth = (combination.customLastMonthGrowth / codes.length).toFixed(2);
+        combination.lastWeekGrowth = (combination.lastWeekGrowth / codes.length).toFixed(2);
+        combination.lastMonthGrowth = (combination.lastMonthGrowth / codes.length).toFixed(2);
+        combination.lastThreeMonthsGrowth = (combination.lastThreeMonthsGrowth / codes.length).toFixed(2);
+        combination.lastSixMonthsGrowth = (combination.lastSixMonthsGrowth / codes.length).toFixed(2);
+        combination.lastYearGrowth = (combination.lastYearGrowth / codes.length).toFixed(2);
 
         // combination.dayGrowth = (combination.dayGrowth).toFixed(2);
         // combination.customLastWeekGrowth = combination.customLastWeekGrowth.toFixed(2);
@@ -1029,7 +1035,7 @@ const Tools = {
                 JZZZL += (+(customNetWorkData[i][key] ? customNetWorkData[i][key].JZZZL : 0));
             }
             const FSRQ = customNetWorkData[0][key].FSRQ;
-            combination.customNetWorkData.push({JZZZL:(JZZZL/codes.length).toFixed(2),FSRQ})
+            combination.customNetWorkData.push({ JZZZL: (JZZZL / codes.length).toFixed(2), FSRQ })
 
             // combination.customNetWorkData.push({ JZZZL: (JZZZL).toFixed(2), FSRQ })
         })
@@ -1176,6 +1182,7 @@ const Tools = {
     // },
     getTable: (datas = []) => {
         let str = '';
+        let increment = -1;
         datas.forEach((data, index) => {
             // console.log(data)
             // 判断是否更新
@@ -1260,6 +1267,7 @@ const Tools = {
                                                                 if (!SORT.is_ct || (SORT.is_ct == '1' && is_ct == '1')) {
                                                                     // 是否有基金分类筛选
                                                                     if (!SORT.classify || (CODES[data.code] && CODES[data.code].classify && SORT.classify == CODES[data.code].classify)) {
+                                                                        increment++;
                                                                         str += `
                                                                             <tr data-code="${data.code}" style="${data.code.includes(',') ? 'background: #fff7f3;' : ''}">
                                                                                 <td>
@@ -1271,19 +1279,20 @@ const Tools = {
                                                                                     <span class="j-code-name ${(is_limited || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${is_limited ? `/${data.maxBuy}` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
                                                                                     ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                                                                     ${CODES[data.code] && Object.keys(EMOJIS).map(emoji => {
-                                                                                return CODES[data.code][EMOJIS[emoji].key] == 1 ? `<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>` : '';
-                                                                            }).join('') || ''}
+                                                                            return CODES[data.code][EMOJIS[emoji].key] == 1 ? `<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>` : '';
+                                                                        }).join('') || ''}
                                                                                     <p class="j-copyText fs12 green">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
-                                                                                    ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify))?`<p class="wsi">`:''}
-                                                                                    ${(CODES[data.code] && CODES[data.code].classify)?`<span class="u-box-1 mr5 j-classify" style="color:green;">${CLASSIFICATION[CODES[data.code].classify]}</span>`:''}
-                                                                                    ${Array.isArray(data.relateTheme) && `${data.relateTheme.map((theme,index)=>`<span class="u-box-1" style="${index!==0 && 'margin-left:5px;' || ''}">${theme.SEC_NAME}</span>`).join('')}` || ''}
-                                                                                    ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify))?`</p>`:''}
+                                                                                    ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `<p class="wsi">` : ''}
+                                                                                    ${(CODES[data.code] && CODES[data.code].classify) ? `<span class="u-box-1 mr5 j-classify" style="color:green;">${CLASSIFICATION[CODES[data.code].classify]}</span>` : ''}
+                                                                                    ${Array.isArray(data.relateTheme) && `${data.relateTheme.map((theme, index) => `<span class="u-box-1" style="${index !== 0 && 'margin-left:5px;' || ''}">${theme.SEC_NAME}</span>`).join('')}` || ''}
+                                                                                    ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `</p>` : ''}
                                                                                 </td>
                                                                                 <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                                                                 <td>${Array.isArray(data.customAdjacentData) && `<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}</td>
+                                                                                <td><fund-valuation code="${data.code}" delay="${increment * 200}" /></td>
                                                                                 ${total_arr.map(total => {
-                                                                                return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-                                                                            }).join('')}
+                                                                            return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                                                                        }).join('')}
                                                                                 <td>${data.customType ? data.customType : ''}</td>
                                                                                 <td>
                                                                                     <div class="tip-container">
@@ -1295,14 +1304,14 @@ const Tools = {
                                                                                 </td>
                                                                                 <td style="padding:0;">
                                                                                     ${Tools.isSale(data.code).map((sale, index) => {
-                                                                                return `
-                                                                                            <div data-index="${index}" class="j-del-buyTime" style="padding:10px; ${(sale.rate && +sale.rate.rate.slice(0,-1)<1.5)?'background-color:antiquewhite;':''}">
+                                                                            return `
+                                                                                            <div data-index="${index}" class="j-del-buyTime" style="padding:10px; ${(sale.rate && +sale.rate.rate.slice(0, -1) < 1.5) ? 'background-color:antiquewhite;' : ''}">
                                                                                                 <p class="gray fs12">${sale.time}</p>
                                                                                                 ${sale.str}
-                                                                                                ${sale.rate?`<div class="gray" title="${sale.rate.time}">${sale.rate.rate}，${sale.rate.str.replaceAll('red','')}</div>`:''}
+                                                                                                ${sale.rate ? `<div class="gray" title="${sale.rate.time}">${sale.rate.rate}，${sale.rate.str.replaceAll('red', '')}</div>` : ''}
                                                                                             </div>
                                                                                         `
-                                                                            }).join('<div class="br" style="margin:0 10px;"></div>')}
+                                                                        }).join('<div class="br" style="margin:0 10px;"></div>')}
                                                                                 </td>
                                                                                 <td>
                                                                                     <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
@@ -1336,7 +1345,7 @@ const Tools = {
                                                                                     ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods) != 0 ? `<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>` : ''}
                                                                                 </td>
                                                                             </tr>
-                                                                        `   
+                                                                        `
                                                                     }
                                                                 }
                                                         }
@@ -1369,7 +1378,8 @@ const Tools = {
         }).join('')}
                     </th>
                     <th>购后均日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
-                    <th>连涨/幅度<span class="caret-wrapper ${SORT.day == 'sumLastDp' ? sortClassname : ''}" data-day="sumLastDp"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
+                    <th>连涨跌/幅度<span class="caret-wrapper ${SORT.day == 'sumLastDp' ? sortClassname : ''}" data-day="sumLastDp"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
+                    <th>基金估值<span class="caret-wrapper ${SORT.day == 'valuation' ? sortClassname : ''}" data-day="valuation"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     ${total_arr.map(total => {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
         }).join('')}
@@ -1461,7 +1471,7 @@ const Tools = {
                 <div class="m-search">
                     <input type="datetime-local" class="search_input mr10 j-buyTime-ipt" style="width:150px;" value="${Tools.getTime('yyyy-mm-dd hh:mm')}" />
                     <button class="search_btn mr10 j-buyTime-btn">插入购买时间</button>
-                    <select class="search_input mr10 j-classify-ipt" style="width:auto;"><option value="">基金分类</option>${Object.keys(CLASSIFICATION).map(key=>(`<option value="${key}" ${SORT.classify==key?'selected':''}>${CLASSIFICATION[key]}</option>`))}</select>
+                    <select class="search_input mr10 j-classify-ipt" style="width:auto;"><option value="">基金分类</option>${Object.keys(CLASSIFICATION).map(key => (`<option value="${key}" ${SORT.classify == key ? 'selected' : ''}>${CLASSIFICATION[key]}</option>`))}</select>
                     <button class="search_btn mr10 j-classify-btn">添加分类</button>
                     <button class="search_btn mr10 j-classify-btn-search">查询分类</button>
                     定投基金：<input class="search_input mr10" type="text" placeholder="" name="fcode" />
@@ -1474,7 +1484,9 @@ const Tools = {
                     <span class="ml10 gray">移动止盈：设定目标收益率为<span class="red">20%</span>，止赢回撤比例为<span class="red">5%</span></span>
                 </div>
             </div>
-            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-sort-preset-span" style="margin-left:10px;" data-sorts="${encodeURIComponent(JSON.stringify({ Ftype: '2', type: '信用', sale_time: '7', lv: '10' }))}">筛选债券</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
+            <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-sort-preset-span" style="margin-left:10px;" data-sorts="${encodeURIComponent(JSON.stringify({ Ftype: '2', type: '信用', sale_time: '7', lv: '10' }))}">筛选债券</span><span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
+                    <span style="margin-left:10px; color:red; cursor: pointer;" class="j-select-all">全选</span>
+                    <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
             <div style="margin:10px 0;" class="gray">${JSON.stringify(SORT)}</div>
             <audio src="/public/uploads/1.mp3" controls="controls" class="audio" loop="true" style="display:none;"></audio>
             <div class="j-hj-gn"></div>
@@ -1820,19 +1832,19 @@ addEventListener($table, 'click', e => {
     compareCodes([code]);
 }, '.j-code-name')
 // 基金分类被点击
-addEventListener($table,'click',e=>{
+addEventListener($table, 'click', e => {
     const classify = e.target.innerHTML;
     const $trs = $table.querySelectorAll('tbody>tr');
-    Array.from($trs).forEach($tr=>{
-        const code = $tr.getAttribute('data-code'); 
-        if(CODES[code] && CLASSIFICATION[CODES[code].classify] == classify){
+    Array.from($trs).forEach($tr => {
+        const code = $tr.getAttribute('data-code');
+        if (CODES[code] && CLASSIFICATION[CODES[code].classify] == classify) {
             // console.log(DATAS[code].name,classify);
             $tr.classList.add('select')
-        }else{
-            $tr.classList.remove('select') 
+        } else {
+            $tr.classList.remove('select')
         }
     })
-},'.j-classify')
+}, '.j-classify')
 // 定投点击
 addEventListener($table, 'click', e => {
     const code = e.target.closest('[data-code]').getAttribute('data-code');
@@ -2234,8 +2246,8 @@ addEventListener($form, 'click', Tools.throttle(e => {
 addEventListener($form, 'click', e => {
     const value = document.querySelector('.j-classify-ipt').value;
     Tools.setCustomSort({ classify: value });
-    Tools.updateDatasTable(); 
-},'.j-classify-btn-search')
+    Tools.updateDatasTable();
+}, '.j-classify-btn-search')
 // 筛选定投收益率
 addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
@@ -2252,7 +2264,7 @@ addEventListener($form, 'input', Tools.throttle(e => {
     Tools.setCustomSort({ position: value });
 }, 500), '.j-code-position-sort')
 // 清除筛选
-addEventListener($form, 'click', e => {
+addEventListener($Content, 'click', e => {
     delete SORT.type;
     delete SORT.name;
     delete SORT.checked;
@@ -2264,6 +2276,7 @@ addEventListener($form, 'click', e => {
     delete SORT.dtSly;
     delete SORT.ratePositiveDay;
     delete SORT.is_ct;
+    delete SORT.classify;
     $form.querySelector('.j-code-name-ipt').value = '';
     $form.querySelector('.j-code-type-ipt').value = '';
     $form.querySelector('.j-code-note-sort').value = '';
@@ -2272,15 +2285,16 @@ addEventListener($form, 'click', e => {
     $form.querySelector('.j-code-lv-sort').value = '';
     $form.querySelector('.j-code-dtSly').value = '';
     $form.querySelector('.j-code-ratePositiveDay-sort').value = '';
+    $form.querySelector('.j-classify-ipt').value = '';
     Tools.storageDatas();
     Tools.updateDatasTable();
 }, '.j-code-filter-clear')
 // 全选
-addEventListener($form, 'click', e => {
+addEventListener($Content, 'click', e => {
     Tools.selectAllTrs();
 }, '.j-select-all')
 // 清除选择
-addEventListener($form, 'click', e => {
+addEventListener($Content, 'click', e => {
     Tools.updateDatasTable();
 }, '.j-code-select-clear')
 // 定投计算
@@ -2841,3 +2855,102 @@ class ViewImg extends HTMLElement {
     }
 }
 customElements.define('view-img', ViewImg);
+// 定义基金估值自动查询
+class FundValuation extends HTMLElement {
+    constructor() {
+        super();
+        const shadow = this.attachShadow({ mode: 'open' });
+        shadow.innerHTML = `
+            <span></span>
+        `;
+        this.code = this.getAttribute('code');
+        this.delay = this.getAttribute('delay') || 0;
+        this.$span = shadow.querySelector('span');
+        // this.fetch();
+        // this.time();
+        // setTimeout(() => {
+        //     this.fetch();
+        // }, this.delay);
+        if (this.code) {
+            // console.log(this.delay);
+            if (CODES[this.code] && CODES[this.code].valuation) {
+                this.valuation = CODES[this.code].valuation;
+                this.fill();
+            }
+            if (this.isTradingTime()) {
+                if ((this.valuation && this.isOneMinute(new Date(), this.valuation.date)) || !this.valuation) {
+                    setTimeout(() => {
+                        this.fetch();
+                    }, this.delay);
+                }
+                this.time();
+            }
+        }
+    }
+    fill() {
+        this.$span.textContent = this.valuation.value+'%';
+        this.$span.title = this.valuation.date;
+        if (this.valuation.value < 0) {
+            this.$span.style.color = 'green';
+        } else {
+            this.$span.style.color = 'red';
+        }
+    }
+    fetch() {
+        const code = this.code;
+        Tools.fetch('fundValuation', { code }).then(res => {
+            // 去数字部分
+            const valuation = parseFloat(res.valuation.replace("%", ""))
+            this.valuation = {
+                value: valuation,
+                date: res.date
+            };
+            Tools.setCustomCodes(code, {
+                valuation: this.valuation
+            });
+            this.fill();
+        })
+    }
+    time() {
+        this.timer = setInterval(() => {
+            if (!this.isTradingTime()) {
+                clearInterval(this.timer);
+                this.timer = null;
+                return;
+            } else {
+                this.fetch();
+            }
+        }, 60 * 1000)
+    }
+    isTradingTime() {
+        const now = new Date();
+        const day = now.getDay();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+
+        // 判断是否为工作日（周一到周五）
+        if (day >= 1 && day <= 5) {
+            // 判断是否在 9:30 - 11:30 之间
+            if ((hour === 9 && minute >= 30) || (hour > 9 && hour < 11) || (hour === 11 && minute < 30)) {
+                return true;
+            }
+            // 判断是否在 13:00 - 15:00 之间
+            if (hour >= 13 && hour < 15) {
+                return true;
+            }
+        }
+        return false;
+    }
+    isOneMinute(time1, time2) {
+        // 将时间转换为毫秒数
+        const ms1 = new Date(time1).getTime();
+        const ms2 = new Date(time2).getTime();
+
+        // 计算时间差（毫秒）
+        const diffMs = Math.abs(ms1 - ms2);
+        const oneMinute = 60 * 1000;
+
+        return diffMs >= oneMinute;
+    }
+}
+customElements.define('fund-valuation', FundValuation);

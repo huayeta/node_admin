@@ -172,7 +172,7 @@ const customStorage = new CustomStorage();
             },
             {
                 label: '广浴隆',
-                options: ['肛瘘9', '肛裂5', '痔疮7'],
+                options: ['肛瘘10', '肛裂6', '痔疮7'],
             },
             {
                 label: '艾跃',
