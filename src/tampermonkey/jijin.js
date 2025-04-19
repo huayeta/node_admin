@@ -77,38 +77,82 @@ const CLASSIFICATION = {
     '8': '低空经济',
     '10': '大数据',
 }
-// 异步处理函数
-class AsyncFunc {
-    constructor(params) {
-        this.arr = [];
-        this.timer = null;
-        this.log = params.log || console.log;
-    }
-    add(func) {
-        this.clearTimer();
-        this.arr.push(func);
-        this.startTimer();
-    }
-    startTimer() {
-        this.timer = setInterval(async () => {
-            if (this.arr.length > 0) {
-                const func = this.arr.shift();
-                func();
-                this.log(`异步函数还剩下${this.arr.length}个没执行`);
-            } else {
-                this.clearTimer();
-                // 确认是否刷新
-                const is = confirm('是否刷新数据');
-                if (is) location.reload();
+// 创建一个基金估值自动查询事件中心
+class jjQuery extends EventTarget {
+    constructor() {
+        super();
+        this.codes = [];
+        this.queryTime = localStorage.getItem('jijin.QueryTime') || 0;
+        if (this.isTradingTime()) {
+            const time = 1 * 60 * 1000;
+            // 距离上次查询时间大于60秒
+            if (new Date().getTime() - this.queryTime >= time || !this.queryTime) {
+                setTimeout(this.startTimer.bind(this), 2000)
+                localStorage.setItem('jijin.QueryTime', new Date().getTime());
+            }else{
+                setTimeout(this.startTimer.bind(this), time - (new Date().getTime() - this.queryTime)) 
             }
-        }, 30 * 1000);
+        }
     }
-    clearTimer() {
-        this.log('');
-        clearInterval(this.timer);
+    addCode(code) {
+        if (this.codes.includes(code)) return;
+        this.codes.push(code);
+    }
+    removeCodes() {
+        this.codes = [];
+    }
+    async startTimer() {
+        // 依次循环codes
+        for (let code of this.codes) {
+            await this.fetch(code);
+            await Tools.delayExecute(1000);
+        }
+        await Tools.delayExecute(1 * 60 * 1000);
+        await this.startTimer();
+    }
+    async fetch(code) {
+        const res = await Tools.fetch('fundValuation', { code });
+        // 去数字部分
+        const valuation = parseFloat(res.valuation.replace("%", ""));
+        let value = {
+            valuation: valuation,
+            date: res.date,
+            code: code
+        };
+        Tools.setCustomCodes(code, {
+            valuation: value
+        });
+        this.dispatchEvent(new CustomEvent('valuation', { detail: value }));
+    }
+    isTradingTime() {
+        // return true;
+        const now = new Date();
+        const day = now.getDay();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+
+        // 判断是否为工作日（周一到周五）
+        if (day >= 1 && day <= 5) {
+            // 判断是否在 9:30 - 11:30 之间
+            if ((hour === 9 && minute >= 30) || (hour > 9 && hour < 11) || (hour === 11 && minute < 30)) {
+                return true;
+            }
+            // 判断是否在 13:00 - 15:00 之间
+            if (hour >= 13 && hour < 15) {
+                return true;
+            }
+        }
+        return false;
     }
 }
-// const asyncBonds = new AsyncFunc();
+const jjQueryCenter = new jjQuery();
+// jjQueryCenter.addCode('015968');
+// jjQueryCenter.addCode('017811');
+// jjQueryCenter.addEventListener('valuation', (e) => {
+//     const code = e.detail.code;
+//     const valuation = e.detail.valuation;
+//     console.log(code, valuation,e); 
+// })
 const Tools = {
     // 节流函数
     throttle: (fn, delay) => {
@@ -187,6 +231,31 @@ const Tools = {
     objectToQueryParams: (params) => {
         return Object.keys(params).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`).join('&');
     },
+    convertNumber: (num) => {
+        if (num === null || num === undefined || num === '') {
+            return "输入为空";
+        }
+        if (isNaN(Number(num))) {
+            return "输入不是有效的数字";
+        }
+        num = Number(num);
+        const units = ['', '十', '百', '千', '万', '十万', '百万', '千万', '亿', '十亿', '百亿', '千亿'];
+        let unitIndex = 0;
+        let result = '';
+        if (num < 10) {
+            result = num + units[0];
+        } else {
+            while (num >= 10 && unitIndex < units.length - 1) {
+                if (num % 10 === 0 && num < 10) {
+                    break;
+                }
+                num = Math.round(num / 10);
+                unitIndex++;
+            }
+            result = num.toFixed(0) + units[unitIndex];
+        }
+        return result;
+    },
     isNumber: (str) => {
         const num = Number(str);
         return !isNaN(num);
@@ -220,7 +289,7 @@ const Tools = {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve();
-            }, 4000);
+            }, time);
         });
     },
     alertFuc: obj => {
@@ -493,6 +562,7 @@ const Tools = {
         if (SORT.day && SORT.sort != 0) {
             codes = Tools.sortCodes(codes, SORT.day, SORT.sort);
         }
+        jjQueryCenter.removeCodes();
         Tools.setTable(Tools.getTable(codes));
     },
     storageDatas: async () => {
@@ -673,8 +743,6 @@ const Tools = {
             // 夏普比率
             Data.uniqueInfo.sharp1 = uniqueInfo[0].SHARP1;
         }
-        // 债权组合
-        Data.customType = Tools.getCustomType(Data);
         // 是否限额
         Data.maxBuy = MAXSG;
         // 是否可以申购
@@ -693,6 +761,8 @@ const Tools = {
                 position,
             };
         }
+        // 债权组合
+        Data.customType = Tools.getCustomType(Data);
 
         console.log(Data);
         Tools.setCode(Data);
@@ -967,6 +1037,7 @@ const Tools = {
                     break;
             }
             if (arr.length > 1) customType += '为主';
+            console.log(customType)
         }
         return customType;
     },
@@ -1276,7 +1347,7 @@ const Tools = {
                                                                                     <p class="fs12 gray" style="text-indent:2em;">-${count_neg.count},${count_neg.sum}（${count_neg.num}/${count_neg.max}）</p>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <span class="j-code-name ${(is_limited || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; ">${data.name}${is_limited ? `/${data.maxBuy}` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
+                                                                                    <span class="j-code-name ${(is_limited || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; " title="限购：${Tools.convertNumber(data.maxBuy)}">${data.name}${(is_limited || +data.maxBuy < 1000000) ? `<span class="gray fs12">/${data.maxBuy}</span>` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
                                                                                     ${is_new ? '<span title="已经更新">🔥</span>' : ''}
                                                                                     ${CODES[data.code] && Object.keys(EMOJIS).map(emoji => {
                                                                             return CODES[data.code][EMOJIS[emoji].key] == 1 ? `<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>` : '';
@@ -1288,7 +1359,7 @@ const Tools = {
                                                                                     ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `</p>` : ''}
                                                                                 </td>
                                                                                 <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
-                                                                                <td>${Array.isArray(data.customAdjacentData) && `<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}</td>
+                                                                                <td>${Array.isArray(data.customAdjacentData) && data.customAdjacentData.length > 0 && `<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}</td>
                                                                                 <td><fund-valuation code="${data.code}" delay="${increment * 1000}" /></td>
                                                                                 ${total_arr.map(total => {
                                                                             return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
@@ -1313,14 +1384,14 @@ const Tools = {
                                                                                         `
                                                                         }).join('<div class="br" style="margin:0 10px;"></div>')}
                                                                                 </td>
-                                                                                <td>
-                                                                                    <!-- ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''} -->
+                                                                                <!-- <td>
+                                                                                    ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}
                                                                                     <p class="fs12 gray j-show-investment">
                                                                                         ${CODES[data.code] && CODES[data.code].investment ? `
                                                                                             ${dtSly}%
                                                                                         `: ''}
                                                                                     </p>
-                                                                                </td>
+                                                                                </td> -->
                                                                                 <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${(assetDp > 0 ? 'background:rgba(255,0,12,.1)' : assetDp < 0 ? 'background:rgba(0,128,0,.1)' : '')}">
                                                                                     ${data.asset && Tools.isNumber1(data.asset.jj) ? `基金：${data.asset.jj}%<br/>` : ''}
                                                                                     ${data.asset && Tools.isNumber1(data.asset.gp) ? `股票：${data.asset.gp}%<br/>` : ''}
@@ -1388,7 +1459,7 @@ const Tools = {
                     </th>
                     <th>卖出时间</th>
                     <th>是否售出</th>
-                    <th>定投收益</th>
+                    <!-- <th>定投收益</th> -->
                     <th>资产</th>
                     <th>持仓情况<span class="caret-wrapper ${SORT.day == 'credit' ? sortClassname : ''}" data-day="credit"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>特色数据</th>
@@ -2864,93 +2935,32 @@ class FundValuation extends HTMLElement {
             <span></span>
         `;
         this.code = this.getAttribute('code');
-        this.delay = this.getAttribute('delay') || 0;
         this.$span = shadow.querySelector('span');
-        // this.fetch();
-        // this.time();
-        // setTimeout(() => {
-        //     this.fetch();
-        // }, this.delay);
         if (this.code) {
             // console.log(this.delay);
             if (CODES[this.code] && CODES[this.code].valuation) {
                 this.valuation = CODES[this.code].valuation;
                 this.fill();
             }
-            if (this.isTradingTime()) {
-                if ((this.valuation && this.isOneMinute(new Date(), this.valuation.date)) || !this.valuation) {
-                    setTimeout(() => {
-                        this.fetch();
-                    }, this.delay);
-                }
-                this.time();
-            }
+            jjQueryCenter.addCode(this.code);
+            jjQueryCenter.addEventListener('valuation', (e) => {
+                const code = e.detail.code;
+                if (code != this.code) return;
+                this.valuation = e.detail;
+                this.fill();
+            })
         }
     }
     fill() {
-        this.$span.innerHTML = `<span>${this.valuation.value+'%'}</span><br><span style="font-size:12px;color:gray;">${this.valuation.date}</span>`;
+        // 去掉年份，去掉秒
+        const date = this.valuation.date.replace(/\d{4}-/, '').replace(/:\d{2}$/, '');
+        this.$span.innerHTML = `<span>${this.valuation.valuation + '%'}</span><br><span style="font-size:12px;color:gray;">${date}</span>`;
         this.$span.title = this.valuation.date;
-        if (this.valuation.value < 0) {
+        if (this.valuation.valuation < 0) {
             this.$span.style.color = 'green';
         } else {
             this.$span.style.color = 'red';
         }
-    }
-    fetch() {
-        const code = this.code;
-        Tools.fetch('fundValuation', { code }).then(res => {
-            // 去数字部分
-            const valuation = parseFloat(res.valuation.replace("%", ""))
-            this.valuation = {
-                value: valuation,
-                date: res.date
-            };
-            Tools.setCustomCodes(code, {
-                valuation: this.valuation
-            });
-            this.fill();
-        })
-    }
-    time() {
-        this.timer = setInterval(() => {
-            if (!this.isTradingTime()) {
-                clearInterval(this.timer);
-                this.timer = null;
-                return;
-            } else {
-                this.fetch();
-            }
-        }, 60 * 1000)
-    }
-    isTradingTime() {
-        const now = new Date();
-        const day = now.getDay();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
-
-        // 判断是否为工作日（周一到周五）
-        if (day >= 1 && day <= 5) {
-            // 判断是否在 9:30 - 11:30 之间
-            if ((hour === 9 && minute >= 30) || (hour > 9 && hour < 11) || (hour === 11 && minute < 30)) {
-                return true;
-            }
-            // 判断是否在 13:00 - 15:00 之间
-            if (hour >= 13 && hour < 15) {
-                return true;
-            }
-        }
-        return false;
-    }
-    isOneMinute(time1, time2) {
-        // 将时间转换为毫秒数
-        const ms1 = new Date(time1).getTime();
-        const ms2 = new Date(time2).getTime();
-
-        // 计算时间差（毫秒）
-        const diffMs = Math.abs(ms1 - ms2);
-        const oneMinute = 60 * 1000;
-
-        return diffMs >= oneMinute;
     }
 }
 customElements.define('fund-valuation', FundValuation);
