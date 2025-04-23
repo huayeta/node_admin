@@ -120,7 +120,11 @@ const Tools = {
                     <button class="search-button">搜索</button>
                 </div>
                 <div class="search-con"></div>
-                <div class="menu-a">超链：<a href="?query=乐乐课堂%5C动画版乐乐课堂乐乐小学%5C04人教版1-6年级数学视频%2BPDF习题%5C二年级%5C二年级上&disk=l1">乐二上</a><a href="?query=乐乐课堂%5C281-小学奥数乐乐课堂%5C一年级%5C01【一年级奥数】-%2084集&disk=l1">乐高一</a><a href="?query=洋葱学院%5C洋葱学院小学数学人教版%5C人教版%5C二年级%5C二年级上册&disk=l1">洋二上</a></div>
+                <div class="menu-a">
+                    超链：<a href="?query=乐乐课堂%5C动画版乐乐课堂乐乐小学%5C04人教版1-6年级数学视频%2BPDF习题%5C二年级%5C二年级上&disk=l1">乐二上</a>
+                    <a href="?query=乐乐课堂%5C281-小学奥数乐乐课堂%5C一年级%5C01【一年级奥数】-%2084集&disk=l1">乐高一</a>
+                    <a href="?query=洋葱学院%5C洋葱学院小学数学人教版%5C人教版%5C二年级%5C二年级上册&disk=l1">洋二上</a>
+                </div>
                 <div class="menu">${['语文', '数学', '英语', '阅读', '历史', '初中', '高中', '其他'].map(data => `<span ${(Tools.data.sel && Tools.data.sel.includes(data)) ? 'class="sel"' : ''}>${data}</span>`).join('')}</div>
             `: ''}
             <ul>

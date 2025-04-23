@@ -81,17 +81,19 @@ const CLASSIFICATION = {
 class jjQuery extends EventTarget {
     constructor() {
         super();
+        this.max = 1 * 60 * 1000;
         this.codes = [];
         this.queryTime = localStorage.getItem('jijin.QueryTime') || 0;
         if (this.isTradingTime()) {
             const time = 1 * 60 * 1000;
+            setTimeout(this.startTimer.bind(this), 2000)
             // 距离上次查询时间大于60秒
-            if (new Date().getTime() - this.queryTime >= time || !this.queryTime) {
-                setTimeout(this.startTimer.bind(this), 2000)
-                localStorage.setItem('jijin.QueryTime', new Date().getTime());
-            }else{
-                setTimeout(this.startTimer.bind(this), time - (new Date().getTime() - this.queryTime)) 
-            }
+            // if (new Date().getTime() - this.queryTime >= time || !this.queryTime) {
+            //     setTimeout(this.startTimer.bind(this), 2000)
+            //     localStorage.setItem('jijin.QueryTime', new Date().getTime());
+            // } else {
+            //     setTimeout(this.startTimer.bind(this), time - (new Date().getTime() - this.queryTime))
+            // }
         }
     }
     addCode(code) {
@@ -102,12 +104,27 @@ class jjQuery extends EventTarget {
         this.codes = [];
     }
     async startTimer() {
+        const length = this.codes.length;
+        let bh = false;
+        // console.log(this.codes)
         // 依次循环codes
         for (let code of this.codes) {
-            await this.fetch(code);
-            await Tools.delayExecute(1000);
+            if(length!=this.codes.length){
+                bh = true;
+                break;
+            }
+            const lastTime = Tools.getCustomCodes(code, 'valuation.date');
+            // console.log(code,lastTime)
+            // 距离上次查询时间大于60秒
+            if (new Date().getTime() - new Date(lastTime).getDate() >= this.max || !lastTime) {
+                await this.fetch(code);
+                await Tools.delayExecute(1000);  
+            }
         }
-        await Tools.delayExecute(1 * 60 * 1000);
+        Tools.updateDatasTable();
+        if(!bh){
+            await Tools.delayExecute(this.max);
+        }
         await this.startTimer();
     }
     async fetch(code) {
@@ -355,6 +372,17 @@ const Tools = {
         customStorage.setItem('jijin.codes', CODES);
         // Tools.updateDatasTable();
     },
+    getCustomCodes: (code, path) => {
+        const keys = path.split('.');
+        let current = CODES[code]||{};
+        for (const key of keys) {
+            if (!current || !Object.prototype.hasOwnProperty.call(current, key)) {
+                return undefined;
+            }
+            current = current[key];
+        }
+        return current;
+    },
     delCustomCodes: (code) => {
         delete CODES[code];
         customStorage.setItem('jijin.codes', CODES);
@@ -393,8 +421,8 @@ const Tools = {
                 }
             } else if (day == 'valuation') {
                 let aa = bb = (sort > 0 ? 1000 : 0);
-                if (CODES[a.code] && CODES[a.code].valuation && CODES[a.code].valuation.value) aa = CODES[a.code].valuation.value;
-                if (CODES[b.code] && CODES[b.code].valuation && CODES[b.code].valuation.value) bb = CODES[b.code].valuation.value;
+                if (CODES[a.code] && CODES[a.code].valuation && CODES[a.code].valuation.valuation) aa = CODES[a.code].valuation.valuation;
+                if (CODES[b.code] && CODES[b.code].valuation && CODES[b.code].valuation.valuation) bb = CODES[b.code].valuation.valuation;
                 result = aa - bb;
             } else {
                 result = Number(a[day]) - Number(b[day]);
