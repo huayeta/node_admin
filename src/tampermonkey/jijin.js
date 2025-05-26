@@ -30,9 +30,9 @@ let DATAS = {};
 let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,Ftype_text:债权类型,investment:定投相关,is_ct:城投债,classify:分类}}
 let CODES = {};
-//  ['lastWeekGrowth', '周涨幅',day], ['lastMonthGrowth', '月涨幅',day],
+//  ['lastWeekGrowth', '周涨幅',day], ['lastMonthGrowth', '月涨幅',day], ['lastYearGrowth', '年涨幅']
 let BONDS = {};
-const total_arr = [['dayGrowth', '日涨幅'], , ['custom3DayGrowth', '最近3天涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
+const total_arr = [['dayGrowth', '日涨幅'], , ['custom3DayGrowth', '最近3天涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金', '组合'];
 const SALETIME = {
     7: '7天免',
@@ -72,10 +72,13 @@ const CLASSIFICATION = {
     '3': '机器人',
     '4': 'AI算力',
     '5': '中证新能源光伏',
-    '6': 'AI医疗创新药',
+    '6': '创新药',
     '7': '卫星互联网',
     '8': '低空经济',
     '10': '大数据',
+    '11': '中药',
+    '12': '化学制药',
+    '13': '游戏',
 }
 // 创建一个基金估值自动查询事件中心
 class jjQuery extends EventTarget {
@@ -85,8 +88,7 @@ class jjQuery extends EventTarget {
         this.codes = [];
         this.queryTime = localStorage.getItem('jijin.QueryTime') || 0;
         if (this.isTradingTime()) {
-            const time = 1 * 60 * 1000;
-            setTimeout(this.startTimer.bind(this), 2000)
+            this.start();
             // 距离上次查询时间大于60秒
             // if (new Date().getTime() - this.queryTime >= time || !this.queryTime) {
             //     setTimeout(this.startTimer.bind(this), 2000)
@@ -95,6 +97,10 @@ class jjQuery extends EventTarget {
             //     setTimeout(this.startTimer.bind(this), time - (new Date().getTime() - this.queryTime))
             // }
         }
+    }
+    start() {
+        console.log('开始查询基金估值');
+        setTimeout(this.startTimer.bind(this), 2000)
     }
     addCode(code) {
         if (this.codes.includes(code)) return;
@@ -109,7 +115,7 @@ class jjQuery extends EventTarget {
         // console.log(this.codes)
         // 依次循环codes
         for (let code of this.codes) {
-            if(length!=this.codes.length){
+            if (length != this.codes.length) {
                 bh = true;
                 break;
             }
@@ -118,11 +124,11 @@ class jjQuery extends EventTarget {
             // 距离上次查询时间大于60秒
             if (new Date().getTime() - new Date(lastTime).getDate() >= this.max || !lastTime) {
                 await this.fetch(code);
-                await Tools.delayExecute(1000);  
+                await Tools.delayExecute(1000);
             }
         }
         Tools.updateDatasTable();
-        if(!bh){
+        if (!bh) {
             await Tools.delayExecute(this.max);
         }
         await this.startTimer();
@@ -136,9 +142,9 @@ class jjQuery extends EventTarget {
             date: res.date,
             code: code
         };
-        Tools.setCustomCodes(code, {
-            valuation: value
-        });
+        // Tools.setCustomCodes(code, {
+        //     valuation: value
+        // });
         this.dispatchEvent(new CustomEvent('valuation', { detail: value }));
     }
     isTradingTime() {
@@ -374,7 +380,7 @@ const Tools = {
     },
     getCustomCodes: (code, path) => {
         const keys = path.split('.');
-        let current = CODES[code]||{};
+        let current = CODES[code] || {};
         for (const key of keys) {
             if (!current || !Object.prototype.hasOwnProperty.call(current, key)) {
                 return undefined;
@@ -1541,6 +1547,7 @@ const Tools = {
                     <button class="search_btn j-code-compare reb" style="margin-left:10px">对比债券</button>
                     <button class="search_btn j-code-compare-month" style="margin-left:10px">对比月债</button>
                     <button class="search_btn j-code-compare-bp" style="margin-left:10px">对比涨跌</button>
+                    <button class="search_btn" style="margin-left:10px" onclick="javascript:jjQueryCenter.start();">估值查询</button>
                     <button class="search_btn j-code-download" style="margin-left:10px">下载数据</button>
                     <input class="search_input j-code-note-ipt" type="text" placeholder="备注信息" style="margin-left:10px; width:150px;" />
                     <button class="search_btn reb j-code-note-add" style="margin-left:0px">添加备注</button>
@@ -2577,6 +2584,7 @@ class Contextmenu {
             return `<div class="context-menu-item" data-emoji="${emoji}">添加${EMOJIS[emoji].title.substr(0, 2)}${emoji}</div>`;
         }).join('')}
                 <div class="context-menu-item">点击天天✅</div>
+                <div class="context-menu-item">点击查询✅</div>
                 <div class="context-menu-item">更新基金🔃</div>
                 <div class="context-menu-item">更新债权🔃</div>
                 <div class="context-menu-item">删除基金🔃</div>
@@ -2659,6 +2667,10 @@ class Contextmenu {
         }
         if (con.includes('点击天天')) {
             window.open(`https://fund.eastmoney.com/${code}.html`, '_blank')
+            this.hide();
+        }
+        if (con.includes('点击查询')) {
+            window.open(`https://www.dayfund.cn/fundvalue/${code}.html`, '_blank')
             this.hide();
         }
         if (con.includes('更新基金')) {
@@ -2923,8 +2935,8 @@ class HJ {
         `;
     }
 }
-new HJ('.j-hj-gn', { codes: 'JO_9753', max: 630, min: 600, zl: 626, title: '国内黄金', jk_min_price: 606, jk_max_price: 630 });
-new HJ('.j-hj-gj', { codes: 'JO_92233', max: 2750, min: 2500, zl: 2650, title: '国际黄金' });
+new HJ('.j-hj-gn', { codes: 'JO_9753', max: 840, min: 600, zl: 626, title: '国内黄金', jk_min_price: 606, jk_max_price: 630 });
+new HJ('.j-hj-gj', { codes: 'JO_92233', max: 3500, min: 2500, zl: 2650, title: '国际黄金' });
 // 查看图片
 class ViewImg extends HTMLElement {
     constructor() {
@@ -2964,17 +2976,25 @@ class FundValuation extends HTMLElement {
         `;
         this.code = this.getAttribute('code');
         this.$span = shadow.querySelector('span');
-        if (this.code) {
+        if (this.code && Tools.isDebt(this.code) == 1) {
             // console.log(this.delay);
+            let code = this.code;
+            const name = DATAS[this.code].name;
+            if (name.includes('联接') && DATAS[this.code].assetPosition && DATAS[this.code].assetPosition.etf) {
+                code = DATAS[this.code].assetPosition.etf.code;
+            }
             if (CODES[this.code] && CODES[this.code].valuation) {
                 this.valuation = CODES[this.code].valuation;
                 this.fill();
             }
-            jjQueryCenter.addCode(this.code);
+            jjQueryCenter.addCode(code);
             jjQueryCenter.addEventListener('valuation', (e) => {
-                const code = e.detail.code;
-                if (code != this.code) return;
-                this.valuation = e.detail;
+                const value = e.detail;
+                if (value.code != code) return;
+                Tools.setCustomCodes(this.code, {
+                    valuation: value
+                });
+                this.valuation = value;
                 this.fill();
             })
         }
