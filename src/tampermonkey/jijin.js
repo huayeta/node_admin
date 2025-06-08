@@ -466,7 +466,7 @@ const Tools = {
         return is;
     },
     // 获取工作日
-    getWorkingDay: (date=new Date().getTime(), symbol = '+') => {
+    getWorkingDay: (date, symbol = '+') => {
         let nextDay = new Date(date);
         while (true) {
             const dayOfWeek = nextDay.getDay();
@@ -1620,19 +1620,23 @@ const Tools = {
         const arr = Object.keys(DATAS).filter(code => {
             return Tools.isDebt(code)==1;
         }).filter(code => {
-            let date = new Date();
             // 当前时间大约20点
             if(new Date().getHours()>=20){
-                // if(new Date(DATAS[code].update_time).getHours()<20)return code;               
+                // if(new Date(DATAS[code].update_time).getHours()<20)return code;        
+                let date = new Date();       
                 // 是周六周日
                 if(date.getDay()==0 || date.getDay()==6)date = Tools.getWorkingDay(new Date().getTime(),'-');
+                if(date.getDay()!= new Date(DATAS[code].netWorthDate).getDay())return code;
             }else{
                 // 已经更新的不是上一个工作日
-                date = Tools.getWorkingDay(new Date().getTime(),'-');     
+                let date = new Date();
+                date.setDate(date.getDate()-1);
+                date = Tools.getWorkingDay(date.getTime(),'-');
+                // console.log(date.getDay(),new Date(DATAS[code].netWorthDate).getDay())
+                if(date.getDay()!= new Date(DATAS[code].netWorthDate).getDay())return code;
             }
-            if(date.getDay()!= new Date(DATAS[code].netWorthDate).getDay())return code;
         });
-        // alert(arr.length);
+        // console.log(arr.length);
         if(arr.length>0)Tools.updatasCodes(document.querySelector('.j-code-updata'),arr);
 
 
