@@ -76,17 +76,17 @@ const CLASSIFICATION = {
     '7': '卫星互联网',
     '8': '低空经济',
     '10': '大数据',
-    '11': '中药',
-    '12': '化学制药',
     '13': '游戏',
+    '14': '北证50',
 }
 // 创建一个基金估值自动查询事件中心
 class jjQuery extends EventTarget {
     constructor() {
         super();
         this.max = 1 * 60 * 1000;
+        this.delay_time= 1000;
         this.codes = [];
-        this.queryTime = localStorage.getItem('jijin.QueryTime') || 0;
+        // this.queryTime = localStorage.getItem('jijin.QueryTime') || 0;
         if (this.isTradingTime()) {
             this.start();
             // 距离上次查询时间大于60秒
@@ -119,12 +119,12 @@ class jjQuery extends EventTarget {
                 bh = true;
                 break;
             }
-            const lastTime = Tools.getCustomCodes(code, 'valuation.date');
-            // console.log(code,lastTime)
+            const query_date = Tools.getCustomCodes(code, 'valuation.query_date');
+            // console.log(code,query_date)
             // 距离上次查询时间大于60秒
-            if (new Date().getTime() - new Date(lastTime).getDate() >= this.max || !lastTime) {
+            if (new Date().getTime() - new Date(query_date).getDate() >= this.max || !query_date) {
                 await this.fetch(code);
-                await Tools.delayExecute(1000);
+                await Tools.delayExecute(this.delay_time);
             }
         }
         Tools.updateDatasTable();
@@ -140,7 +140,8 @@ class jjQuery extends EventTarget {
         let value = {
             valuation: valuation,
             date: res.date,
-            code: code
+            code: code,
+            query_date:Tools.getTime(),
         };
         // Tools.setCustomCodes(code, {
         //     valuation: value
@@ -464,46 +465,48 @@ const Tools = {
         }
         return is;
     },
+    // 获取工作日
+    getWorkingDay: (date=new Date().getTime(), symbol = '+') => {
+        let nextDay = new Date(date);
+        while (true) {
+            const dayOfWeek = nextDay.getDay();
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                return nextDay;
+            }
+            nextDay.setDate(nextDay.getDate() + (symbol == '+' ? 1 : -1));
+        } 
+    },
+    // 获取购买后最大的卖出时间
     isSale: (code) => {
         const data = DATAS[code];
         if (!data || !data.maxSaleTime || !CODES[code] || !CODES[code].buy_time) return [];
         let { buy_time } = CODES[code];
         // if (!Array.isArray(buy_time)) buy_time = [buy_time];
         const arr = [];
-        const getWorkingDay = (date, symbol = '+') => {
-            let nextDay = new Date(date);
-            while (true) {
-                const dayOfWeek = nextDay.getDay();
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                    return nextDay;
-                }
-                nextDay.setDate(nextDay.getDate() + (symbol == '+' ? 1 : -1));
-            }
-        }
         const getSaleStr = (time, maxSaleTime) => {
             if (!time || !maxSaleTime) return {};
             let result = {};
             let today = new Date();
             let specificDate = new Date(time);
-            // console.log(specificDate,getWorkingDay(specificDate));
+            // console.log(specificDate,Tools.getWorkingDay(specificDate));
             // 如果是15点后买的就推迟一天当购买时间
             if (specificDate.getHours() >= 15) {
                 specificDate.setDate(specificDate.getDate() + 1)
                 specificDate.setHours(12, 0, 0, 0);
             }
             // 获取真正的工作日购买时间15点前
-            specificDate = getWorkingDay(specificDate);
+            specificDate = Tools.getWorkingDay(specificDate);
             // 计算基金确认时间
-            specificDate = getWorkingDay(specificDate.setDate(specificDate.getDate() + 1));
+            specificDate = Tools.getWorkingDay(specificDate.setDate(specificDate.getDate() + 1));
             // 未来算满基金购买日期
             specificDate.setDate(specificDate.getDate() + Number(maxSaleTime) - 1);
             specificDate.setHours(15, 0, 0, 0);
             // 往上获取到工作日
-            specificDate = getWorkingDay(specificDate, '-');
+            specificDate = Tools.getWorkingDay(specificDate, '-');
             // 再往前走一天
             specificDate.setDate(specificDate.getDate() - 1);
             // 往上获取到工作日
-            specificDate = getWorkingDay(specificDate, '-');
+            specificDate = Tools.getWorkingDay(specificDate, '-');
             // 如果当前时间大于specificDate就可以卖出
             if (new Date() > specificDate) {
                 result = {
@@ -1612,6 +1615,27 @@ const Tools = {
         //     Tools.upDateIncome(code);
         // })
         Tools.updateDatasTable();
+
+        // 获取需要更新的列表
+        const arr = Object.keys(DATAS).filter(code => {
+            return Tools.isDebt(code)==1;
+        }).filter(code => {
+            let date = new Date();
+            // 当前时间大约20点
+            if(new Date().getHours()>=20){
+                // if(new Date(DATAS[code].update_time).getHours()<20)return code;               
+                // 是周六周日
+                if(date.getDay()==0 || date.getDay()==6)date = Tools.getWorkingDay(new Date().getTime(),'-');
+            }else{
+                // 已经更新的不是上一个工作日
+                date = Tools.getWorkingDay(new Date().getTime(),'-');     
+            }
+            if(date.getDay()!= new Date(DATAS[code].netWorthDate).getDay())return code;
+        });
+        // alert(arr.length);
+        if(arr.length>0)Tools.updatasCodes(document.querySelector('.j-code-updata'),arr);
+
+
         // 下面是储存json
         const $datasAddDiv = document.querySelector('.j-datas-add');
         const $datasText = $datasAddDiv.querySelector('textarea');
@@ -1720,7 +1744,7 @@ const myAlert = new Alert();
 //         Tools.setTable(str)
 //     }
 // })
-// function addEventListener1(el, eventName, eventHandler, selector) {
+// function addEventListener(el, eventName, eventHandler, selector) {
 //     if (selector) {
 //         const wrappedHandler = (e) => {
 //             if (e.target && e.target.matches(selector)) {

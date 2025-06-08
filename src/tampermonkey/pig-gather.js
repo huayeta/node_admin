@@ -631,11 +631,13 @@ const customStorage = new CustomStorage();
             return [dyStr + table, code ? str : ''];
         },
         // 通过某个条件找到所有的数据并显示
-        displayAccountByKeyValue: (arr, otherKeysFuc, isBreakFuc = (data, i) => i == 0, sort) => {
+        displayAccountByKeyValue: (arr, otherKeysFuc, isBreakFuc = (data, i) => i == 0, sort1) => {
             const accounts = Tools.findAccountsBykeyValue(arr, otherKeysFuc, true, isBreakFuc);
-            // console.log(accounts,come_type);
-
-            return Tools.displayAccounts(accounts, undefined, sort, true);
+            // console.log(arr);
+            // console.log(otherKeysFuc);
+            // console.log(isBreakFuc);
+            // console.log(sort1);
+            return Tools.displayAccounts(accounts, undefined, sort1, true);
         },
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
@@ -1867,6 +1869,7 @@ const customStorage = new CustomStorage();
                         <button class="search_btn j-gatherQqs" style="">倒序筛选1238</button>
                         <button class="search_btn reb j-gatherRegisterQqs" style="">无损筛选1238</button>
                         <button class="search_btn j-gatherWx" style="">做单渠道号筛选1238</button>
+                        <button class="search_btn j-gatherShopFilter" style="">店铺产品筛选12348</button>
                         <button class="search_btn j-gatherShop" style="">查询店铺做单数据346</button>
                         <button class="search_btn download" style="">下载数据</button>
                         <button class="search_btn reb j-wait-search" style="">筛选待处理（<span>0</span>）</button>
@@ -1875,7 +1878,7 @@ const customStorage = new CustomStorage();
                         <span class="gray">1：</span><select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
                         <span class="gray">2：</span><select class="search_input j-screen-time"><option value="1" selected>筛选正序</option><option value="-1">筛选逆序</option></select>
                         <span class="gray">3：</span><input class="search_input j-search-time" placeholder="搜索时间" value="2023-04-01" type="date" />
-                        <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="-1">默认评价</option></select>
+                        <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="0">未评价</option><option value="-1">默认评价</option></select>
                         <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type => `<option value="${type}">${type}</option>`)}</select>
                         <span class="gray">6：</span><select class="search_input j-shop-id"></select>
                         <span class="gray">7：</span><select class="search_input j-come-type">${COMETYPE.map(type => `<option value="${type.value}" ${type.value == 'pig' ? 'selected' : ''}>${type.name}</option>`).join('')}</select>
@@ -3065,6 +3068,7 @@ const customStorage = new CustomStorage();
             let startTime = new Date($searchTime.value);
             const is_screen = qqAdd.querySelector('.j-screen').value;
             const screen_time = parseInt(qqAdd.querySelector('.j-screen-time').value, 10);
+            const comment_sel = qqAdd.querySelector('.j-comment-sel').value;
             let DateRecords = [];
             const DatePhones = Object.keys(DATA);
             const getLastTypeData = (datas, pig_type) => {
@@ -3172,7 +3176,27 @@ const customStorage = new CustomStorage();
                 // 判断是否是wx
                 // console.log(humanData);
                 if(humanData.last_recode.qq_exec_pre==qq_exec_pre){
+                    
                     return true;
+                }
+                return false;
+            }, pig_type)
+        }, false)
+        qqAdd.querySelector('.j-gatherShopFilter').addEventListener('click', () => {
+            const pig_type = $pigType.value;
+            const shop_label = $shopId.value;
+            if (!shop_label) return;
+            const comment_sel = qqAdd.querySelector('.j-comment-sel').value;
+            GatherQqs(humanData => {
+                // console.log(humanData);
+                const data = humanData.last_recode;
+                if(data.shop_label==shop_label){
+                    if(comment_sel === ''){
+                        return true;
+                    }else{
+                        if(data.is_comment == comment_sel)return true;
+                        if(comment_sel === '0' && !data.is_comment)return true;
+                    }
                 }
                 return false;
             }, pig_type)
@@ -3184,47 +3208,17 @@ const customStorage = new CustomStorage();
             const comment_sel = qqAdd.querySelector('.j-comment-sel').value;
             const search_time = $searchTime.value;
             if (!shop_label) return;
-            // const phones = Object.keys(DATA);
-            // for (let phone of phones) {
-            //     const datas = DATA[phone];
-            //     if (trim(datas[0].shop_label) == trim(shop_label) && !datas[0].is_remind) {
-            //         if ((comment_sel === '' && !datas[0].is_comment) || (comment_sel && comment_sel == datas[0].is_comment)) {
-            //             if (!RDATA.isExist(phone, 'comment_reminder')) arr.push(datas[0]);
-            //         }
-            //     }
-            // }
-            // arr.sort((a, b) => {
-            //     if (new Date(a.pig_over_time) > new Date(b.pig_over_time)) {
-            //         return 1;
-            //     } else {
-            //         return -1;
-            //     }
-            // })
-            // if (arr.length == 0) return setCon(['没有找到做单记录']);
-            // let dyStr = '';
-            // if (arr.length > 5) {
-            //     dyStr += `<div style="margin-bottom: 10px; color:gray;text-align: center">....还剩下<span style="color:red;">${arr.length - 5}</span>个.....</div>`
-            // }
-            // // console.log(arr);
-            // const phoneDatas = [];
-            // const forLen = arr.length < 5 ? arr.length : 5;
-            // for (let i = 0; i < forLen; i++) {
-            //     phoneDatas.push(DATA[arr[i].pig_phone]);
-            // }
-            // // console.log(phoneDatas);
-            // const table = getDataTable(phoneDatas, comment_sel === '' ? [{ text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' }, { text: '标注默认评价', className: 'j-addComment', texted: '已默认评价', val: '-1' }, { text: '<br/>copy去除comment', className: 'j-remindPhone', type: 'comment_reminder' }, { text: '不再提醒', className: 'j-no-remind' }] : comment_sel == '-1' ? { text: '标注已评价', className: 'j-addComment', texted: "已评价", val: '1' } : '');
-            // setCon([dyStr + table]);
 
             setCon(Tools.displayAccountByKeyValue([['shop_label', shop_label]], (data, i) => {
                 if ((comment_sel === '' && !data.is_comment) || (comment_sel && comment_sel == data.is_comment)) {
                     if (!RDATA.isExist(data.pig_phone, 'comment_reminder') && new Date(data.pig_over_time) > new Date(search_time)) return true;
                 }
-            }, (data, i) => i == 0), (data1, data2) => {
+            }, (data, i) => i == 0, (data1, data2) => {
                 // 排序
                 let str1 = data1[0].comment_time ? data1[0].comment_time : data1[0].pig_over_time;
                 let str2 = data2[0].comment_time ? data2[0].comment_time : data2[0].pig_over_time;
                 return new Date(str1) > new Date(str2);
-            })
+            }));
         }, false)
         // function getComeTypeByTang() {
         //     const accounts = Tools.findAccountsBykeyValue([['qq_exec_pre', 'tang']], (data, i) => {
