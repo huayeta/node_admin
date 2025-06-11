@@ -5,7 +5,41 @@ const Disk = Url.searchParams.get('disk') ? Url.searchParams.get('disk') : '';
 const Musice = Url.searchParams.get('musice') ? Url.searchParams.get('musice') : '';
 const BaseUrl = `${Url.origin}${Url.pathname}`;
 
-function addEventListener(el, eventName, eventHandler, selector) {
+class CSSLoader {
+    constructor() {
+        this.cssLinkElement = null;
+    }
+
+    load(url) {
+        return new Promise((resolve, reject) => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = url;
+
+            link.addEventListener('load', () => {
+                this.cssLinkElement = link;
+                resolve();
+            });
+
+            link.addEventListener('error', () => {
+                reject(new Error(`无法加载 CSS 文件: ${url}`));
+            });
+
+            document.head.appendChild(link);
+        });
+    }
+
+    remove() {
+        if (this.cssLinkElement && this.cssLinkElement.parentNode) {
+            this.cssLinkElement.parentNode.removeChild(this.cssLinkElement);
+            this.cssLinkElement = null;
+            console.log('CSS 已删除');
+        }
+    }
+}
+const cssLoader = new CSSLoader();
+
+function addMyEventListener(el, eventName, eventHandler, selector) {
     if (selector) {
         const wrappedHandler = (e) => {
             if (!e.target) return;
@@ -62,6 +96,11 @@ const Tools = {
     isMusicFile: (ext) => {
         const musicExtensions = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma'];
         return musicExtensions.includes(ext);
+    },
+    // 判断是视频文件
+    isVideoFile: (ext) => {
+        const videoExtensions = ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm'];
+        return videoExtensions.includes(ext);
     },
     findNextSiblingWithClass: (element, className) => {
         let currentElement = element.nextElementSibling;
@@ -160,9 +199,16 @@ const Tools = {
                 return `<li>${subject ? `<span class="subject" style="${subject == '英语' ? 'color:aquamarine' : ''}">${subject}</span>` : ''}${data.subject && data.subject.is_top == '1' ? `<span class="subject" style="color:#fff;">置顶</span>` : ''}<a href="${url}">${data.file}</a></li>`;
             }
             if (Tools.isMusicFile(data.ext)) {
-                const urlMusic = new URL(window.location.href);
-                urlMusic.searchParams.set('musice', index);
+                // const urlMusic = new URL(window.location.href);
+                // urlMusic.searchParams.set('musice', index);
                 return `<li><a data-musice="${index}" href="javascript:;" class="j-musice">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
+            }
+            if (Tools.isVideoFile(data.ext)) {
+                const url_tmp = new URL(window.location.href);
+                url_tmp.searchParams.set('query', encodeURIComponent((QUERY ? `${QUERY}\\` : '') + data.file));
+                url_tmp.searchParams.set('disk', data.disk);
+                url_tmp.searchParams.set('video', data.ext);
+                return `<li><a target="_black" href="${url_tmp}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
             }
             return `<li><a target="_black" href="/api/dir${url}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
         }).join('')}
@@ -186,9 +232,72 @@ const Tools = {
         // console.log(myPlayer.player.skipTo);        
         myPlayer.player.skipTo(index);
     },
+    getVideoMimeType: (extension) => {
+        // 处理输入：转为小写并移除开头的点（如果有）
+        const ext = extension.toLowerCase().replace(/^\./, '');
+
+        // 视频格式到 MIME 类型的映射表
+        const mimeTypes = {
+            'mp4': 'video/mp4',
+            'webm': 'video/webm',
+            'ogg': 'video/ogg',
+            'mkv': 'video/x-matroska',
+            'mov': 'video/quicktime',
+            'avi': 'video/x-msvideo',
+            'wmv': 'video/x-ms-wmv',
+            'flv': 'video/x-flv',
+            'm3u8': 'application/x-mpegURL',
+            'mpd': 'application/dash+xml',
+            'ts': 'video/MP2T'  // HLS 片段
+        };
+
+        return mimeTypes[ext] || null;
+    },
+    playVideo: async (url, video_type) => {
+        console.log(url,Tools.getVideoMimeType(video_type))
+        // 加载css
+        await cssLoader.load('./video/video-js.min.css');
+        await import('./video/video.min.js');
+        if(video_type.includes('flv')){
+            await import('./video/flv.min.js');
+            await import('./video/videojs-flvjs.min.js');
+        }
+        // 创建视频元素
+        const videoElement = document.createElement('video');
+        videoElement.id = 'my-video';
+        videoElement.className = 'video-js vjs-default-skin';
+        videoElement.controls = true;
+        videoElement.preload = 'metadata';
+        videoElement.style.width = '100%';
+        videoElement.style.height = '100vh';
+
+        // 添加到容器
+        const container = document.querySelector('.content');
+        container.innerHTML = '<style>body{margin:0}</style>';
+        container.appendChild(videoElement);
+        // 初始化video.js
+        const player = videojs('my-video',{
+            techOrder: ['html5','flvjs'],
+        })
+        player.src({
+            src: url,
+            type: Tools.getVideoMimeType(video_type)
+        });
+        player.on('error',function(){
+            const $error = document.querySelector('.vjs-modal-dialog-content');
+            const a = document.createElement('a');
+            a.style='display:block;position:absolute; left:50%;top:50%;font-size:20px;';
+            a.innerHTML='点击转换尝试播放';
+            a.target='_black';
+            a.href=`/api/dir?query=${QUERY}&disk=${Disk}`;
+            $error.appendChild(a);
+        })
+    },
     initialization: async () => {
         // const aa = import('./study-player.js');
         // 如果query的后缀名是.pdf
+        const url = new URL(window.location.href);
+        const disk = url.searchParams.get('disk');
         if (QUERY && QUERY.endsWith('.pdf')) {
             const pdfjs = await import('https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.min.mjs');
             // 初始化PDF.js库 
@@ -258,44 +367,22 @@ const Tools = {
                     });
                 });
             });
-        } else {
+        } else if (QUERY && url.searchParams.get('video') && Tools.isVideoFile(url.searchParams.get('video'))) {
+            let video_url = `/api/dir?query=${QUERY}&disk=${disk}&convert=2`;
+            const video_type = url.searchParams.get('video');
+            Tools.playVideo(video_url, video_type);
+        }
+        else {
             Tools.addLoading();
             const datas = await Tools.readDir();
             if (datas) {
                 Tools.data.datas = datas.datas;
                 Tools.updataHtml();
-                // 判断是否全部是音频
-                // const isAllMusic = datas.datas.every(data => {
-                //     // console.log(data.ext,Tools.isMusicFile(data.ext));
-                //     return Tools.isMusicFile(data.ext);
-                // });
-                // if (isAllMusic) {
-                //     Tools.playMusic();
-                // }
-                // if (Musice) {
-                //     Tools.playMusic();
-                // } else {
-                    // Tools.updataHtml();
-                    // 是否存在音频
-                    // const hasMusic = datas.datas.some(data => {
-                    //     return Tools.isMusicFile(data.ext);
-                    // });
-                    // if (hasMusic) {
-                    //     const url = new URL(window.location.href);
-                    //     url.searchParams.set('musice', 1);
-                    //     const qpbt = document.createElement('a');
-                    //     qpbt.classList.add('bottom-right-button');
-                    //     qpbt.style = 'bottom:5.3em;line-height:1em;';
-                    //     qpbt.href = url.toString();
-                    //     qpbt.innerHTML = `<span style="font-size:1em;">全屏播放</span>`;
-                    //     document.querySelector('.content').appendChild(qpbt);
-                    // }
-                // }
             }
         }
         document.title = QUERY;
         // 音乐点击
-        addEventListener(document.querySelector('.content'), 'click', async (e) => {
+        addMyEventListener(document.querySelector('.content'), 'click', async (e) => {
             const $target = e.target;
             const index = $target.dataset.musice;
             // console.log(index);
@@ -304,7 +391,7 @@ const Tools = {
             }
         }, '.j-musice')
         // 顶部的菜单切换
-        addEventListener(document.querySelector('.content'), 'click', (e) => {
+        addMyEventListener(document.querySelector('.content'), 'click', (e) => {
             const $target = e.target;
             const sel = $target.textContent;
             if (Tools.data.sel) {
@@ -319,7 +406,7 @@ const Tools = {
             Tools.updataHtml();
         }, '.menu span')
         // 搜索
-        addEventListener(document.querySelector('.content'), 'click', async (e) => {
+        addMyEventListener(document.querySelector('.content'), 'click', async (e) => {
             const $target = e.target;
             const val = document.querySelector('.search-container .search-input').value;
             if (val) {
@@ -347,7 +434,7 @@ const Tools = {
                 }
             }
         }, '.search-container .search-button')
-        addEventListener(document.querySelector('.content'), 'click', (e) => {
+        addMyEventListener(document.querySelector('.content'), 'click', (e) => {
             document.querySelector('.search-con').innerHTML = '';
             document.querySelector('.search-container .search-input').value = '';
         }, '.j-search-clear')
