@@ -80,13 +80,14 @@ const CLASSIFICATION = {
     '14': '北证50',
     '15': '科创芯片',
     '16': '人工智能',
+    '17': '稀土',
 }
 // 创建一个基金估值自动查询事件中心
 class jjQuery extends EventTarget {
     constructor() {
         super();
         this.max = 1 * 60 * 1000;
-        this.delay_time= 1000;
+        this.delay_time = 1000;
         this.codes = [];
         // this.queryTime = localStorage.getItem('jijin.QueryTime') || 0;
         if (this.isTradingTime()) {
@@ -143,7 +144,7 @@ class jjQuery extends EventTarget {
             valuation: valuation,
             date: res.date,
             code: code,
-            query_date:Tools.getTime(),
+            query_date: Tools.getTime(),
         };
         // Tools.setCustomCodes(code, {
         //     valuation: value
@@ -476,7 +477,7 @@ const Tools = {
                 return nextDay;
             }
             nextDay.setDate(nextDay.getDate() + (symbol == '+' ? 1 : -1));
-        } 
+        }
     },
     // 获取购买后最大的卖出时间
     isSale: (code) => {
@@ -1076,7 +1077,7 @@ const Tools = {
                     break;
             }
             if (arr.length > 1) customType += '为主';
-            console.log(customType)
+            // console.log(customType)
         }
         return customType;
     },
@@ -1604,12 +1605,13 @@ const Tools = {
             <div class="j-hj-gj"></div>
             <div class="g-table"></div>
             <div class="g-con"></div>
-            <div style="margin-top:15px;" class="j-datas-add">
-                <textarea placeholder="复制进下载的数据" class="search_input" style="height:24px;"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
-            </div>
+            <div class="g-baidu-stocks" style="margin:15px 0;"></div>
             ${['大佬-2', '大佬-4', 9, 1, 3, 5, 6, 7, 8].map(name => {
             return `<view-img src="/public/uploads/${name}.jpg" ></view-img>`
         }).join('')}
+            <div style="margin-top:15px;" class="j-datas-add">
+                <textarea placeholder="复制进下载的数据" class="search_input" style="height:24px;"></textarea><button class="search_btn reb" style="margin-left:10px;vertical-align:bottom;">储存</button>
+            </div>
         `;
         document.querySelector('.content').innerHTML = con;
         // 初始化收入
@@ -1620,26 +1622,26 @@ const Tools = {
 
         // 获取需要更新的列表
         const arr = Object.keys(DATAS).filter(code => {
-            return Tools.isDebt(code)==1;
+            return Tools.isDebt(code) == 1;
         }).filter(code => {
             // 当前时间大约20点
-            if(new Date().getHours()>=20){
+            if (new Date().getHours() >= 20) {
                 // if(new Date(DATAS[code].update_time).getHours()<20)return code;        
-                let date = new Date();       
+                let date = new Date();
                 // 是周六周日
-                if(date.getDay()==0 || date.getDay()==6)date = Tools.getWorkingDay(new Date().getTime(),'-');
-                if(date.getDay()!= new Date(DATAS[code].netWorthDate).getDay())return code;
-            }else{
+                if (date.getDay() == 0 || date.getDay() == 6) date = Tools.getWorkingDay(new Date().getTime(), '-');
+                if (date.getDay() != new Date(DATAS[code].netWorthDate).getDay()) return code;
+            } else {
                 // 已经更新的不是上一个工作日
                 let date = new Date();
-                date.setDate(date.getDate()-1);
-                date = Tools.getWorkingDay(date.getTime(),'-');
+                date.setDate(date.getDate() - 1);
+                date = Tools.getWorkingDay(date.getTime(), '-');
                 // console.log(date.getDay(),new Date(DATAS[code].netWorthDate).getDay())
-                if(date.getDay()!= new Date(DATAS[code].netWorthDate).getDay())return code;
+                if (date.getDay() != new Date(DATAS[code].netWorthDate).getDay()) return code;
             }
         });
         // console.log(arr.length);
-        if(arr.length>0)Tools.updatasCodes(document.querySelector('.j-code-updata'),arr);
+        if (arr.length > 0) Tools.updatasCodes(document.querySelector('.j-code-updata'), arr);
 
 
         // 下面是储存json
@@ -3042,3 +3044,172 @@ class FundValuation extends HTMLElement {
     }
 }
 customElements.define('fund-valuation', FundValuation);
+
+class BaiduStocks {
+    constructor() {
+        this.stocks = customStorage.getItem('jijin.baiduStocks') || {};
+        this.day = Tools.getTime('yyyy-mm-dd');
+        this.$con = document.querySelector('.g-baidu-stocks');
+    }
+    async pullStocks(page = 0) {
+        const ranks = await Tools.fetch('baiduRank', { index: page });
+        const lists = ranks.Result.list.body;
+        // console.log(lists);
+        const arr = [];
+        let isToBottom = false;
+        for (let body of lists) {
+            const stock = { name: body.name,code:body.code };
+
+            const rate = parseFloat(body.pxChangeRate.replace(/[^0-9.-]/g, ''));
+            if (rate < 10) {
+                isToBottom = true;
+                break;
+            }
+            const detail = await Tools.fetch('baiduDetail', { code: body.code });
+            Object.assign(stock, {
+                rate: rate,
+                first: detail.Result.content.fundFlowBlock.result[0].industry.name,
+                second: detail.Result.content.fundFlowBlock.result[1].industry.name,
+            })
+            arr.push(stock);
+        }
+        this.stocks[this.day].stocks.push(...arr);
+        if (!isToBottom) {
+            page += 20;
+            await Tools.delayExecute(2000);
+            await this.pullStocks(page);
+        }
+        // console.log(arr);
+        // return arr;
+    }
+    async getStocks() {
+        this.stocks[this.day] = { update_time: Tools.getTime(), stocks: [] };
+        await this.pullStocks();
+        customStorage.setItem('jijin.baiduStocks', this.stocks);
+    }
+    sortIndustry(obj) {
+        // return obj;
+        return Object.keys(obj).map(industry => [industry, Object.values(obj[industry]).reduce((a, b) => a + b, 0), obj[industry]]).sort((a, b) => b[1] - a[1]);
+
+    }
+    format(stocks) {
+        const obj = {};
+        for (let stock of stocks) {
+            const { first, second } = stock;
+            if (!obj[first]) {
+                obj[first] = { [second]: 1 };
+            } else {
+                if (!obj[first][second]) {
+                    obj[first][second] = 1;
+                } else {
+                    obj[first][second]++;
+
+                }
+            }
+        }
+        return this.sortIndustry(obj);
+    }
+    async init() {
+        // 下午三点半后检查
+        let isUpdata = false;
+
+        let date = new Date();
+        let time = Tools.getTime('yyyy-mm-dd');
+        // 是周六周日
+        if (date.getDay() == 0 || date.getDay() == 6) {
+            date = Tools.getWorkingDay(new Date().getTime(), '-');
+            time = Tools.getTime('yyyy-mm-dd', date.getTime());
+        } else {
+            // 当前时间大约15:30点
+            if (new Date() >= new Date(Tools.getTime('yyyy/mm/dd 15:30'))) {
+                let time = Tools.getTime('yyyy-mm-dd');
+            } else {
+                // 已经更新的不是上一个工作日
+                date.setDate(date.getDate() - 1);
+                date = Tools.getWorkingDay(date.getTime(), '-');
+                time = Tools.getTime('yyyy-mm-dd', date.getTime());
+            }
+        }
+        if (!this.stocks[time]) {
+            isUpdata = true;
+        } else if (new Date(this.stocks[time].update_time) < new Date(Tools.getTime('yyyy/mm/dd 15:30', date.getTime()))) {
+            isUpdata = true;
+        }
+        this.day = time;
+        this.updateHtml();
+
+        if (isUpdata){
+            const $target = this.$con.querySelector('.update_btn');
+            this.updataStocksByEle($target);
+        }
+        // console.log(this.day)
+        
+        // console.log(this.format(this.stocks[this.day].stocks), this.stocks[this.day].update_time, this.day);
+        console.log(this.stocks);
+        addEventListener(this.$con,'click', async (e) => {
+            const $target = e.target;
+            this.updataStocksByEle($target);
+        },'.update_btn');
+    }
+    async updataStocksByEle($target){
+        this.updataStocks();
+        this.updateHtml();
+        $target.innerHTML = '正在更新';
+        await this.getStocks();
+        $target.innerHTML = '更新';
+        this.updateHtml();
+    }
+    updateHtml(){
+        let str = `
+            <table>
+                <thead><tr><th>时间</th><th>A股涨跌板行业统计<button class="search_btn reb update_btn" style="margin-left:10px;">更新</button></th></tr></thead>
+                <tbody>
+                    ${Object.keys(this.stocks).sort((a,b)=>new Date(b)-new Date(a)).map(day=>{
+                        const stocks = this.format(this.stocks[day].stocks);
+                        const update_time = this.stocks[day].update_time;
+                        return `
+                            <tr>
+                                <td>
+                                    <p>${day}</p>
+                                    <p class="fs12 gray">${update_time}</p>
+                                </td>
+                                <td>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                ${stocks.map(stock=>{
+                                                    return `
+                                                        <th>${stock[0]}</th>
+                                                    `;    
+                                                }).join('')}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr style="vertical-align:top;">
+                                                ${stocks.map(stock=>{
+                                                    return `
+                                                        <td>
+                                                            <p>数量：${stock[1]}</p>
+                                                            ${Object.keys(stock[2]).sort((a,b)=>stock[2][b]-stock[2][a]).map(val=>{
+                                                                return `
+                                                                    <p class="gray fs12">${val}：${stock[2][val]}</p>
+                                                                `;
+                                                            }).join('')}
+                                                        </td>
+                                                    `;    
+                                                }).join('')}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        `
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+        this.$con.innerHTML = str;
+    }
+}
+const baiduStocks = new BaiduStocks();
+baiduStocks.init();
