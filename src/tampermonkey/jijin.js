@@ -82,6 +82,28 @@ const CLASSIFICATION = {
     '16': '人工智能',
     '17': '稀土',
 }
+let Tools = {
+    isTradingTime: () => {
+        // return true;
+        const now = new Date();
+        const day = now.getDay();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+
+        // 判断是否为工作日（周一到周五）
+        if (day >= 1 && day <= 5) {
+            // 判断是否在 9:30 - 11:30 之间
+            if ((hour === 9 && minute >= 30) || (hour > 9 && hour < 11) || (hour === 11 && minute < 30)) {
+                return true;
+            }
+            // 判断是否在 13:00 - 15:00 之间
+            if (hour >= 13 && hour < 15) {
+                return true;
+            }
+        }
+        return false;
+    },
+}
 // 创建一个基金估值自动查询事件中心
 class jjQuery extends EventTarget {
     constructor() {
@@ -90,7 +112,7 @@ class jjQuery extends EventTarget {
         this.delay_time = 1000;
         this.codes = [];
         // this.queryTime = localStorage.getItem('jijin.QueryTime') || 0;
-        if (this.isTradingTime()) {
+        if (Tools.isTradingTime()) {
             this.start();
             // 距离上次查询时间大于60秒
             // if (new Date().getTime() - this.queryTime >= time || !this.queryTime) {
@@ -151,26 +173,6 @@ class jjQuery extends EventTarget {
         // });
         this.dispatchEvent(new CustomEvent('valuation', { detail: value }));
     }
-    isTradingTime() {
-        // return true;
-        const now = new Date();
-        const day = now.getDay();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
-
-        // 判断是否为工作日（周一到周五）
-        if (day >= 1 && day <= 5) {
-            // 判断是否在 9:30 - 11:30 之间
-            if ((hour === 9 && minute >= 30) || (hour > 9 && hour < 11) || (hour === 11 && minute < 30)) {
-                return true;
-            }
-            // 判断是否在 13:00 - 15:00 之间
-            if (hour >= 13 && hour < 15) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
 const jjQueryCenter = new jjQuery();
 // jjQueryCenter.addCode('015968');
@@ -180,7 +182,7 @@ const jjQueryCenter = new jjQuery();
 //     const valuation = e.detail.valuation;
 //     console.log(code, valuation,e); 
 // })
-const Tools = {
+Object.assign(Tools, {
     // 节流函数
     throttle: (fn, delay) => {
         let timer = null;
@@ -1675,7 +1677,7 @@ const Tools = {
             }
         }, false)
     }
-}
+})
 // 初始化
 Tools.initialization();
 class Alert {
@@ -3058,7 +3060,7 @@ class BaiduStocks {
         const arr = [];
         let isToBottom = false;
         for (let body of lists) {
-            const stock = { name: body.name,code:body.code };
+            const stock = { name: body.name, code: body.code };
 
             const rate = parseFloat(body.pxChangeRate.replace(/[^0-9.-]/g, ''));
             if (rate < 10) {
@@ -3138,20 +3140,30 @@ class BaiduStocks {
         this.day = time;
         this.updateHtml();
 
-        if (isUpdata){
+        if (isUpdata) {
             const $target = this.$con.querySelector('.update_btn');
             this.updataStocksByEle($target);
         }
         // console.log(this.day)
-        
+
         // console.log(this.format(this.stocks[this.day].stocks), this.stocks[this.day].update_time, this.day);
         console.log(this.stocks);
-        addEventListener(this.$con,'click', async (e) => {
+        addEventListener(this.$con, 'click', async (e) => {
             const $target = e.target;
             this.updataStocksByEle($target);
-        },'.update_btn');
+        }, '.update_btn');
+        addEventListener(this.$con, 'click', async e => {
+            let time = Tools.getTime('yyyy-mm-dd');
+            // 判断是否在交易日
+            if(Tools.isTradingTime()){
+                this.day = time;
+                await this.updataStocksByEle(e.target)
+            }else{
+                alert('非交易日')
+            }
+        }, '.update_btn_now')
     }
-    async updataStocksByEle($target){
+    async updataStocksByEle($target) {
         this.updataStocks();
         this.updateHtml();
         $target.innerHTML = '正在更新';
@@ -3159,15 +3171,15 @@ class BaiduStocks {
         $target.innerHTML = '更新';
         this.updateHtml();
     }
-    updateHtml(){
+    updateHtml() {
         let str = `
             <table>
-                <thead><tr><th>时间</th><th>A股涨跌板行业统计<button class="search_btn reb update_btn" style="margin-left:10px;">更新</button></th></tr></thead>
+                <thead><tr><th>时间</th><th>A股涨跌板行业统计<button class="search_btn reb update_btn" style="margin-left:10px;">更新</button><button class="search_btn update_btn_now" style="margin-left:10px;">今日更新</button></th></tr></thead>
                 <tbody>
-                    ${Object.keys(this.stocks).sort((a,b)=>new Date(b)-new Date(a)).map(day=>{
-                        const stocks = this.format(this.stocks[day].stocks);
-                        const update_time = this.stocks[day].update_time;
-                        return `
+                    ${Object.keys(this.stocks).sort((a, b) => new Date(b) - new Date(a)).map(day => {
+            const stocks = this.format(this.stocks[day].stocks);
+            const update_time = this.stocks[day].update_time;
+            return `
                             <tr>
                                 <td>
                                     <p>${day}</p>
@@ -3177,34 +3189,34 @@ class BaiduStocks {
                                     <table>
                                         <thead>
                                             <tr>
-                                                ${stocks.map(stock=>{
-                                                    return `
+                                                ${stocks.map(stock => {
+                return `
                                                         <th>${stock[0]}</th>
-                                                    `;    
-                                                }).join('')}
+                                                    `;
+            }).join('')}
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr style="vertical-align:top;">
-                                                ${stocks.map(stock=>{
-                                                    return `
+                                                ${stocks.map(stock => {
+                return `
                                                         <td>
                                                             <p>数量：${stock[1]}</p>
-                                                            ${Object.keys(stock[2]).sort((a,b)=>stock[2][b]-stock[2][a]).map(val=>{
-                                                                return `
+                                                            ${Object.keys(stock[2]).sort((a, b) => stock[2][b] - stock[2][a]).map(val => {
+                    return `
                                                                     <p class="gray fs12">${val}：${stock[2][val]}</p>
                                                                 `;
-                                                            }).join('')}
+                }).join('')}
                                                         </td>
-                                                    `;    
-                                                }).join('')}
+                                                    `;
+            }).join('')}
                                             </tr>
                                         </tbody>
                                     </table>
                                 </td>
                             </tr>
                         `
-                    }).join('')}
+        }).join('')}
                 </tbody>
             </table>
         `;
