@@ -3101,6 +3101,17 @@ class BaiduStocks {
         this.day = Tools.getTime('yyyy-mm-dd');
         this.$con = document.querySelector('.g-baidu-stocks');
         this.now_day = Tools.getTime('yyyy-mm-dd');
+
+        // 如果this.stocks大于5个就取最近的5个
+        const max = 7;
+        if (Object.keys(this.stocks).length > max) {
+            const keys = Object.keys(this.stocks);
+            keys.forEach(key => {
+                if (key < keys[keys.length - max]) {
+                    delete this.stocks[key];
+                }
+            })
+        }
         // Object.keys(this.stocks).forEach(day=>{
         //     const obj = this.stocks[day];
         //     // console.log(obj.stocks)
@@ -3169,6 +3180,7 @@ class BaiduStocks {
             Object.assign(stock, {
                 firstIndustry: relatedblock.Result[body.code][0].list[0].name,
                 secondIndustry: relatedblock.Result[body.code][0].list[1].name,
+                industry: relatedblock.Result[body.code][0].list.map(industry => ({ name: industry.name, ratio: industry.ratio, code: new URLSearchParams(industry.xcx_query).get('code') }))
             })
             // 获取日K线
             stock.klines = await this.getStockKline(body.code, body.exchange);
@@ -3209,7 +3221,7 @@ class BaiduStocks {
         // console.log(arr);
         // return arr;
     }
-    storage(){
+    storage() {
         customStorage.setItem('jijin.baiduStocks', this.stocks);
     }
     async getStocks(cb) {
@@ -3217,27 +3229,37 @@ class BaiduStocks {
         await this.pullStocks(0, cb);
         this.storage();
     }
-    sortIndustry(obj) {
-        // return obj;
-        return Object.keys(obj).map(industry => [industry, Object.values(obj[industry]).reduce((a, b) => a + b, 0), obj[industry]]).sort((a, b) => b[1] - a[1]);
-
-    }
     format(stocks) {
         const obj = {};
+        const Industry = {};
         for (let stock of stocks) {
             const { firstIndustry, secondIndustry } = stock;
             if (!obj[firstIndustry]) {
                 obj[firstIndustry] = { [secondIndustry]: 1 };
+                if (stock.industry) {
+                    Industry[firstIndustry] = stock.industry[0];
+                    Industry[secondIndustry] = stock.industry[1];
+                }
             } else {
                 if (!obj[firstIndustry][secondIndustry]) {
                     obj[firstIndustry][secondIndustry] = 1;
+                    if (stock.industry) Industry[secondIndustry] = stock.industry[1];
                 } else {
                     obj[firstIndustry][secondIndustry]++;
 
                 }
             }
         }
-        return this.sortIndustry(obj);
+        // console.log(obj)
+        // console.log(Industry);
+        // [第一行业，数量，[{name,num,rate,code}],第一行业{name,rate,code}]
+        return Object.keys(obj).map(industry => [
+            industry,
+            Object.values(obj[industry]).reduce((a, b) => a + b, 0),
+            Object.keys(obj[industry]).map(secondIndustry => ({ name: secondIndustry, num: obj[industry][secondIndustry], rate: Industry[secondIndustry]?.ratio, code: Industry[secondIndustry]?.code })).sort((a, b) => b.num - a.num),
+            Industry[industry]
+        ]).sort((a, b) => b[1] - a[1]);
+
     }
     async init() {
         // console.log(this.format(this.stocks[this.day].stocks), this.stocks[this.day].update_time, this.day);
@@ -3266,13 +3288,13 @@ class BaiduStocks {
             const $target = e.target.closest('.j-stock-updata');
             const day = $target.closest('[data-day]').dataset.day;
             const stocks = this.stocks[day].stocks;
-            for(let [index,stock] of stocks.entries()){
-                $target.innerHTML = `正在更新 ${index+1}/${stocks.length}`;
+            for (let [index, stock] of stocks.entries()) {
+                $target.innerHTML = `正在更新 ${index + 1}/${stocks.length}`;
                 // 获取日K线
                 this.stocks[day].stocks[index].klines = await this.getStockKline(stock.code, stock.exchange);
                 await Tools.delayExecute(500);
             }
-            $target.innerHTML='更新';
+            $target.innerHTML = '更新';
             this.storage();
             this.updateHtml();
         }, '.j-stock-updata');
@@ -3341,6 +3363,34 @@ class BaiduStocks {
         $target.innerHTML = '更新';
         this.updateHtml();
     }
+    getIndustryHtml(obj) {
+        const industy = this.format(obj);
+        return `
+            <table>
+                <thead>
+                    ${industy.map(stock => {
+            return `
+                            <th>${stock[3] ? `<a href="https://gushitong.baidu.com/block/ab-${stock[3].code}" target="_blank">${stock[0]}</a> <span style="font-weight: normal;" class="fs12 ${stock[3].ratio.includes('+') > 0 ? 'red' : 'green'}">${stock[3].ratio}</span>` : stock[0]}</th>
+                        `;
+        }).join('')}
+                                                            </thead>
+                                                            <tbody>
+                                                                ${industy.map(stock => {
+            return `
+                                                                    <td style="vertical-align: top;">
+                                                                        <p>数量：${stock[1]}</p>
+                                                                        ${stock[2].map(val => {
+                return `
+                                                                                <p class="gray fs12">${val.code ? `<a href="https://gushitong.baidu.com/block/ab-${val.code}" target="_blank">${val.name}</a><span style="font-weight: normal; font-size:9px;" class="${val.rate.includes('+') > 0 ? 'red' : 'green'}">${val.rate}</span>` : val.name}：${val.num}</p>
+                                                                            `;
+            }).join('')}
+                                                                    </td>
+                                                                `;
+        }).join('')}
+                                                            </tbody>
+                                                        </table>
+        `;
+    }
     updateDailyLimit() {
         const arr = Object.keys(this.stocks).filter(day => this.stocks[day].stocks[0].klines).sort((a, b) => new Date(b) - new Date(a)).slice(0, 5);
         function countConsecutiveOver9(arr) {
@@ -3354,23 +3404,25 @@ class BaiduStocks {
                 <div class="tab-header">
                     ${arr.map((day, index) => {
             return `
-                            <span class="tab-label ${index == 0 ? 'active' : ''}" data-day="${day}">${day}${index==1?` <span class="red j-stock-updata">更新</span>`:''}</span>
+                            <span class="tab-label ${index == 0 ? 'active' : ''}" data-day="${day}">${day}${index == 1 ? ` <span class="red j-stock-updata">更新</span>` : ''}</span>
 
                         `
         }).join('')}
+        <button class="search_btn reb update_btn" style="margin-left:10px;">更新</button>
                 </div>
                 <div class="tab-content ${arr}">
                     ${arr.map((day, index) => {
             const stocks = this.stocks[day].stocks.sort((a, b) => {
-                const klines_a = countConsecutiveOver9(a.klines.filter(d=>new Date(d.date)<=new Date(day)).map(d => +d.rate));
-                const klines_b = countConsecutiveOver9(b.klines.filter(d=>new Date(d.date)<=new Date(day)).map(d => +d.rate));
+                const klines_a = countConsecutiveOver9(a.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate));
+                const klines_b = countConsecutiveOver9(b.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate));
                 // console.log(klines_a-klines_b);
                 return klines_b - klines_a;
             });
             // console.log(day,stocks);
             return `
                             <div class="tab-item ${index == 0 ? 'active' : ''}" data-day="${day}">
-                            <div style="display:flex;align-items: baseline;">
+                            ${this.getIndustryHtml(this.stocks[day].stocks)}
+                            <div style="display:flex;align-items: baseline; margin-top:15px;">
                                 <table>
                                     <thead>
                                         <tr>
@@ -3388,7 +3440,7 @@ class BaiduStocks {
                                                     <td>
                                                         <div class="tip-container">
                                                             <div>
-                                                                ${(stock.klines && stock.klines[stock.klines.length-1].rate != stock.rate)?`<span class="${+stock.klines[stock.klines.length-1].rate>0?'red':'green'}">${stock.klines[stock.klines.length-1].rate}</span><p class="gray fs12">${stock.klines[stock.klines.length-1].date}</p>`:stock.rate}
+                                                                ${(stock.klines && stock.klines[stock.klines.length - 1].rate != stock.rate) ? `<span class="${+stock.klines[stock.klines.length - 1].rate > 0 ? 'red' : 'green'}">${stock.klines[stock.klines.length - 1].rate}</span><p class="gray fs12">${stock.klines[stock.klines.length - 1].date}</p>` : stock.rate}
                                                             </div>
                                                             <div class="tip">
                                                                 ${stock.klines.map(line => `<p class="p-item">${line.date}：<span class="${+line.rate > 0 ? 'red' : 'green'}">${line.rate}</span></p>`).join('')}
@@ -3402,7 +3454,7 @@ class BaiduStocks {
             }).join('')}
                                     </tbody>
                                 </table>
-                                <table style="margin-left:20px;">
+                                <table style="margin-left:15px;">
                                     <thead>
                                         <tr>
                                             <th>连板天数</th>
@@ -3418,35 +3470,11 @@ class BaiduStocks {
                 }
                 return result;
             }, []).map(arr => {
-                const industy = this.format(arr);
                 return `
                                                 <tr>
                                                     <td style="text-align:center;">${countConsecutiveOver9(arr[0].klines.map(d => +d.rate))}</td>
                                                     <td>
-                                                        <table>
-                                                            <thead>
-                                                                ${industy.map(stock => {
-                    return `
-                                                                    <th style="text-align:center;">${stock[0]}</th>
-
-                                                                `;
-                }).join('')}
-                                                            </thead>
-                                                            <tbody>
-                                                                ${industy.map(stock => {
-                    return `
-                                                                    <td>
-                                                                        <p>数量：${stock[1]}</p>
-                                                                        ${Object.keys(stock[2]).sort((a, b) => stock[2][b] - stock[2][a]).map(val => {
-                        return `
-                                                                                <p class="gray fs12">${val}：${stock[2][val]}</p>
-                                                                            `;
-                    }).join('')}
-                                                                    </td>
-                                                                `;
-                }).join('')}
-                                                            </tbody>
-                                                        </table>
+                                                        ${this.getIndustryHtml(arr)}
                                                     </td>
                                                 </tr>
                                             `
@@ -3475,43 +3503,14 @@ class BaiduStocks {
                 <thead><tr><th>时间</th><th>A股涨跌板行业统计<button class="search_btn reb update_btn" style="margin-left:10px;">更新</button></th></tr></thead>
                 <tbody>
                     ${Object.keys(this.stocks).sort((a, b) => new Date(b) - new Date(a)).slice(0, 5).map(day => {
-            const stocks = this.format(this.stocks[day].stocks);
-            // console.log(stocks);
-            const update_time = this.stocks[day].update_time;
             return `
                                         <tr class="day" data-day="${day}">
                                             <td>
                                                 <p>${day}</p>
-                                                <p class="fs12 gray">${update_time}</p>
+                                                <p class="fs12 gray">${this.stocks[day].update_time}</p>
                                             </td>
                                             <td>
-                                                <table>
-                                                    <thead>
-                                                        <tr>
-                                                            ${stocks.map(stock => {
-                return `
-                                                                    <th>${stock[0]}</th>
-                                                                `;
-            }).join('')}
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr style="vertical-align:top;">
-                                                            ${stocks.map(stock => {
-                return `
-                                                                    <td>
-                                                                        <p>数量：${stock[1]}</p>
-                                                                        ${Object.keys(stock[2]).sort((a, b) => stock[2][b] - stock[2][a]).map(val => {
-                    return `
-                                                                                <p class="gray fs12">${val}：${stock[2][val]}</p>
-                                                                            `;
-                }).join('')}
-                                                                    </td>
-                                                                `;
-            }).join('')}
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
+                                                ${this.getIndustryHtml(this.stocks[day].stocks)}
                                             </td>
                                         </tr>
                                     `
@@ -3525,7 +3524,8 @@ class BaiduStocks {
                 </div>
             </div>
         `;
-        this.$con.innerHTML = str;
+        // this.$con.innerHTML = str;
+        this.$con.innerHTML = this.updateDailyLimit();
         this.updateDailyLimit();
     }
 }
