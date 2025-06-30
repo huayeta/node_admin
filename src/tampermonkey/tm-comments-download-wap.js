@@ -69,7 +69,7 @@
                 Photos.push({ id: Index, photos: photos })
             }
             // Coments.push(photos.length > 0 ? `有图片：${Index}：${comment}` : comment);
-            const time = [...tr.children].filter(div=>div.classList.contains('card__sku'))[0].textContent.match(/^\d+?-\d+?-\d+? /)[0];
+            const time = [...tr.children].filter(div=>div.classList.contains('card__sku'))[0].textContent.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/)[0];
             addComment({time,comment},photos.length>0?`有图片：${Index}：`:'')
             // 获取追评
             const appendList = [...tr.children].filter(div=>div.classList.contains('card__append-rate-main'));

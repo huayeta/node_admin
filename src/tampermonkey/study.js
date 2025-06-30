@@ -172,6 +172,7 @@ const Tools = {
                     <a href="?query=乐乐课堂%5C281-小学奥数乐乐课堂%5C一年级%5C01【一年级奥数】-%2084集&disk=l1">乐奥一</a>
                     <a href="?query=洋葱学院%5C洋葱学院小学数学人教版%5C人教版%5C二年级%5C二年级下册&disk=l1">洋二下</a>
                     <a href="?query=英语分级阅读%5C全网最全的地理155册点读包%2B音频&disk=m1">国家地理</a>
+                    <a href="?query=乐乐课堂%5C乐乐课堂大语文&disk=l1">乐乐课堂大语文</a>
                 </div>
                 <div class="menu">${['语文', '数学', '英语', '阅读', '历史', '初中', '高中', '其他'].map(data => `<span ${(Tools.data.sel && Tools.data.sel.includes(data)) ? 'class="sel"' : ''}>${data}</span>`).join('')}</div>
             `: ''}
@@ -380,7 +381,7 @@ const Tools = {
                 Tools.updataHtml();
             }
         }
-        document.title = QUERY;
+        document.title = decodeURIComponent(QUERY);
         // 音乐点击
         addMyEventListener(document.querySelector('.content'), 'click', async (e) => {
             const $target = e.target;
