@@ -85,6 +85,7 @@ const CLASSIFICATION = {
     '19': '计算机',
     '20': '银行',
     '21': '多元金融',
+    '22': '光伏',
 }
 let Tools = {
     dispatchEvent: ($ele, type) => {
@@ -3097,13 +3098,17 @@ addEventListener($Content, 'click', e => {
 }, '.tab-label');
 class BaiduStocks {
     constructor() {
-        this.stocks = customStorage.getItem('jijin.baiduStocks') || {};
+        const Stocks = customStorage.getItem('jijin.stocks') || {};
+        this.stocks = Stocks?.stocks || {};
         this.day = Tools.getTime('yyyy-mm-dd');
         this.$con = document.querySelector('.g-baidu-stocks');
         this.now_day = Tools.getTime('yyyy-mm-dd');
+        this.up_stocks = Stocks?.up_stocks || {};
+
+        console.log(Stocks);
 
         // 如果this.stocks大于5个就取最近的5个
-        const max = 7;
+        const max = 15;
         if (Object.keys(this.stocks).length > max) {
             const keys = Object.keys(this.stocks);
             keys.forEach(key => {
@@ -3112,6 +3117,12 @@ class BaiduStocks {
                 }
             })
         }
+
+        // delete this.stocks['2025-07-02'].season['300118']
+        // delete this.stocks['2025-07-02'].season['600876']
+        // delete this.stocks['2025-07-02'].season['688303']
+        // this.storage();
+
         // Object.keys(this.stocks).forEach(day=>{
         //     const obj = this.stocks[day];
         //     // console.log(obj.stocks)
@@ -3132,6 +3143,14 @@ class BaiduStocks {
         const url = `https://finance.pae.baidu.com/api/getrelatedblock?stock=%7B%22market%22:%22ab%22,%22type%22:%22stock%22,%22code%22:%22${code}%22%7D&finClientType=pc`;
         const result = await Tools.fetch('http', { url });
         return result;
+    }
+    async getSeason(name, Hexin) {
+        // 获取股票的涨停原因
+        const result = await Tools.fetch('ansStock', { name, 'Hexin-V': Hexin })
+        // console.log(result.data.answer[0].txt[0].content.components[5].data.datas);
+        const datas = result.data.answer[0].txt[0].content.components?.[5]?.data?.datas;
+        // console.log(result1)
+        return datas;
     }
     async getStockKline(code, exchange) {
         // 计算这只股票最近10天的涨跌情况
@@ -3222,10 +3241,14 @@ class BaiduStocks {
         // return arr;
     }
     storage() {
-        customStorage.setItem('jijin.baiduStocks', this.stocks);
+        // customStorage.setItem('jijin.baiduStocks', this.stocks);
+        customStorage.setItem('jijin.stocks', { stocks: this.stocks, up_stocks: this.up_stocks });
     }
     async getStocks(cb) {
-        this.stocks[this.day] = { update_time: Tools.getTime(), stocks: [] };
+        if (!this.stocks[this.day]) {
+            this.stocks[this.day] = {};
+        }
+        Object.assign(this.stocks[this.day], { update_time: Tools.getTime(), stocks: [] })
         await this.pullStocks(0, cb);
         this.storage();
     }
@@ -3263,7 +3286,22 @@ class BaiduStocks {
     }
     async init() {
         // console.log(this.format(this.stocks[this.day].stocks), this.stocks[this.day].update_time, this.day);
-        console.log(this.stocks);
+        // console.log(this.stocks);
+
+        // 循环this.stocks找到连板大于4的股票存起来
+        Object.keys(this.stocks).forEach(day => {
+            const obj = this.stocks[day];
+            obj.stocks.forEach(stock => {
+                if (!this.up_stocks[stock.code] && this.countConsecutiveOver9(stock.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate)) >= 4) {
+                    this.up_stocks[stock.code] = stock;
+                }
+            })
+        })
+        console.log(this.up_stocks)
+        // this.up_stocks['003029']['exchange']='SZ';
+        // this.up_stocks['603022']['exchange']='SH';
+        this.storage();
+
         this.updateHtml();
 
         // 更新
@@ -3283,6 +3321,33 @@ class BaiduStocks {
                 this.updateHtml();
             }
         }, '.day')
+        // 龙头行业更新
+        addEventListener(this.$con, 'click', async (e) => {
+            const $target = e.target.closest('.j-up_stock-updata');
+            const stocks = Object.values(this.up_stocks);
+            // console.log(stocks);
+            for (let index = 0; index < stocks.length; index++) {
+                const stock = stocks[index];
+                $target.innerHTML = `正在更新 ${index + 1}/${stocks.length}`;
+                // 获取日K线
+                try {
+                    this.up_stocks[stock.code].klines = await this.getStockKline(stock.code, stock.exchange);
+                    // 获得相关行业
+                    const relatedblock = await this.getrelatedblock(stock.code);
+                    Object.assign(stock, {
+                        firstIndustry: relatedblock.Result[stock.code][0].list[0].name,
+                        secondIndustry: relatedblock.Result[stock.code][0].list[1].name,
+                        industry: relatedblock.Result[stock.code][0].list.map(industry => ({ name: industry.name, ratio: industry.ratio, code: new URLSearchParams(industry.xcx_query).get('code') }))
+                    })
+                } catch (error) {
+                    console.log(error);
+                }
+                await Tools.delayExecute(500);
+            }
+            $target.innerHTML = '更新';
+            this.storage();
+            this.updateHtml();
+        }, '.j-up_stock-updata');
         // 更新day的数据
         addEventListener(this.$con, 'click', async (e) => {
             const $target = e.target.closest('.j-stock-updata');
@@ -3298,6 +3363,29 @@ class BaiduStocks {
             this.storage();
             this.updateHtml();
         }, '.j-stock-updata');
+        // 更新涨停板原因
+        addEventListener(this.$con, 'click', async (e) => {
+            const $target = e.target.closest('.season_btn');
+            const day = $target.closest('[data-day]').dataset.day;
+            const stocks = this.stocks[day].stocks.filter(stock => !this.stocks[day].season || !this.stocks[day].season[stock.code]);
+            const Hexin = document.querySelector('.season_input').value;
+            if (!Hexin) return alert('请输入hexin')
+            if (!this.stocks[day].season) this.stocks[day].season = {};
+            try {
+                for (let [index, stock] of stocks.entries()) {
+                    $target.innerHTML = `正在更新 ${index + 1}/${stocks.length}`;
+                    // 获取日K线
+                    this.stocks[day].season[stock.code] = await this.getSeason(stock.name, Hexin);
+                    this.storage();
+                    await Tools.delayExecute(500);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+            $target.innerHTML = '更新涨停板原因';
+            this.storage();
+            this.updateHtml();
+        }, '.season_btn');
         // const detail = await Tools.fetch('baiduDetail', { code: "688499" });
         // let klines = [];
         // try {
@@ -3311,6 +3399,24 @@ class BaiduStocks {
         // console.log(relatedblock.Result['000632'][0].list[0].name,relatedblock.Result['000632'][0].list[1].name);
 
         // console.log(await this.getStockKline(300635,'SZ'))
+
+        // const result = await Tools.fetch('ansStock', { name: '长城军工' })
+        // console.log(result.data.answer[0].txt[0].content.components[5].data.datas);
+        // const text = result.data.answer[0].txt[0].content.components[5].data.datas[0]['重要事件内容']
+        // // 匹配时间（格式：YYYY年MM月DD日 HH时MM分SS秒）
+        // const timeRegex = /(\d{4}年\d{2}月\d{2}日 \d{2}时\d{2}分\d{2}秒)/;
+        // // 匹配涨停原因（冒号后到句号前的内容）
+        // const reasonRegex = /涨停原因：([^。]+)/;
+
+        // const timeMatch = text.match(timeRegex);
+        // const reasonMatch = text.match(reasonRegex);
+
+        // const result1 = {
+        //     time: timeMatch ? timeMatch[1] : null,
+        //     涨停原因: reasonMatch ? reasonMatch[1] : null
+        // };
+        // console.log(result1)
+
     }
     getTime() {
         let date = new Date();
@@ -3363,6 +3469,78 @@ class BaiduStocks {
         $target.innerHTML = '更新';
         this.updateHtml();
     }
+    getStocksTableHtml(stocks, day = Tools.getTime('yyyy-mm-dd')) {
+        function getNowSeason(datas, day) {
+            let result = {};
+            for (let i = 0; i < datas.length; i++) {
+                const data = datas[i];
+                if (data['重要事件名称'] == '涨停') {
+                    let str = data['重要事件内容'];
+                    // 匹配涨停原因（冒号后到句号前的内容）
+                    const reasonRegex = /涨停原因：([^。]+)/;
+
+                    const time = data['重要事件公告时间'];
+                    const reasonMatch = str.match(reasonRegex);
+                    if (reasonMatch) {
+                        result = {
+                            time: time,
+                            season: reasonMatch ? reasonMatch[1] : null
+                        }
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+        return `
+            <table>
+                <thead>
+                    <tr>
+                        <th>序号/${stocks.length}</th>
+                        <th>股票</th>
+                        <th>涨幅</th>
+                        <th>连板</th>
+                        <th>涨停原因</th>
+                        <th>行业</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${stocks.map((stock, stockIndex) => {
+            const sDay = this.countConsecutiveOver9(stock.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate));
+            return `
+                            <tr class="${sDay % 2 == 0 ? 'even' : ''}">
+                                <td style="text-align:center;">${stockIndex + 1}</td>
+                                <td>
+                                    <a href="https://gushitong.baidu.com/stock/ab-${stock.code}" target="_blank">${stock.name}</a> 
+                                    <a href="https://www.iwencai.com/unifiedwap/result?tid=stockpick&qs=box_main_ths&w=${stock.name}" target="_blank">${stock.code}</a>
+                                </td>
+                                <td>
+                                    <div class="tip-container">
+                                        <div>
+                                            ${(stock.klines && stock.klines[stock.klines.length - 1].rate != stock.rate) ? `<span class="${+stock.klines[stock.klines.length - 1].rate > 0 ? 'red' : 'green'}">${stock.klines[stock.klines.length - 1].rate}</span><p class="gray fs12">${stock.klines[stock.klines.length - 1].date}</p>` : stock.rate}
+                                        </div>
+                                        <div class="tip">
+                                            ${stock.klines.map(line => `<p class="p-item">${line.date}：<span class="${+line.rate > 0 ? 'red' : 'green'}">${line.rate}</span></p>`).join('')}
+
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${sDay}</td>
+                                <td>${this.stocks[day] && this.stocks[day].season && this.stocks[day].season[stock.code] ? `
+                                    <div class="tip-container">
+                                        <div>${getNowSeason(this.stocks[day].season[stock.code], day).season}</div>
+                                        <div class="tip">
+                                            ${this.stocks[day].season[stock.code].map(line => `<p class="p-item">${line['重要事件名称']}：${line['重要事件内容']}</p>`).join('')}
+                                        </div>
+                                    </div>
+                                `: ''}</td>
+                                <td>${stock.industry ? `<a href="https://gushitong.baidu.com/block/ab-${stock.industry[0].code}" target="_blank">${stock.industry[0].name}</a> <span class="gray fs12"><a href="https://gushitong.baidu.com/block/ab-${stock.industry[1].code}" target="_blank">${stock.industry[1].name}</a></span>` : ''}</td>
+                            `
+        }).join('')}
+                </tbody>
+            </table>
+        `
+    }
     getIndustryHtml(obj) {
         const industy = this.format(obj);
         return `
@@ -3391,17 +3569,18 @@ class BaiduStocks {
                                                         </table>
         `;
     }
+    countConsecutiveOver9(arr) {
+        let arr1 = [...arr];
+        arr1.reverse();
+        const index = arr1.findIndex(num => num < 9);
+        return index === -1 ? arr1.length : index;
+    }
     updateDailyLimit() {
         const arr = Object.keys(this.stocks).filter(day => this.stocks[day].stocks[0].klines).sort((a, b) => new Date(b) - new Date(a)).slice(0, 5);
-        function countConsecutiveOver9(arr) {
-            let arr1 = [...arr];
-            arr1.reverse();
-            const index = arr1.findIndex(num => num < 9);
-            return index === -1 ? arr1.length : index;
-        }
         let str = `
             <div class="tab-container">
                 <div class="tab-header">
+                        <span class="tab-label">行业龙头 <span class="red j-up_stock-updata">更新</span></span>
                     ${arr.map((day, index) => {
             return `
                             <span class="tab-label ${index == 0 ? 'active' : ''}" data-day="${day}">${day}${index == 1 ? ` <span class="red j-stock-updata">更新</span>` : ''}</span>
@@ -3409,51 +3588,31 @@ class BaiduStocks {
                         `
         }).join('')}
         <button class="search_btn reb update_btn" style="margin-left:10px;">更新</button>
+        <button class="search_btn season_btn" style="margin-left:10px;" data-day="${arr[0]}">更新涨停板原因</button>
+        <input type="text" class="search_input season_input" placeholder="输入Hexin-V" />
                 </div>
-                <div class="tab-content ${arr}">
+                <div class="tab-content">
+                    <div class="tab-item">
+                        ${this.getStocksTableHtml(Object.values(this.up_stocks).sort((a, b) => {
+                            const klines_a = this.countConsecutiveOver9(a.klines.map(d => +d.rate));
+                            const klines_b = this.countConsecutiveOver9(b.klines.map(d => +d.rate));
+                            // console.log(klines_a-klines_b);
+                            return klines_b - klines_a;
+                        }))}
+                    </div>
                     ${arr.map((day, index) => {
             const stocks = this.stocks[day].stocks.sort((a, b) => {
-                const klines_a = countConsecutiveOver9(a.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate));
-                const klines_b = countConsecutiveOver9(b.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate));
+                const klines_a = this.countConsecutiveOver9(a.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate));
+                const klines_b = this.countConsecutiveOver9(b.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate));
                 // console.log(klines_a-klines_b);
                 return klines_b - klines_a;
             });
             // console.log(day,stocks);
             return `
                             <div class="tab-item ${index == 0 ? 'active' : ''}" data-day="${day}">
-                            ${this.getIndustryHtml(this.stocks[day].stocks)}
+                            <div class="day" data-day="${day}">${this.getIndustryHtml(this.stocks[day].stocks)}</div>
                             <div style="display:flex;align-items: baseline; margin-top:15px;">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>股票</th>
-                                            <th>涨幅</th>
-                                            <th>连板</th>
-                                            <th>行业</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${stocks.map(stock => {
-                return `
-                                                <tr>
-                                                    <td><a href="https://gushitong.baidu.com/stock/ab-${stock.code}" target="_blank">${stock.name}</a> ${stock.code}</td>
-                                                    <td>
-                                                        <div class="tip-container">
-                                                            <div>
-                                                                ${(stock.klines && stock.klines[stock.klines.length - 1].rate != stock.rate) ? `<span class="${+stock.klines[stock.klines.length - 1].rate > 0 ? 'red' : 'green'}">${stock.klines[stock.klines.length - 1].rate}</span><p class="gray fs12">${stock.klines[stock.klines.length - 1].date}</p>` : stock.rate}
-                                                            </div>
-                                                            <div class="tip">
-                                                                ${stock.klines.map(line => `<p class="p-item">${line.date}：<span class="${+line.rate > 0 ? 'red' : 'green'}">${line.rate}</span></p>`).join('')}
-
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td>${countConsecutiveOver9(stock.klines.map(d => +d.rate))}</td>
-                                                    <td>${stock.firstIndustry} <span class="gray fs12">${stock.secondIndustry}</span></td>
-                                                `
-            }).join('')}
-                                    </tbody>
-                                </table>
+                                ${this.getStocksTableHtml(stocks, day)}
                                 <table style="margin-left:15px;">
                                     <thead>
                                         <tr>
@@ -3463,7 +3622,7 @@ class BaiduStocks {
                                     </thead>
                                     <tbody>
                                         ${stocks.reduce((result, current, index) => {
-                if (index == 0 || countConsecutiveOver9(current.klines.map(d => +d.rate)) != countConsecutiveOver9(stocks[index - 1].klines.map(d => +d.rate))) {
+                if (index == 0 || this.countConsecutiveOver9(current.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate)) != this.countConsecutiveOver9(stocks[index - 1].klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate))) {
                     result.push([current]);
                 } else {
                     result[result.length - 1].push(current);
@@ -3472,7 +3631,7 @@ class BaiduStocks {
             }, []).map(arr => {
                 return `
                                                 <tr>
-                                                    <td style="text-align:center;">${countConsecutiveOver9(arr[0].klines.map(d => +d.rate))}</td>
+                                                    <td style="text-align:center;">${this.countConsecutiveOver9(arr[0].klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate))}/${arr.length}</td>
                                                     <td>
                                                         ${this.getIndustryHtml(arr)}
                                                     </td>
@@ -3491,42 +3650,8 @@ class BaiduStocks {
         return str;
     }
     updateHtml() {
-        let str = `
-            <div class="tab-container">
-                <div class="tab-header">
-                    <span class="tab-label active">行业统计</span>
-                    <span class="tab-label">跌停板</span>
-                </div>
-                <div class="tab-content">
-                    <div class="tab-item active">
-                        <table>
-                <thead><tr><th>时间</th><th>A股涨跌板行业统计<button class="search_btn reb update_btn" style="margin-left:10px;">更新</button></th></tr></thead>
-                <tbody>
-                    ${Object.keys(this.stocks).sort((a, b) => new Date(b) - new Date(a)).slice(0, 5).map(day => {
-            return `
-                                        <tr class="day" data-day="${day}">
-                                            <td>
-                                                <p>${day}</p>
-                                                <p class="fs12 gray">${this.stocks[day].update_time}</p>
-                                            </td>
-                                            <td>
-                                                ${this.getIndustryHtml(this.stocks[day].stocks)}
-                                            </td>
-                                        </tr>
-                                    `
-        }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="tab-item">
-                        ${this.updateDailyLimit()}
-                    </div>
-                </div>
-            </div>
-        `;
-        // this.$con.innerHTML = str;
         this.$con.innerHTML = this.updateDailyLimit();
-        this.updateDailyLimit();
+        // this.updateDailyLimit();
     }
 }
 const baiduStocks = new BaiduStocks();
