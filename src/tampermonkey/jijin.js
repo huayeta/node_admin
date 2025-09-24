@@ -71,21 +71,26 @@ const CLASSIFICATION = {
     '2': '半导体',
     '3': '机器人',
     '4': '云计算',
-    '5': '固态电池',
+    '5': '电池',
     '6': '创新药',
     '7': '军工',
     '8': '低空经济',
-    '10': '大数据',
     '13': '游戏',
     '14': '北证50',
     '15': '科创芯片',
     '16': '人工智能',
     '17': '稀土',
-    '18': '5G',
-    '19': '计算机',
+    '18':'国产算力',
     '20': '银行',
     '21': '多元金融',
     '22': '光伏',
+    '23': '稳债基',
+    '24': '电力',
+    '25':'恒生科技',
+    '26':'科创50',
+    '27':'消费电子',
+    '28':'精选小盘股',
+
 }
 let Tools = {
     dispatchEvent: ($ele, type) => {
@@ -485,15 +490,17 @@ Object.assign(Tools, {
     // 是否是债基
     isDebt: (code) => {
         const data = DATAS[code];
-        const { Ftype = '债权' } = data;
+        let { Ftype = '债权',name } = data;
         // console.log(data);
         let is = 2;//债基
+        if(!Ftype)Ftype='';
         if (Ftype.includes('固收')) {
             is = 2;//债基
-        } else if (Ftype.includes('QDII') || Ftype.includes('指数型') || Ftype.includes('商品')) {
+        } else if (Ftype.includes('QDII') || Ftype.includes('指数型') || Ftype.includes('商品') || name.includes('混合')) {
+
             // is = 3; //QDII
             is = 1;
-        } else if (data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) {
+        } else if ((data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) || Ftype.includes('混合型')) {
             // 股票占比大于10的
             is = 1;
         }
@@ -1404,7 +1411,7 @@ Object.assign(Tools, {
                                                         // 连续正天数筛选
                                                         if (!SORT.ratePositiveDay || count_pos.count >= SORT.ratePositiveDay) {
                                                             // 筛选连续负天数筛选
-                                                            if (!SORT.rateNegativeDay || count_neg.count >= SORT.rateNegativeDay)
+                                                            if (!SORT.rateNegativeDay || count_neg.count >= SORT.rateNegativeDay){
                                                                 // 是否是城投筛选
                                                                 if (!SORT.is_ct || (SORT.is_ct == '1' && is_ct == '1')) {
                                                                     // 是否有基金分类筛选
@@ -1490,6 +1497,7 @@ Object.assign(Tools, {
                                                                         `
                                                                     }
                                                                 }
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1637,7 +1645,7 @@ Object.assign(Tools, {
             <div class="g-table"></div>
             <div class="g-con"></div>
             <div class="g-baidu-stocks" style="margin:15px 0;"></div>
-            ${['大佬-2', '大佬-4', 9, 1, 3, 5, 6, 7, 8].map(name => {
+            ${['大佬-5','大佬-2', '大佬-4', 9, 1, 3, 5, 6, 7, 8].map(name => {
             return `<view-img src="/public/uploads/${name}.jpg" ></view-img>`
         }).join('')}
             <div style="margin-top:15px;" class="j-datas-add">
@@ -3096,6 +3104,93 @@ addEventListener($Content, 'click', e => {
         content[index].classList.add('active');
     }
 }, '.tab-label');
+// 监听右键点击事件
+class MyContextmenu {
+    // [{title,callback}]
+    constructor(arr, $CON, className, showCallBack) {
+        const $div = document.createElement('div');
+        $div.innerHTML = `
+    <style>
+        /* 样式化右键菜单 */
+        .context-menu {
+            position: absolute;
+            border: 1px solid #e7dfdf;
+            padding: 10px 0;
+            background: #fff;
+            line-height: 2;
+            font-size: 14px;
+            border-radius：10px;
+            box-shadow:0px 0px 10px rgba(0,0,0,.3);
+            min-width: 135px;
+            max-width: 160px;
+        }
+
+        .context-menu .context-menu-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .context-menu .context-menu-item:hover {
+            background-color: #ddd;
+        }
+        .context-menu .br{
+            height:1px;
+            background: #e7dfdf;
+        }
+    </style>
+    <!-- 鼠标右键菜单 -->
+    <div class="context-menu" style="display:none;">
+        <div class="name" style="text-align:center;border-bottom:1px solid #e7dfdf;padding:5px;font-size: 14px; color:gray;line-height:1.4;"></div>
+        ${arr.map((item, index) => {
+            return `<div class="context-menu-item" data-index="${index}">${item.title}</div>`;
+        }).join('')}
+    </div>
+`
+        const $body = document.querySelector('body');
+        $body.append($div);
+        this.$menu = $div.querySelector('.context-menu');
+        this.$name = $div.querySelector('.name');
+        this.name = '';
+        this.arr = arr;
+        // 阻止浏览器默认的右键菜单
+        addEventListener($CON, 'contextmenu', event => {
+            event.preventDefault();
+            // 显示右键菜单
+            showCallBack.call(this, event.target.closest(className));
+            this.show(event);
+        }, className)
+        // 取消弹窗
+        addEventListener($CON, 'click', e => {
+            this.hide();
+        })
+        // 点击菜单
+        addEventListener(this.$menu, 'click', e => {
+            this.item(e.target.closest('.context-menu-item'));
+        }, '.context-menu-item')
+    }
+    show(event) {
+        this.$menu.style.display = 'block';
+        this.$name.innerHTML = `${this.name}`;
+        var x = event.clientX + window.scrollX;
+        var y = event.clientY + window.scrollY;
+        var maxX = window.innerWidth + window.scrollX - this.$menu.offsetWidth - 20;
+        var maxY = window.innerHeight + window.scrollY - this.$menu.offsetHeight - 20;
+        x = Math.min(x, maxX);
+        y = Math.min(y, maxY);
+        this.$menu.style.left = x + "px";
+        this.$menu.style.top = y + "px";
+    }
+    hide() {
+        this.$menu.style.display = 'none';
+    }
+    async item($item) {
+        const index = $item.dataset.index;
+        // console.log($item,index,this)
+        this.arr[index]?.callback.call(this, $item);
+    }
+}
+// const Menu = new Contextmenu();
 class BaiduStocks {
     constructor() {
         const Stocks = customStorage.getItem('jijin.stocks') || {};
@@ -3178,7 +3273,8 @@ class BaiduStocks {
     }
     async pullStocks(page = 0, cb = () => { }) {
 
-        const ranks = await Tools.fetch('baiduRank', { index: page });
+        // const ranks = await Tools.fetch('baiduRank', { index: page });
+        const ranks = await Tools.fetch('http', { url: `https://finance.pae.baidu.com/sapi/v1/ranks?bizType=stock_rank&category=undefined&sortKey=&sortType=&market=ab&pn=${page}&rn=20&style=tablelist&finClientType=pc` })
         const lists = ranks.Result.list.body;
         // console.log(lists);
         const arr = [];
@@ -3297,10 +3393,10 @@ class BaiduStocks {
                 }
             })
         })
-        console.log(this.up_stocks)
+        // console.log(this.up_stocks)
         // this.up_stocks['003029']['exchange']='SZ';
         // this.up_stocks['603022']['exchange']='SH';
-        this.storage();
+        // this.storage();
 
         this.updateHtml();
 
@@ -3348,6 +3444,20 @@ class BaiduStocks {
             this.storage();
             this.updateHtml();
         }, '.j-up_stock-updata');
+        const _this = this;
+        new MyContextmenu(Object.entries(CLASSIFICATION).map(([index, item]) => ({
+            title: item, callback: function () {
+                // console.log(this,item);
+                _this.up_stocks[this.code].classify = index;
+                this.hide();
+                _this.storage();
+                _this.updateHtml();
+            }
+        })), this.$con, '.j-up-stock-content>table:nth-child(1)>tbody>tr', function ($target) {
+            const code = $target.dataset.code;
+            this.name = _this.up_stocks[code].name;
+            this.code = code;
+        });
         // 更新day的数据
         addEventListener(this.$con, 'click', async (e) => {
             const $target = e.target.closest('.j-stock-updata');
@@ -3386,6 +3496,7 @@ class BaiduStocks {
             this.storage();
             this.updateHtml();
         }, '.season_btn');
+
         // const detail = await Tools.fetch('baiduDetail', { code: "688499" });
         // let klines = [];
         // try {
@@ -3451,6 +3562,9 @@ class BaiduStocks {
                 isUpdata = true;
             }
         }
+        if (this.stocks[time]?.stocks?.length == 0) {
+            isUpdata = true;
+        }
         this.day = time;
         if (isUpdata) {
             const $target = this.$con.querySelector('.update_btn');
@@ -3502,13 +3616,15 @@ class BaiduStocks {
                         <th>连板</th>
                         <th>涨停原因</th>
                         <th>行业</th>
+                        <th>概念</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${stocks.map((stock, stockIndex) => {
             const sDay = this.countConsecutiveOver9(stock.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate));
             return `
-                            <tr class="${sDay % 2 == 0 ? 'even' : ''}">
+                            <tr class="${sDay % 2 == 0 ? 'even' : ''}" data-index="${stockIndex}" data-code="${stock.code}">
+
                                 <td style="text-align:center;">${stockIndex + 1}</td>
                                 <td>
                                     <a href="https://gushitong.baidu.com/stock/ab-${stock.code}" target="_blank">${stock.name}</a> 
@@ -3535,6 +3651,7 @@ class BaiduStocks {
                                     </div>
                                 `: ''}</td>
                                 <td>${stock.industry ? `<a href="https://gushitong.baidu.com/block/ab-${stock.industry[0].code}" target="_blank">${stock.industry[0].name}</a> <span class="gray fs12"><a href="https://gushitong.baidu.com/block/ab-${stock.industry[1].code}" target="_blank">${stock.industry[1].name}</a></span>` : ''}</td>
+                                <td>${CLASSIFICATION[this.up_stocks[stock.code]?.classify] || '-'}</td>
                             `
         }).join('')}
                 </tbody>
@@ -3576,7 +3693,7 @@ class BaiduStocks {
         return index === -1 ? arr1.length : index;
     }
     updateDailyLimit() {
-        const arr = Object.keys(this.stocks).filter(day => this.stocks[day].stocks[0].klines).sort((a, b) => new Date(b) - new Date(a)).slice(0, 5);
+        const arr = Object.keys(this.stocks).filter(day => this.stocks[day].stocks?.[0]?.klines).sort((a, b) => new Date(b) - new Date(a));
         let str = `
             <div class="tab-container">
                 <div class="tab-header">
@@ -3592,13 +3709,13 @@ class BaiduStocks {
         <input type="text" class="search_input season_input" placeholder="输入Hexin-V" />
                 </div>
                 <div class="tab-content">
-                    <div class="tab-item">
+                    <div class="tab-item j-up-stock-content">
                         ${this.getStocksTableHtml(Object.values(this.up_stocks).sort((a, b) => {
-                            const klines_a = this.countConsecutiveOver9(a.klines.map(d => +d.rate));
-                            const klines_b = this.countConsecutiveOver9(b.klines.map(d => +d.rate));
-                            // console.log(klines_a-klines_b);
-                            return klines_b - klines_a;
-                        }))}
+            const klines_a = this.countConsecutiveOver9(a.klines.map(d => +d.rate));
+            const klines_b = this.countConsecutiveOver9(b.klines.map(d => +d.rate));
+            // console.log(klines_a-klines_b);
+            return klines_b - klines_a;
+        }), arr[0])}
                     </div>
                     ${arr.map((day, index) => {
             const stocks = this.stocks[day].stocks.sort((a, b) => {

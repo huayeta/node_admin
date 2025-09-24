@@ -32,6 +32,7 @@
             ((comment &&
                 !comment.includes('此用户没有填写评价') &&
                 !comment.includes('系统默认好评') &&
+                !comment.includes('该用户觉得商品非常好，给出5星好评') &&
                 comment.length >= +select_length)) ||
             fir
         ) {
@@ -268,7 +269,7 @@
             download();
         });
     }
-    console.log('下载评论函数：startReadComent()')
+    console.log('%c下载评论函数：startReadComent()','color:red;font-size:20px;');
     console.log('用手机页面下载评论，直接手动拖动到评论底部，出现验证码要把开发工具关掉变成电脑页面再去滑动验证，要不然不会成功');
     console.log(`window.is_save_photo=${window.is_save_photo},true保存图片，false不保存图片，可以修改当前值`)
     console.log(`小技巧，可以调整电脑的滚轮到最大，滚动的时候可以更快`)

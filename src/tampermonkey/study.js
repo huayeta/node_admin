@@ -168,10 +168,9 @@ const Tools = {
                 </div>
                 <div class="search-con"></div>
                 <div class="menu-a">
-                    超链：<a href="?query=乐乐课堂%5C动画版乐乐课堂乐乐小学%5C04人教版1-6年级数学视频%2BPDF习题%5C二年级%5C二年级下&disk=l1">乐二下</a>
+                    超链：<a href="?query=乐乐课堂%5C动画版乐乐课堂乐乐小学%5C04人教版1-6年级数学视频%2BPDF习题%5C三年级%5C三年级上&disk=l1">乐三上</a>
                     <a href="?query=乐乐课堂%5C281-小学奥数乐乐课堂%5C一年级%5C01【一年级奥数】-%2084集&disk=l1">乐奥一</a>
-                    <a href="?query=洋葱学院%5C洋葱学院小学数学人教版%5C人教版%5C二年级%5C二年级下册&disk=l1">洋二下</a>
-                    <a href="?query=英语分级阅读%5C全网最全的地理155册点读包%2B音频&disk=m1">国家地理</a>
+                    <a href="?query=洋葱学院%5C洋葱学院小学数学人教版%5C人教版&disk=l1">洋葱学院</a>
                     <a href="?query=乐乐课堂%5C乐乐课堂大语文&disk=l1">乐乐课堂大语文</a>
                     <a href="?query=1000-2000-4000词%5C2000词%5C1000词视频%5C1000%20Basic%20English%20Words%20精讲视频&disk=m1">1000词</a>
                 </div>
