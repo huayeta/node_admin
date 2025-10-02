@@ -170,7 +170,7 @@ const Tools = {
                 <div class="menu-a">
                     超链：<a href="?query=乐乐课堂%5C动画版乐乐课堂乐乐小学%5C04人教版1-6年级数学视频%2BPDF习题%5C三年级%5C三年级上&disk=l1">乐三上</a>
                     <a href="?query=乐乐课堂%5C281-小学奥数乐乐课堂%5C一年级%5C01【一年级奥数】-%2084集&disk=l1">乐奥一</a>
-                    <a href="?query=洋葱学院%5C洋葱学院小学数学人教版%5C人教版&disk=l1">洋葱学院</a>
+                    <a href="?query=洋葱学院%5C25新版洋葱合集【小学】%5C数学%5C人教版%5C人教版&disk=l1">洋葱学院</a>
                     <a href="?query=乐乐课堂%5C乐乐课堂大语文&disk=l1">乐乐课堂大语文</a>
                     <a href="?query=1000-2000-4000词%5C2000词%5C1000词视频%5C1000%20Basic%20English%20Words%20精讲视频&disk=m1">1000词</a>
                 </div>
@@ -255,11 +255,11 @@ const Tools = {
         return mimeTypes[ext] || null;
     },
     playVideo: async (url, video_type) => {
-        console.log(url,Tools.getVideoMimeType(video_type))
+        console.log(url, Tools.getVideoMimeType(video_type))
         // 加载css
         await cssLoader.load('./video/video-js.min.css');
         await import('./video/video.min.js');
-        if(video_type.includes('flv')){
+        if (video_type.includes('flv')) {
             await import('./video/flv.min.js');
             await import('./video/videojs-flvjs.min.js');
         }
@@ -277,21 +277,19 @@ const Tools = {
         container.innerHTML = '<style>body{margin:0}</style>';
         container.appendChild(videoElement);
         // 初始化video.js
-        const player = videojs('my-video',{
-            techOrder: ['html5','flvjs'],
+        const player = videojs('my-video', {
+            techOrder: ['html5', 'flvjs'],
         })
         player.src({
             src: url,
             type: Tools.getVideoMimeType(video_type)
         });
-        player.on('error',function(){
+        player.on('error', function () {
             const $error = document.querySelector('.vjs-modal-dialog-content');
-            const a = document.createElement('a');
-            a.style='display:block;position:absolute; left:50%;top:50%;font-size:20px;';
-            a.innerHTML='点击转换尝试播放';
-            a.target='_black';
-            a.href=`/api/dir?query=${QUERY}&disk=${Disk}`;
-            $error.appendChild(a);
+            const div = document.createElement('div');
+            div.style = 'position:absolute; left:50%;top:50%;font-size:20px;';
+            div.innerHTML = `<p><a target="_black" href="/api/dir?query=${QUERY}&disk=${Disk}">点击转换尝试播放</a></p><p><a class="j-copyText" data-copytext="${document.location.origin}${url}">点击复制链接去其他播放器播放</a></p>`;
+            $error.appendChild(div);
         })
     },
     initialization: async () => {
@@ -439,6 +437,34 @@ const Tools = {
             document.querySelector('.search-con').innerHTML = '';
             document.querySelector('.search-container .search-input').value = '';
         }, '.j-search-clear')
+        // 点击copy
+        function copyToClipboard(text) {
+            const domIpt = document.createElement('textarea');
+            domIpt.style.position = 'absolute';
+            domIpt.style.left = '-9999px';
+            domIpt.style.top = '-9999px';
+            document.body.appendChild(domIpt);
+            domIpt.value = text;
+            domIpt.select();
+            document.execCommand('copy');
+            document.body.removeChild(domIpt);
+        }
+        addMyEventListener(document.querySelector('.content'), 'click', e => {
+            const $text = e.target;
+            const text = $text.textContent;
+            $text.style.cursor = 'pointer';
+            $text.title = '点击复制';
+            const copytext = $text.getAttribute('data-copytext');
+            copyToClipboard(copytext?copytext:text);
+            const copyed = $text.getAttribute('data-copyed');
+            if (copyed !== '1') {
+                const $after = document.createElement('span');
+                $after.style = 'color:gray;margin-left:3px;';
+                $after.textContent = '已复制';
+                $text.after($after);
+            }
+            $text.setAttribute('data-copyed', '1');
+        }, '.j-copyText')
     }
 }
 Tools.initialization();

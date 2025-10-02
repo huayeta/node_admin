@@ -180,7 +180,7 @@ const customStorage = new CustomStorage();
             // },
             {
                 label: '处韵',
-                options: ['肛裂1'],
+                options: ['肛裂1','肛瘘1','痔疮1'],
             }
         ],
         JD_datas: [

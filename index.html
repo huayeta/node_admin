@@ -5,17 +5,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主页</title>
+    <style>
+        ul li{
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
     <ul>
-        
+        <li><a href="/src/tampermonkey/pig-gather-htm.htm">小猪数据</a></li>
+        <li><a href="/src/tampermonkey/jijin.htm">基金数据</a></li>
+        <li><a href="/src/tampermonkey/study.htm">学习</a></li>
     </ul>
 </body>
 </html>
-<script>
-    // 判断网址是不是包含pig.com
-    if(location.href.indexOf("pig.com") > -1){
-        // 包含pig.com
-        window.location.href='/index1.html'; 
-    }
-</script>
