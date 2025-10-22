@@ -3660,12 +3660,13 @@ class BaiduStocks {
     }
     getIndustryHtml(obj) {
         const industy = this.format(obj);
+        // console.log(industy);
         return `
             <table>
                 <thead>
                     ${industy.map(stock => {
             return `
-                            <th>${stock[3] ? `<a href="https://gushitong.baidu.com/block/ab-${stock[3].code}" target="_blank">${stock[0]}</a> <span style="font-weight: normal;" class="fs12 ${stock[3].ratio.includes('+') > 0 ? 'red' : 'green'}">${stock[3].ratio}</span>` : stock[0]}</th>
+                            <th>${stock[3] ? `<a href="https://gushitong.baidu.com/block/ab-${stock[3].code}" target="_blank">${stock[0]}</a> <span style="font-weight: normal;" class="fs12 ${stock[3].ratio?.includes('+') > 0 ? 'red' : 'green'}">${stock[3].ratio}</span>` : stock[0]}</th>
                         `;
         }).join('')}
                                                             </thead>
