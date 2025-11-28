@@ -80,17 +80,16 @@ const CLASSIFICATION = {
     '15': '科创芯片',
     '16': '人工智能',
     '17': '稀土',
-    '18':'国产算力',
+    '18': '国产算力',
     '20': '银行',
     '21': '多元金融',
-    '22': '光伏',
+    '22': '新能源',
     '23': '稳债基',
     '24': '电力',
-    '25':'恒生科技',
-    '26':'科创50',
-    '27':'消费电子',
-    '28':'精选小盘股',
-
+    '25': '恒生科技',
+    '26': '科创50',
+    '27': '消费电子',
+    '28': '精选小盘股',
 }
 let Tools = {
     dispatchEvent: ($ele, type) => {
@@ -470,6 +469,11 @@ Object.assign(Tools, {
                 if (CODES[a.code] && CODES[a.code].valuation && CODES[a.code].valuation.valuation) aa = CODES[a.code].valuation.valuation;
                 if (CODES[b.code] && CODES[b.code].valuation && CODES[b.code].valuation.valuation) bb = CODES[b.code].valuation.valuation;
                 result = aa - bb;
+            } else if (day == 'standardDeviation') {
+                let aa = bb = (sort > 0 ? 1000 : 0);
+                if (a.standardDeviation && a.standardDeviation.populationStdDev) aa = +a.standardDeviation.populationStdDev;
+                if (b.standardDeviation && b.standardDeviation.populationStdDev) bb = +b.standardDeviation.populationStdDev;
+                result = aa - bb;
             } else {
                 result = Number(a[day]) - Number(b[day]);
             }
@@ -490,10 +494,10 @@ Object.assign(Tools, {
     // 是否是债基
     isDebt: (code) => {
         const data = DATAS[code];
-        let { Ftype = '债权',name } = data;
+        let { Ftype = '债权', name } = data;
         // console.log(data);
         let is = 2;//债基
-        if(!Ftype)Ftype='';
+        if (!Ftype) Ftype = '';
         if (Ftype.includes('固收')) {
             is = 2;//债基
         } else if (Ftype.includes('QDII') || Ftype.includes('指数型') || Ftype.includes('商品') || name.includes('混合')) {
@@ -700,9 +704,15 @@ Object.assign(Tools, {
         const customMonthData = {};
         // 记录每个时段的涨跌变化
         const customAdjacentData = [];
+        // 收集最近90个交易日的涨幅
+        let customLastThreeMonthsGrowthArr = [];
         fundMNHisNetList.forEach((data, i) => {
             if (i == 0) dayGrowth = data.JZZZL;
             if (Tools.isNumber(data.JZZZL)) {
+                // 收集最近90个交易日的涨幅
+                if (i <= 90) {
+                    customLastThreeMonthsGrowthArr.push(+data.JZZZL);
+                }
                 // 0,1,2,3   i=3  4-2=2
                 if (i < 3) {
                     custom3DayGrowth += (+data.JZZZL);
@@ -763,6 +773,8 @@ Object.assign(Tools, {
         Data.customLastMonthGrowth = (customLastMonthGrowth).toFixed(2);
         Data.customMonthData = customMonthData;
         Data.customAdjacentData = customAdjacentData;
+        // 计算最近90个交易日的标准差
+        Data.standardDeviation = Tools.calculateStandardDeviation(customLastThreeMonthsGrowthArr);
 
         // 其他基本信息
         const { data: { FundACRateInfoV2Expansion: { ShortName: name, FType: Ftype }, rateInfo: { sh, MAXSG, CYCLE, SGZT }, uniqueInfo, fundRelateTheme } } = await Tools.fetch('jjxqy1_2', { 'fcode': code })
@@ -846,6 +858,104 @@ Object.assign(Tools, {
         Tools.setCode(Data);
         return Data;
     },
+    /**
+ * 计算数组的标准差（总体标准差和样本标准差）
+ * @param {Array<number>} data - 输入的数值数组（支持正负、小数）
+ * @returns {Object} 包含总体标准差和样本标准差的结果
+ */
+    calculateStandardDeviation: (data) => {
+        // 步骤1：校验输入（确保数组非空且元素为数字）
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("请输入非空数组");
+        }
+        if (data.some(item => typeof item !== 'number' || isNaN(item))) {
+            throw new Error("数组元素必须为有效数字");
+        }
+
+        const n = data.length; // 数据个数
+        if (n === 1) {
+            return { populationStdDev: 0, sampleStdDev: 0 }; // 单个数据波动为0
+        }
+
+        // 步骤2：计算平均值
+        const sum = data.reduce((acc, val) => acc + val, 0);
+        const mean = sum / n;
+
+        // 步骤3：计算每个数据与平均值的偏差平方和
+        const squaredDeviationsSum = data.reduce((acc, val) => {
+            const deviation = val - mean; // 偏差（含正负）
+            return acc + deviation * deviation; // 平方后累加（抵消正负）
+        }, 0);
+
+        // 步骤4：计算总体标准差（除以n）和样本标准差（除以n-1）
+        const populationVariance = squaredDeviationsSum / n; // 总体方差
+        const sampleVariance = squaredDeviationsSum / (n - 1); // 样本方差
+        const populationStdDev = Math.sqrt(populationVariance); // 总体标准差（开平方）
+        const sampleStdDev = Math.sqrt(sampleVariance); // 样本标准差（开平方）
+
+        // 返回结果（保留3位小数）
+        return {
+            populationStdDev: Number(populationStdDev.toFixed(3)),
+            sampleStdDev: Number(sampleStdDev.toFixed(3))
+        };
+    },
+    /**
+ * 自适应k值：筛选波动小的子集（保障样本量）并计算平均值
+ * @param {Array<number>} data - 原始数据数组
+ * @param {number} minRetainRatio - 最小保留比例（0-1，默认0.6即60%）
+ * @returns {Object} 包含自适应k值、筛选子集、平均值的结果
+ */
+    getAdaptiveStableMean: (data, minRetainRatio = 0.6) => {
+        // 1. 基础校验与数据清洗
+        if (!Array.isArray(data) || data.length < 2) throw new Error("数据数组需至少2个有效数字");
+        const validData = data.filter(item => typeof item === 'number' && !isNaN(item));
+        const totalCount = validData.length;
+        if (totalCount < 2) throw new Error("有效数据不足2个");
+
+        // 2. 计算基础统计量（平均值、标准差）
+        const sum = validData.reduce((acc, val) => acc + val, 0);
+        const mean = sum / totalCount;
+        const squaredDeviationsSum = validData.reduce((acc, val) => acc + (val - mean) ** 2, 0);
+        const stdDev = Math.sqrt(squaredDeviationsSum / totalCount);
+
+        // 3. 计算各数据的绝对偏差，按从小到大排序
+        const deviations = validData.map(val => ({
+            value: val,
+            absDev: Math.abs(val - mean) // 每个数据与平均值的绝对偏差
+        })).sort((a, b) => a.absDev - b.absDev); // 按偏差从小到大排序
+
+        // 4. 自适应计算k值（保障最小样本量）
+        const minRetainCount = Math.max(2, Math.ceil(totalCount * minRetainRatio)); // 至少保留2个样本
+        const criticalDeviation = deviations[minRetainCount - 1].absDev; // 第N个样本的偏差（N=最小保留数）
+        const adaptiveK = stdDev === 0 ? 0 : (criticalDeviation / stdDev); // 反向算k值（避免标准差为0）
+
+        // 5. 用自适应k值筛选子集（实际保留数≥最小保留数）
+        const stableSubset = validData.filter(val => Math.abs(val - mean) <= adaptiveK * stdDev);
+        const stableSum = stableSubset.reduce((acc, val) => acc + val, 0);
+        const stableMean = stableSum / stableSubset.length;
+
+        // 6. 返回结果（保留3位小数）
+        return {
+            adaptiveK: Number(adaptiveK.toFixed(3)), // 自适应得到的k值
+            stableSubset: stableSubset.map(val => Number(val.toFixed(3))),
+            stableMean: Number(stableMean.toFixed(3)),
+            retainRatio: Number((stableSubset.length / totalCount).toFixed(2)), // 实际保留比例
+            filterRule: `与平均值（${mean.toFixed(3)}）的偏差≤${adaptiveK.toFixed(3)}×标准差（${stdDev.toFixed(3)}）`
+        };
+    },
+
+    // ---------------------- 测试示例（用你之前的数据） ----------------------
+    // const testData = [1.46, 1.76, 4.13, -2.42, 3.25, -1.18, -0.09, 7.6, -0.7];
+    // const result = getAdaptiveStableMean(testData); // 默认最小保留60%数据
+    // console.log("自适应k值：", result.adaptiveK); // 输出：1.000（本例中刚好满足60%保留比例）
+    // console.log("波动小的子集：", result.stableSubset); // 输出：[1.46, 1.76, 4.13, 3.25, -1.18, -0.09, -0.7]
+    // console.log("子集平均值：", result.stableMean); // 输出：1.407
+    // console.log("实际保留比例：", result.retainRatio); // 输出：0.78（7/9，满足≥60%）
+
+    // // ---------------------- 极端情况测试（数据波动极大） ----------------------
+    // const extremeData = [10, 20, 30, -50, 40, 50, -100];
+    // const extremeResult = getAdaptiveStableMean(extremeData, 0.7); // 要求至少保留70%数据
+    // console.log("极端数据自适应k值：", extremeResult.adaptiveK); // 自动调整k值，确保保留≥5个样本
     getAsset: async (code) => {
         // 资产情况
         let asset = {};
@@ -989,12 +1099,12 @@ Object.assign(Tools, {
             fundStocks.forEach(fund => {
                 secids.push(`${fund.NEWTEXCH}.${fund.GPDM}`);
             })
-            const { data } = await Tools.fetch('ulist', { secids: secids.join(',') });
-            if (data && data.diff && data.diff.length > 0) {
-                data.diff.forEach(item => {
-                    fundStocksDiff[item['f12']] = item;
-                })
-            }
+            // const { data } = await Tools.fetch('ulist', { secids: secids.join(',') });
+            // if (data && data.diff && data.diff.length > 0) {
+            //     data.diff.forEach(item => {
+            //         fundStocksDiff[item['f12']] = item;
+            //     })
+            // }
         }
         // 计算股票的涨幅跟持仓
         let gprice = 0;
@@ -1013,12 +1123,12 @@ Object.assign(Tools, {
             fundboods.forEach(fund => {
                 secids.push(`${fund.NEWTEXCH}.${fund.ZQDM}`);
             })
-            const { data } = await Tools.fetch('ulist', { secids: secids.join(',') });
-            if (data && data.diff && data.diff.length > 0) {
-                data.diff.forEach(item => {
-                    fundboodsDiff[item['f12']] = item;
-                })
-            }
+            // const { data } = await Tools.fetch('ulist', { secids: secids.join(',') });
+            // if (data && data.diff && data.diff.length > 0) {
+            //     data.diff.forEach(item => {
+            //         fundboodsDiff[item['f12']] = item;
+            //     })
+            // }
         }
         // 计算出债权的涨幅和持仓
         let price = 0;
@@ -1411,17 +1521,37 @@ Object.assign(Tools, {
                                                         // 连续正天数筛选
                                                         if (!SORT.ratePositiveDay || count_pos.count >= SORT.ratePositiveDay) {
                                                             // 筛选连续负天数筛选
-                                                            if (!SORT.rateNegativeDay || count_neg.count >= SORT.rateNegativeDay){
+                                                            if (!SORT.rateNegativeDay || count_neg.count >= SORT.rateNegativeDay) {
                                                                 // 是否是城投筛选
                                                                 if (!SORT.is_ct || (SORT.is_ct == '1' && is_ct == '1')) {
                                                                     // 是否有基金分类筛选
                                                                     if (!SORT.classify || (CODES[data.code] && CODES[data.code].classify && SORT.classify == CODES[data.code].classify)) {
                                                                         increment++;
+                                                                        // 计算基金样本涨跌幅度
+            let dpJj = {
+                '+':{
+                    stableMean:0,
+                    arr:[]
+                },
+                '-':{
+                    stableMean:0,
+                    arr:[]
+                }
+            };
+            data.customAdjacentData.forEach(item=>{
+                if(+item.sum>0){
+                    dpJj['+'].arr.push(+item.sum);
+                }else{
+                    dpJj['-'].arr.push(+item.sum);
+                }
+            })
+            dpJj['+'].stableMean = Tools.getAdaptiveStableMean(dpJj['+'].arr).stableMean.toFixed(2);
+            dpJj['-'].stableMean = Tools.getAdaptiveStableMean(dpJj['-'].arr).stableMean.toFixed(2);
                                                                         str += `
                                                                             <tr data-code="${data.code}" style="${data.code.includes(',') ? 'background: #fff7f3;' : ''}">
                                                                                 <td>
                                                                                     ${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',') ? data.code.replaceAll(',', '<br />') : data.code}</span>
-                                                                                    <p class="fs12 gray" style="text-indent:2em;">+${count_pos.count},+${count_pos.sum}（${count_pos.num}/${count_pos.max}）</p>
+                                                                                    <p class="fs12 gray" style="text-indent:2em;" title="最大连涨天数,最大连长幅度（连涨天数/最大涨幅）">+${count_pos.count},+${count_pos.sum}（${count_pos.num}/${count_pos.max}）</p>
                                                                                     <p class="fs12 gray" style="text-indent:2em;">-${count_neg.count},${count_neg.sum}（${count_neg.num}/${count_neg.max}）</p>
                                                                                 </td>
                                                                                 <td>
@@ -1437,11 +1567,23 @@ Object.assign(Tools, {
                                                                                     ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `</p>` : ''}
                                                                                 </td>
                                                                                 <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
-                                                                                <td>${Array.isArray(data.customAdjacentData) && data.customAdjacentData.length > 0 && `<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}</td>
+                                                                                <td>
+                                                                                    ${Array.isArray(data.customAdjacentData) && data.customAdjacentData.length > 0 && `${((sum,dp)=>{
+                                                                                        if(sum>0 && sum>dp['+'].stableMean){
+                                                                                            return `<span class="green">减：</span>`
+                                                                                        }
+                                                                                        if(sum<0 && sum<dp['-'].stableMean){
+                                                                                            return `<span class="red">加：</span>`
+                                                                                        }
+                                                                                            return '';
+                                                                                        })(data.customAdjacentData[0].sum,dpJj)}<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}
+                                                                                    <p class="gray">样：${dpJj['+'].stableMean}/${dpJj['-'].stableMean}</p>
+                                                                                </td>
                                                                                 <td><fund-valuation code="${data.code}" delay="${increment * 1000}" /></td>
                                                                                 ${total_arr.map(total => {
                                                                             return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
                                                                         }).join('')}
+                                                                                <td class="tac">${data.standardDeviation ? data.standardDeviation.populationStdDev : ''}</td>
                                                                                 <td>${data.customType ? data.customType : ''}</td>
                                                                                 <td>
                                                                                     <div class="tip-container">
@@ -1526,6 +1668,7 @@ Object.assign(Tools, {
                         ${Object.keys(EMOJIS).map(emoji => {
             return `<span class="emoji j-emoji ${SORT.emoji == emoji ? 'sel' : ''}">${emoji}</span>`;
         }).join('')}
+                        <span class="caret-wrapper ${SORT.day == 'dp' ? sortClassname : ''}" data-day="dp"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span>
                     </th>
                     <th>购后均日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>连涨跌/幅度<span class="caret-wrapper ${SORT.day == 'sumLastDp' ? sortClassname : ''}" data-day="sumLastDp"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
@@ -1533,6 +1676,7 @@ Object.assign(Tools, {
                     ${total_arr.map(total => {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
         }).join('')}
+                    <th>90标准差<span class="caret-wrapper ${SORT.day == 'standardDeviation' ? sortClassname : ''}" data-day="standardDeviation"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>
                         债权组合
                     </th>
@@ -1645,7 +1789,7 @@ Object.assign(Tools, {
             <div class="g-table"></div>
             <div class="g-con"></div>
             <div class="g-baidu-stocks" style="margin:15px 0;"></div>
-            ${['大佬-5','大佬-2', '大佬-4', 9, 1, 3, 5, 6, 7, 8].map(name => {
+            ${['大佬-5', '大佬-2', '大佬-4', 9, 1, 3, 5, 6, 7, 8].map(name => {
             return `<view-img src="/public/uploads/${name}.jpg" ></view-img>`
         }).join('')}
             <div style="margin-top:15px;" class="j-datas-add">
@@ -3249,26 +3393,38 @@ class BaiduStocks {
     }
     async getStockKline(code, exchange) {
         // 计算这只股票最近10天的涨跌情况
-        let type;
-        switch (exchange) {
-            case 'SZ':
-                type = 0;
-                break;
-            case 'SH':
-                type = 1;
-                break;
-            default:
-                type = 0;
-                break;
-        }
-        const dps = await Tools.fetch('stockKline', { code: code, type: type, klt: 101, lmt: 10, fqt: 1, end: Tools.getTime('yyyymmdd') });
-        const klines = dps.data.klines.map(kline => {
-            const arr = kline.split(',');
-            return {
-                date: arr[0],
-                rate: arr[8]
-            }
-        });
+        // let type;
+        // switch (exchange) {
+        //     case 'SZ':
+        //         type = 0;
+        //         break;
+        //     case 'SH':
+        //         type = 1;
+        //         break;
+        //     default:
+        //         type = 0;
+        //         break;
+        // }
+        // const dps = await Tools.fetch('stockKline', { code: code, type: type, klt: 101, lmt: 10, fqt: 1, end: Tools.getTime('yyyymmdd') });
+        // const klines = dps.data.klines.map(kline => {
+        //     const arr = kline.split(',');
+        //     return {
+        //         date: arr[0],
+        //         rate: arr[8]
+        //     }
+        // });
+        
+        const detailDay = await Tools.fetch('baiduDetailDay',{code});
+        // console.log(detailDay)
+        // console.log(detailDay.Result.newMarketData.marketData);
+        let klines=[];
+        detailDay.Result.newMarketData.marketData.split(';').slice(-10).forEach(day=>{
+            // console.log(day)
+            const item = day.split(',');
+            klines.push({date:item[1],rate:item[9]});
+        })
+        // console.log(klines);
+
         return klines;
     }
     async pullStocks(page = 0, cb = () => { }) {
@@ -3299,8 +3455,10 @@ class BaiduStocks {
             })
             // 获取日K线
             stock.klines = await this.getStockKline(body.code, body.exchange);
-
+            
+            // stock.klines = await this.getStockKline(body.code, body.exchange);
             // const detail = await Tools.fetch('baiduDetail', { code: body.code });
+
             // let klines = [];
             // try {
             //     klines = detail.Result.content.fundFlowMinute.data.split(',').reduce((acc, _, i) => {
@@ -3309,9 +3467,11 @@ class BaiduStocks {
             //         }
             //         return acc;
             //     }, []).slice(-10).reverse();
+                
             // } catch (e) {
             //     console.log(e);
             // }
+            // console.log(klines)
             // Object.assign(stock, {
             //     rate: rate,
             //     firstIndustry: detail.Result.content.fundFlowBlock.result[0].industry.name,
@@ -3385,14 +3545,14 @@ class BaiduStocks {
         // console.log(this.stocks);
 
         // 循环this.stocks找到连板大于4的股票存起来
-        Object.keys(this.stocks).forEach(day => {
-            const obj = this.stocks[day];
-            obj.stocks.forEach(stock => {
-                if (!this.up_stocks[stock.code] && this.countConsecutiveOver9(stock.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate)) >= 4) {
-                    this.up_stocks[stock.code] = stock;
-                }
-            })
-        })
+        // Object.keys(this.stocks).forEach(day => {
+        //     const obj = this.stocks[day];
+        //     obj.stocks.forEach(stock => {
+        //         if (!this.up_stocks[stock.code] && this.countConsecutiveOver9(stock.klines.filter(d => new Date(d.date) <= new Date(day)).map(d => +d.rate)) >= 4) {
+        //             this.up_stocks[stock.code] = stock;
+        //         }
+        //     })
+        // })
         // console.log(this.up_stocks)
         // this.up_stocks['003029']['exchange']='SZ';
         // this.up_stocks['603022']['exchange']='SH';
@@ -3497,6 +3657,19 @@ class BaiduStocks {
             this.updateHtml();
         }, '.season_btn');
 
+        // 日线
+        // const detailDay = await Tools.fetch('baiduDetailDay',{code:'688499'});
+        // console.log(detailDay)
+        // console.log(detailDay.Result.newMarketData.marketData);
+        // let klines=[];
+        // detailDay.Result.newMarketData.marketData.split(';').reverse().slice(0,10).forEach(day=>{
+        //     // console.log(day)
+        //     const item = day.split(',');
+        //     klines.push({date:item[1],rate:item[9]});
+        // })
+        // console.log(klines);
+
+        // 分钟线
         // const detail = await Tools.fetch('baiduDetail', { code: "688499" });
         // let klines = [];
         // try {
