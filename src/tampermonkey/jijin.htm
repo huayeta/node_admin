@@ -126,12 +126,30 @@
         .fwn {
             font-weight: normal;
         }
+        .fat{
+            color: currentColor;
+            text-decoration: auto;
+        }
 
         .owb {
             /* 允许在单词内换行 */
             overflow-wrap: break-word;
             /* 强制在任意字符处换行 */
             word-break: break-all;
+        }
+
+        /* 单行省略核心样式 */
+        .single-ellipsis {
+            /* 1. 必须固定宽度（px/%/vw等，否则无法判断“超出”） */
+            /* width: 200px; */
+            /* 2. 强制文本单行显示 */
+            white-space: nowrap;
+            /* 3. 隐藏超出容器的内容 */
+            overflow: hidden;
+            /* 4. 超出部分显示省略号 */
+            text-overflow: ellipsis;
+            /* 可选：避免inline元素不生效，建议设为block/inline-block */
+            display: inline-block;
         }
 
         .br {
@@ -309,16 +327,18 @@
             padding: 15px;
             border-top: 1px solid #eee;
         }
+
         .tab-content .tab-item.active {
             display: block;
         }
-        .tab-container a{
+
+        .tab-container a {
             color: inherit;
             text-decoration: none;
         }
 
-        .even{
-            background: #f5f5f5;
+        .even {
+            backgroun·: #f5f5f5;
         }
     </style>
 </head>
@@ -331,4 +351,4 @@
 
 </html>
 <script src="/public/libs/lz-string.min.js"></script>
-<script src="./jijin.js"></script>
+<script src="./jijin.js?version=1.0.0"></script>

@@ -28,7 +28,7 @@ const customStorage = new CustomStorage();
 let DATAS = {};
 // {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME,position:持仓情况,lv:利率债小于等于,dtSly:定投收益率大于等于,ratePositiveDay:连续正收益率的天数大于等于,classify:基金分类}
 let SORT = {};
-// {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,Ftype_text:债权类型,investment:定投相关,is_ct:城投债,classify:分类}}
+// {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,Ftype_text:债权类型,investment:定投相关,is_ct:城投债,classify:分类，relateTheme:相关主题}}
 let CODES = {};
 //  ['lastWeekGrowth', '周涨幅',day], ['lastMonthGrowth', '月涨幅',day], ['lastYearGrowth', '年涨幅']
 let BONDS = {};
@@ -436,6 +436,7 @@ Object.assign(Tools, {
         if (Tools.alertFuc({ obj })) return false;
         Object.assign(SORT, obj);
         localStorage.setItem('jijin.sort', JSON.stringify(SORT));
+        document.querySelector('.j-sort-info').textContent = JSON.stringify(SORT);
         Tools.updateDatasTable();
     },
     // 1 升序 -1 降序
@@ -500,11 +501,10 @@ Object.assign(Tools, {
         if (!Ftype) Ftype = '';
         if (Ftype.includes('固收')) {
             is = 2;//债基
-        } else if (Ftype.includes('QDII') || Ftype.includes('指数型') || Ftype.includes('商品') || name.includes('混合')) {
-
-            // is = 3; //QDII
-            is = 1;
-        } else if ((data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) || Ftype.includes('混合型')) {
+        } else if (Ftype.includes('QDII')) {
+            is = 3; //QDII
+            // is = 1;
+        } else if ((data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) || Ftype.includes('混合型')  || Ftype.includes('指数型') || Ftype.includes('商品') || name.includes('混合')) {
             // 股票占比大于10的
             is = 1;
         }
@@ -1500,143 +1500,146 @@ Object.assign(Tools, {
             if ((!SORT.type || (data.customType && data.customType.includes(SORT.type)))) {
                 // 债权类型筛选
                 if (!SORT.Ftype_text || (SORT.Ftype_text && data.Ftype && data.Ftype.includes(SORT.Ftype_text))) {
-                    // 基金代码选中筛选
-                    if (!SORT.checked || (SORT.checked == 1 && CODES[data.code] && CODES[data.code].checked == 1)) {
-                        // name筛选/code筛选
-                        if (is_filter_name) {
-                            // note筛选
-                            if (!SORT.note || (CODES[data.code] && CODES[data.code].note && CODES[data.code].note.includes(SORT.note))) {
-                                // position持仓筛选
-                                if (!SORT.position || (data.position && +data.position[SORT.position] > 0)) {
-                                    // emoji筛选
-                                    if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji].key] == 1)) {
-                                        // 针对卖出时间筛选
-                                        if (!SORT.sale_time || (data.maxSaleTime == SORT.sale_time)) {
-                                            // 针对是否是债基筛选
-                                            if (!SORT.Ftype || SORT.Ftype == Tools.isDebt(data.code)) {
-                                                // 筛选利率债<=
-                                                if (!SORT.lv || (data.position && (!data.position.lv || +data.position.lv <= +SORT.lv))) {
-                                                    // 筛选定投收益率>=
-                                                    if (!SORT.dtSly || (CODES[data.code] && CODES[data.code].investment && dtSly >= (+SORT.dtSly))) {
-                                                        // 连续正天数筛选
-                                                        if (!SORT.ratePositiveDay || count_pos.count >= SORT.ratePositiveDay) {
-                                                            // 筛选连续负天数筛选
-                                                            if (!SORT.rateNegativeDay || count_neg.count >= SORT.rateNegativeDay) {
-                                                                // 是否是城投筛选
-                                                                if (!SORT.is_ct || (SORT.is_ct == '1' && is_ct == '1')) {
-                                                                    // 是否有基金分类筛选
-                                                                    if (!SORT.classify || (CODES[data.code] && CODES[data.code].classify && SORT.classify == CODES[data.code].classify)) {
-                                                                        increment++;
-                                                                        // 计算基金样本涨跌幅度
-            let dpJj = {
-                '+':{
-                    stableMean:0,
-                    arr:[]
-                },
-                '-':{
-                    stableMean:0,
-                    arr:[]
-                }
-            };
-            data.customAdjacentData.forEach(item=>{
-                if(+item.sum>0){
-                    dpJj['+'].arr.push(+item.sum);
-                }else{
-                    dpJj['-'].arr.push(+item.sum);
-                }
-            })
-            dpJj['+'].stableMean = Tools.getAdaptiveStableMean(dpJj['+'].arr).stableMean.toFixed(2);
-            dpJj['-'].stableMean = Tools.getAdaptiveStableMean(dpJj['-'].arr).stableMean.toFixed(2);
-                                                                        str += `
-                                                                            <tr data-code="${data.code}" style="${data.code.includes(',') ? 'background: #fff7f3;' : ''}">
-                                                                                <td>
-                                                                                    ${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',') ? data.code.replaceAll(',', '<br />') : data.code}</span>
-                                                                                    <p class="fs12 gray" style="text-indent:2em;" title="最大连涨天数,最大连长幅度（连涨天数/最大涨幅）">+${count_pos.count},+${count_pos.sum}（${count_pos.num}/${count_pos.max}）</p>
-                                                                                    <p class="fs12 gray" style="text-indent:2em;">-${count_neg.count},${count_neg.sum}（${count_neg.num}/${count_neg.max}）</p>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <span class="j-code-name ${(is_limited || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; " title="限购：${Tools.convertNumber(data.maxBuy)}">${data.name}${(is_limited || +data.maxBuy < 1000000) ? `<span class="gray fs12">/${data.maxBuy}</span>` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
-                                                                                    ${is_new ? '<span title="已经更新">🔥</span>' : ''}
-                                                                                    ${CODES[data.code] && Object.keys(EMOJIS).map(emoji => {
-                                                                            return CODES[data.code][EMOJIS[emoji].key] == 1 ? `<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>` : '';
-                                                                        }).join('') || ''}
-                                                                                    <p class="j-copyText fs12 green">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
-                                                                                    ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `<p class="wsi">` : ''}
-                                                                                    ${(CODES[data.code] && CODES[data.code].classify) ? `<span class="u-box-1 mr5 j-classify" style="color:green;">${CLASSIFICATION[CODES[data.code].classify]}</span>` : ''}
-                                                                                    ${Array.isArray(data.relateTheme) && `${data.relateTheme.map((theme, index) => `<span class="u-box-1" style="${index !== 0 && 'margin-left:5px;' || ''}">${theme.SEC_NAME}</span>`).join('')}` || ''}
-                                                                                    ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `</p>` : ''}
-                                                                                </td>
-                                                                                <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
-                                                                                <td>
-                                                                                    ${Array.isArray(data.customAdjacentData) && data.customAdjacentData.length > 0 && `${((sum,dp)=>{
-                                                                                        if(sum>0 && sum>dp['+'].stableMean){
-                                                                                            return `<span class="green">减：</span>`
-                                                                                        }
-                                                                                        if(sum<0 && sum<dp['-'].stableMean){
-                                                                                            return `<span class="red">加：</span>`
-                                                                                        }
-                                                                                            return '';
-                                                                                        })(data.customAdjacentData[0].sum,dpJj)}<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}
-                                                                                    <p class="gray">样：${dpJj['+'].stableMean}/${dpJj['-'].stableMean}</p>
-                                                                                </td>
-                                                                                <td><fund-valuation code="${data.code}" delay="${increment * 1000}" /></td>
-                                                                                ${total_arr.map(total => {
-                                                                            return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-                                                                        }).join('')}
-                                                                                <td class="tac">${data.standardDeviation ? data.standardDeviation.populationStdDev : ''}</td>
-                                                                                <td>${data.customType ? data.customType : ''}</td>
-                                                                                <td>
-                                                                                    <div class="tip-container">
-                                                                                        <div>${data.maxSaleTime ? `${data.maxSaleTime}天免` : ''}</div>
-                                                                                        <div class="tip">
-                                                                                            ${Array.isArray(data.saleTime) && data.saleTime.map(item => `<p>${item.time}，<span class="red">${item.rate}</span></p>`).join('')}
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td style="padding:0;">
-                                                                                    ${Tools.isSale(data.code).map((sale, index) => {
-                                                                            return `
-                                                                                            <div data-index="${index}" class="j-del-buyTime" style="padding:10px; ${(sale.rate && +sale.rate.rate.slice(0, -1) < 1.5) ? 'background-color:antiquewhite;' : ''}">
-                                                                                                <p class="gray fs12">${sale.time}</p>
-                                                                                                ${sale.str}
-                                                                                                ${sale.rate ? `<div class="gray" title="${sale.rate.time}">${sale.rate.rate}，${sale.rate.str.replaceAll('red', '')}</div>` : ''}
+                    // 筛选相关主题
+                    if(!SORT.relateTheme || (SORT.relateTheme && data.relateTheme && data.relateTheme.some(theme => theme.SEC_NAME.includes(SORT.relateTheme)))){
+                        // 基金代码选中筛选
+                        if (!SORT.checked || (SORT.checked == 1 && CODES[data.code] && CODES[data.code].checked == 1)) {
+                            // name筛选/code筛选
+                            if (is_filter_name) {
+                                // note筛选
+                                if (!SORT.note || (CODES[data.code] && CODES[data.code].note && CODES[data.code].note.includes(SORT.note))) {
+                                    // position持仓筛选
+                                    if (!SORT.position || (data.position && +data.position[SORT.position] > 0)) {
+                                        // emoji筛选
+                                        if (!SORT.emoji || (CODES[data.code] && CODES[data.code][EMOJIS[SORT.emoji].key] == 1)) {
+                                            // 针对卖出时间筛选
+                                            if (!SORT.sale_time || (data.maxSaleTime == SORT.sale_time)) {
+                                                // 针对是否是债基筛选
+                                                if (!SORT.Ftype || SORT.Ftype == Tools.isDebt(data.code)) {
+                                                    // 筛选利率债<=
+                                                    if (!SORT.lv || (data.position && (!data.position.lv || +data.position.lv <= +SORT.lv))) {
+                                                        // 筛选定投收益率>=
+                                                        if (!SORT.dtSly || (CODES[data.code] && CODES[data.code].investment && dtSly >= (+SORT.dtSly))) {
+                                                            // 连续正天数筛选
+                                                            if (!SORT.ratePositiveDay || count_pos.count >= SORT.ratePositiveDay) {
+                                                                // 筛选连续负天数筛选
+                                                                if (!SORT.rateNegativeDay || count_neg.count >= SORT.rateNegativeDay) {
+                                                                    // 是否是城投筛选
+                                                                    if (!SORT.is_ct || (SORT.is_ct == '1' && is_ct == '1')) {
+                                                                        // 是否有基金分类筛选
+                                                                        if (!SORT.classify || (CODES[data.code] && CODES[data.code].classify && SORT.classify == CODES[data.code].classify)) {
+                                                                            increment++;
+                                                                            // 计算基金样本涨跌幅度
+                let dpJj = {
+                    '+':{
+                        stableMean:0,
+                        arr:[]
+                    },
+                    '-':{
+                        stableMean:0,
+                        arr:[]
+                    }
+                };
+                data.customAdjacentData.forEach(item=>{
+                    if(+item.sum>0){
+                        dpJj['+'].arr.push(+item.sum);
+                    }else{
+                        dpJj['-'].arr.push(+item.sum);
+                    }
+                })
+                dpJj['+'].stableMean = Tools.getAdaptiveStableMean(dpJj['+'].arr).stableMean.toFixed(2);
+                dpJj['-'].stableMean = Tools.getAdaptiveStableMean(dpJj['-'].arr).stableMean.toFixed(2);
+                                                                            str += `
+                                                                                <tr data-code="${data.code}" style="${data.code.includes(',') ? 'background: #fff7f3;' : ''}">
+                                                                                    <td>
+                                                                                        ${index + 1}.<input type="checkbox" class="j-code-checkbox" ${(CODES[data.code] && CODES[data.code].checked == 1) ? 'checked' : ''} /><span class="j-code">${data.code.includes(',') ? data.code.replaceAll(',', '<br />') : data.code}</span>
+                                                                                        <p class="fs12 gray" style="text-indent:2em;" title="最大连涨天数,最大连长幅度（连涨天数/最大涨幅）">+${count_pos.count},+${count_pos.sum}（${count_pos.num}/${count_pos.max}）</p>
+                                                                                        <p class="fs12 gray" style="text-indent:2em;">-${count_neg.count},${count_neg.sum}（${count_neg.num}/${count_neg.max}）</p>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <span class="j-code-name ${(is_limited || (data.sgzt && data.sgzt.includes('暂停'))) ? 'del' : ''}" style="white-space:initial; " title="限购：${Tools.convertNumber(data.maxBuy)}">${data.name}${(is_limited || +data.maxBuy < 1000000) ? `<span class="gray fs12">/${data.maxBuy}</span>` : ''}${(data.sgzt && data.sgzt.includes('暂停')) ? `/${data.sgzt}` : ''}</span>
+                                                                                        ${is_new ? '<span title="已经更新">🔥</span>' : ''}
+                                                                                        ${CODES[data.code] && Object.keys(EMOJIS).map(emoji => {
+                                                                                return CODES[data.code][EMOJIS[emoji].key] == 1 ? `<span class="j-code-emoji-del" data-emoji="${emoji}" style="" title="${EMOJIS[emoji].title}">${emoji}</span>` : '';
+                                                                            }).join('') || ''}
+                                                                                        <p class="j-copyText fs12 green">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
+                                                                                        ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `<p class="wsi">` : ''}
+                                                                                        ${(CODES[data.code] && CODES[data.code].classify) ? `<span class="u-box-1 mr5 j-classify" style="color:green;">${CLASSIFICATION[CODES[data.code].classify]}</span>` : ''}
+                                                                                        ${Array.isArray(data.relateTheme) && `${data.relateTheme.map((theme, index) => `<span class="u-box-1 j-code-filter-relateTheme" style="${index !== 0 && 'margin-left:5px;' || ''} ${SORT.relateTheme === theme.SEC_NAME?'color:red;':''}" data-relatetheme="${theme.SEC_NAME}">${theme.SEC_NAME}</span>`).join('')}` || ''}
+                                                                                        ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `</p>` : ''}
+                                                                                    </td>
+                                                                                    <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
+                                                                                    <td>
+                                                                                        ${Array.isArray(data.customAdjacentData) && data.customAdjacentData.length > 0 && `${((sum,dp)=>{
+                                                                                            if(sum>0 && sum>dp['+'].stableMean){
+                                                                                                return `<span class="green">减：</span>`
+                                                                                            }
+                                                                                            if(sum<0 && sum<dp['-'].stableMean){
+                                                                                                return `<span class="red">加：</span>`
+                                                                                            }
+                                                                                                return '';
+                                                                                            })(data.customAdjacentData[0].sum,dpJj)}<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}
+                                                                                        <p class="gray">样：${dpJj['+'].stableMean}/${dpJj['-'].stableMean}</p>
+                                                                                    </td>
+                                                                                    <td><fund-valuation code="${data.code}" delay="${increment * 1000}" /></td>
+                                                                                    ${total_arr.map(total => {
+                                                                                return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                                                                            }).join('')}
+                                                                                    <td class="tac">${data.standardDeviation ? data.standardDeviation.sampleStdDev : ''}</td>
+                                                                                    <td>${data.customType ? data.customType : ''}</td>
+                                                                                    <td>
+                                                                                        <div class="tip-container">
+                                                                                            <div>${data.maxSaleTime ? `${data.maxSaleTime}天免` : ''}</div>
+                                                                                            <div class="tip">
+                                                                                                ${Array.isArray(data.saleTime) && data.saleTime.map(item => `<p>${item.time}，<span class="red">${item.rate}</span></p>`).join('')}
                                                                                             </div>
-                                                                                        `
-                                                                        }).join('<div class="br" style="margin:0 10px;"></div>')}
-                                                                                </td>
-                                                                                <!-- <td>
-                                                                                    ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}
-                                                                                    <p class="fs12 gray j-show-investment">
-                                                                                        ${CODES[data.code] && CODES[data.code].investment ? `
-                                                                                            ${dtSly}%
-                                                                                        `: ''}
-                                                                                    </p>
-                                                                                </td> -->
-                                                                                <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${(assetDp > 0 ? 'background:rgba(255,0,12,.1)' : assetDp < 0 ? 'background:rgba(0,128,0,.1)' : '')}">
-                                                                                    ${data.asset && Tools.isNumber1(data.asset.jj) ? `基金：${data.asset.jj}%<br/>` : ''}
-                                                                                    ${data.asset && Tools.isNumber1(data.asset.gp) ? `股票：${data.asset.gp}%<br/>` : ''}
-                                                                                    ${data.asset && Tools.isNumber1(data.asset.zq) ? `债权：${data.asset.zq}%<br/>` : ''}
-                                                                                    ${data.asset && Tools.isNumber1(data.asset.xj) ? `现金：${data.asset.xj}%<br/>` : ''}
-                                                                                    ${data.asset && Tools.isNumber1(data.asset.qt) ? `其他：${data.asset.qt}%<br/>` : ''}
-                                                                                </td>
-                                                                                <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${data.assetPosition && data.assetPosition.fundboodsDp && (data.assetPosition.fundboodsDp.price > 0 ? 'background:rgba(255,0,12,.1)' : data.assetPosition.fundboodsDp.price < 0 ? 'background:rgba(0,128,0,.1)' : '')}">
-                                                                                    ${data.position && Tools.isNumber1(data.position.xx) ? `信用债：${data.position.xx}%<br/>` : ''}
-                                                                                    ${data.position && Tools.isNumber1(data.position.lv) ? `利率债：${data.position.lv}%<br/>` : ''}
-                                                                                    ${data.position && Tools.isNumber1(data.position.kzz) ? `<span class="red">可转债：${data.position.kzz}%</span><br/>` : ''}
-                                                                                    ${data.position && Tools.isNumber1(data.position.qt) ? `其他：${data.position.qt}%` : ''}
-                                                                                </td>
-                                                                                <td style="font-size:12px; padding:2px 10px;">
-                                                                                    ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.stddev1) ? `最大波动：${+data.uniqueInfo.stddev1.toFixed(2)}%<br/>` : ''}
-                                                                                    ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.sharp1) ? `夏普比率：${+data.uniqueInfo.sharp1.toFixed(2)}%<br/>` : ''}
-                                                                                    ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.maxretra1) ? `最大回撤：${+data.uniqueInfo.maxretra1.toFixed(2)}%` : ''}
-                                                                                </td>
-                                                                                <td>${Array.isArray(data.netWorthDate) ? data.netWorthDate.join('<br />') : data.netWorthDate}</td>
-                                                                                <td style="${(data.Ftype && data.Ftype.includes('混合型')) ? 'color:brown;' : ''}">
-                                                                                    ${Array.isArray(data.Ftype) ? data.Ftype.join('<br />') : data.Ftype}
-                                                                                    ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods) != 0 ? `<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>` : ''}
-                                                                                </td>
-                                                                            </tr>
-                                                                        `
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td style="padding:0;">
+                                                                                        ${Tools.isSale(data.code).map((sale, index) => {
+                                                                                return `
+                                                                                                <div data-index="${index}" class="j-del-buyTime" style="padding:10px; ${(sale.rate && +sale.rate.rate.slice(0, -1) < 1.5) ? 'background-color:antiquewhite;' : ''}">
+                                                                                                    <p class="gray fs12">${sale.time}</p>
+                                                                                                    ${sale.str}
+                                                                                                    ${sale.rate ? `<div class="gray" title="${sale.rate.time}">${sale.rate.rate}，${sale.rate.str.replaceAll('red', '')}</div>` : ''}
+                                                                                                </div>
+                                                                                            `
+                                                                            }).join('<div class="br" style="margin:0 10px;"></div>')}
+                                                                                    </td>
+                                                                                    <!-- <td>
+                                                                                        ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}
+                                                                                        <p class="fs12 gray j-show-investment">
+                                                                                            ${CODES[data.code] && CODES[data.code].investment ? `
+                                                                                                ${dtSly}%
+                                                                                            `: ''}
+                                                                                        </p>
+                                                                                    </td> -->
+                                                                                    <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${(assetDp > 0 ? 'background:rgba(255,0,12,.1)' : assetDp < 0 ? 'background:rgba(0,128,0,.1)' : '')}">
+                                                                                        ${data.asset && Tools.isNumber1(data.asset.jj) ? `基金：${data.asset.jj}%<br/>` : ''}
+                                                                                        ${data.asset && Tools.isNumber1(data.asset.gp) ? `股票：${data.asset.gp}%<br/>` : ''}
+                                                                                        ${data.asset && Tools.isNumber1(data.asset.zq) ? `债权：${data.asset.zq}%<br/>` : ''}
+                                                                                        ${data.asset && Tools.isNumber1(data.asset.xj) ? `现金：${data.asset.xj}%<br/>` : ''}
+                                                                                        ${data.asset && Tools.isNumber1(data.asset.qt) ? `其他：${data.asset.qt}%<br/>` : ''}
+                                                                                    </td>
+                                                                                    <td class="j-code-asset-alert" style="font-size:12px; padding:2px 10px; ${data.assetPosition && data.assetPosition.fundboodsDp && (data.assetPosition.fundboodsDp.price > 0 ? 'background:rgba(255,0,12,.1)' : data.assetPosition.fundboodsDp.price < 0 ? 'background:rgba(0,128,0,.1)' : '')}">
+                                                                                        ${data.position && Tools.isNumber1(data.position.xx) ? `信用债：${data.position.xx}%<br/>` : ''}
+                                                                                        ${data.position && Tools.isNumber1(data.position.lv) ? `利率债：${data.position.lv}%<br/>` : ''}
+                                                                                        ${data.position && Tools.isNumber1(data.position.kzz) ? `<span class="red">可转债：${data.position.kzz}%</span><br/>` : ''}
+                                                                                        ${data.position && Tools.isNumber1(data.position.qt) ? `其他：${data.position.qt}%` : ''}
+                                                                                    </td>
+                                                                                    <td style="font-size:12px; padding:2px 10px;">
+                                                                                        ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.stddev1) ? `最大波动：${+data.uniqueInfo.stddev1.toFixed(2)}%<br/>` : ''}
+                                                                                        ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.sharp1) ? `夏普比率：${+data.uniqueInfo.sharp1.toFixed(2)}%<br/>` : ''}
+                                                                                        ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.maxretra1) ? `最大回撤：${+data.uniqueInfo.maxretra1.toFixed(2)}%` : ''}
+                                                                                    </td>
+                                                                                    <td>${Array.isArray(data.netWorthDate) ? data.netWorthDate.join('<br />') : data.netWorthDate}</td>
+                                                                                    <td style="${(data.Ftype && data.Ftype.includes('混合型')) ? 'color:brown;' : ''}">
+                                                                                        ${Array.isArray(data.Ftype) ? data.Ftype.join('<br />') : data.Ftype}
+                                                                                        ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods) != 0 ? `<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>` : ''}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            `
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -1644,8 +1647,8 @@ Object.assign(Tools, {
                                                     }
                                                 }
                                             }
-                                        }
 
+                                        }
                                     }
                                 }
                             }
@@ -1782,7 +1785,7 @@ Object.assign(Tools, {
             <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-sort-preset-span" style="margin-left:10px;" data-sorts="${encodeURIComponent(JSON.stringify({ Ftype: '2', type: '信用', sale_time: '7', lv: '10' }))}">筛选债券</span><span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
                     <span style="margin-left:10px; color:red; cursor: pointer;" class="j-select-all">全选</span>
                     <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
-            <div style="margin:10px 0;" class="gray">${JSON.stringify(SORT)}</div>
+            <div style="margin:10px 0;" class="gray j-sort-info">${JSON.stringify(SORT)}</div>
             <audio src="/public/uploads/1.mp3" controls="controls" class="audio" loop="true" style="display:none;"></audio>
             <div class="j-hj-gn"></div>
             <div class="j-hj-gj"></div>
@@ -1841,7 +1844,11 @@ Object.assign(Tools, {
         }
         const cshLocal = (obj) => {
             Object.keys(obj).forEach(key => {
-                localStorage.setItem(key, JSON.stringify(obj[key]));
+                if(['jijin.baiduStocks','jijin.codes','jijin.datas','jijin.stocks'].includes(key)){
+                    customStorage.setItem(key, obj[key]);
+                }else{
+                    localStorage.setItem(key, JSON.stringify(obj[key]));
+                }
             })
         }
         $datasBtn.addEventListener('click', () => {
@@ -2000,7 +2007,7 @@ const compareCodes = function (codes) {
         if (!customNetWorkData) return;
         str += `
         <div style="margin:0 10px;">
-            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;">${Array.isArray(name) ? '组合' : name}</div>
+            <div class="single-ellipsis" style="text-align:center; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;width:167px;" title="${Array.isArray(name) ? '组合' : name}">${Array.isArray(name) ? '组合' : name}</div>
             <table>
                 <thead>
                     <tr><th>日期</th><th>日涨幅</th></tr>
@@ -2110,7 +2117,7 @@ const compareBp = function (codes) {
         if (!customAdjacentData) return;
         str += `
         <div style="margin:0 10px;">
-            <div style="text-align:center; margin-bottom:5px; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all;">${Array.isArray(name) ? '组合' : name}</div>
+            <div class="single-ellipsis" style="text-align:center; color:gray; position: sticky; top:-20px; background:#fff;word-break:keep-all; width:200px;" title="${Array.isArray(name) ? '组合' : name}">${Array.isArray(name) ? '组合' : name}</div>
             <table>
                 <thead>
                     <tr><th>日期</th><th>日涨幅</th></tr>
@@ -2233,11 +2240,12 @@ addEventListener($table, 'click', e => {
                 <div style="margin:0 10px;">
                     <table>
                         <thead>
-                            <tr><th>联接股票名称</th><th>价格<p class="fs12 fwn ${gprice > 0 ? 'red' : gprice < 0 ? 'green' : ''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
+                            <tr><th>联接代码</th><th>联接股票名称</th><th>价格<p class="fs12 fwn ${gprice > 0 ? 'red' : gprice < 0 ? 'green' : ''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
                         </thead>
                         <tbody>
                             ${fundStocks.map(data => `
                                 <tr>
+                                    <td>${data['GPDM']}</td>
                                     <td>${data['GPJC']}</td>
                                     <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] > 0) ? 'red' : (fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] < 0) ? 'green' : ''}">${fundStocksDiff[data.GPDM] ? `${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%` : ''}</td>
                                     <td>${data['JZBL']}%</td>
@@ -2260,12 +2268,15 @@ addEventListener($table, 'click', e => {
             <div style="margin:0 10px;">
                 <table>
                     <thead>
-                        <tr><th>股票名称</th><th>价格<p class="fs12 fwn ${gprice > 0 ? 'red' : gprice < 0 ? 'green' : ''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
+                        <tr><th>股票代码</th><th>股票名称</th><th>价格<p class="fs12 fwn ${gprice > 0 ? 'red' : gprice < 0 ? 'green' : ''}" style="margin-top:-8px;">${gprice}</p></th><th>持仓占比<p class="gray fs12 fwn" style="margin-top:-8px;">${stockce.toFixed(2)}%</p></th></tr>
                     </thead>
                     <tbody>
                         ${fundStocks.map(data => `
                             <tr>
-                                <td style="line-height:1;"><div>${data['GPJC']}</div><span class="u-box-1" style="margin-top:4px;">${data['INDEXNAME']}</span></td>
+                                <td>
+                                    <a href="https://gushitong.baidu.com/stock/ab-${data['GPDM']}" target="_blank" class="fat">${data['GPDM']}</a>
+                                </td>
+                                <td style="line-height:1;"><div><a class="fat" href="https://www.iwencai.com/unifiedwap/result?tid=stockpick&qs=box_main_ths&w=${data['GPJC']}" target="_blank">${data['GPJC']}</a></div><span class="u-box-1" style="margin-top:4px;">${data['INDEXNAME']}</span></td>
                                 <td class="${(fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] > 0) ? 'red' : (fundStocksDiff[data.GPDM] && +fundStocksDiff[data.GPDM]['f3'] < 0) ? 'green' : ''}">${fundStocksDiff[data.GPDM] ? `${fundStocksDiff[data.GPDM]['f2']}/${fundStocksDiff[data.GPDM]['f3']}%` : ''}</td>
                                 <td>${data['JZBL']}%</td>
                             </tr>
@@ -2512,6 +2523,17 @@ addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
     Tools.setCustomSort({ name: value });
 }, 500), '.j-code-name-ipt')
+// 筛选相关主题
+addEventListener($table, 'click', e => {
+    const $target = e.target;
+    const relateTheme = $target.getAttribute('data-relatetheme');
+    const preRelateTheme = SORT.relateTheme || '';
+    if(preRelateTheme !== relateTheme) {
+        Tools.setCustomSort({ relateTheme });
+    } else {
+        Tools.setCustomSort({ relateTheme:'' });
+    }
+}, '.j-code-filter-relateTheme')
 // 筛选债基
 addEventListener($form, 'click', e => {
     const $Ftype = e.target;
@@ -3150,8 +3172,8 @@ class HJ {
         `;
     }
 }
-new HJ('.j-hj-gn', { codes: 'JO_9753', max: 840, min: 600, zl: 626, title: '国内黄金', jk_min_price: 606, jk_max_price: 630 });
-new HJ('.j-hj-gj', { codes: 'JO_92233', max: 3500, min: 2500, zl: 2650, title: '国际黄金' });
+new HJ('.j-hj-gn', { codes: 'JO_9753', max: 1000, min: 700, zl: 726, title: '国内黄金', jk_min_price: 900, jk_max_price: 1000 });
+new HJ('.j-hj-gj', { codes: 'JO_92233', max: 5000, min: 2500, zl: 2650, title: '国际黄金' });
 // 查看图片
 class ViewImg extends HTMLElement {
     constructor() {

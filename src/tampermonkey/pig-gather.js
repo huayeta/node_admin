@@ -48,7 +48,7 @@ const customStorage = new CustomStorage();
     //         {pig_phone,wait} 等待处理
     //         {pig_phone,nickname} 昵称
     //         {pig_phone,jd,jd_nickname?} 添加京东号，京东号昵称
-    //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名} 正常小猪单
+    //         { task_id, pig_phone, pig_qq, pig_register_time, pig_over_time, qq_exec_pre?, shop_label?,pig_type?:TB|JD ,is_comment?:0|1，is_remind?:'-1'是否提醒, real_name:？真实姓名,remind_add_wx？:1提醒添加微信} 正常小猪单
     //     ]
     // }
     // 获取已完成小猪数据
@@ -642,6 +642,17 @@ const customStorage = new CustomStorage();
             // console.log(isBreakFuc);
             // console.log(sort1);
             return Tools.displayAccounts(accounts, undefined, sort1, true);
+        },
+        // 提醒是否添加了微信
+        RemindAddWx: (pig_phone, remind_add_wx) => {
+            if (Tools.alertFuc({ pig_phone, remind_add_wx })) return false;
+            const result = Tools.modifyDataToLastRecord(pig_phone, { remind_add_wx });
+            return result;
+        },
+        // 找到提醒是否添加了微信
+        findRemindAddWx: (datas) => {
+            const arr = Tools.findKeysByDatas(datas, 'remind_add_wx');
+            return arr.length > 0 ? arr[0] : '';
         },
         // 添加真实姓名
         addRealName: (pig_phone, real_name) => {
@@ -1541,6 +1552,8 @@ const customStorage = new CustomStorage();
         const tang_id = Tools.findTangId(datas);
         // 找到昵称
         const nickname = Tools.findNickname(datas);
+        // 找到提醒是否添加了微信
+        const remind_add_wx = Tools.findRemindAddWx(datas);
         // 找到佣金
         const commission = Tools.findCommission(datas);
         // 找到所有团队
@@ -1609,6 +1622,7 @@ const customStorage = new CustomStorage();
             last_recode:last_recode,
             commission: commission,
             nickname: nickname,
+            remind_add_wx: remind_add_wx,
             teamers: teamers,
             is_wait: is_wait,
             record_time: records.length > 0 && records[0].pig_over_time,
@@ -1672,7 +1686,7 @@ const customStorage = new CustomStorage();
             }, '')}` : ''}
                 ${humanData.wxs.length > 0 ? `<p style="margin-top:15px; color:gray;">全部wxs：</p>${humanData.wxs.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
-            }, '')}` : ''}
+            }, '')}` : humanData.remind_add_wx?'':'<p style="margin-top:15px; color:gray;">全部wxs：</p><button class="search_btn j-RemindAddWx">是否添加了wx</button>'}
                 ${humanData.mobiles.length > 0 ? `<p style="margin-top:15px; color:gray;">全部mobiles：</p>${humanData.mobiles.reduce((a, b) => {
                 return a + `<p class="j-copyText">${Tools.highLightStr(b, highLightStr)}</p>`;
             }, '')}` : ''}
@@ -1961,7 +1975,11 @@ const customStorage = new CustomStorage();
         }
         const cshLocal = (obj) => {
             Object.keys(obj).forEach(key => {
-                localStorage.setItem(key, JSON.stringify(obj[key]));
+                if(['completeOrders'].includes(key)){
+                    customStorage.setItem(key, obj[key]);
+                }else{
+                    localStorage.setItem(key, JSON.stringify(obj[key]));
+                }
             })
         }
         $datasBtn.addEventListener('click', () => {
@@ -2786,6 +2804,15 @@ const customStorage = new CustomStorage();
             $btn.style.color = 'gray';
             Tools.lastAddCommentByPhone(account, val, pig_type);
         }, '.j-addComment')
+        // 提醒添加微信
+        addEventListener($con, 'click', e => {
+            const $btn = e.target;
+            const $tr = $btn.closest('tr[data-account]');
+            // const datas = JSON.parse($btn.getAttribute('data-datas').replaceAll("'", '"'));
+            const account = $tr.getAttribute('data-account');
+            const result = Tools.RemindAddWx(account, 1);
+            $btn.textContent = (result ? '已提醒' : '提醒失败');
+        }, '.j-RemindAddWx')
         // 修改最后一个做单记录
         addEventListener(qqAdd, 'click', e => {
             const phone = $phone.value;
