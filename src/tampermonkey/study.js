@@ -171,7 +171,7 @@ const Tools = {
                     超链：<a href="?query=乐乐课堂%5C动画版乐乐课堂乐乐小学%5C04人教版1-6年级数学视频%2BPDF习题%5C三年级%5C三年级上&disk=l1">乐三上</a>
                     <a href="?query=乐乐课堂%5C281-小学奥数乐乐课堂%5C一年级%5C01【一年级奥数】-%2084集&disk=l1">乐奥一</a>
                     <a href="?query=洋葱学院%5C25新版洋葱合集【小学】%5C数学%5C人教版%5C人教版&disk=l1">洋葱学院</a>
-                    <a href="?query=乐乐课堂%5C乐乐课堂大语文&disk=l1">乐乐课堂大语文</a>
+                    <a href="?query=剑桥素材-power%20up-think-Kid’%20s%20Box%5Cthink第二版资源包%5C音频视频&disk=m1">think音视频</a>
                     <a href="?query=1000-2000-4000词%5C2000词%5C1000词视频%5C1000%20Basic%20English%20Words%20精讲视频&disk=m1">1000词</a>
                 </div>
                 <div class="menu">${['语文', '数学', '英语', '阅读', '历史', '初中', '高中', '其他'].map(data => `<span ${(Tools.data.sel && Tools.data.sel.includes(data)) ? 'class="sel"' : ''}>${data}</span>`).join('')}</div>

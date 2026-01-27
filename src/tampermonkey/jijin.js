@@ -90,6 +90,7 @@ const CLASSIFICATION = {
     '26': '科创50',
     '27': '消费电子',
     '28': '精选小盘股',
+    '29': '脑机接口'
 }
 let Tools = {
     dispatchEvent: ($ele, type) => {
@@ -504,7 +505,7 @@ Object.assign(Tools, {
         } else if (Ftype.includes('QDII')) {
             is = 3; //QDII
             // is = 1;
-        } else if ((data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) || Ftype.includes('混合型')  || Ftype.includes('指数型') || Ftype.includes('商品') || name.includes('混合')) {
+        } else if ((data.asset && (+data.asset.gp > 1 || +data.asset.jj > 0)) || Ftype.includes('混合型') || Ftype.includes('指数型') || Ftype.includes('商品') || name.includes('混合')) {
             // 股票占比大于10的
             is = 1;
         }
@@ -1501,7 +1502,7 @@ Object.assign(Tools, {
                 // 债权类型筛选
                 if (!SORT.Ftype_text || (SORT.Ftype_text && data.Ftype && data.Ftype.includes(SORT.Ftype_text))) {
                     // 筛选相关主题
-                    if(!SORT.relateTheme || (SORT.relateTheme && data.relateTheme && data.relateTheme.some(theme => theme.SEC_NAME.includes(SORT.relateTheme)))){
+                    if (!SORT.relateTheme || (SORT.relateTheme && data.relateTheme && data.relateTheme.some(theme => theme.SEC_NAME.includes(SORT.relateTheme)))) {
                         // 基金代码选中筛选
                         if (!SORT.checked || (SORT.checked == 1 && CODES[data.code] && CODES[data.code].checked == 1)) {
                             // name筛选/code筛选
@@ -1529,26 +1530,6 @@ Object.assign(Tools, {
                                                                         // 是否有基金分类筛选
                                                                         if (!SORT.classify || (CODES[data.code] && CODES[data.code].classify && SORT.classify == CODES[data.code].classify)) {
                                                                             increment++;
-                                                                            // 计算基金样本涨跌幅度
-                let dpJj = {
-                    '+':{
-                        stableMean:0,
-                        arr:[]
-                    },
-                    '-':{
-                        stableMean:0,
-                        arr:[]
-                    }
-                };
-                data.customAdjacentData.forEach(item=>{
-                    if(+item.sum>0){
-                        dpJj['+'].arr.push(+item.sum);
-                    }else{
-                        dpJj['-'].arr.push(+item.sum);
-                    }
-                })
-                dpJj['+'].stableMean = Tools.getAdaptiveStableMean(dpJj['+'].arr).stableMean.toFixed(2);
-                dpJj['-'].stableMean = Tools.getAdaptiveStableMean(dpJj['-'].arr).stableMean.toFixed(2);
                                                                             str += `
                                                                                 <tr data-code="${data.code}" style="${data.code.includes(',') ? 'background: #fff7f3;' : ''}">
                                                                                     <td>
@@ -1565,26 +1546,17 @@ Object.assign(Tools, {
                                                                                         <p class="j-copyText fs12 green">${CODES[data.code] && CODES[data.code].note ? CODES[data.code].note : ''}</p>
                                                                                         ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `<p class="wsi">` : ''}
                                                                                         ${(CODES[data.code] && CODES[data.code].classify) ? `<span class="u-box-1 mr5 j-classify" style="color:green;">${CLASSIFICATION[CODES[data.code].classify]}</span>` : ''}
-                                                                                        ${Array.isArray(data.relateTheme) && `${data.relateTheme.map((theme, index) => `<span class="u-box-1 j-code-filter-relateTheme" style="${index !== 0 && 'margin-left:5px;' || ''} ${SORT.relateTheme === theme.SEC_NAME?'color:red;':''}" data-relatetheme="${theme.SEC_NAME}">${theme.SEC_NAME}</span>`).join('')}` || ''}
+                                                                                        ${Array.isArray(data.relateTheme) && `${data.relateTheme.map((theme, index) => `<span class="u-box-1 j-code-filter-relateTheme" style="${index !== 0 && 'margin-left:5px;' || ''} ${SORT.relateTheme === theme.SEC_NAME ? 'color:red;' : ''}" data-relatetheme="${theme.SEC_NAME}">${theme.SEC_NAME}</span>`).join('')}` || ''}
                                                                                         ${(Array.isArray(data.relateTheme) || (CODES[data.code] && CODES[data.code].classify)) ? `</p>` : ''}
                                                                                     </td>
                                                                                     <td>${(CODES[data.code] && CODES[data.code].income) ? `<span class="${+CODES[data.code].income > 0 ? `red` : 'green'}">${CODES[data.code].income}%</span>/<span class="brown">${CODES[data.code].income_sort}` : ''}</span></td>
                                                                                     <td>
-                                                                                        ${Array.isArray(data.customAdjacentData) && data.customAdjacentData.length > 0 && `${((sum,dp)=>{
-                                                                                            if(sum>0 && sum>dp['+'].stableMean){
-                                                                                                return `<span class="green">减：</span>`
-                                                                                            }
-                                                                                            if(sum<0 && sum<dp['-'].stableMean){
-                                                                                                return `<span class="red">加：</span>`
-                                                                                            }
-                                                                                                return '';
-                                                                                            })(data.customAdjacentData[0].sum,dpJj)}<span class="${data.customAdjacentData[0].sum > 0 ? 'red' : 'green'}">${data.customAdjacentData[0].sum}/${data.customAdjacentData[0].days}</span>` || ''}
-                                                                                        <p class="gray">样：${dpJj['+'].stableMean}/${dpJj['-'].stableMean}</p>
+                                                                                        <sample-size sample="1" code="${data.code}" />
                                                                                     </td>
                                                                                     <td><fund-valuation code="${data.code}" delay="${increment * 1000}" /></td>
                                                                                     ${total_arr.map(total => {
-                                                                                return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-                                                                            }).join('')}
+                                                                                    return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                                                                                }).join('')}
                                                                                     <td class="tac">${data.standardDeviation ? data.standardDeviation.sampleStdDev : ''}</td>
                                                                                     <td>${data.customType ? data.customType : ''}</td>
                                                                                     <td>
@@ -1597,14 +1569,14 @@ Object.assign(Tools, {
                                                                                     </td>
                                                                                     <td style="padding:0;">
                                                                                         ${Tools.isSale(data.code).map((sale, index) => {
-                                                                                return `
+                                                                                    return `
                                                                                                 <div data-index="${index}" class="j-del-buyTime" style="padding:10px; ${(sale.rate && +sale.rate.rate.slice(0, -1) < 1.5) ? 'background-color:antiquewhite;' : ''}">
                                                                                                     <p class="gray fs12">${sale.time}</p>
                                                                                                     ${sale.str}
                                                                                                     ${sale.rate ? `<div class="gray" title="${sale.rate.time}">${sale.rate.rate}，${sale.rate.str.replaceAll('red', '')}</div>` : ''}
                                                                                                 </div>
                                                                                             `
-                                                                            }).join('<div class="br" style="margin:0 10px;"></div>')}
+                                                                                }).join('<div class="br" style="margin:0 10px;"></div>')}
                                                                                     </td>
                                                                                     <!-- <td>
                                                                                         ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}
@@ -1844,9 +1816,9 @@ Object.assign(Tools, {
         }
         const cshLocal = (obj) => {
             Object.keys(obj).forEach(key => {
-                if(['jijin.baiduStocks','jijin.codes','jijin.datas','jijin.stocks'].includes(key)){
+                if (['jijin.baiduStocks', 'jijin.codes', 'jijin.datas', 'jijin.stocks'].includes(key)) {
                     customStorage.setItem(key, obj[key]);
-                }else{
+                } else {
                     localStorage.setItem(key, JSON.stringify(obj[key]));
                 }
             })
@@ -2528,10 +2500,10 @@ addEventListener($table, 'click', e => {
     const $target = e.target;
     const relateTheme = $target.getAttribute('data-relatetheme');
     const preRelateTheme = SORT.relateTheme || '';
-    if(preRelateTheme !== relateTheme) {
+    if (preRelateTheme !== relateTheme) {
         Tools.setCustomSort({ relateTheme });
     } else {
-        Tools.setCustomSort({ relateTheme:'' });
+        Tools.setCustomSort({ relateTheme: '' });
     }
 }, '.j-code-filter-relateTheme')
 // 筛选债基
@@ -3203,6 +3175,72 @@ class ViewImg extends HTMLElement {
     }
 }
 customElements.define('view-img', ViewImg);
+// 自定义样本加减
+class SampleSize extends HTMLElement {
+        constructor() {
+            super();
+            const shadow = this.attachShadow({ mode: 'open' });
+            const code = this.getAttribute('code');
+            const data = DATAS[code];
+            let Sum = +this.getAttribute('sum');
+            const sum0 = +data.customAdjacentData[0].sum;
+            this.sample = this.getAttribute('sample') || 0;
+            if(Sum){
+                if(Math.sign(Sum) == Math.sign(sum0)){
+                    Sum += sum0;
+                }
+                Sum = +Sum.toFixed(2);
+            }else{
+                Sum = sum0;
+            }
+            // 计算基金样本涨跌幅度
+            let dpJj = {
+                '+': {
+                    stableMean: 0,
+                    arr: []
+                },
+                '-': {
+                    stableMean: 0,
+                    arr: []
+                }
+            };
+            data.customAdjacentData.forEach(item => {
+                if (+item.sum > 0) {
+                    dpJj['+'].arr.push(+item.sum);
+                } else {
+                    dpJj['-'].arr.push(+item.sum);
+                }
+            })
+            dpJj['+'].stableMean = +Tools.getAdaptiveStableMean(dpJj['+'].arr).stableMean.toFixed(2);
+            dpJj['-'].stableMean = +Tools.getAdaptiveStableMean(dpJj['-'].arr).stableMean.toFixed(2);
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .gray{color:gray;}
+                .red{color:red;}
+                .green{color:green;}
+                p{margin:0;}
+            `;
+            shadow.appendChild(style);
+            shadow.innerHTML += `
+            ${Array.isArray(data.customAdjacentData) && data.customAdjacentData.length > 0 && `${((sum, dp) => {
+                if (sum > 0 && sum > dp['+'].stableMean) {
+                    return `<span class="green">减：</span>`
+                }
+                if (sum < 0 && sum < dp['-'].stableMean) {
+                    return `<span class="red">加：</span>`
+                }
+                return '';
+            })(Sum, dpJj)}<span class="${Sum > 0 ? 'red' : 'green'}">${Sum}/${data.customAdjacentData[0].days+(Sum==sum0?0:1)}</span>` || ''}
+            ${this.sample ==1?`
+            <p class="gray">样：${dpJj['+'].stableMean}/${dpJj['-'].stableMean}</p>
+            `:''}
+            `;     
+        }
+        connectedCallback() {
+            
+        }
+}
+customElements.define('sample-size', SampleSize);
 // 定义基金估值自动查询
 class FundValuation extends HTMLElement {
     constructor() {
@@ -3236,10 +3274,32 @@ class FundValuation extends HTMLElement {
             })
         }
     }
+    isToday(targetDate) {
+        if (!(targetDate instanceof Date) || isNaN(targetDate.getTime())) {
+            console.error("传入的参数不是一个合法的 Date 对象");
+            return false;
+        }
+
+        const today = new Date();
+
+        const targetYear = targetDate.getFullYear(); // 新增：获取年份
+        const targetMonth = targetDate.getMonth();
+        const targetDay = targetDate.getDate();
+
+        const todayYear = today.getFullYear(); // 新增：获取今天的年份
+        const todayMonth = today.getMonth();
+        const todayDay = today.getDate();
+
+        // 新增：年份对比
+        return targetYear === todayYear && targetMonth === todayMonth && targetDay === todayDay;
+    }
     fill() {
         // 去掉年份，去掉秒
         const date = this.valuation.date.replace(/\d{4}-/, '').replace(/:\d{2}$/, '');
-        this.$span.innerHTML = `<span>${this.valuation.valuation + '%'}</span><br><span style="font-size:12px;color:gray;">${date}</span>`;
+        let adjacentData = '';
+        const isD = this.isToday(new Date(this.valuation.date));
+        // console.log(isD)
+        this.$span.innerHTML = `<span>${this.valuation.valuation + '%'}</span><br><span style="font-size:12px;color:gray;">${date}</span>${isD?`<br /><sample-size code="${this.code}" sum="${this.valuation.valuation}" />`:''}`;
         this.$span.title = this.valuation.date;
         if (this.valuation.valuation < 0) {
             this.$span.style.color = 'green';
@@ -3435,15 +3495,15 @@ class BaiduStocks {
         //         rate: arr[8]
         //     }
         // });
-        
-        const detailDay = await Tools.fetch('baiduDetailDay',{code});
+
+        const detailDay = await Tools.fetch('baiduDetailDay', { code });
         // console.log(detailDay)
         // console.log(detailDay.Result.newMarketData.marketData);
-        let klines=[];
-        detailDay.Result.newMarketData.marketData.split(';').slice(-10).forEach(day=>{
+        let klines = [];
+        detailDay.Result.newMarketData.marketData.split(';').slice(-10).forEach(day => {
             // console.log(day)
             const item = day.split(',');
-            klines.push({date:item[1],rate:item[9]});
+            klines.push({ date: item[1], rate: item[9] });
         })
         // console.log(klines);
 
@@ -3477,7 +3537,7 @@ class BaiduStocks {
             })
             // 获取日K线
             stock.klines = await this.getStockKline(body.code, body.exchange);
-            
+
             // stock.klines = await this.getStockKline(body.code, body.exchange);
             // const detail = await Tools.fetch('baiduDetail', { code: body.code });
 
@@ -3489,7 +3549,7 @@ class BaiduStocks {
             //         }
             //         return acc;
             //     }, []).slice(-10).reverse();
-                
+
             // } catch (e) {
             //     console.log(e);
             // }

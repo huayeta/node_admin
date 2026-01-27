@@ -2812,6 +2812,7 @@ const customStorage = new CustomStorage();
             const account = $tr.getAttribute('data-account');
             const result = Tools.RemindAddWx(account, 1);
             $btn.textContent = (result ? '已提醒' : '提醒失败');
+            copyToClipboard(account);
         }, '.j-RemindAddWx')
         // 修改最后一个做单记录
         addEventListener(qqAdd, 'click', e => {
