@@ -23,6 +23,10 @@ class CustomStorage {
 }
 const customStorage = new CustomStorage();
 // customStorage.setItem('jijin.datas1', JSON.parse(localStorage.getItem('jijin.datas')));
+// fetch('http://fundgz.1234567.com.cn/js/016874.js')
+//     .then(response => response.text()).then(text => {
+//         console.log(text);
+//     });
 
 // {code:...data}
 let DATAS = {};
@@ -32,7 +36,7 @@ let SORT = {};
 let CODES = {};
 //  ['lastWeekGrowth', '周涨幅',day], ['lastMonthGrowth', '月涨幅',day], ['lastYearGrowth', '年涨幅']
 let BONDS = {};
-const total_arr = [['dayGrowth', '日涨幅'], , ['custom3DayGrowth', '最近3天涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅']];
+const total_arr = [['dayGrowth', '日涨幅'], , ['custom3DayGrowth', '最近3天涨幅'], ['customLastWeekGrowth', '最近周涨幅'], ['custom2LastWeekGrowth', '最近2周涨幅'], ['customLastMonthGrowth', '最近月涨幅'], ['lastThreeMonthsGrowth', '3月涨幅'], ['lastSixMonthsGrowth', '6月涨幅'], ['lastYearGrowth', '年涨幅']];
 const code_type_arr = ['利率债', '信用债', '利率债为主', '信用债为主', '股基利率债为主', '股基信用债为主', '海外债权', '黄金', '组合'];
 const SALETIME = {
     7: '7天免',
@@ -75,22 +79,26 @@ const CLASSIFICATION = {
     '6': '创新药',
     '7': '军工',
     '8': '低空经济',
+    '9': '永磁稀土',
+    '10': '存储芯片',
     '13': '游戏',
     '14': '北证50',
     '15': '科创芯片',
     '16': '人工智能',
-    '17': '稀土',
-    '18': '国产算力',
+    '17': '有色金属',
+    '18': '电网设备',
     '20': '银行',
     '21': '多元金融',
     '22': '新能源',
     '23': '稳债基',
-    '24': '电力',
+    '24': '东数西算',
     '25': '恒生科技',
     '26': '科创50',
     '27': '消费电子',
     '28': '精选小盘股',
-    '29': '脑机接口'
+    '29': '脑机接口',
+    '30': '基础化工',
+    '31': '可控核聚变'
 }
 let Tools = {
     dispatchEvent: ($ele, type) => {
@@ -120,6 +128,80 @@ let Tools = {
         }
         return false;
     },
+    /**
+ * 判断目标时间是否为本地时区的“今天”
+ * @param {Date|string|number} input - 支持：
+ *   - Date 对象
+ *   - 时间戳（数字）
+ *   - 标准日期字符串（ISO、'YYYY-MM-DD' 等）
+ *   - 8位数字字符串（'YYYYMMDD'）
+ * @returns {boolean} 是否为今天（仅比较本地时区的年月日）
+ */
+    isToday: (input) => {
+        // ===== 1. 统一转换为有效的 Date 对象 =====
+        let targetDate;
+
+        // 情况1：已是 Date 对象
+        if (input instanceof Date) {
+            if (isNaN(input.getTime())) {
+                console.warn('[isToday] 无效的 Date 对象（NaN）');
+                return false;
+            }
+            targetDate = input;
+        }
+        // 情况2：字符串
+        else if (typeof input === 'string') {
+            input = input.trim();
+
+            // 优先处理 YYYYMMDD 格式（8位纯数字）
+            if (/^\d{8}$/.test(input)) {
+                const year = parseInt(input.substring(0, 4), 10);
+                const month = parseInt(input.substring(4, 6), 10) - 1; // JS 月份 0-11
+                const day = parseInt(input.substring(6, 8), 10);
+
+                targetDate = new Date(year, month, day);
+
+                // 严格验证日期有效性（防 2月30日等）
+                if (
+                    targetDate.getFullYear() !== year ||
+                    targetDate.getMonth() !== month ||
+                    targetDate.getDate() !== day
+                ) {
+                    console.warn(`[isToday] 无效的 YYYYMMDD 日期: ${input}`);
+                    return false;
+                }
+            }
+            // 其他字符串：尝试标准解析
+            else {
+                targetDate = new Date(input);
+                if (isNaN(targetDate.getTime())) {
+                    console.warn(`[isToday] 无法解析的日期字符串: "${input}"`);
+                    return false;
+                }
+            }
+        }
+        // 情况3：数字（时间戳）
+        else if (typeof input === 'number' && isFinite(input)) {
+            targetDate = new Date(input);
+            if (isNaN(targetDate.getTime())) {
+                console.warn(`[isToday] 无效的时间戳: ${input}`);
+                return false;
+            }
+        }
+        // 情况4：其他类型（null, undefined, object 等）
+        else {
+            console.warn(`[isToday] 不支持的参数类型: ${input === null ? 'null' : typeof input}`);
+            return false;
+        }
+
+        // ===== 2. 仅比较本地时区的年月日 =====
+        const now = new Date();
+        return (
+            targetDate.getFullYear() === now.getFullYear() &&
+            targetDate.getMonth() === now.getMonth() &&
+            targetDate.getDate() === now.getDate()
+        );
+    }
 }
 // 创建一个基金估值自动查询事件中心
 class jjQuery extends EventTarget {
@@ -471,6 +553,11 @@ Object.assign(Tools, {
                 if (CODES[a.code] && CODES[a.code].valuation && CODES[a.code].valuation.valuation) aa = CODES[a.code].valuation.valuation;
                 if (CODES[b.code] && CODES[b.code].valuation && CODES[b.code].valuation.valuation) bb = CODES[b.code].valuation.valuation;
                 result = aa - bb;
+            } else if (day == 'valuation_ths') {
+                let aa = bb = (sort > 0 ? 1000 : 0);
+                if (CODES[a.code] && CODES[a.code].valuation_ths_arr && CODES[a.code].valuation_ths_arr.length > 0 && CODES[a.code].valuation_ths_arr[CODES[a.code].valuation_ths_arr.length - 1].valuation) aa = CODES[a.code].valuation_ths_arr[CODES[a.code].valuation_ths_arr.length - 1].valuation;
+                if (CODES[b.code] && CODES[b.code].valuation_ths_arr && CODES[b.code].valuation_ths_arr.length > 0 && CODES[b.code].valuation_ths_arr[CODES[b.code].valuation_ths_arr.length - 1].valuation) bb = CODES[b.code].valuation_ths_arr[CODES[b.code].valuation_ths_arr.length - 1].valuation;
+                result = aa - bb;
             } else if (day == 'standardDeviation') {
                 let aa = bb = (sort > 0 ? 1000 : 0);
                 if (a.standardDeviation && a.standardDeviation.populationStdDev) aa = +a.standardDeviation.populationStdDev;
@@ -645,8 +732,68 @@ Object.assign(Tools, {
         if (SORT.day && SORT.sort != 0) {
             codes = Tools.sortCodes(codes, SORT.day, SORT.sort);
         }
+        // 移除估值查询
         jjQueryCenter.removeCodes();
+
         Tools.setTable(Tools.getTable(codes));
+
+        // 更新同花顺估值涨跌
+        const nowCodes = Tools.getNowCodes();
+        const now_code_dp = { '+': 0, '-': 0 };
+        nowCodes.forEach(code => {
+            if (CODES[code] && CODES[code].valuation_ths_arr && CODES[code].valuation_ths_arr.length > 0) {
+                const valuation_ths = CODES[code].valuation_ths_arr[CODES[code].valuation_ths_arr.length - 1];
+                if (+valuation_ths.valuation > 0) {
+                    now_code_dp['+']++;
+                } else {
+                    now_code_dp['-']++;
+                }
+            }
+        })
+        // console.log(now_code_dp);
+        document.querySelector('.j-valuation-ths-sort').innerHTML = `<span class="red">${now_code_dp['+']} ↑ </span><span class="green" style="margin-left:3px;">${now_code_dp['-']} ↓</span>`;
+        
+        // 更新基金涨跌
+        const now_code_dp_fund = { '+': 0, '-': 0 };
+        nowCodes.forEach(code => {
+            // console.log(DATAS[code]);
+            if (DATAS[code] && DATAS[code].customNetWorkData) {
+                const fund_ths = DATAS[code].customNetWorkData[0].JZZZL;
+                // console.log(fund_ths);
+                if (+fund_ths > 0) {
+                    now_code_dp_fund['+']++;
+                } else {
+                    now_code_dp_fund['-']++;
+                }
+            }
+        })
+        // console.log(now_code_dp_fund);
+        document.querySelector('.j-fund-sort').innerHTML = `<span class="red">${now_code_dp_fund['+']} ↑ </span><span class="green" style="margin-left:3px;">${now_code_dp_fund['-']} ↓</span>`;
+
+        // 更新股票分类涨跌
+        const stockCodes = Tools.getAllStockCodes();
+        const classify_dp = {};
+        stockCodes.forEach(code => {
+            let classify = '-1';
+            if(CODES[code] && CODES[code].classify){
+                classify = CODES[code].classify;
+            }
+            if(!classify_dp[classify]){
+                classify_dp[classify] = { '+': 0, '-': 0 };
+            }
+            if(CODES[code] && CODES[code].valuation_ths_arr && CODES[code].valuation_ths_arr.length > 0){
+                const valuation_ths = CODES[code].valuation_ths_arr[CODES[code].valuation_ths_arr.length - 1];
+                // console.log(valuation_ths);
+                if (+valuation_ths.valuation > 0) {
+                    classify_dp[classify]['+']++;
+                } else {
+                    classify_dp[classify]['-']++;
+                }
+            }
+        })
+        // console.log(classify_dp);
+        const classification = {...CLASSIFICATION, '-1':'其他'};
+        document.querySelector('.j-classify-btn-group').innerHTML=Object.keys(classification).sort((a,b)=>classify_dp[b]?.['+']-classify_dp[a]?.['+']??0).map(key => (`<button class="mr10 mb10 ${SORT.classify == key ? 'reb' : ''}" value="${key}"><span>${['1','2','9','10','17','18','24','30'].includes(key)?'🔥':''}${classification[key]}</span>${classify_dp[key]?`<span class="red ml5">${classify_dp[key]['+']}</span>,<span class="green">${classify_dp[key]['-']}</span>`:''}</button>`)).join('')
     },
     storageDatas: async () => {
         customStorage.setItem('jijin.datas', DATAS);
@@ -1392,6 +1539,7 @@ Object.assign(Tools, {
         return codes;
     },
     getNowCodes: () => {
+        const $table = document.querySelector('.g-table');
         const $trs = $table.querySelectorAll('tr');
         const codes = [];
         $trs.forEach($tr => {
@@ -1399,6 +1547,12 @@ Object.assign(Tools, {
             if (code) codes.push(code);
         })
         return codes;
+    },
+    // 获取所有股基
+    getAllStockCodes: () => {
+        return Object.keys(DATAS).filter(code => {
+            return Tools.isDebt(code) == 1;
+        })
     },
     // 列表全选
     selectAllTrs: () => {
@@ -1528,7 +1682,7 @@ Object.assign(Tools, {
                                                                     // 是否是城投筛选
                                                                     if (!SORT.is_ct || (SORT.is_ct == '1' && is_ct == '1')) {
                                                                         // 是否有基金分类筛选
-                                                                        if (!SORT.classify || (CODES[data.code] && CODES[data.code].classify && SORT.classify == CODES[data.code].classify)) {
+                                                                        if (!SORT.classify || (CODES[data.code] && CODES[data.code].classify && SORT.classify == CODES[data.code].classify) || (SORT.classify == '-1' && !CODES[data.code]?.classify)) {
                                                                             increment++;
                                                                             str += `
                                                                                 <tr data-code="${data.code}" style="${data.code.includes(',') ? 'background: #fff7f3;' : ''}">
@@ -1553,10 +1707,14 @@ Object.assign(Tools, {
                                                                                     <td>
                                                                                         <sample-size sample="1" code="${data.code}" />
                                                                                     </td>
-                                                                                    <td><fund-valuation code="${data.code}" delay="${increment * 1000}" /></td>
+                                                                                    <!-- <td><fund-valuation code="${data.code}" delay="${increment * 1000}" /></td> -->
+                                                                                    <td style="position:relative;">
+                                                                                        <fund-valuation code="${data.code}" type="ths" class="j-valuation-ths-text" style="position:relative;z-index:1;"></fund-valuation>
+                                                                                        <fund-valuation-scaling-echarts code="${data.code}" style="position:absolute;top:0px;left:10px;opacity:0.3;z-index:0;" ></fund-valuation-scaling-echarts>
+                                                                                    </td>
                                                                                     ${total_arr.map(total => {
-                                                                                    return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
-                                                                                }).join('')}
+                                                                                return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                                                                            }).join('')}
                                                                                     <td class="tac">${data.standardDeviation ? data.standardDeviation.sampleStdDev : ''}</td>
                                                                                     <td>${data.customType ? data.customType : ''}</td>
                                                                                     <td>
@@ -1569,14 +1727,14 @@ Object.assign(Tools, {
                                                                                     </td>
                                                                                     <td style="padding:0;">
                                                                                         ${Tools.isSale(data.code).map((sale, index) => {
-                                                                                    return `
+                                                                                return `
                                                                                                 <div data-index="${index}" class="j-del-buyTime" style="padding:10px; ${(sale.rate && +sale.rate.rate.slice(0, -1) < 1.5) ? 'background-color:antiquewhite;' : ''}">
                                                                                                     <p class="gray fs12">${sale.time}</p>
                                                                                                     ${sale.str}
                                                                                                     ${sale.rate ? `<div class="gray" title="${sale.rate.time}">${sale.rate.rate}，${sale.rate.str.replaceAll('red', '')}</div>` : ''}
                                                                                                 </div>
                                                                                             `
-                                                                                }).join('<div class="br" style="margin:0 10px;"></div>')}
+                                                                            }).join('<div class="br" style="margin:0 10px;"></div>')}
                                                                                     </td>
                                                                                     <!-- <td>
                                                                                         ${CODES[data.code] && CODES[data.code].credit ? `信用占比${CODES[data.code].credit}%<br />` : ''}
@@ -1647,9 +1805,10 @@ Object.assign(Tools, {
                     </th>
                     <th>购后均日涨<span class="caret-wrapper ${SORT.day == 'income' ? sortClassname : ''}" data-day="income"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>连涨跌/幅度<span class="caret-wrapper ${SORT.day == 'sumLastDp' ? sortClassname : ''}" data-day="sumLastDp"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
-                    <th>基金估值<span class="caret-wrapper ${SORT.day == 'valuation' ? sortClassname : ''}" data-day="valuation"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
-                    ${total_arr.map(total => {
-            return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>`
+                    <!-- <th>基金估值<span class="caret-wrapper ${SORT.day == 'valuation' ? sortClassname : ''}" data-day="valuation"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th> -->
+                    <th>天天估值<span class="caret-wrapper ${SORT.day == 'valuation_ths' ? sortClassname : ''}" data-day="valuation_ths"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span><span style="font-weight:normal;" class="j-valuation-ths-sort"></span></th>
+                    ${total_arr.map((total,index) => {
+            return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span>${index==0?'<span style="font-weight:normal;" class="j-fund-sort"></span>':''}</th>`
         }).join('')}
                     <th>90标准差<span class="caret-wrapper ${SORT.day == 'standardDeviation' ? sortClassname : ''}" data-day="standardDeviation"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>
@@ -1755,12 +1914,14 @@ Object.assign(Tools, {
                 </div>
             </div>
             <div style="margin-bottom:10px; color:gray;">选购策略：债权，信用债为主，7天，利率债<15%，最大回撤<0.6，夏普比率>4.8可转债看行情<span class="red j-sort-preset-span" style="margin-left:10px;" data-sorts="${encodeURIComponent(JSON.stringify({ Ftype: '2', type: '信用', sale_time: '7', lv: '10' }))}">筛选债券</span><span style="margin-left:10px; color:red; cursor: pointer;" class="j-code-filter-clear">清楚筛选</span>
-                    <span style="margin-left:10px; color:red; cursor: pointer;" class="j-select-all">全选</span>
-                    <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
+                <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-copy-name">复制基金名</span>    
+                <span style="margin-left:10px; color:red; cursor: pointer;" class="j-select-all">全选</span>
+                <span style="margin-left:10px; color:deepskyblue; cursor: pointer;" class="j-code-select-clear">清楚选择</span>，利率债购买，下跌之后如果小反弹多看2天，大回调直接买，出现回调直接卖</div>
             <div style="margin:10px 0;" class="gray j-sort-info">${JSON.stringify(SORT)}</div>
             <audio src="/public/uploads/1.mp3" controls="controls" class="audio" loop="true" style="display:none;"></audio>
             <div class="j-hj-gn"></div>
             <div class="j-hj-gj"></div>
+            <div class="j-classify-btn-group"></div>
             <div class="g-table"></div>
             <div class="g-con"></div>
             <div class="g-baidu-stocks" style="margin:15px 0;"></div>
@@ -1836,10 +1997,12 @@ Object.assign(Tools, {
                 alert(error.message);
             }
         }, false)
+
     }
 })
 // 初始化
 Tools.initialization();
+// console.log(Tools.getNowCodes())
 class Alert {
     constructor() {
         const $head = document.querySelector('head');
@@ -1852,6 +2015,7 @@ class Alert {
             right:0;
             bottom:0;
             display:none;
+            z-index:999;
         }
         .u-alert .bg{
             position:absolute;
@@ -1956,6 +2120,374 @@ const $codeIpt = $form.querySelector('.j-code-ipt');
 const $codeNoteIpt = $form.querySelector('.j-code-note-ipt');
 const $codeCredit = $form.querySelector('.j-code-credit-ipt');
 const $audio = $Content.querySelector('.audio');
+
+// 同花顺估值查询
+// const $valuationThs = document.querySelector('.j-valuation-ths');
+// const valuationThsMax = 5 * 60 * 1000;
+// const queryValuationThs = async (time = Tools.getTime()) => {
+//     return;
+//     // const codes_pre = Tools.getNowCodes();
+//     const codes = [];
+//     // 获取需要更新的列表
+//     Object.keys(DATAS).filter(code => {
+//         return Tools.isDebt(code) == 1;
+//     }).forEach(code => {
+//         // console.log(code)
+//         const valuation_ths_arr = Tools.getCustomCodes(code, 'valuation_ths_arr');
+//         let query_date = '';
+//         if (valuation_ths_arr && valuation_ths_arr.length > 0) {
+//             query_date = valuation_ths_arr[valuation_ths_arr.length - 1].query_date;
+//         }
+
+//         // 距离上次查询时间大于valuationThsMax
+//         if (!query_date || new Date().getTime() - new Date(query_date).getTime() >= valuationThsMax) {
+//             // console.log(code, query_date, new Date().getTime() - new Date(query_date).getTime() >= this.max, new Date().getTime() - new Date(query_date).getTime(), this.max)
+//             codes.push(code);
+//         }
+//     })
+//     if (codes.length == 0) return;
+//     const result = await Tools.fetch('myTongHuaShunList', { code: codes.join(',') });
+//     if (result.error_code == '0') {
+//         const lists = result.ex_data.list;
+//         lists.forEach(data => {
+//             if (!CODES[data.code]) CODES[data.code] = {};
+//             if (!CODES[data.code].valuation_ths_arr) CODES[data.code].valuation_ths_arr = [];
+//             const valuation_ths_arr = Tools.getCustomCodes(data.code, 'valuation_ths_arr');
+//             // 判断是否是同一天
+//             // console.log(data.code,valuation_ths_arr,CODES[data.code].valuation_ths_arr)
+//             if (valuation_ths_arr.length > 0 && !Tools.isToday(valuation_ths_arr[0].query_date)) {
+//                 CODES[data.code].valuation_ths_arr = [];
+//             }
+//             CODES[data.code].valuation_ths_arr.push({
+//                 // yugu_price: data.yugu_price,
+//                 // yugu_price_change: data.yugu_price_change,
+//                 code: data.code,
+//                 valuation: (+data.yugu_rate * 100).toFixed(2),
+//                 // date: data.conf_date,
+//                 date: time,
+//                 query_date: time,
+//             })
+//         })
+//         Tools.storageDatas();
+//         Tools.updateDatasTable();
+//     }
+// }
+// if (Tools.isTradingTime()) {
+//     queryValuationThs();
+// }
+// const queryValuationThsTimer = setInterval(() => {
+//     if (Tools.isTradingTime()) {
+//         queryValuationThs();
+//     } else {
+//         // clearInterval(queryValuationThsTimer);
+//         // 小于15:00查询
+//         // const nowCodes = Tools.getNowCodes();
+//         // const query_date = Tools.getCustomCodes(nowCodes[0], 'valuation_ths.query_date');
+//         // const date = new Date(query_date);
+//         // const cutoff = new Date(date.getFullYear(), date.getMonth(), date.getDate(),15,0,0,0);
+//         // if(date < cutoff){
+//         //     queryValuationThs();
+//         // }else{
+//         //     clearInterval(queryValuationThsTimer);
+//         // }
+//     }
+// }, valuationThsMax);
+// // console.log(Tools.getTime(undefined,Tools.getWorkingDay(new Date(),'-').setHours(15,0,0,0)))
+// addEventListener($table, 'click', () => {
+//     queryValuationThs();
+// }, '.j-valuation-ths-sort')
+addEventListener($table, 'click', (e) => {
+    // console.log(e.target.code,e)
+    const code = e.target.getAttribute('code');
+    myAlert.data = code;
+    myAlert.show(`<fund-valuation-echarts code="${code}" />`);
+}, '.j-valuation-ths-text')
+// console.log(Tools.getNowCodes());
+/**
+ * 基金自动请求类（交易日自动刷新，支持页面刷新后保持请求间隔）
+ * 使用示例：
+ * const fetcher = new FundAutoFetcher({
+ *   apiUrl: '/myTTJJFundValuation',
+ *   fundCodes: ['01687', '22232'],
+ *   refreshInterval: 5 * 60 * 1000,
+ *   onData: (data) => console.log('收到数据', data),
+ *   onError: (err) => console.error('请求失败', err),
+ *   onStatusChange: (msg) => console.log('状态', msg),
+ * });
+ * fetcher.start();
+ */
+class FundAutoFetcher {
+    /**
+     * @param {Object} config 配置对象
+     * @param {string} config.apiUrl 接口地址（必填）
+     * @param {string[]|string} config.fundCodes 基金代码数组或逗号分隔字符串（必填）
+     * @param {number} config.refreshInterval 刷新间隔（毫秒），默认 300000（5分钟）
+     * @param {Object} config.tradeStart 交易开始时间 {hour, minute}，默认 {hour:9, minute:30}
+     * @param {Object} config.tradeEnd 交易结束时间 {hour, minute}，默认 {hour:15, minute:0}
+     * @param {Function} config.onData 成功获取数据后的回调，参数为解析后的数据数组
+     * @param {Function} config.onError 请求失败的回调，参数为错误对象
+     * @param {Function} config.onStatusChange 状态变化的回调，参数为状态描述字符串
+     * @param {string} config.storageKey localStorage 中存储上次请求时间的键名，默认 'fund_last_fetch_time'
+     */
+    constructor(config) {
+        this.apiUrl = config.apiUrl;
+        // if (!this.apiUrl) throw new Error('apiUrl 不能为空');
+
+        // 处理基金代码
+        if (Array.isArray(config.fundCodes)) {
+            this.fundCodes = config.fundCodes.join(',');
+        } else {
+            this.fundCodes = config.fundCodes;
+        }
+
+        this.refreshInterval = config.refreshInterval || 5 * 60 * 1000; // 默认5分钟
+        this.tradeStart = config.tradeStart || { hour: 9, minute: 30 };
+        this.tradeEnd = config.tradeEnd || { hour: 15, minute: 0 };
+        this.onData = config.onData || (() => { });
+        this.onError = config.onError || (() => { });
+        this.onStatusChange = config.onStatusChange || (() => { });
+        this.storageKey = config.storageKey || 'fund_last_fetch_time';
+
+        // 定时器ID
+        this._timeoutId = null;
+    }
+
+    // ---------- 辅助方法 ----------
+    _isWeekday(date) {
+        const day = date.getDay();
+        return day >= 1 && day <= 5; // 周一至周五
+    }
+
+    _isTradeTime(date) {
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const currentTotal = hours * 60 + minutes;
+        const startTotal = this.tradeStart.hour * 60 + this.tradeStart.minute;
+        const endTotal = this.tradeEnd.hour * 60 + this.tradeEnd.minute;
+        return currentTotal >= startTotal && currentTotal <= endTotal;
+    }
+
+    // 获取下一个工作日的 00:00:00
+    _getNextWorkday(date) {
+        const next = new Date(date);
+        next.setHours(0, 0, 0, 0);
+        next.setDate(next.getDate() + 1);
+        while (!this._isWeekday(next)) {
+            next.setDate(next.getDate() + 1);
+        }
+        return next;
+    }
+
+    // 获取下一个交易开始时间
+    _getNextTradeStart(date) {
+        const now = date;
+        const startToday = new Date(now);
+        startToday.setHours(this.tradeStart.hour, this.tradeStart.minute, 0, 0);
+
+        if (now < startToday) {
+            return startToday;
+        } else {
+            // 已收盘，找下一个工作日的开盘时间
+            let nextDay = new Date(now);
+            nextDay.setDate(nextDay.getDate() + 1);
+            nextDay.setHours(this.tradeStart.hour, this.tradeStart.minute, 0, 0);
+            while (!this._isWeekday(nextDay)) {
+                nextDay.setDate(nextDay.getDate() + 1);
+            }
+            return nextDay;
+        }
+    }
+
+    // ---------- 核心请求方法 ----------
+    async _fetchValuation(codes=this.fundCodes) {
+        try {
+            const url = `${this.apiUrl}?codes=${encodeURIComponent(codes)}`;
+            const response = await Tools.fetch('myTTJJFundValuation', { codes: codes });
+            if (response.code != 0) {
+                throw new Error(`HTTP ${response.msg}`);
+            }
+            const data = response.data;
+            // 请求成功后记录当前时间戳
+            localStorage.setItem(this.storageKey, Date.now().toString());
+            this.onData(data);
+        } catch (err) {
+            this.onError(err);
+        }
+    }
+
+    // ---------- 定时调度逻辑 ----------
+    _stopAllTimers() {
+        if (this._timeoutId) {
+            clearTimeout(this._timeoutId);
+            this._timeoutId = null;
+        }
+    }
+
+    // 交易时段内的递归调度（每次请求后自动安排下一次）
+    _startTradeTimeRefresh() {
+        this._stopAllTimers();
+        this.onStatusChange(`交易时段内，启动自动刷新`);
+
+        // 定义递归调度函数
+        const scheduleNextFetch = () => {
+            // 每次请求前检查是否仍在交易时段
+            if (!this._isTradeTime(new Date())) {
+                this.onStatusChange('交易时段已结束，重新调度');
+                this._scheduleNext();
+                return;
+            }
+
+            // 执行请求
+            this._fetchValuation().finally(() => {
+                // 无论成功失败，安排下一次
+                this._timeoutId = setTimeout(() => {
+                    scheduleNextFetch();
+                }, this.refreshInterval);
+            });
+        };
+
+        // 根据上次请求时间决定首次请求的时机
+        const now = Date.now();
+        const lastTime = localStorage.getItem(this.storageKey);
+        if (!lastTime) {
+            // 从未请求过，立即请求
+            scheduleNextFetch();
+        } else {
+            const elapsed = now - parseInt(lastTime, 10);
+            if (elapsed >= this.refreshInterval) {
+                // 已超过间隔，立即请求
+                scheduleNextFetch();
+            } else {
+                // 等待剩余时间后再请求
+                const wait = this.refreshInterval - elapsed;
+                this.onStatusChange(`距离上次请求已过 ${Math.round(elapsed / 1000)}秒，等待 ${Math.round(wait / 1000)}秒后首次请求`);
+                this._timeoutId = setTimeout(() => {
+                    scheduleNextFetch();
+                }, wait);
+            }
+        }
+    }
+
+    _scheduleNext() {
+        this._stopAllTimers();
+
+        const now = new Date();
+        const isWeekdayNow = this._isWeekday(now);
+        const inTradeTime = this._isTradeTime(now);
+
+        if (!isWeekdayNow) {
+            // 非工作日：计算下一个工作日0点
+            this.onStatusChange('今日非交易日，等待下一个交易日...');
+            const nextWorkday = this._getNextWorkday(now);
+            const waitMs = nextWorkday.getTime() - now.getTime();
+            this._timeoutId = setTimeout(() => {
+                this._scheduleNext();
+            }, waitMs);
+            return;
+        }
+
+        // 是工作日
+        if (inTradeTime) {
+            this._startTradeTimeRefresh();
+        } else {
+            // 工作日但不在交易时间：计算下一个交易开始时间
+            this.onStatusChange(`今日为交易日，但当前不在交易时段，等待开盘...`);
+            const nextStart = this._getNextTradeStart(now);
+            const waitMs = nextStart.getTime() - now.getTime();
+            this._timeoutId = setTimeout(() => {
+                this._scheduleNext();
+            }, waitMs);
+        }
+    }
+
+    // ---------- 公开方法 ----------
+    /**
+     * 启动自动调度
+     */
+    start() {
+        this._scheduleNext();
+    }
+
+    /**
+     * 停止所有定时器，不再自动请求
+     */
+    stop() {
+        this._stopAllTimers();
+        this.onStatusChange('已停止自动刷新');
+    }
+
+    /**
+     * 立即手动请求一次数据（不改变定时调度）
+     */
+    async fetchNow(codes) {
+        await this._fetchValuation(codes);
+    }
+
+    /**
+     * 判断当前是否在交易时段内
+     * @returns {boolean}
+     */
+    isTradingTime() {
+        return this._isTradeTime(new Date());
+    }
+
+    /**
+     * 获取当前状态描述（可用于界面显示）
+     * @returns {string}
+     */
+    getStatus() {
+        const now = new Date();
+        const isWeekday = this._isWeekday(now);
+        const inTradeTime = this._isTradeTime(now);
+        if (!isWeekday) return '非交易日';
+        if (inTradeTime) return '交易时段中';
+        return '交易时段外';
+    }
+}
+const fetcher = new FundAutoFetcher({
+    // apiUrl: '/myTTJJFundValuation',
+    fundCodes: Object.keys(DATAS).filter(code => {
+        return Tools.isDebt(code) == 1;
+    }) || Tools.getNowCodes(),
+    refreshInterval: 5 * 60 * 1000,
+    onData: (data) => {
+        // console.log('最新数据', data);
+        // 更新你的 UI
+        // 假设返回格式是数组
+        data.forEach(item => {
+            const code = item.fundcode;
+            if (!CODES[code]) CODES[code] = {};
+            if (!CODES[code].valuation_ths_arr) CODES[code].valuation_ths_arr = [];
+            // 判断是否是同一天
+            // console.log(data.code,valuation_ths_arr,CODES[data.code].valuation_ths_arr)
+            const valuation_ths_arr = CODES[code].valuation_ths_arr;
+            if (valuation_ths_arr.length > 0 && !Tools.isToday(valuation_ths_arr[0].date)) {
+                CODES[code].valuation_ths_arr = [];
+            }
+            CODES[code].valuation_ths_arr.push({
+                code: code,
+                valuation: +item.gszzl,
+                // date: item.conf_date,
+                date: item.gztime,
+                // query_date: Tools.getTime(),
+            })
+            // 去重
+            CODES[code].valuation_ths_arr = [...new Set(CODES[code].valuation_ths_arr)];
+        })
+        Tools.storageDatas();
+        Tools.updateDatasTable();
+    },
+    onError: (err) => {
+        console.error('请求失败', err);
+    },
+    onStatusChange: (msg) => {
+        // document.getElementById('status').textContent = msg;
+        console.log(msg);
+    }
+});
+
+fetcher.start();
+// fetcher.fetchNow(Tools.getNowCodes());
 
 // 拼凑tr数据
 const getJZZL = (history) => {
@@ -2544,6 +3076,21 @@ addEventListener(document, 'click', e => {
     Tools.setCustomSort(obj);
     location.reload();
 }, '.j-sort-preset-span')
+addEventListener($Content.querySelector('.j-classify-btn-group'), 'click', e => {
+    const $target = e.target.closest('button');
+    let classify = $target.value;
+    // console.log('11')
+    if($target.classList.contains('reb')){
+        Tools.setCustomSort({ classify: '' });
+    }else{
+        e.target.parentElement.querySelectorAll('button').forEach(ele => {
+            ele.classList.remove('reb');
+        })
+        Tools.setCustomSort({ classify });
+    }
+    // console.log('22');
+    $target.classList.toggle('reb');
+}, 'button')
 // 筛选利率债
 addEventListener($form, 'input', Tools.throttle(e => {
     const value = e.target.value;
@@ -2612,6 +3159,18 @@ addEventListener($Content, 'click', e => {
 addEventListener($Content, 'click', e => {
     Tools.updateDatasTable();
 }, '.j-code-select-clear')
+// 复制当前的基金名字
+addEventListener($Content, 'click', e => {
+    const $tr = $table.querySelectorAll('tbody tr');
+    const names = [];
+    $tr.forEach(ele => {
+        const code = ele.getAttribute('data-code');
+        console.log(code)
+        names.push(DATAS[code].name);
+    })
+    copyToClipboard(names);
+    alert('复制成功');
+}, '.j-code-copy-name')
 // 定投计算
 document.querySelector('.j-fundDtCalculator').addEventListener('click', async e => {
     const $parent = e.target.closest('div.m-search');
@@ -2795,6 +3354,7 @@ class Contextmenu {
                 <div class="context-menu-item">点击天天✅</div>
                 <div class="context-menu-item">点击查询✅</div>
                 <div class="context-menu-item">更新基金🔃</div>
+                <div class="context-menu-item">更新估值🔃</div>
                 <div class="context-menu-item">更新债权🔃</div>
                 <div class="context-menu-item">删除基金🔃</div>
                 <div class="context-menu-item">更新定投🔃</div>
@@ -2806,6 +3366,7 @@ class Contextmenu {
                 <div class="context-menu-item">对比涨跌❇️</div>
                 <div class="context-menu-item">筛选债权✅</div>
                 <div class="context-menu-item">列表基金🔃</div>
+                <div class="context-menu-item">列表估值❇️</div>
                 <div class="context-menu-item">列表债券🔃</div>
                 <div class="context-menu-item">列表持仓🔃</div>
                 <div class="context-menu-item">列表定投🔃</div>
@@ -2889,6 +3450,10 @@ class Contextmenu {
             Tools.updatasCodes(document.querySelector('.j-code-updata'), codes);
             this.hide();
         }
+        if (con.includes('更新估值')) {
+            fetcher.fetchNow([code]);
+            this.hide();
+        }
         if (con.includes('更新债权')) {
             await Tools.getBondInfosByData(Data);
             alert('更新完成');
@@ -2932,6 +3497,10 @@ class Contextmenu {
         if (con.includes('列表基金')) {
             const codes = Tools.getNowCodes();
             Tools.updatasCodes(document.querySelector('.j-code-updata'), codes);
+            this.hide();
+        }
+        if (con.includes('列表估值')) {
+            fetcher.fetchNow(Tools.getNowCodes());
             this.hide();
         }
         if (con.includes('列表债券')) {
@@ -3177,51 +3746,62 @@ class ViewImg extends HTMLElement {
 customElements.define('view-img', ViewImg);
 // 自定义样本加减
 class SampleSize extends HTMLElement {
-        constructor() {
-            super();
-            const shadow = this.attachShadow({ mode: 'open' });
-            const code = this.getAttribute('code');
-            const data = DATAS[code];
-            let Sum = +this.getAttribute('sum');
-            const sum0 = +data.customAdjacentData[0].sum;
-            this.sample = this.getAttribute('sample') || 0;
-            if(Sum){
-                if(Math.sign(Sum) == Math.sign(sum0)){
-                    Sum += sum0;
-                }
-                Sum = +Sum.toFixed(2);
-            }else{
+    constructor() {
+        super();
+        const shadow = this.attachShadow({ mode: 'open' });
+        const code = this.getAttribute('code');
+        const data = DATAS[code];
+        let Sum = +this.getAttribute('sum');
+        const sumDate = this.getAttribute('date');
+        const sum0 = +data.customAdjacentData[0].sum;
+        const sum0Date = data.customAdjacentData[0].start;
+        this.sample = this.getAttribute('sample') || 0;
+        this.days = +data.customAdjacentData[0].days;
+        if (Sum) {
+            if (new Date(sumDate).getDate() == new Date(sum0Date).getDate()) {
                 Sum = sum0;
-            }
-            // 计算基金样本涨跌幅度
-            let dpJj = {
-                '+': {
-                    stableMean: 0,
-                    arr: []
-                },
-                '-': {
-                    stableMean: 0,
-                    arr: []
-                }
-            };
-            data.customAdjacentData.forEach(item => {
-                if (+item.sum > 0) {
-                    dpJj['+'].arr.push(+item.sum);
+            } else {
+                if (Math.sign(Sum) == Math.sign(sum0)) {
+                    Sum += sum0;
+                    this.days += 1;
                 } else {
-                    dpJj['-'].arr.push(+item.sum);
+                    // Sum = sum0;
+                    this.days = 1;
                 }
-            })
-            dpJj['+'].stableMean = +Tools.getAdaptiveStableMean(dpJj['+'].arr).stableMean.toFixed(2);
-            dpJj['-'].stableMean = +Tools.getAdaptiveStableMean(dpJj['-'].arr).stableMean.toFixed(2);
-            const style = document.createElement('style');
-            style.innerHTML = `
+            }
+            Sum = +Sum.toFixed(2);
+        } else {
+            Sum = sum0;
+        }
+        // 计算基金样本涨跌幅度
+        let dpJj = {
+            '+': {
+                stableMean: 0,
+                arr: []
+            },
+            '-': {
+                stableMean: 0,
+                arr: []
+            }
+        };
+        data.customAdjacentData.forEach(item => {
+            if (+item.sum > 0) {
+                dpJj['+'].arr.push(+item.sum);
+            } else {
+                dpJj['-'].arr.push(+item.sum);
+            }
+        })
+        dpJj['+'].stableMean = +Tools.getAdaptiveStableMean(dpJj['+'].arr).stableMean.toFixed(2);
+        dpJj['-'].stableMean = +Tools.getAdaptiveStableMean(dpJj['-'].arr).stableMean.toFixed(2);
+        const style = document.createElement('style');
+        style.innerHTML = `
                 .gray{color:gray;}
                 .red{color:red;}
                 .green{color:green;}
                 p{margin:0;}
             `;
-            shadow.appendChild(style);
-            shadow.innerHTML += `
+        shadow.appendChild(style);
+        shadow.innerHTML += `
             ${Array.isArray(data.customAdjacentData) && data.customAdjacentData.length > 0 && `${((sum, dp) => {
                 if (sum > 0 && sum > dp['+'].stableMean) {
                     return `<span class="green">减：</span>`
@@ -3230,15 +3810,15 @@ class SampleSize extends HTMLElement {
                     return `<span class="red">加：</span>`
                 }
                 return '';
-            })(Sum, dpJj)}<span class="${Sum > 0 ? 'red' : 'green'}">${Sum}/${data.customAdjacentData[0].days+(Sum==sum0?0:1)}</span>` || ''}
-            ${this.sample ==1?`
+            })(Sum, dpJj)}<span class="${Sum > 0 ? 'red' : 'green'}">${Sum}/${this.days}</span>` || ''}
+            ${this.sample == 1 ? `
             <p class="gray">样：${dpJj['+'].stableMean}/${dpJj['-'].stableMean}</p>
-            `:''}
-            `;     
-        }
-        connectedCallback() {
-            
-        }
+            `: ''}
+            `;
+    }
+    connectedCallback() {
+
+    }
 }
 customElements.define('sample-size', SampleSize);
 // 定义基金估值自动查询
@@ -3251,55 +3831,46 @@ class FundValuation extends HTMLElement {
         `;
         this.code = this.getAttribute('code');
         this.$span = shadow.querySelector('span');
-        if (this.code && Tools.isDebt(this.code) == 1) {
-            // console.log(this.delay);
-            let code = this.code;
-            const name = DATAS[this.code].name;
-            if (name.includes('联接') && DATAS[this.code].assetPosition && DATAS[this.code].assetPosition.etf) {
-                code = DATAS[this.code].assetPosition.etf.code;
+        this.type = this.getAttribute('type') || 'jjscw';
+        if (this.type == 'jjscw') {
+            // 如果是基金速查网
+            if (this.code && Tools.isDebt(this.code) == 1) {
+                // console.log(this.delay);
+                let code = this.code;
+                const name = DATAS[this.code].name;
+                if (name.includes('联接') && DATAS[this.code].assetPosition && DATAS[this.code].assetPosition.etf) {
+                    code = DATAS[this.code].assetPosition.etf.code;
+                }
+                if (CODES[this.code] && CODES[this.code].valuation) {
+                    this.valuation = CODES[this.code].valuation;
+                    this.fill();
+                }
+                jjQueryCenter.addCode(code, this.code);
+                jjQueryCenter.addEventListener('valuation', (e) => {
+                    const value = e.detail;
+                    if (value.code != code) return;
+                    Tools.setCustomCodes(this.code, {
+                        valuation: value
+                    });
+                    this.valuation = value;
+                    this.fill();
+                })
             }
-            if (CODES[this.code] && CODES[this.code].valuation) {
-                this.valuation = CODES[this.code].valuation;
+        } else if (this.type == 'ths') {
+            // 如果是同花顺
+            const valuation_ths_arr = Tools.getCustomCodes(this.code, 'valuation_ths_arr');
+            if (valuation_ths_arr && valuation_ths_arr.length > 0) {
+                this.valuation = valuation_ths_arr[valuation_ths_arr.length - 1];
                 this.fill();
             }
-            jjQueryCenter.addCode(code, this.code);
-            jjQueryCenter.addEventListener('valuation', (e) => {
-                const value = e.detail;
-                if (value.code != code) return;
-                Tools.setCustomCodes(this.code, {
-                    valuation: value
-                });
-                this.valuation = value;
-                this.fill();
-            })
         }
-    }
-    isToday(targetDate) {
-        if (!(targetDate instanceof Date) || isNaN(targetDate.getTime())) {
-            console.error("传入的参数不是一个合法的 Date 对象");
-            return false;
-        }
-
-        const today = new Date();
-
-        const targetYear = targetDate.getFullYear(); // 新增：获取年份
-        const targetMonth = targetDate.getMonth();
-        const targetDay = targetDate.getDate();
-
-        const todayYear = today.getFullYear(); // 新增：获取今天的年份
-        const todayMonth = today.getMonth();
-        const todayDay = today.getDate();
-
-        // 新增：年份对比
-        return targetYear === todayYear && targetMonth === todayMonth && targetDay === todayDay;
     }
     fill() {
         // 去掉年份，去掉秒
-        const date = this.valuation.date.replace(/\d{4}-/, '').replace(/:\d{2}$/, '');
-        let adjacentData = '';
-        const isD = this.isToday(new Date(this.valuation.date));
+        const date = Tools.getTime('mm-dd hh:ii', this.valuation.date);
+        const isD = Tools.isToday(this.valuation.date);
         // console.log(isD)
-        this.$span.innerHTML = `<span>${this.valuation.valuation + '%'}</span><br><span style="font-size:12px;color:gray;">${date}</span>${isD?`<br /><sample-size code="${this.code}" sum="${this.valuation.valuation}" />`:''}`;
+        this.$span.innerHTML = `<span>${this.valuation.valuation + '%'}</span>${isD ? `（<sample-size code="${this.code}" sum="${this.valuation.valuation}" date="${this.valuation.date}"></sample-size>）` : ''}<br><span style="font-size:12px;color:gray;">${date}</span>`;
         this.$span.title = this.valuation.date;
         if (this.valuation.valuation < 0) {
             this.$span.style.color = 'green';
@@ -3309,6 +3880,327 @@ class FundValuation extends HTMLElement {
     }
 }
 customElements.define('fund-valuation', FundValuation);
+// 自定义基金估值折线图查看
+class FundValuationEcharts extends HTMLElement {
+    constructor() {
+        super();
+        const shadow = this.attachShadow({ mode: 'open' });
+        shadow.innerHTML = `
+            <div class="chart-container" style="width:50vw;height:30vw;"></div>
+        `;
+        this.code = this.getAttribute('code');
+        this.$chartContainer = shadow.querySelector('.chart-container');
+        const valuation_ths_arr = Tools.getCustomCodes(this.code, 'valuation_ths_arr');
+        if (valuation_ths_arr && valuation_ths_arr.length > 0) {
+            this.renderValuationChart(valuation_ths_arr, this.$chartContainer, { code: this.code });
+        }
+    }
+    /**
+ * 渲染估值折线图（纯净版｜无参考线）
+ * @param {Array} data - 原始数据数组，每项需包含 { valuation: string, date: string }
+ * @param {HTMLElement} chartDom - 图表容器DOM元素
+ * @param {Object} options - 可选配置 { title: string, code: string }
+ * @returns {Object} ECharts 实例
+ */
+    renderValuationChart(data, chartDom, options = {}) {
+        // ====== 1. 数据预处理 ======
+        const chartData = data
+            .sort((a, b) => new Date(a.date.replace(/\//g, '-')) - new Date(b.date.replace(/\//g, '-')))
+            .map(item => {
+                const timeStr = item.date.replace(/\//g, '-');
+                return [new Date(timeStr).getTime(), parseFloat(item.valuation)];
+            });
+
+        // ====== 2. 计算Y轴范围（自动留白5%） ======
+        const values = chartData.map(d => d[1]);
+        const minVal = +(Math.min(...values).toFixed(2));
+        const maxVal = +(Math.max(...values).toFixed(2));
+        const padding = +((maxVal - minVal) * 0.05 || 0.1).toFixed(2);
+
+        // ====== 3. 计算X轴范围（强制当日 09:30 – 15:00）======
+        let xMin = null, xMax = null;
+        if (chartData.length > 0) {
+            const firstDate = new Date(chartData[0][0]);          // 第一个数据点的时间
+            const startDate = new Date(firstDate);
+            startDate.setHours(9, 30, 0, 0);                      // 当日开盘 09:30:00
+            const endDate = new Date(firstDate);
+            endDate.setHours(15, 0, 0, 0);                         // 当日收盘 15:00:00
+            xMin = startDate.getTime();
+            xMax = endDate.getTime();
+        }
+
+        // ====== 4. 配置图表选项 ======
+        const chartOption = {
+            animation: false,          // 彻底禁用所有动画
+            title: {
+                text: options.title || `${DATAS[options.code].name || '标的'}(${options.code}) ${CODES[options.code].valuation_ths_arr[CODES[options.code].valuation_ths_arr.length - 1].date} 估值分时走势`,
+                left: 'center',
+                textStyle: { fontSize: 18, fontWeight: 'bold', color: '#2c3e50' }
+            },
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: 'rgba(50,50,50,0.9)',
+                borderColor: '#3498db',
+                borderWidth: 1,
+                textStyle: { color: '#fff', fontSize: 13 },
+                formatter: params => {
+                    const d = new Date(params[0].value[0]);
+                    return `
+                    <div style="padding:8px;line-height:1.6">
+                        <div>🕒 ${d.toLocaleTimeString('zh-CN')}</div>
+                        <div>💰 估值: <span style="color:#e74c3c;font-weight:bold">${params[0].value[1].toFixed(2)}</span></div>
+                        <div>📊 变化: ${params[0].value[1] === values[0] ? '起始' :
+                            (params[0].value[1] > params[0].value[1] - (params[0].dataIndex > 0 ? chartData[params[0].dataIndex - 1][1] : 0) ?
+                                `<span style="color:#27ae60">↑${(params[0].value[1] - chartData[params[0].dataIndex - 1][1]).toFixed(2)}</span>` :
+                                `<span style="color:#e74c3c">↓${(chartData[params[0].dataIndex - 1][1] - params[0].value[1]).toFixed(2)}</span>`)
+                        }</div>
+                    </div>
+                `;
+                }
+            },
+            grid: { left: '6%', right: '4%', bottom: '12%', top: '18%' },
+            xAxis: {
+                type: 'time',
+                name: '时间',
+                min: xMin,               // 固定为 09:30
+                max: xMax,               // 固定为 15:00
+                axisLabel: {
+                    formatter: '{MM}-{dd} {HH}:{mm}', // 显示 月-日 时:分
+                    color: '#555'
+                },
+                splitLine: { lineStyle: { color: '#f0f0f0' } }
+            },
+            yAxis: {
+                type: 'value',
+                name: '估值',
+                min: minVal - padding,
+                max: maxVal + padding,
+                axisLabel: { color: '#555' },
+                splitLine: { lineStyle: { color: '#f5f5f5' } }
+            },
+            series: [{
+                name: '估值',
+                type: 'line',
+                data: chartData,
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 6,
+                lineStyle: { width: 2.5, color: '#3498db' },
+                itemStyle: { color: '#3498db', borderColor: '#fff', borderWidth: 2 },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(52, 152, 219, 0.12)' },
+                        { offset: 1, color: 'rgba(52, 152, 219, 0.01)' }
+                    ])
+                }
+            }],
+            animationDuration: 1000
+        };
+
+        // ====== 【参考线计算逻辑】 ======
+        const markLines = [
+            { yAxis: maxVal, name: `当日高点 ${maxVal.toFixed(2)}` },
+            { yAxis: minVal, name: `当日低点 ${minVal.toFixed(2)}` }
+        ];
+
+        // 注入参考线配置
+        chartOption.series[0].markLine = {
+            data: markLines,
+            lineStyle: { color: '#7f8c8d', width: 1.2, type: 'dashed' },
+            label: {
+                position: 'middle',
+                formatter: '{b}',
+                backgroundColor: 'rgba(255,255,255,0.8)',
+                borderColor: '#eee',
+                borderRadius: 3,
+                padding: [2, 6]
+            },
+            symbol: ['none', 'none']
+        };
+
+        // ====== 5. 渲染图表 ======
+        if (!chartDom) {
+            console.error(`容器不存在`);
+            return null;
+        }
+
+        // 销毁已有实例避免内存泄漏
+        if (chartDom.echartsInstance) {
+            chartDom.echartsInstance.dispose();
+        }
+
+        const chart = echarts.init(chartDom);
+        chart.setOption(chartOption);
+        chartDom.echartsInstance = chart; // 保存实例供后续更新
+
+        return chart;
+    }
+}
+customElements.define('fund-valuation-echarts', FundValuationEcharts);
+// 自定义基金估值折线缩略图查看
+class FundValuationScalingEcharts extends HTMLElement {
+    constructor() {
+        super();
+        const shadow = this.attachShadow({ mode: 'open' });
+        shadow.innerHTML = `
+            <div class="chart-scale-container" style="width:100px;height:45px;"></div>
+        `;
+        this.code = this.getAttribute('code');
+    }
+    connectedCallback() {
+        const chartDom = this.shadowRoot.querySelector('.chart-scale-container');
+        // 初始化图表
+        const valuation_ths_arr = Tools.getCustomCodes(this.code, 'valuation_ths_arr');
+        if (valuation_ths_arr && valuation_ths_arr.length > 0) {
+            // console.log(valuation_ths_arr)
+            this.renderMiniValuationChart(chartDom, valuation_ths_arr, {
+                color: '#3498db',    // 蓝色趋势线
+                showArea: false,     // 不显示面积（更清爽）
+                markLast: true       // 标记最后一点（当前值）
+            });
+        }
+    }
+    /**
+     * 渲染估值缩略图（专为列表设计｜极速｜无动画｜极简）
+     * @param {string} containerId - DOM容器ID（如 "mini-chart-018123"）
+     * @param {Array} data - 原始数据数组 [{valuation, date}, ...]
+     * @param {Object} options - 配置项
+     *   - color: 线条颜色 (默认 '#3498db')
+     *   - showTooltip: 是否显示tooltip (默认 false)
+     *   - showArea: 是否显示面积 (默认 false)
+     *   - width: 容器宽度 (默认 160)
+     *   - height: 容器高度 (默认 60)
+     *   - markLast: 是否标记最后一点 (默认 true)
+     */
+    renderMiniValuationChart(chartDom, data, options = {}) {
+        // ====== 1. 参数默认值 ======
+        const {
+            color = '#3498db',
+            showTooltip = false,
+            showArea = false,
+            width = 160,
+            height = 60,
+            markLast = true
+        } = options;
+
+        // ====== 2. 数据预处理（仅提取必要字段）======
+        if (!data || data.length === 0) {
+            console.warn(`[MiniChart] 容器#${containerId} 无有效数据`);
+            return null;
+        }
+
+        // 转换并排序（时间戳升序）
+        const chartData = data
+            .map(item => [
+                new Date(item.date.replace(/\//g, '-')).getTime(),
+                parseFloat(item.valuation)
+            ])
+            .sort((a, b) => a[0] - b[0]);
+
+        // if (chartData.length < 2) {
+        //     console.warn(`[MiniChart] 容器#${containerId} 数据点不足`);
+        //     return null;
+        // }
+
+        // ====== 3. 极简配置（专为缩略图优化）======
+        const option = {
+            // ⚡ 性能核心
+            animation: false,
+            silent: true, // 禁用交互事件（提升滚动性能）
+
+            // 坐标轴（完全隐藏但保留计算）
+            xAxis: { type: 'time', show: false },
+            yAxis: { type: 'value', show: false, min: 'dataMin', max: 'dataMax' },
+
+            // 网格（无边距，充分利用空间）
+            grid: { left: 2, right: 2, top: 2, bottom: 2, containLabel: false },
+
+            // 提示框（按需启用）
+            tooltip: showTooltip ? {
+                trigger: 'axis',
+                backgroundColor: 'rgba(50,50,50,0.85)',
+                borderColor: 'transparent',
+                textStyle: { color: '#fff', fontSize: 11 },
+                formatter: params => {
+                    const val = params[0].value[1];
+                    const change = val - chartData[0][1];
+                    const percent = ((val - chartData[0][1]) / chartData[0][1] * 100).toFixed(1);
+                    return `
+                <div style="padding:4px;line-height:1.4">
+                  ${new Date(params[0].value[0]).toLocaleTimeString('zh-CN')}
+                  <br/>💰 ${val.toFixed(2)} 
+                  <br/>${change >= 0 ? `↑` : `↓`} ${Math.abs(change).toFixed(2)} (${percent}%)
+                </div>
+              `;
+                },
+                axisPointer: { type: 'line', lineStyle: { color: '#fff', width: 1, opacity: 0.5 } }
+            } : undefined,
+
+            // 系列配置
+            series: [{
+                type: 'line',
+                data: chartData,
+                smooth: true,
+                symbol: 'none', // 无数据点标记
+                lineStyle: {
+                    width: 1.5,
+                    color: color,
+                    shadowColor: 'rgba(0,0,0,0.08)',
+                    shadowBlur: 3
+                },
+                areaStyle: showArea ? {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: `${color}22` }, // 15% opacity
+                        { offset: 1, color: 'transparent' }
+                    ])
+                } : undefined,
+                // 标记最后一点（当前值）
+                markPoint: markLast ? {
+                    symbol: 'circle',
+                    symbolSize: 4,
+                    itemStyle: { color: '#e74c3c', borderColor: '#fff', borderWidth: 1 },
+                    label: { show: false },
+                    data: [{
+                        coord: [chartData[chartData.length - 1][0], chartData[chartData.length - 1][1]],
+                        value: chartData[chartData.length - 1][1].toFixed(2)
+                    }]
+                } : undefined
+            }]
+        };
+
+        // ====== 4. 渲染图表 ======
+        // const container = document.getElementById(containerId);
+        const container = chartDom;
+        if (!container) {
+            console.error(`[MiniChart] 容器#${containerId} 不存在`);
+            return null;
+        }
+
+        // 销毁旧实例（防内存泄漏）
+        if (container.chartInstance) {
+            container.chartInstance.dispose();
+        }
+
+        // 初始化（指定尺寸 + 渲染优化）
+        const chart = echarts.init(container, null, {
+            width: width,
+            height: height,
+            renderer: 'canvas',
+            useDirtyRect: true
+        });
+
+        chart.setOption(option, true); // true: 不合并，直接覆盖
+        container.chartInstance = chart; // 保存实例
+
+        // 响应容器尺寸变化（轻量级）
+        const resizeObserver = new ResizeObserver(() => chart.resize());
+        resizeObserver.observe(container);
+        container.resizeObserver = resizeObserver; // 便于后续清理
+
+        return chart;
+    }
+}
+customElements.define('fund-valuation-scaling-echarts', FundValuationScalingEcharts);
 // tab
 addEventListener($Content, 'click', e => {
     const $target = e.target.closest('.tab-label');

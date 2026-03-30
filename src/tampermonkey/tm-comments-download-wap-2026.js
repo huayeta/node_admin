@@ -17,8 +17,8 @@
     let Coments = [];
     const Photos = [];
     let Index = 0; // 图片数字从几开始
-   // let currentPage = 1; // 当前页码
-   // let next_btn;
+    // let currentPage = 1; // 当前页码
+    // let next_btn;
     const select_length = 15; // 最小长度
     const select_qz = true; // 是否强制长度
     window.is_save_photo = true; // 是否保存图片
@@ -27,77 +27,55 @@
     let Counter = 0; // 下载图片的进度
     let ImgLength = 0; // 总图片的length
     const maxDownload = 200; // 一次下载图片最多多少
-    const product_id = new URLSearchParams(window.location.search.slice(1)).get('auctionNumId');
+    const product_id = JSON.parse(new URLSearchParams(window.location.search.slice(1)).get('rateInfo')).itemId;
     const Zip = new JSZip();
-    const addComment = ({comment,time},fir)=>{
+    const addComment = ({ comment }, fir) => {
         if (
             ((comment &&
                 !comment.includes('此用户没有填写评价') &&
                 !comment.includes('系统默认好评') &&
-                !comment.includes('该用户觉得商品非常好，给出5星好评') &&
+                !comment.includes('该用户觉得商品非常好') &&
                 comment.length >= +select_length)) ||
             fir
         ) {
-            if(select_qz && comment.length < +select_length)return;
+            if (select_qz && comment.length < +select_length) return;
             // console.log(comment)
-            Coments.push({comment:`${fir}${comment}`,time});
+            Coments.push(`${fir}${comment}`);
         }
     }
-    const commentSort =()=>{
-        Coments= Coments.sort((a,b)=>{
-            const aTime = new Date(a.time);
-            const bTime = new Date(b.time);
-            if(aTime<bTime){
-                return 1
-            }else if(aTime>bTime){
-                return -1;
-            }else{
-                return 0;
-            }
-        }).map(obj=>obj.comment);
+    const getComment = (tr) => {
+        const comment = tr.querySelector('[class*="textCollapse_content"]').textContent;
+        const photos = [];
+        const lis = tr.querySelectorAll('[class*="flexSmallContainer"] > img');
+        lis && Array.prototype.forEach.call(lis, li => {
+            photos.push(li.getAttribute('src'));
+        })
+        return { comment, photos };
     }
     const readComment = () => {
-        const trs = document.querySelectorAll('.rax-view-v2.rax-scrollview-webcontainer .card__main');
+        const trs = document.querySelectorAll('.container--qQOSacQG ~ [data-appeared]');
         Array.prototype.forEach.call(trs, tr => {
-            // 直接评论
-            const comment = [...tr.children].filter(div=>div.classList.contains('card__content'))[0].textContent;
-            const photos = [];
-            const lis = [...tr.children].filter(div=>div.classList.contains('card__pictures-main'))[0].querySelectorAll('img');
-            lis && Array.prototype.forEach.call(lis, li => {
-                photos.push(li.getAttribute('src'));
-            })
-            // console.log(comment, photos);
-            if(photos.length>0){
-                Index = Index+1;
-                Photos.push({ id: Index, photos: photos })
-            }
-            // Coments.push(photos.length > 0 ? `有图片：${Index}：${comment}` : comment);
-            const time = [...tr.children].filter(div=>div.classList.contains('card__sku'))[0].textContent.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/)[0];
-            addComment({time,comment},photos.length>0?`有图片：${Index}：`:'')
-            // 获取追评
-            const appendList = [...tr.children].filter(div=>div.classList.contains('card__append-rate-main'));
-            if(appendList.length>0){
-                const append = appendList[0];
-                const append_comment = append.querySelector('.card__append-rate-content').textContent;
-                const append_photos = [];
-                const append_lis = append.querySelectorAll('.card__pictures-main img');
-                append_lis && Array.prototype.forEach.call(append_lis, li => {
-                    append_photos.push(li.getAttribute('src'));
-                })
-                // console.log(append_comment, append_photos);
-                if(append_photos.length > 0){
-                    Index = Index+1;
-                    Photos.push({ id: Index, photos: append_photos });
+            const $trs = tr.querySelectorAll('[class*="mainContentRoot--RVozY2ZI"]')
+            if ($trs.length > 0) {
+                const { comment, photos } = getComment($trs[0]);
+                if (photos.length > 0) {
+                    Index = Index + 1;
+                    Photos.push({ id: Index, photos: photos })
                 }
-                // Coments.push(append_photos.length > 0 ? `有图片：${Index}：追：${append_comment}` : `追：${append_comment}`);
-                addComment({time,comment:append_comment},append_photos.length > 0 ? `有图片：${Index}：追：` : `追：`);
+                addComment({ comment }, photos.length > 0 ? `有图片：${Index}：` : '')
+                if ($trs.length > 1) {
+                    const { comment: append_comment, photos: append_photos } = getComment($trs[1]);
+                    if (append_photos.length > 0) {
+                        Index = Index + 1;
+                        Photos.push({ id: Index, photos: append_photos });
+                    }
+                    // Coments.push(append_photos.length > 0 ? `有图片：${Index}：追：${append_comment}` : `追：${append_comment}`);
+                    addComment({ comment: append_comment }, append_photos.length > 0 ? `有图片：${Index}：追：` : `追：`);
+                }
             }
-            
         })
         // console.log(Coments);
         // console.log(Photos);
-        // 排序
-        commentSort();
     }
     function getBase64Image(src) {
         return new Promise((resolve, reject) => {
@@ -128,7 +106,7 @@
         // 进一步的去匹配
         // 比如：*0-rate.jpg_230x10000Q75.jpg_.webp
         const match2 = url.match(/^(.+?)\.(jpg|jpeg|png|gif)_\w+\.\w+\.\w+$/);
-        if(match2) url = match2[1]+'.'+match2[2];
+        if (match2) url = match2[1] + '.' + match2[2];
 
         let min = 'jpg';
         const match_min = url.match(/\/([^\/]+?)\.(\w+?)$/);
@@ -148,7 +126,7 @@
      * @param {string} filenameA 下载的文件名 
      * @param {function} cb 下载完成后的回调函数
      */
-    function startDownload(zipD,filenameA=product_id,cb=()=>{}) {
+    function startDownload(zipD, filenameA = product_id, cb = () => { }) {
         console.log(`正在打包评论...`)
         zipD.generateAsync({ type: "blob" }).then(function (content) {
             // 下载的文件名
@@ -175,7 +153,7 @@
      * @param {array} imgArr 添加图片的数组
      * @param {function} cb 添加完图片后的回调函数
      */
-    function pushImg(zipD=Zip,imgArr=[],cb) {
+    function pushImg(zipD = Zip, imgArr = [], cb) {
         var img = zipD.folder('images');
         let index = 0;
         imgArr.forEach(photo => {
@@ -196,10 +174,10 @@
      * @param {string} imgFolder 下载zip的名字
      * @param {function} cb 下载完成后的回调函数 
      */
-    function startImagesDownload(imgArr=[],imgFolder='images',cb=()=>{}) {
+    function startImagesDownload(imgArr = [], imgFolder = 'images', cb = () => { }) {
         const zip1 = new JSZip();
-        pushImg(zip1,imgArr,()=>{
-            startDownload(zip1,imgFolder,cb)
+        pushImg(zip1, imgArr, () => {
+            startDownload(zip1, imgFolder, cb)
         })
     }
     /**
@@ -208,13 +186,13 @@
      * @param {function} cb 下载成功后的毁掉函数
      */
     let imgIndex = 0;
-    function loopImagesDownload(imgArr=[],cb=()=>{}) {
-        const arr = imgArr.splice(0,maxDownload);
+    function loopImagesDownload(imgArr = [], cb = () => { }) {
+        const arr = imgArr.splice(0, maxDownload);
         imgIndex++;
-        startImagesDownload(arr,`${product_id}-images-${imgIndex}`,()=>{
-            if(imgArr.length>0){
-                loopImagesDownload(imgArr,cb)
-            }else{
+        startImagesDownload(arr, `${product_id}-images-${imgIndex}`, () => {
+            if (imgArr.length > 0) {
+                loopImagesDownload(imgArr, cb)
+            } else {
                 cb();
             }
         })
@@ -231,12 +209,12 @@
             })
         })
         ImgLength = down_photos.length;
-        if(ImgLength<= maxDownload){
-            pushImg(Zip,down_photos,()=>{
-                startDownload(Zip,product_id);
+        if (ImgLength <= maxDownload) {
+            pushImg(Zip, down_photos, () => {
+                startDownload(Zip, product_id);
             })
-        }else{
-            startDownload(Zip,`${product_id}-comments`,()=>{
+        } else {
+            startDownload(Zip, `${product_id}-comments`, () => {
                 loopImagesDownload(down_photos);
             })
         }
@@ -271,7 +249,7 @@
             download();
         });
     }
-    console.log('%c下载评论函数：startReadComent()','color:red;font-size:20px;');
+    console.log('%c下载评论函数：startReadComent()', 'color:red;font-size:20px;');
     console.log('用手机页面下载评论，直接手动拖动到评论底部，出现验证码要把开发工具关掉变成电脑页面再去滑动验证，要不然不会成功');
     console.log(`window.is_save_photo=${window.is_save_photo},true保存图片，false不保存图片，可以修改当前值`)
     console.log(`小技巧，可以调整电脑的滚轮到最大，滚动的时候可以更快`)

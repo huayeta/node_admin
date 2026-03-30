@@ -171,8 +171,9 @@ const Tools = {
                     超链：<a href="?query=乐乐课堂%5C动画版乐乐课堂乐乐小学%5C04人教版1-6年级数学视频%2BPDF习题%5C三年级%5C三年级上&disk=l1">乐三上</a>
                     <a href="?query=乐乐课堂%5C281-小学奥数乐乐课堂%5C一年级%5C01【一年级奥数】-%2084集&disk=l1">乐奥一</a>
                     <a href="?query=洋葱学院%5C25新版洋葱合集【小学】%5C数学%5C人教版%5C人教版&disk=l1">洋葱学院</a>
-                    <a href="?query=剑桥素材-power%20up-think-Kid’%20s%20Box%5Cthink第二版资源包%5C音频视频&disk=m1">think音视频</a>
+                    <a href="?query=剑桥素材-power%20up-think-Kid%27s%20Box&disk=m1">think音视频1</a>
                     <a href="?query=1000-2000-4000词%5C2000词%5C1000词视频%5C1000%20Basic%20English%20Words%20精讲视频&disk=m1">1000词</a>
+                    <a href="?query=01讲解版-金波美文精读&disk=m1">金波美文精读</a>
                 </div>
                 <div class="menu">${['语文', '数学', '英语', '阅读', '历史', '初中', '高中', '其他'].map(data => `<span ${(Tools.data.sel && Tools.data.sel.includes(data)) ? 'class="sel"' : ''}>${data}</span>`).join('')}</div>
             `: ''}
@@ -209,9 +210,9 @@ const Tools = {
                 url_tmp.searchParams.set('query', encodeURIComponent((QUERY ? `${QUERY}\\` : '') + data.file));
                 url_tmp.searchParams.set('disk', data.disk);
                 url_tmp.searchParams.set('video', data.ext);
-                return `<li><a target="_black" href="${url_tmp}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
+                return `<li><a target="_blank" href="${url_tmp}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
             }
-            return `<li><a target="_black" href="/api/dir${url}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
+            return `<li><a target="_blank" href="/api/dir${url}">${data.file}</a><span class="bytes">${Tools.formatBytes(data.size)}</span></li>`;
         }).join('')}
             </ul>`
         document.querySelector('.content').innerHTML = str;
@@ -280,16 +281,21 @@ const Tools = {
         const player = videojs('my-video', {
             techOrder: ['html5', 'flvjs'],
         })
-        player.src({
-            src: url,
-            type: Tools.getVideoMimeType(video_type)
-        });
+        
         player.on('error', function () {
             const $error = document.querySelector('.vjs-modal-dialog-content');
             const div = document.createElement('div');
             div.style = 'position:absolute; left:50%;top:50%;font-size:20px;';
             div.innerHTML = `<p><a target="_black" href="/api/dir?query=${QUERY}&disk=${Disk}">点击转换尝试播放</a></p><p><a class="j-copyText" data-copytext="${document.location.origin}${url}">点击复制链接去其他播放器播放</a></p>`;
             $error.appendChild(div);
+        })
+        player.on('ready', function () {
+            // console.log(player)
+            player.src({
+                src: url,
+                type: Tools.getVideoMimeType(video_type)
+            });
+            // player.play();
         })
     },
     initialization: async () => {
