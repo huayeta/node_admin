@@ -296,6 +296,20 @@ const Tools = {
                 type: Tools.getVideoMimeType(video_type)
             });
             // player.play();
+            const div = document.createElement('div');
+            div.style = 'position:absolute; right:0vw;bottom:2.5vh;z-index:100;font-weight:bold;font-size:20px;background-color:rgba(255,255,255,0.1);color:#fff;padding:15px 10px;border-radius:100vw;cursor;';
+            div.innerHTML = `播放`;
+            container.appendChild(div);
+            div.addEventListener('click', function () {
+                // 切换播放状态
+                if (player.paused()) {
+                    player.play();
+                } else {
+                    player.pause();
+                }
+                // 切换div的文本
+                div.innerHTML = player.paused() ? '播放' : '暂停';
+            })
         })
     },
     initialization: async () => {

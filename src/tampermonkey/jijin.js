@@ -30,7 +30,7 @@ const customStorage = new CustomStorage();
 
 // {code:...data}
 let DATAS = {};
-// {day:total_arr[0][0]|credit,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME,position:持仓情况,lv:利率债小于等于,dtSly:定投收益率大于等于,ratePositiveDay:连续正收益率的天数大于等于,classify:基金分类}
+// {day:total_arr[0][0]|credit|sharp1:夏普特率,sort:-1|1|0,type:债权组合,checked:1|0是否筛选购买的,name:筛选名字,note:筛选备注,emoji:keynote|shield,sale_time:SALETIME,position:持仓情况,lv:利率债小于等于,dtSly:定投收益率大于等于,ratePositiveDay:连续正收益率的天数大于等于,classify:基金分类}
 let SORT = {};
 // {code:{checked:1,type:code_type_arr[0]债权组合,sale_time:7|30卖出时间,note:备注,keynote:重点,shield:抗跌,heavy:重仓,buy_time:买入时间,credit:信用值,income:购买后平均收益率,limit:限额,Ftype:债权类型,Ftype_text:债权类型,investment:定投相关,is_ct:城投债,classify:分类，relateTheme:相关主题}}
 let CODES = {};
@@ -81,6 +81,7 @@ const CLASSIFICATION = {
     '8': '低空经济',
     '9': '永磁稀土',
     '10': '存储芯片',
+    '11':'锂矿',
     '13': '游戏',
     '14': '北证50',
     '15': '科创芯片',
@@ -535,30 +536,42 @@ Object.assign(Tools, {
         codes.sort((a, b) => {
             let result = 0;
             if (day == 'income') {
+                // 购后日增长
                 let aa = bb = (sort > 0 ? 1000 : 0);
                 if (CODES[a.code] && CODES[a.code][day]) aa = CODES[a.code][day];
                 if (CODES[b.code] && CODES[b.code][day]) bb = CODES[b.code][day];
                 result = aa - bb;
             } else if (day == 'credit') {
+                // 信用债
                 let aa = bb = (sort > 0 ? 0 : 10000);
                 if (a.position && +a.position.xx > 0) aa = +a.position.xx;
                 if (b.position && +b.position.xx > 0) bb = +b.position.xx;
                 return sort > 0 ? (bb - aa) : (aa - bb);
+            } else if (day == 'sharp1') {
+                // 夏普特率
+                let aa = bb = (sort > 0 ? 0 : 10000);
+                if (a.uniqueInfo && +a.uniqueInfo.sharp1 > 0) aa = +a.uniqueInfo.sharp1;
+                if (b.uniqueInfo && +b.uniqueInfo.sharp1 > 0) bb = +b.uniqueInfo.sharp1;
+                return sort > 0 ? (bb - aa) : (aa - bb);
             } else if (day == 'sumLastDp') {
+                // 最后连续正负收益
                 if (Array.isArray(a.customAdjacentData) && Array.isArray(b.customAdjacentData)) {
                     result = Number(a.customAdjacentData[0].sum) - Number(b.customAdjacentData[0].sum);
                 }
             } else if (day == 'valuation') {
+                // 估值
                 let aa = bb = (sort > 0 ? 1000 : 0);
                 if (CODES[a.code] && CODES[a.code].valuation && CODES[a.code].valuation.valuation) aa = CODES[a.code].valuation.valuation;
                 if (CODES[b.code] && CODES[b.code].valuation && CODES[b.code].valuation.valuation) bb = CODES[b.code].valuation.valuation;
                 result = aa - bb;
             } else if (day == 'valuation_ths') {
+                // 估值_100天
                 let aa = bb = (sort > 0 ? 1000 : 0);
                 if (CODES[a.code] && CODES[a.code].valuation_ths_arr && CODES[a.code].valuation_ths_arr.length > 0 && CODES[a.code].valuation_ths_arr[CODES[a.code].valuation_ths_arr.length - 1].valuation) aa = CODES[a.code].valuation_ths_arr[CODES[a.code].valuation_ths_arr.length - 1].valuation;
                 if (CODES[b.code] && CODES[b.code].valuation_ths_arr && CODES[b.code].valuation_ths_arr.length > 0 && CODES[b.code].valuation_ths_arr[CODES[b.code].valuation_ths_arr.length - 1].valuation) bb = CODES[b.code].valuation_ths_arr[CODES[b.code].valuation_ths_arr.length - 1].valuation;
                 result = aa - bb;
             } else if (day == 'standardDeviation') {
+                // 标准差
                 let aa = bb = (sort > 0 ? 1000 : 0);
                 if (a.standardDeviation && a.standardDeviation.populationStdDev) aa = +a.standardDeviation.populationStdDev;
                 if (b.standardDeviation && b.standardDeviation.populationStdDev) bb = +b.standardDeviation.populationStdDev;
@@ -574,11 +587,24 @@ Object.assign(Tools, {
     sortHtml: (day) => {
         let codes = Object.values(DATAS);
         codes = Tools.sortCodes(codes, day, -1);
-        for (let key in codes) {
-            const code = codes[key].code;
-            // console.log(Number(key)+1);
-            DATAS[code][`${day}_sort`] = `<span style="${key < 5 ? 'color:deepskyblue;' : ''}">${Number(key) + 1}</span>/${codes.length}`;
+        const codes_1 = codes.filter(code => Tools.isDebt(code.code) == 1);
+        const codes_2 = codes.filter(code => Tools.isDebt(code.code) == 2);
+        const codes_3 = codes.filter(code => Tools.isDebt(code.code) == 3);
+        function getSort (codes){
+            for (let key in codes) {
+                const code = codes[key].code;
+                // console.log(Number(key)+1);
+                DATAS[code][`${day}_sort_debt`] = `<span style="${key < 5 ? 'color:deepskyblue;' : ''}">${Number(key) + 1}</span>/${codes.length}`;
+            }
         }
+        getSort(codes_1);
+        getSort(codes_2);
+        getSort(codes_3);
+        // for (let key in codes) {
+        //     const code = codes[key].code;
+        //     // console.log(Number(key)+1);
+        //     DATAS[code][`${day}_sort`] = `<span style="${key < 5 ? 'color:deepskyblue;' : ''}">${Number(key) + 1}</span>/${codes.length}`;
+        // }
     },
     // 是否是债基
     isDebt: (code) => {
@@ -1713,10 +1739,10 @@ Object.assign(Tools, {
                                                                                         <fund-valuation-scaling-echarts code="${data.code}" style="position:absolute;top:0px;left:10px;opacity:0.3;z-index:0;" ></fund-valuation-scaling-echarts>
                                                                                     </td>
                                                                                     ${total_arr.map(total => {
-                                                                                return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort`]}</span></td>`
+                                                                                return `<td><span class="${(+data[total[0]]) > 0 ? 'red' : 'green'}">${data[total[0]]}%</span>/<span class="brown">${data[`${total[0]}_sort_debt`]}</span></td>`
                                                                             }).join('')}
-                                                                                    <td class="tac">${data.standardDeviation ? data.standardDeviation.sampleStdDev : ''}</td>
-                                                                                    <td>${data.customType ? data.customType : ''}</td>
+                                                                                    <td class="tac">${data.standardDeviation ? data.standardDeviation.sampleStdDev : ''}<br/>${data.customType ? data.customType : ''}</td>
+                                                                                    <!-- <td>${data.customType ? data.customType : ''}</td> -->
                                                                                     <td>
                                                                                         <div class="tip-container">
                                                                                             <div>${data.maxSaleTime ? `${data.maxSaleTime}天免` : ''}</div>
@@ -1762,11 +1788,17 @@ Object.assign(Tools, {
                                                                                         ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.sharp1) ? `夏普比率：${+data.uniqueInfo.sharp1.toFixed(2)}%<br/>` : ''}
                                                                                         ${data.uniqueInfo && Tools.isNumber1(data.uniqueInfo.maxretra1) ? `最大回撤：${+data.uniqueInfo.maxretra1.toFixed(2)}%` : ''}
                                                                                     </td>
-                                                                                    <td>${Array.isArray(data.netWorthDate) ? data.netWorthDate.join('<br />') : data.netWorthDate}</td>
-                                                                                    <td style="${(data.Ftype && data.Ftype.includes('混合型')) ? 'color:brown;' : ''}">
+                                                                                    <td>
+                                                                                        ${Array.isArray(data.netWorthDate) ? data.netWorthDate.join('<br />') : data.netWorthDate}
+                                                                                        <div style="${(data.Ftype && data.Ftype.includes('混合型')) ? 'color:brown;' : ''}">
+                                                                                            ${Array.isArray(data.Ftype) ? data.Ftype.join('<br />') : data.Ftype}
+                                                                                            ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods) != 0 ? `<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>` : ''}
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <!-- <td style="${(data.Ftype && data.Ftype.includes('混合型')) ? 'color:brown;' : ''}">
                                                                                         ${Array.isArray(data.Ftype) ? data.Ftype.join('<br />') : data.Ftype}
                                                                                         ${data.assetPosition && data.assetPosition.fundboods && Tools.showYh(data.assetPosition.fundboods) != 0 ? `<p class="green fs12">银行债：${Tools.showYh(data.assetPosition.fundboods).toFixed(2)}%</p>` : ''}
-                                                                                    </td>
+                                                                                    </td> -->
                                                                                 </tr>
                                                                             `
                                                                         }
@@ -1811,17 +1843,17 @@ Object.assign(Tools, {
             return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span>${index==0?'<span style="font-weight:normal;" class="j-fund-sort"></span>':''}</th>`
         }).join('')}
                     <th>90标准差<span class="caret-wrapper ${SORT.day == 'standardDeviation' ? sortClassname : ''}" data-day="standardDeviation"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
-                    <th>
+                    <!--<th>
                         债权组合
-                    </th>
+                    </th> -->
                     <th>卖出时间</th>
                     <th>是否售出</th>
                     <!-- <th>定投收益</th> -->
                     <th>资产</th>
                     <th>持仓情况<span class="caret-wrapper ${SORT.day == 'credit' ? sortClassname : ''}" data-day="credit"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
-                    <th>特色数据</th>
+                    <th>特色数据<span class="caret-wrapper ${SORT.day == 'sharp1' ? sortClassname : ''}" data-day="sharp1"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <th>净值更新日期</th>
-                    <th>债权类型</th>
+                    <!-- <th>债权类型</th> -->
                 </tr>
             </thead>
             <tbody>
@@ -1835,6 +1867,19 @@ Object.assign(Tools, {
     },
     setCon: (context) => {
         document.querySelector('.g-con').innerHTML = context;
+    },
+    // 获取持仓列表
+    getCheckedDebtCodes: () => {
+        const debtCodes = [];
+        // console.log(CODES)
+        Object.keys(CODES).forEach(code=>{
+            if(code && Tools.isDebt(code) == 1 && CODES[code].checked == 1){
+                // 是股基
+                debtCodes.push(code);
+            }
+        })
+        // console.log(debtCodes);
+        return debtCodes;
     },
     initialization: () => {
 
@@ -1941,7 +1986,8 @@ Object.assign(Tools, {
 
         // 获取需要更新的列表
         const arr = Object.keys(DATAS).filter(code => {
-            return Tools.isDebt(code) == 1;
+            // return Tools.isDebt(code) == 1;
+            return true;
         }).filter(code => {
             // 当前时间大约20点
             if (new Date().getHours() >= 20) {
@@ -1962,6 +2008,17 @@ Object.assign(Tools, {
         console.log(arr.length);
         if (arr.length > 0) Tools.updatasCodes(document.querySelector('.j-code-updata'), arr);
 
+        // 获取持仓列表
+        const debtCodes = Tools.getCheckedDebtCodes();
+        fetch('http://127.0.0.1:3000/fundHolding',{
+            method:'POST',
+            headers: {
+                'Content-Type': 'application/json', // 必须加上，告诉后端这是JSON数据
+              },
+            body:JSON.stringify({
+                'fundCode':debtCodes.join(',')
+            })
+        })  
 
         // 下面是储存json
         const $datasAddDiv = document.querySelector('.j-datas-add');

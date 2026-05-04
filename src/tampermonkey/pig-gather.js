@@ -180,7 +180,7 @@ const customStorage = new CustomStorage();
             // },
             {
                 label: '处韵',
-                options: ['肛裂1','肛瘘1','痔疮2'],
+                options: ['肛裂1','肛瘘2','痔疮2'],
             }
         ],
         JD_datas: [
@@ -1065,14 +1065,16 @@ const customStorage = new CustomStorage();
         // 给旺旺添加备注
         addWwNoteByAccount: (pig_phone, ww, note) => {
             const obj = { note, note_create_time: Tools.getTime() };
+            const obj_1={...obj};
             if (note.includes('被抓')) {
-                obj.is_del = "1";
-            }
-            return Tools.updataDataByAccount(pig_phone, obj, (data, index) => {
+                obj_1.is_del = "1";
+                Tools.updataDataByAccount(pig_phone,{...obj,"is_comment":"1","comment_time":Tools.getTime()},(data,index)=>{if(data.pig_type=='TB'){return 'break'}});
+            } 
+            return Tools.updataDataByAccount(pig_phone, obj_1, (data, index) => {
                 if (data.ww_exec == ww) {
                     return 'break';
                 }
-            })
+            });
         },
         // 添加wx
         addWx: (pig_phone, wx) => {
@@ -1257,13 +1259,16 @@ const customStorage = new CustomStorage();
                         }
                     })
                 }
+                // 判断是否有被抓
+                let catch_txt = '';
+                if(data.note?.includes('被抓'))catch_txt='<span style="color:red;">（被抓）</span>';
                 if (data.shop_label) {
                     const shopLabels = data.shop_label.split('-');
                     // 合并店铺
                     if (datas[index + 1] && datas[index + 1].shop_label && datas[index + 1].shop_label.indexOf(shopLabels[0]) !== -1) {
-                        results.unshift((record_color && index === 0) ? `<span style="color:${record_color}">${shopLabels[1]}</span>` : shopLabels[1]);
+                        results.unshift((record_color && index === 0) ? `<span style="color:${record_color}">${shopLabels[1]+catch_txt}</span>` : shopLabels[1]+catch_txt);
                     } else {
-                        results.unshift((record_color && index === 0) ? `<span style="color:${record_color}">${data.shop_label}</span>` : data.shop_label);
+                        results.unshift((record_color && index === 0) ? `<span style="color:${record_color}">${data.shop_label+catch_txt}</span>` : data.shop_label+catch_txt);
                     }
                 }
             })
@@ -1895,7 +1900,7 @@ const customStorage = new CustomStorage();
                     <div class="m-findData search" style="margin-top:0px;">
                         <span class="gray">1：</span><select class="search_input j-screen"><option value="1">筛选被抓</option><option value="0" selected>不筛选被抓</option></select>
                         <span class="gray">2：</span><select class="search_input j-screen-time"><option value="1" selected>筛选正序</option><option value="-1">筛选逆序</option></select>
-                        <span class="gray">3：</span><input class="search_input j-search-time" placeholder="搜索时间" value="2025-04-01" type="date" />
+                        <span class="gray">3：</span><input class="search_input j-search-time" placeholder="搜索时间" value="2025-12-01" type="date" />
                         <span class="gray">4：</span><select class="search_input j-comment-sel"><option value="" selected>未知评价</option><option value="1">已评价</option><option value="0">未评价</option><option value="-1">默认评价</option></select>
                         <span class="gray">5：</span><select class="search_input j-pig-type">${ORDERTYPES.map(type => `<option value="${type}">${type}</option>`)}</select>
                         <span class="gray">6：</span><select class="search_input j-shop-id"></select>

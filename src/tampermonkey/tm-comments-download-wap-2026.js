@@ -9,7 +9,7 @@
 // @require      https://stuk.github.io/jszip/dist/jszip.js
 // @grant        none
 // ==/UserScript==
-// 比如：https://h5.m.taobao.com/app/rate/www/rate-list/index.html?auctionNumId=867886200962
+// 比如：https://h5.m.taobao.com/app/rate/www/rate-list/index.html?auctionNumId=969053722591
 // 比如：https://meta.m.taobao.com/app/taobao-ugc-community/rate-list/?rateInfo={"itemId":"867886200962","feedId":"","sellerId":"","shopId":"","exParams":{"openMode":"","clickTimeMS":"","navTimeMS":"","rateType":"-8","bizChannel":"ttdetail_h5"},"commentCount":"","itemInfo":{},"keyword":{"attribute":"","word":""},"invokeSource":0,"detailRate":{},"rateKeywordList":[],"skuInfo":{},"askInfo":{},"rateType":"","foldFlag":"","clickTimeMS":"","navTimeMS":""}
 (function () {
     'use strict';

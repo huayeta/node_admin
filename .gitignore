@@ -17,3 +17,5 @@ planflod
 *.db
 npminstall-debug.log
 c.md
+.atomcode
+.atomcode.md
