@@ -81,7 +81,7 @@ const CLASSIFICATION = {
     '8': '低空经济',
     '9': '永磁稀土',
     '10': '存储芯片',
-    '11':'锂矿',
+    '11': '锂矿',
     '13': '游戏',
     '14': '北证50',
     '15': '科创芯片',
@@ -590,7 +590,7 @@ Object.assign(Tools, {
         const codes_1 = codes.filter(code => Tools.isDebt(code.code) == 1);
         const codes_2 = codes.filter(code => Tools.isDebt(code.code) == 2);
         const codes_3 = codes.filter(code => Tools.isDebt(code.code) == 3);
-        function getSort (codes){
+        function getSort(codes) {
             for (let key in codes) {
                 const code = codes[key].code;
                 // console.log(Number(key)+1);
@@ -778,7 +778,7 @@ Object.assign(Tools, {
         })
         // console.log(now_code_dp);
         document.querySelector('.j-valuation-ths-sort').innerHTML = `<span class="red">${now_code_dp['+']} ↑ </span><span class="green" style="margin-left:3px;">${now_code_dp['-']} ↓</span>`;
-        
+
         // 更新基金涨跌
         const now_code_dp_fund = { '+': 0, '-': 0 };
         nowCodes.forEach(code => {
@@ -801,13 +801,13 @@ Object.assign(Tools, {
         const classify_dp = {};
         stockCodes.forEach(code => {
             let classify = '-1';
-            if(CODES[code] && CODES[code].classify){
+            if (CODES[code] && CODES[code].classify) {
                 classify = CODES[code].classify;
             }
-            if(!classify_dp[classify]){
+            if (!classify_dp[classify]) {
                 classify_dp[classify] = { '+': 0, '-': 0 };
             }
-            if(CODES[code] && CODES[code].valuation_ths_arr && CODES[code].valuation_ths_arr.length > 0){
+            if (CODES[code] && CODES[code].valuation_ths_arr && CODES[code].valuation_ths_arr.length > 0) {
                 const valuation_ths = CODES[code].valuation_ths_arr[CODES[code].valuation_ths_arr.length - 1];
                 // console.log(valuation_ths);
                 if (+valuation_ths.valuation > 0) {
@@ -818,8 +818,8 @@ Object.assign(Tools, {
             }
         })
         // console.log(classify_dp);
-        const classification = {...CLASSIFICATION, '-1':'其他'};
-        document.querySelector('.j-classify-btn-group').innerHTML=Object.keys(classification).sort((a,b)=>classify_dp[b]?.['+']-classify_dp[a]?.['+']??0).map(key => (`<button class="mr10 mb10 ${SORT.classify == key ? 'reb' : ''}" value="${key}"><span>${['1','2','9','10','17','18','24','30'].includes(key)?'🔥':''}${classification[key]}</span>${classify_dp[key]?`<span class="red ml5">${classify_dp[key]['+']}</span>,<span class="green">${classify_dp[key]['-']}</span>`:''}</button>`)).join('')
+        const classification = { ...CLASSIFICATION, '-1': '其他' };
+        document.querySelector('.j-classify-btn-group').innerHTML = Object.keys(classification).sort((a, b) => classify_dp[b]?.['+'] - classify_dp[a]?.['+'] ?? 0).map(key => (`<button class="mr10 mb10 ${SORT.classify == key ? 'reb' : ''}" value="${key}"><span>${['1', '2', '9', '10', '17', '18', '24', '30'].includes(key) ? '🔥' : ''}${classification[key]}</span>${classify_dp[key] ? `<span class="red ml5">${classify_dp[key]['+']}</span>,<span class="green">${classify_dp[key]['-']}</span>` : ''}</button>`)).join('')
     },
     storageDatas: async () => {
         customStorage.setItem('jijin.datas', DATAS);
@@ -1839,8 +1839,8 @@ Object.assign(Tools, {
                     <th>连涨跌/幅度<span class="caret-wrapper ${SORT.day == 'sumLastDp' ? sortClassname : ''}" data-day="sumLastDp"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <!-- <th>基金估值<span class="caret-wrapper ${SORT.day == 'valuation' ? sortClassname : ''}" data-day="valuation"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th> -->
                     <th>天天估值<span class="caret-wrapper ${SORT.day == 'valuation_ths' ? sortClassname : ''}" data-day="valuation_ths"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span><span style="font-weight:normal;" class="j-valuation-ths-sort"></span></th>
-                    ${total_arr.map((total,index) => {
-            return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span>${index==0?'<span style="font-weight:normal;" class="j-fund-sort"></span>':''}</th>`
+                    ${total_arr.map((total, index) => {
+            return `<th>${total[1]}<span class="caret-wrapper ${SORT.day == total[0] ? sortClassname : ''}" data-day="${total[0]}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span>${index == 0 ? '<span style="font-weight:normal;" class="j-fund-sort"></span>' : ''}</th>`
         }).join('')}
                     <th>90标准差<span class="caret-wrapper ${SORT.day == 'standardDeviation' ? sortClassname : ''}" data-day="standardDeviation"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span></th>
                     <!--<th>
@@ -1872,8 +1872,8 @@ Object.assign(Tools, {
     getCheckedDebtCodes: () => {
         const debtCodes = [];
         // console.log(CODES)
-        Object.keys(CODES).forEach(code=>{
-            if(code && Tools.isDebt(code) == 1 && CODES[code].checked == 1){
+        Object.keys(CODES).forEach(code => {
+            if (code && Tools.isDebt(code) == 1 && CODES[code].checked == 1) {
                 // 是股基
                 debtCodes.push(code);
             }
@@ -1969,6 +1969,7 @@ Object.assign(Tools, {
             <div class="j-classify-btn-group"></div>
             <div class="g-table"></div>
             <div class="g-con"></div>
+            <div class="g-industry-block-container" style="margin:15px 0;"></div>
             <div class="g-baidu-stocks" style="margin:15px 0;"></div>
             ${['大佬-5', '大佬-2', '大佬-4', 9, 1, 3, 5, 6, 7, 8].map(name => {
             return `<view-img src="/public/uploads/${name}.jpg" ></view-img>`
@@ -1987,7 +1988,7 @@ Object.assign(Tools, {
         // 获取需要更新的列表
         const arr = Object.keys(DATAS).filter(code => {
             // return Tools.isDebt(code) == 1;
-            return true;
+            return false;
         }).filter(code => {
             // 当前时间大约20点
             if (new Date().getHours() >= 20) {
@@ -2010,15 +2011,15 @@ Object.assign(Tools, {
 
         // 获取持仓列表
         const debtCodes = Tools.getCheckedDebtCodes();
-        fetch('http://127.0.0.1:3000/fundHolding',{
-            method:'POST',
+        fetch('http://127.0.0.1:3000/fundHolding', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json', // 必须加上，告诉后端这是JSON数据
-              },
-            body:JSON.stringify({
-                'fundCode':debtCodes.join(',')
+            },
+            body: JSON.stringify({
+                'fundCode': debtCodes.join(',')
             })
-        })  
+        })
 
         // 下面是储存json
         const $datasAddDiv = document.querySelector('.j-datas-add');
@@ -2356,7 +2357,7 @@ class FundAutoFetcher {
     }
 
     // ---------- 核心请求方法 ----------
-    async _fetchValuation(codes=this.fundCodes) {
+    async _fetchValuation(codes = this.fundCodes) {
         try {
             const url = `${this.apiUrl}?codes=${encodeURIComponent(codes)}`;
             const response = await Tools.fetch('myTTJJFundValuation', { codes: codes });
@@ -3137,9 +3138,9 @@ addEventListener($Content.querySelector('.j-classify-btn-group'), 'click', e => 
     const $target = e.target.closest('button');
     let classify = $target.value;
     // console.log('11')
-    if($target.classList.contains('reb')){
+    if ($target.classList.contains('reb')) {
         Tools.setCustomSort({ classify: '' });
-    }else{
+    } else {
         e.target.parentElement.querySelectorAll('button').forEach(ele => {
             ele.classList.remove('reb');
         })
@@ -4365,6 +4366,7 @@ class MyContextmenu {
         this.arr[index]?.callback.call(this, $item);
     }
 }
+
 // const Menu = new Contextmenu();
 class BaiduStocks {
     constructor() {
@@ -4978,3 +4980,219 @@ class BaiduStocks {
 }
 const baiduStocks = new BaiduStocks();
 baiduStocks.init();
+
+// 行业板块图
+class IndustryBlockContainer {
+    constructor() {
+        this.$con = document.querySelector('.g-industry-block-container');
+        this.Datas = JSON.parse(customStorage.getItem('jijin.industry')) || {};
+    }
+    storage() {
+        // customStorage.setItem('jijin.baiduStocks', this.stocks);
+        customStorage.setItem('jijin.industry', JSON.stringify(this.Datas));
+    }
+    _fetchData(tt,dt,st = 'FLOW') {
+        // 闭环tt,dt
+        return ((tt,dt) => {
+            return Tools.fetch('bankRank', { tt, dt, st }).then(res => {
+                const datas = res.Data;
+                const time = Tools.getTime('YYYY-MM-DD');
+                if(!this.Datas[`${tt}-${dt}`])this.Datas[`${tt}-${dt}`] = {};
+                this.Datas[`${tt}-${dt}`][time] = {
+                    datas,time:Tools.getTime(),
+                };
+                this.storage();
+            });
+       })(tt,dt);
+    }
+    async fetchData(st = 'FLOW') {
+        const arr =[];
+        ['001002','001003'].forEach(tt => {
+            ['zf','zjlr'].forEach(dt => {   
+                arr.push(this._fetchData(tt,dt,dt=='zf'?'zf':'FLOW'));  
+            });
+        });
+        await Promise.all(arr);
+        this.updateTable();
+    }
+    renderHtml() {
+        this.$con.innerHTML = `
+        <style>
+            /* ─── Header ─── */
+		.g-industry-block-container .app-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 20px;
+		}
+
+		.g-industry-block-container .app-header h1 {
+			font-size: 20px;
+			font-weight: 600;
+		}
+        /* ─── Toolbar ─── */
+		.g-industry-block-container .toolbar {
+			display: flex;
+			align-items: center;
+			gap: 20px;
+			margin-bottom: 20px;
+			flex-wrap: wrap;
+		}
+
+		.g-industry-block-container .toolbar-group {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
+
+		.g-industry-block-container .toolbar-label {
+			font-size: 12px;
+			color: #8b949e;
+			margin-right: 8px;
+		}
+        </style>
+            <div class="app-header">
+        <h1>📊 板块热力图</h1>
+      </div>
+      <div class="toolbar">
+        <span class="toolbar-label">板块类别</span>
+        <div class="toolbar-group">
+          <button class="btn" data-tt="all">全部</button>
+          <button class="btn reb" data-tt="001002">行业</button>
+          <button class="btn" data-tt="001003">概念</button>
+        </div>
+        <span class="toolbar-label" style="margin-left:8px">排序</span>
+        <div class="toolbar-group">
+          <button class="btn reb" data-dt="zf">按涨幅</button>
+          <button class="btn" data-dt="zjlr">按资金流入</button>
+        </div>
+      </div>
+      <div class="heatmap-grid">
+        
+      </div>
+        `;
+        this.updateTable();
+    }
+    getSortHtml(day) {
+        // 判断排序class
+        let sortClassname = '';
+        if (SORT.industry_sort == 1) sortClassname = 'ascending';
+        if (SORT.industry_sort == -1) sortClassname = 'descending';
+        return `<span class="caret-wrapper ${SORT.industry_day == day ? sortClassname : ''}" data-day="${day}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span>`
+    }
+    findIndustryData(datas,name){
+        return datas.find(d => d.INDEXNAME == name);
+    }
+    updateTable() {
+        this.tt = this.$con.querySelector('[data-tt].reb').dataset.tt;
+        this.dt = this.$con.querySelector('[data-dt].reb').dataset.dt;
+        let datas=[];
+        let datas_now=[];
+        let datas_yesterday=[];
+        let datas_before_yesterday=[];
+        if(this.Datas[`${this.tt}-${this.dt}`]){
+            const keys = Object.keys(this.Datas[`${this.tt}-${this.dt}`]).sort((a,b)=>b.time-a.time);
+            datas_now = this.Datas[`${this.tt}-${this.dt}`][keys[0]].datas;
+            datas_yesterday = this.Datas[`${this.tt}-${this.dt}`][keys[1]].datas;
+            datas_before_yesterday = this.Datas[`${this.tt}-${this.dt}`]?.[keys[2]]?.datas || [];
+            if(SORT.industry_sort==1)datas_now = [...datas_now].reverse();
+            if(SORT.industry_sort==1)datas_yesterday = [...datas_yesterday].reverse();
+            if(SORT.industry_sort==1)datas_before_yesterday = [...datas_before_yesterday].reverse();
+        }
+        // console.log(`${this.tt}-${this.dt}`);
+        console.log(this.Datas,this.tt,this.dt);
+        // console.log(datas_now,datas_yesterday,datas_before_yesterday);
+        const industry_day = SORT.industry_day;
+        if(industry_day == 'industry_now'){
+            datas = datas_now;
+        }
+        else if(industry_day == 'industry_yesterday'){
+            datas = datas_yesterday;
+        }
+        else if(industry_day == 'industry_before_yesterday'){
+            datas = datas_before_yesterday;
+        }
+        if(!datas) datas = [];
+        const get_num = (d) =>{
+            return this.dt == 'zf' ? (d?.D.toFixed(2) +'%') : (d?.FLOW / 100000000).toFixed(2) + ' 亿';
+        }
+        const str = `
+            <table class="el-table">
+                <thead>
+                    <tr>
+                        <th>${this.tt == '001002' ? '行业' : '概念'}</th>
+                        <th>实时${this.getSortHtml('industry_now')}</th>
+                        <th>昨天</th>
+                        <th>前天</th>
+                        <th>最近两天</th>
+                        <th>最近三天</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${datas.map(d => {
+                        const data_yesterday = this.findIndustryData(datas_yesterday,d.INDEXNAME);
+                        const data_before_yesterday = this.findIndustryData(datas_before_yesterday,d.INDEXNAME);
+                        return `
+                            <tr>
+                                <td>${d.INDEXNAME}</td>
+                                <td>${get_num(d)}</td>
+                                <td>${get_num(data_yesterday)}</td>
+                                <td>${get_num(data_before_yesterday)}</td>
+                                <td>${this.dt=='zf' ? ((d?.D+data_yesterday?.D).toFixed(2) || 0) + '%' : (((d?.FLOW+data_yesterday?.FLOW)/100000000).toFixed(2) || 0) + ' 亿'}</td>
+                                <td>${this.dt=='zf' ? ((d?.D+data_before_yesterday?.D+data_yesterday?.D).toFixed(2) || 0) + '%' : (((d?.FLOW+data_before_yesterday?.FLOW+data_yesterday?.FLOW)/100000000).toFixed(2) || 0) + ' 亿'}</td>
+                            </tr>
+                        `
+                    }).join('')}
+                </tbody>
+            </table>
+        `
+        this.$con.querySelector('.heatmap-grid').innerHTML = str;
+    }
+    init() {
+        this.renderHtml();
+        this.fetchData();
+        // 排序
+        addEventListener(this.$con, 'click', e => {
+            const target = e.target;
+            const $parent = target.parentNode;
+            const day = $parent.getAttribute('data-day');
+            let sort = 0;
+            if (target.classList.contains('ascending')) {
+                // 点击升序
+                if ($parent.classList.contains('ascending')) {
+                    // 取消升序
+                    $parent.classList.remove('ascending');
+                    sort = 0;
+                } else {
+                    // 升序排列
+                    $parent.classList.add('ascending');
+                    $parent.classList.remove('descending');
+                    sort = 1;
+                }
+            }
+            if (target.classList.contains('descending')) {
+                // 点击降序
+                if ($parent.classList.contains('descending')) {
+                    // 取消降序
+                    $parent.classList.remove('descending');
+                    sort = 0;
+                } else {
+                    // 降序排列
+                    $parent.classList.add('descending');
+                    $parent.classList.remove('ascending');
+                    sort = -1;
+                }
+            }
+            Tools.setCustomSort({ industry_day: day, industry_sort: sort });
+            this.updateTable();
+        }, '.sort-caret')
+        //点击板块类别
+        addEventListener(this.$con.querySelector('.toolbar'), 'click', e => {
+            const target = e.target;
+            target.parentElement.querySelectorAll('.reb').forEach(btn => btn.classList.remove('reb'));
+            target.classList.add('reb');
+            this.updateTable();
+        }, '.btn')
+    }
+}
+(new IndustryBlockContainer()).init();

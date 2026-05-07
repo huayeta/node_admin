@@ -4,6 +4,7 @@ const DATA = [
     { url: 'https://github.com/OpenBMB/VoxCPM', title: 'VoxCPM语音生成克隆', desc: '面向多语言语音生成、创意语音设计与高保真语音克隆的无分词器文本转语音模型' },
     { url: 'https://github.com/YILING0013/AI_NovelGenerator', title: 'AI 小说生成器', desc: '用大模型自动生成多章节小说，支持上下文衔接、伏笔设计，适合网文作者、内容创作者快速产出故事内容。' },
     { url: 'https://github.com/forrestchang/andrej-karpathy-skills', title: 'Claude Code 的执行规范', desc: '给 Claude Code 提供一套规范的 "技能集"，让 AI 理解你的项目结构、代码风格，大幅提升代码质量和协作效率。' },
+    { url: 'https://github.com/HKUDS/DeepTutor', title: 'DeepTutor、AI帮助学习', desc: '主打把教材 / PDF / 论文变成可交互、可答疑、可出题的智能导师' },
 ];
 
 class BookmarkTable {
