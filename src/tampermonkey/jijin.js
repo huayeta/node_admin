@@ -3,6 +3,8 @@
 // https://kouchao.github.io/TiantianFundApi/apis/ 所有api信息
 // 更新的话先 cd E:\work\TiantianFundApi-main 然后npm run start
 
+import StockMarket from './jijin-stock.js';
+
 class CustomStorage {
     constructor() {
         this.storage = localStorage;
@@ -1988,7 +1990,7 @@ Object.assign(Tools, {
         // 获取需要更新的列表
         const arr = Object.keys(DATAS).filter(code => {
             // return Tools.isDebt(code) == 1;
-            return false;
+            return true;
         }).filter(code => {
             // 当前时间大约20点
             if (new Date().getHours() >= 20) {
@@ -4991,31 +4993,31 @@ class IndustryBlockContainer {
         // customStorage.setItem('jijin.baiduStocks', this.stocks);
         customStorage.setItem('jijin.industry', JSON.stringify(this.Datas));
     }
-    _fetchData(tt,dt,st = 'FLOW') {
+    async _fetchData(tt, dt, st = 'FLOW') {
         // 闭环tt,dt
-        return ((tt,dt) => {
-            return Tools.fetch('bankRank', { tt, dt, st }).then(res => {
+        return ((tt, dt) => {
+            return Tools.fetch('bankRank', { tt, dt, st }).then(async res => {
                 const datas = res.Data;
-                const time = Tools.getTime('YYYY-MM-DD');
-                if(!this.Datas[`${tt}-${dt}`])this.Datas[`${tt}-${dt}`] = {};
+                const time = await StockMarket.getCurrentTradingDate(new Date());
+                if (!this.Datas[`${tt}-${dt}`]) this.Datas[`${tt}-${dt}`] = {};
                 this.Datas[`${tt}-${dt}`][time] = {
-                    datas,time:Tools.getTime(),
+                    datas, time: Tools.getTime(),
                 };
                 this.storage();
             });
-       })(tt,dt);
+        })(tt, dt);
     }
     async fetchData(st = 'FLOW') {
-        const arr =[];
-        ['001002','001003'].forEach(tt => {
-            ['zf','zjlr'].forEach(dt => {   
-                arr.push(this._fetchData(tt,dt,dt=='zf'?'zf':'FLOW'));  
+        const arr = [];
+        ['001002', '001003'].forEach(tt => {
+            ['zf', 'zjlr'].forEach(dt => {
+                arr.push(this._fetchData(tt, dt, dt == 'zf' ? 'zf' : 'FLOW'));
             });
         });
         await Promise.all(arr);
-        this.updateTable();
+        await this.updateTable();
     }
-    renderHtml() {
+    async renderHtml() {
         this.$con.innerHTML = `
         <style>
             /* ─── Header ─── */
@@ -5052,7 +5054,7 @@ class IndustryBlockContainer {
 		}
         </style>
             <div class="app-header">
-        <h1>📊 板块热力图</h1>
+        <h1>📊 <a href="https://fund.eastmoney.com/ztjj/#!c/001002/dt/zjlr/curr/zf-%E7%83%AD%E9%97%A8%E4%B8%BB%E9%A2%98/fst/DESC" target="_blank">板块热力图</a></h1>
       </div>
       <div class="toolbar">
         <span class="toolbar-label">板块类别</span>
@@ -5071,7 +5073,8 @@ class IndustryBlockContainer {
         
       </div>
         `;
-        this.updateTable();
+        this.updateTTDT();
+        await this.updateTable();
     }
     getSortHtml(day) {
         // 判断排序class
@@ -5080,77 +5083,96 @@ class IndustryBlockContainer {
         if (SORT.industry_sort == -1) sortClassname = 'descending';
         return `<span class="caret-wrapper ${SORT.industry_day == day ? sortClassname : ''}" data-day="${day}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span>`
     }
-    findIndustryData(datas,name){
+    findIndustryData(datas, name) {
         return datas.find(d => d.INDEXNAME == name);
     }
-    updateTable() {
+    updateTTDT() {
         this.tt = this.$con.querySelector('[data-tt].reb').dataset.tt;
         this.dt = this.$con.querySelector('[data-dt].reb').dataset.dt;
-        let datas=[];
-        let datas_now=[];
-        let datas_yesterday=[];
-        let datas_before_yesterday=[];
-        if(this.Datas[`${this.tt}-${this.dt}`]){
-            const keys = Object.keys(this.Datas[`${this.tt}-${this.dt}`]).sort((a,b)=>b.time-a.time);
-            datas_now = this.Datas[`${this.tt}-${this.dt}`][keys[0]].datas;
-            datas_yesterday = this.Datas[`${this.tt}-${this.dt}`][keys[1]].datas;
-            datas_before_yesterday = this.Datas[`${this.tt}-${this.dt}`]?.[keys[2]]?.datas || [];
-            if(SORT.industry_sort==1)datas_now = [...datas_now].reverse();
-            if(SORT.industry_sort==1)datas_yesterday = [...datas_yesterday].reverse();
-            if(SORT.industry_sort==1)datas_before_yesterday = [...datas_before_yesterday].reverse();
+    }
+    async updateTable() {
+        let datas = [];
+        let datas_now = [];
+        let datas_yesterday = [];
+        let datas_before_yesterday = [];
+        if (this.Datas[`${this.tt}-${this.dt}`]) {
+            const keys = Object.keys(this.Datas[`${this.tt}-${this.dt}`]).sort((a, b) => (new Date(b)) - (new Date(a)));
+            // console.log(keys);
+
+            // console.log(now,yesterday,before_yesterday);
+            datas_now = this.Datas[`${this.tt}-${this.dt}`][this.now].datas;
+            datas_yesterday = this.Datas[`${this.tt}-${this.dt}`][this.yesterday].datas;
+            datas_before_yesterday = this.Datas[`${this.tt}-${this.dt}`]?.[this.before_yesterday]?.datas || [];
+            if (SORT.industry_sort == 1) datas_now = [...datas_now].reverse();
+            if (SORT.industry_sort == 1) datas_yesterday = [...datas_yesterday].reverse();
+            if (SORT.industry_sort == 1) datas_before_yesterday = [...datas_before_yesterday].reverse();
         }
         // console.log(`${this.tt}-${this.dt}`);
-        console.log(this.Datas,this.tt,this.dt);
+        // console.log(this.Datas,this.tt,this.dt);
         // console.log(datas_now,datas_yesterday,datas_before_yesterday);
         const industry_day = SORT.industry_day;
-        if(industry_day == 'industry_now'){
+        if (industry_day == 'industry_now') {
             datas = datas_now;
         }
-        else if(industry_day == 'industry_yesterday'){
+        else if (industry_day == 'industry_yesterday') {
             datas = datas_yesterday;
         }
-        else if(industry_day == 'industry_before_yesterday'){
+        else if (industry_day == 'industry_before_yesterday') {
             datas = datas_before_yesterday;
         }
-        if(!datas) datas = [];
-        const get_num = (d) =>{
-            return this.dt == 'zf' ? (d?.D.toFixed(2) +'%') : (d?.FLOW / 100000000).toFixed(2) + ' 亿';
+        if (!datas) datas = [];
+        const get_num = (d, index) => {
+            return `<span class="${(d?.D || d?.FLOW || 0) < 0 ? 'green' : index <= 10 ? 'red' : ''}">${this.dt == 'zf' ? (d?.D.toFixed(2) + '%') : (d?.FLOW / 100000000).toFixed(2) + ' 亿'}</span>`;
         }
         const str = `
             <table class="el-table">
                 <thead>
                     <tr>
                         <th>${this.tt == '001002' ? '行业' : '概念'}</th>
-                        <th>实时${this.getSortHtml('industry_now')}</th>
-                        <th>昨天</th>
-                        <th>前天</th>
+                        <th>${this.now}${this.getSortHtml('industry_now')}</th>
+                        <th>${this.yesterday}</th>
+                        <th>${this.before_yesterday}</th>
                         <th>最近两天</th>
                         <th>最近三天</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${datas.map(d => {
-                        const data_yesterday = this.findIndustryData(datas_yesterday,d.INDEXNAME);
-                        const data_before_yesterday = this.findIndustryData(datas_before_yesterday,d.INDEXNAME);
-                        return `
+                    ${datas.map((d, index) => {
+            const data_yesterday = this.findIndustryData(datas_yesterday, d.INDEXNAME);
+            const data_before_yesterday = this.findIndustryData(datas_before_yesterday, d.INDEXNAME);
+            return `
                             <tr>
                                 <td>${d.INDEXNAME}</td>
-                                <td>${get_num(d)}</td>
-                                <td>${get_num(data_yesterday)}</td>
-                                <td>${get_num(data_before_yesterday)}</td>
-                                <td>${this.dt=='zf' ? ((d?.D+data_yesterday?.D).toFixed(2) || 0) + '%' : (((d?.FLOW+data_yesterday?.FLOW)/100000000).toFixed(2) || 0) + ' 亿'}</td>
-                                <td>${this.dt=='zf' ? ((d?.D+data_before_yesterday?.D+data_yesterday?.D).toFixed(2) || 0) + '%' : (((d?.FLOW+data_before_yesterday?.FLOW+data_yesterday?.FLOW)/100000000).toFixed(2) || 0) + ' 亿'}</td>
+                                <td class="tac">${get_num(d, index)}</td>
+                                <td class="tac">${get_num(data_yesterday, index)}</td>
+                                <td class="tac">${get_num(data_before_yesterday, index)}</td>
+                                <td>${this.dt == 'zf' ? ((d?.D + data_yesterday?.D).toFixed(2) || 0) + '%' : (((d?.FLOW + data_yesterday?.FLOW) / 100000000).toFixed(2) || 0) + ' 亿'}</td>
+                                <td>${this.dt == 'zf' ? ((d?.D + data_before_yesterday?.D + data_yesterday?.D).toFixed(2) || 0) + '%' : (((d?.FLOW + data_before_yesterday?.FLOW + data_yesterday?.FLOW) / 100000000).toFixed(2) || 0) + ' 亿'}</td>
                             </tr>
                         `
-                    }).join('')}
+        }).join('')}
                 </tbody>
             </table>
         `
         this.$con.querySelector('.heatmap-grid').innerHTML = str;
     }
-    init() {
-        this.renderHtml();
-        this.fetchData();
+    async init() {
+        this.now = Tools.getTime('yyyy-MM-dd', await StockMarket.getCurrentTradingDate(new Date()));
+        this.yesterday = Tools.getTime('yyyy-MM-dd', await StockMarket.getPrevTradingDay(this.now));
+        this.before_yesterday = Tools.getTime('yyyy-MM-dd', await StockMarket.getPrevTradingDay(this.yesterday));
+
+        await this.renderHtml();
+        // 交易时段心跳（自动启停） 5分钟刷新一次
+        StockMarket.startWatcher(this.fetchData, 5 * 60 * 1000);
+        // this.fetchData();
+        // 非交易时间段判断是否刷新数据
+        if (!await StockMarket.isTradingTime(new Date())) {
+            const keys = Object.keys(this.Datas[`${this.tt}-${this.dt}`]).sort((a, b) => (new Date(b)) - (new Date(a)));
+            if (await StockMarket.isDataFresh(this.Datas[`${this.tt}-${this.dt}`][keys[0]].update_time)) {
+                await this.fetchData();
+            }
+        }
+        // await this.fetchData();
         // 排序
         addEventListener(this.$con, 'click', e => {
             const target = e.target;
@@ -5191,6 +5213,7 @@ class IndustryBlockContainer {
             const target = e.target;
             target.parentElement.querySelectorAll('.reb').forEach(btn => btn.classList.remove('reb'));
             target.classList.add('reb');
+            this.updateTTDT();
             this.updateTable();
         }, '.btn')
     }
