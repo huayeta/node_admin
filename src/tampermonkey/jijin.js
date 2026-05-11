@@ -4,7 +4,8 @@
 // 更新的话先 cd E:\work\TiantianFundApi-main 然后npm run start
 
 import StockMarket from './jijin-stock.js';
-
+import BKZJ from './jijin-bkzj.js';
+console.log(BKZJ);
 class CustomStorage {
     constructor() {
         this.storage = localStorage;
@@ -568,7 +569,8 @@ Object.assign(Tools, {
                 result = aa - bb;
             } else if (day == 'valuation_ths') {
                 // 估值_100天
-                let aa = bb = (sort > 0 ? 1000 : 0);
+                let aa =  (sort > 0 ? 1000 : 0);
+                let bb =  (sort > 0 ? 1000 : 0);
                 if (CODES[a.code] && CODES[a.code].valuation_ths_arr && CODES[a.code].valuation_ths_arr.length > 0 && CODES[a.code].valuation_ths_arr[CODES[a.code].valuation_ths_arr.length - 1].valuation) aa = CODES[a.code].valuation_ths_arr[CODES[a.code].valuation_ths_arr.length - 1].valuation;
                 if (CODES[b.code] && CODES[b.code].valuation_ths_arr && CODES[b.code].valuation_ths_arr.length > 0 && CODES[b.code].valuation_ths_arr[CODES[b.code].valuation_ths_arr.length - 1].valuation) bb = CODES[b.code].valuation_ths_arr[CODES[b.code].valuation_ths_arr.length - 1].valuation;
                 result = aa - bb;
@@ -1990,7 +1992,7 @@ Object.assign(Tools, {
         // 获取需要更新的列表
         const arr = Object.keys(DATAS).filter(code => {
             // return Tools.isDebt(code) == 1;
-            return true;
+            return Tools.isDebt(code) == 1 || Tools.isDebt(code) == 2;
         }).filter(code => {
             // 当前时间大约20点
             if (new Date().getHours() >= 20) {
@@ -4987,7 +4989,11 @@ baiduStocks.init();
 class IndustryBlockContainer {
     constructor() {
         this.$con = document.querySelector('.g-industry-block-container');
+        this.fire = false;
+        this.fireList = [];
+        this.fireList.push('CPO','存储芯片','锂矿','东数西算','稀土永磁','半导体','通信设备');
         this.Datas = JSON.parse(customStorage.getItem('jijin.industry')) || {};
+        console.log(this.Datas);
     }
     storage() {
         // customStorage.setItem('jijin.baiduStocks', this.stocks);
@@ -5009,7 +5015,7 @@ class IndustryBlockContainer {
     }
     async fetchData(st = 'FLOW') {
         const arr = [];
-        ['001002', '001003'].forEach(tt => {
+        ['0','001002', '001003'].forEach(tt => {
             ['zf', 'zjlr'].forEach(dt => {
                 arr.push(this._fetchData(tt, dt, dt == 'zf' ? 'zf' : 'FLOW'));
             });
@@ -5057,17 +5063,18 @@ class IndustryBlockContainer {
         <h1>📊 <a href="https://fund.eastmoney.com/ztjj/#!c/001002/dt/zjlr/curr/zf-%E7%83%AD%E9%97%A8%E4%B8%BB%E9%A2%98/fst/DESC" target="_blank">板块热力图</a></h1>
       </div>
       <div class="toolbar">
-        <span class="toolbar-label">板块类别</span>
+        <span class="toolbar-label"><button class="fire">热门主题</button></span>
         <div class="toolbar-group">
-          <button class="btn" data-tt="all">全部</button>
+          <button class="btn" data-tt="0">全部</button>
           <button class="btn reb" data-tt="001002">行业</button>
           <button class="btn" data-tt="001003">概念</button>
         </div>
         <span class="toolbar-label" style="margin-left:8px">排序</span>
         <div class="toolbar-group">
-          <button class="btn reb" data-dt="zf">按涨幅</button>
-          <button class="btn" data-dt="zjlr">按资金流入</button>
+          <button class="btn" data-dt="zf">按涨幅</button>
+          <button class="btn reb" data-dt="zjlr">按资金流入</button>
         </div>
+        <a href="https://fund.eastmoney.com/daogou" target="_blank" class="toolbar-label" style="margin-left:8px">基金导购</a>
       </div>
       <div class="heatmap-grid">
         
@@ -5084,7 +5091,8 @@ class IndustryBlockContainer {
         return `<span class="caret-wrapper ${SORT.industry_day == day ? sortClassname : ''}" data-day="${day}"><i class="sort-caret ascending"></i><i class="sort-caret descending"></i></span>`
     }
     findIndustryData(datas, name) {
-        return datas.find(d => d.INDEXNAME == name);
+        const index = datas.findIndex(d => d.INDEXNAME == name);
+        return [datas[index], index];
     }
     updateTTDT() {
         this.tt = this.$con.querySelector('[data-tt].reb').dataset.tt;
@@ -5095,17 +5103,52 @@ class IndustryBlockContainer {
         let datas_now = [];
         let datas_yesterday = [];
         let datas_before_yesterday = [];
+        let datas_2_days = [];
+        let datas_3_days = [];
         if (this.Datas[`${this.tt}-${this.dt}`]) {
-            const keys = Object.keys(this.Datas[`${this.tt}-${this.dt}`]).sort((a, b) => (new Date(b)) - (new Date(a)));
+            // const keys = Object.keys(this.Datas[`${this.tt}-${this.dt}`]).sort((a, b) => (new Date(b)) - (new Date(a)));
             // console.log(keys);
 
             // console.log(now,yesterday,before_yesterday);
-            datas_now = this.Datas[`${this.tt}-${this.dt}`][this.now].datas;
-            datas_yesterday = this.Datas[`${this.tt}-${this.dt}`][this.yesterday].datas;
+            datas_now = this.Datas[`${this.tt}-${this.dt}`]?.[this.now]?.datas || [];
+            datas_yesterday = this.Datas[`${this.tt}-${this.dt}`]?.[this.yesterday]?.datas || [];
             datas_before_yesterday = this.Datas[`${this.tt}-${this.dt}`]?.[this.before_yesterday]?.datas || [];
+            // 第一步：把 datas_now 转成 map { INDEXCODE: item }
+            const map = {};
+            datas_now.forEach(item => {
+                map[item.INDEXCODE] = { ...item };
+            });
+
+            // 第二步：把 datas_yesterday 加进去，D 相加
+            datas_yesterday && datas_yesterday.forEach(item => {
+                const code = item.INDEXCODE;
+                if (map[code]) {
+                    if (this.dt == 'zf') map[code].D += item.D;
+                    else map[code].FLOW += item.FLOW;
+                } else {
+                    map[code] = { ...item };
+                }
+            });
+            // 深度复制 map 到 map3
+            const map3 = structuredClone(map);
+            datas_before_yesterday && datas_before_yesterday.forEach(item => {
+                const code = item.INDEXCODE;
+                if (map3[code]) {
+                    if (this.dt == 'zf') map3[code].D += item.D;
+                    else map3[code].FLOW += item.FLOW;
+                } else {
+                    map3[code] = { ...item };
+                }
+            });
+            // 第三步：转回数组
+            datas_2_days = Object.values(map).sort((a, b) => (b?.D || b?.FLOW || 0) - (a?.D || a?.FLOW || 0));
+            datas_3_days = Object.values(map3).sort((a, b) => (b?.D || b?.FLOW || 0) - (a?.D || a?.FLOW || 0));
+            // console.log(datas_2_days,datas_3_days,map,map3);
             if (SORT.industry_sort == 1) datas_now = [...datas_now].reverse();
             if (SORT.industry_sort == 1) datas_yesterday = [...datas_yesterday].reverse();
             if (SORT.industry_sort == 1) datas_before_yesterday = [...datas_before_yesterday].reverse();
+            if (SORT.industry_sort == 1) datas_2_days = [...datas_2_days].reverse();
+            if (SORT.industry_sort == 1) datas_3_days = [...datas_3_days].reverse();
         }
         // console.log(`${this.tt}-${this.dt}`);
         // console.log(this.Datas,this.tt,this.dt);
@@ -5119,35 +5162,48 @@ class IndustryBlockContainer {
         }
         else if (industry_day == 'industry_before_yesterday') {
             datas = datas_before_yesterday;
+        } else if (industry_day == 'industry_2_days') {
+            datas = datas_2_days;
+            // console.log(datas_2_days);
+        } else if (industry_day == 'industry_3_days') {
+            datas = datas_3_days;
         }
+        // console.log(datas);
         if (!datas) datas = [];
         const get_num = (d, index) => {
-            return `<span class="${(d?.D || d?.FLOW || 0) < 0 ? 'green' : index <= 10 ? 'red' : ''}">${this.dt == 'zf' ? (d?.D.toFixed(2) + '%') : (d?.FLOW / 100000000).toFixed(2) + ' 亿'}</span>`;
+            return `<span class="${(d?.D || d?.FLOW || 0) < 0 ? 'green' : index <= 10 ? 'red' : ''}">${this.dt == 'zf' ? (d?.D.toFixed(2) + '%') : (d?.FLOW / 100000000).toFixed(2) + ' 亿'} / ${index + 1}</span>`;
         }
         const str = `
             <table class="el-table">
                 <thead>
                     <tr>
+                        <th>code</th>
                         <th>${this.tt == '001002' ? '行业' : '概念'}</th>
                         <th>${this.now}${this.getSortHtml('industry_now')}</th>
-                        <th>${this.yesterday}</th>
-                        <th>${this.before_yesterday}</th>
-                        <th>最近两天</th>
-                        <th>最近三天</th>
+                        <th>${this.yesterday}${this.getSortHtml('industry_yesterday')}</th>
+                        <th>${this.before_yesterday}${this.getSortHtml('industry_before_yesterday')}</th>
+                        <th>最近两天${this.getSortHtml('industry_2_days')}</th>
+                        <th>最近三天${this.getSortHtml('industry_3_days')}</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${datas.map((d, index) => {
-            const data_yesterday = this.findIndustryData(datas_yesterday, d.INDEXNAME);
-            const data_before_yesterday = this.findIndustryData(datas_before_yesterday, d.INDEXNAME);
+            const [data_now, index_now] = this.findIndustryData(datas_now, d.INDEXNAME);
+            const [data_yesterday, index_yesterday] = this.findIndustryData(datas_yesterday, d.INDEXNAME);
+            const [data_before_yesterday, index_before_yesterday] = this.findIndustryData(datas_before_yesterday, d.INDEXNAME);
+            const [data_2_days, index_2_days] = this.findIndustryData(datas_2_days, d.INDEXNAME);
+            const [data_3_days, index_3_days] = this.findIndustryData(datas_3_days, d.INDEXNAME);
+            // console.log(data_now)
+            if(this.fire && !this.fireList.find(item => item == d.INDEXNAME)) return '';
             return `
-                            <tr>
-                                <td>${d.INDEXNAME}</td>
-                                <td class="tac">${get_num(d, index)}</td>
-                                <td class="tac">${get_num(data_yesterday, index)}</td>
-                                <td class="tac">${get_num(data_before_yesterday, index)}</td>
-                                <td>${this.dt == 'zf' ? ((d?.D + data_yesterday?.D).toFixed(2) || 0) + '%' : (((d?.FLOW + data_yesterday?.FLOW) / 100000000).toFixed(2) || 0) + ' 亿'}</td>
-                                <td>${this.dt == 'zf' ? ((d?.D + data_before_yesterday?.D + data_yesterday?.D).toFixed(2) || 0) + '%' : (((d?.FLOW + data_before_yesterday?.FLOW + data_yesterday?.FLOW) / 100000000).toFixed(2) || 0) + ' 亿'}</td>
+                            <tr data-code="${d.INDEXCODE}" data-name="${d.INDEXNAME}">
+                                <td>${d.INDEXCODE}</td>
+                                <td>${d.INDEXNAME}${this.fireList.find(item => item == d.INDEXNAME) ? '🔥' : ''}</td>
+                                <td>${get_num(data_now, index_now)}</td>
+                                <td>${get_num(data_yesterday, index_yesterday)}</td>
+                                <td>${get_num(data_before_yesterday, index_before_yesterday)}</td>
+                                <td>${get_num(data_2_days, index_2_days)}</td>
+                                <td>${get_num(data_3_days, index_3_days)}</td>
                             </tr>
                         `
         }).join('')}
@@ -5163,7 +5219,7 @@ class IndustryBlockContainer {
 
         await this.renderHtml();
         // 交易时段心跳（自动启停） 5分钟刷新一次
-        StockMarket.startWatcher(this.fetchData, 5 * 60 * 1000);
+        StockMarket.startWatcher(this.fetchData.bind(this), 5 * 60 * 1000);
         // this.fetchData();
         // 非交易时间段判断是否刷新数据
         if (!await StockMarket.isTradingTime(new Date())) {
@@ -5216,6 +5272,34 @@ class IndustryBlockContainer {
             this.updateTTDT();
             this.updateTable();
         }, '.btn')
+        // 点击热门主题
+        addEventListener(this.$con.querySelector('.toolbar-label'), 'click', e => {
+            const target = e.target;
+            target.classList.toggle('reb');
+            this.fire=target.classList.contains('reb');
+            this.updateTable();
+        }, '.fire')
+        // 右键菜单
+        new MyContextmenu([{title:'查看基金',callback:function(){
+            window.open(`https://fund.eastmoney.com/ztjj/#!curr/${this.code}-${this.name}`,'_blank');
+            this.hide();
+        }},{
+            title:"查看板块",
+            callback:function(){
+                let data;
+                Object.values(BKZJ).forEach(bk => {
+                     if(!data)data = bk.find(item => {
+                        return item.name == this.name;
+                    });
+                });
+                // console.log(data,BKZJ);
+                window.open(`https://data.eastmoney.com/bkzj/${data.code}.html`,'_blank');
+                this.hide();
+            }
+        }],this.$con,'.heatmap-grid tr',function(tr){
+            this.code = tr.dataset.code;
+            this.name = tr.dataset.name;
+        })
     }
 }
 (new IndustryBlockContainer()).init();
